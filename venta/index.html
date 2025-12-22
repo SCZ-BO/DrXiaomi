@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura Web - Santa Cruz, Bolivia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-dark: #121212;
+            --secondary-dark: #1e1e1e;
+            --tertiary-dark: #2d2d2d;
+            --accent-color: #4a9eff;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border-color: #404040;
+            --success-color: #4caf50;
+            --whatsapp-color: #25D366;
+            --cash-color: #00c853;
+            --qr-color: #2196f3;
+            --highlight-color: #ff9800;
+            --modern-bg: #1a1a2e;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--primary-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: var(--accent-color);
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .logo span {
+            color: var(--text-secondary);
+            font-size: 16px;
+            display: block;
+        }
+
+        .theme-toggle {
+            background: var(--tertiary-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 15px;
+            float: right;
+        }
+
+        h2 {
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-section {
+            background-color: var(--secondary-dark);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .required::after {
+            content: " *";
+            color: #ff5252;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--tertiary-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* Opciones de pago - Destacado */
+        .payment-group {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(74, 158, 255, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .payment-group label {
+            font-size: 16px;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .payment-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .payment-option {
+            flex: 1;
+            padding: 15px;
+            background: var(--tertiary-dark);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .payment-option:hover {
+            background: var(--border-color);
+        }
+
+        .payment-option.selected {
+            border-color: var(--accent-color);
+            background: rgba(74, 158, 255, 0.1);
+        }
+
+        .payment-option.cash {
+            border-color: var(--cash-color);
+        }
+
+        .payment-option.cash.selected {
+            background: rgba(0, 200, 83, 0.1);
+        }
+
+        .payment-option.qr {
+            border-color: var(--qr-color);
+        }
+
+        .payment-option.qr.selected {
+            background: rgba(33, 150, 243, 0.1);
+        }
+
+        .payment-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .payment-option.cash .payment-icon {
+            color: var(--cash-color);
+        }
+
+        .payment-option.qr .payment-icon {
+            color: var(--qr-color);
+        }
+
+        /* QR Code display con imagen fija */
+        .qr-container {
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            background: #fff;
+            margin: 10px auto;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Tabla de artículos - SIN CANTIDAD */
+        .items-container {
+            margin: 20px 0;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: var(--modern-bg);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .items-table th {
+            background-color: #2d2d4a;
+            padding: 15px;
+            text-align: left;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .items-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .items-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .items-table input {
+            background-color: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .items-table input:focus {
+            border-color: var(--accent-color);
+            background-color: rgba(74, 158, 255, 0.1);
+        }
+
+        .btn-add-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: 600;
+            width: 100%;
+            font-size: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-add-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* Garantía - Menos llamativo y abajo */
+        .warranty-group {
+            margin-top: 30px;
+            padding: 15px;
+            background: var(--tertiary-dark);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .warranty-group label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Vista previa - MODERNA */
+        .preview-section {
+            background-color: var(--secondary-dark);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .invoice-preview {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 30px;
+            margin-top: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            font-family: 'Inter', sans-serif;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .preview-title {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #4a9eff 0%, #6cb1ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .preview-company {
+            text-align: right;
+        }
+
+        .company-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #4a9eff;
+            margin-bottom: 5px;
+        }
+
+        .company-info {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Fecha y Hora automática */
+        .preview-date-time {
+            margin-bottom: 25px;
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Cliente - Destacado */
+        .preview-client {
+            background: linear-gradient(135deg, rgba(74, 158, 255, 0.1) 0%, rgba(108, 177, 255, 0.1) 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-client::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, #4a9eff, #6cb1ff);
+        }
+
+        .client-title {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .client-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .client-phone {
+            color: rgba(255,255,255,0.8);
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* Detalles de venta - MODERNO EN MEDIO */
+        .sale-details {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 25px 0;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sale-details-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sale-details-title::before {
+            content: '🛒';
+            font-size: 20px;
+        }
+
+        .preview-items {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sale-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-desc {
+            font-weight: 600;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .item-total-preview {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        /* Monto destacado */
+        .amount-highlight {
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.2) 0%, rgba(255, 152, 0, 0.1) 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            text-align: center;
+            border: 2px solid rgba(255, 152, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .amount-highlight::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, #ff9800, #ffb74d);
+        }
+
+        .amount-label {
+            font-size: 16px;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .amount-value {
+            font-size: 42px;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 10px rgba(255, 152, 0, 0.3);
+        }
+
+        /* Método de pago destacado */
+        .payment-info {
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.2) 0%, rgba(33, 150, 243, 0.1) 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border: 1px solid rgba(33, 150, 243, 0.3);
+        }
+
+        .payment-method {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .payment-method::before {
+            content: '💳';
+            font-size: 24px;
+        }
+
+        .payment-details {
+            color: rgba(255,255,255,0.8);
+            font-size: 16px;
+        }
+
+        /* QR en vista previa */
+        .preview-qr {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .preview-qr-code {
+            width: 180px;
+            height: 180px;
+            background: #fff;
+            margin: 10px auto;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .preview-qr-code img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Garantía - Menos llamativo y abajo */
+        .warranty-info {
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            border-left: 3px solid rgba(255,255,255,0.2);
+        }
+
+        .warranty-text {
+            font-style: italic;
+        }
+
+        /* Notas */
+        .preview-notes {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .notes-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notes-title::before {
+            content: '📝';
+        }
+
+        .notes-content {
+            color: rgba(255,255,255,0.7);
+            line-height: 1.5;
+        }
+
+        /* Botones */
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #00c853 0%, #4caf50 100%);
+            color: white;
+            border: none;
+            padding: 16px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            flex: 2;
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            border: none;
+            padding: 16px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            flex: 1;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-reset {
+            background: var(--tertiary-dark);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 16px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            flex: 1;
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-generate:hover, .btn-reset:hover, .btn-whatsapp:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-whatsapp:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .row {
+                grid-template-columns: 1fr;
+            }
+            
+            .payment-options {
+                flex-direction: column;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .amount-value {
+                font-size: 32px;
+            }
+            
+            .sale-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .item-total-preview {
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <h1>IMPORT SCZ</h1>
+                <span>TECNOLOGIA QUE SIMPLIFICA - SANTA CRUZ BOLIVIA&nbsp; </span>
+            </div>
+            <button class="theme-toggle" id="themeToggle">Modo Claro</button>
+            <div style="clear: both;"></div>
+        </header>
+
+        <section class="form-section">
+            <h2>[Tema] [Generar NOTA]</h2>
+            
+            <form id="invoiceForm">
+                <!-- Nombre y Teléfono del Cliente - Destacado -->
+                <div class="row">
+                    <div class="form-group">
+                        <label for="clientName" class="required">Nombre del Cliente</label>
+                        <input type="text" id="clientName" placeholder="Ingrese nombre del cliente" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="clientPhone" class="required">Teléfono del Cliente</label>
+                        <input type="tel" id="clientPhone" placeholder="Ej: 77712345" required pattern="[0-9]{8,12}">
+                        <small style="color: var(--text-secondary); margin-top: 5px; display: block;">
+                            Para enviar la factura por WhatsApp
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Método de Pago - Destacado -->
+                <div class="payment-group">
+                    <label>Tipo de Pago</label>
+                    <div class="payment-options">
+                        <div class="payment-option cash" data-payment="efectivo">
+                            <div class="payment-icon">💵</div>
+                            <div>Efectivo</div>
+                        </div>
+                        <div class="payment-option qr" data-payment="qr">
+                            <div class="payment-icon">📱</div>
+                            <div>QR/Pago Móvil</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="paymentMethod" value="efectivo">
+                    
+                    <!-- QR Code container con imagen fija -->
+                    <div class="qr-container" id="qrContainer">
+                        <div class="qr-code">
+                            <!-- Coloca aquí tu imagen qr.jpg -->
+                            <img src="qr.jpg" alt="Código QR para pagos" 
+                                 onerror="this.style.display='none'; this.parentElement.innerHTML='[QR CODE]'">
+                        </div>
+                        <small>Escanea este código para pagar</small>
+                    </div>
+                </div>
+
+                <!-- Artículos/Servicios - SIN CANTIDAD -->
+                <div class="form-group items-container">
+                    <label>Artículos/Servicios</label>
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>Descripción</th>
+                                <th width="200">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody">
+                            <tr>
+                                <td><input type="text" class="item-desc" placeholder="Descripción del artículo"></td>
+                                <td><input type="number" class="item-total-input" placeholder="0.00" step="0.01"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn-add-item" id="addItem">+ Agregar Artículo</button>
+                </div>
+
+                <!-- Garantía - Menos llamativo y abajo -->
+                <div class="warranty-group">
+                    <label for="warrantyPeriod">Tiempo de Garantía (opcional)</label>
+                    <select id="warrantyPeriod">
+                        <option value="0">Sin garantía</option>
+                        <option value="30" selected>30 días</option>
+                        <option value="60">60 días</option>
+                        <option value="90">90 días</option>
+                        <option value="180">6 meses</option>
+                        <option value="365">1 año</option>
+                        <option value="custom">Personalizado</option>
+                    </select>
+                    <div id="customWarranty" style="display: none; margin-top: 10px;">
+                        <input type="number" id="customWarrantyDays" placeholder="Número de días" min="1" style="width: 100%;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Notas Adicionales</label>
+                    <textarea id="notes" rows="3" placeholder="Notas o información adicional..."></textarea>
+                </div>
+            </form>
+        </section>
+
+        <section class="preview-section">
+          <h2>Vista Previa de la Factura</h2>
+            <div class="invoice-preview" id="invoicePreview">
+                <!-- Encabezado -->
+                <div class="preview-header">
+                    <div>
+                        <div class="preview-title">IMPORT SCZ&nbsp;</div>
+                        <div style="margin-top: 10px; color: rgba(255,255,255,0.6); font-size: 14px;">
+                            Dir: Centro Comrcial Cañoto #k1<br>
+                          Telefono: 75589308 <br>
+                            Santa Cruz, Bolivia
+                        </div>
+                    </div>
+                    <div class="preview-company">
+                        <div class="company-name">NOTA DE ENTREGA</div>
+                        <div class="company-info">
+                            Comprobante de Garantia<br>
+                            Santa Cruz, Bolivia<br>
+                          
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fecha y Hora AUTOMÁTICA -->
+                <div class="preview-date-time">
+                    <span id="previewDate"></span> | 
+                    <span id="previewTime"></span>
+                </div>
+
+                <!-- Cliente - DESTACADO -->
+                <div class="preview-client">
+                    <div class="client-title">CLIENTE</div>
+                    <div class="client-name" id="previewClientName">Nombre del Cliente</div>
+                    <div class="client-phone" id="previewClientPhone">Tel: 77712345</div>
+                </div>
+
+                <!-- Detalles de Venta - MODERNO EN MEDIO -->
+                <div class="sale-details">
+                    <div class="sale-details-title">Detalles de la Venta</div>
+                    <div class="preview-items" id="previewItems">
+                        <div class="sale-item">
+                            <div class="item-info">
+                                <div class="item-desc">Artículo de ejemplo</div>
+                            </div>
+                            <div class="item-total-preview">100.00 Bs.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monto TOTAL DESTACADO -->
+                <div class="amount-highlight">
+                    <div class="amount-label">TOTAL A PAGAR</div>
+                    <div class="amount-value" id="previewTotal">100.00 Bs.</div>
+                </div>
+
+                <!-- Método de Pago - DESTACADO -->
+                <div class="payment-info">
+                    <div class="payment-method" id="previewPaymentMethod">
+                        Método de Pago: Efectivo
+                    </div>
+                    <div class="payment-details" id="previewPaymentDetails">
+                        Pago realizado en efectivo al momento de la entrega
+                    </div>
+                </div>
+
+                <!-- QR Code (solo si es pago QR) -->
+                <div class="preview-qr" id="previewQrSection" style="display: none;">
+                    <strong>PAGO POR QR</strong>
+                    <div class="preview-qr-code">
+                        <!-- Misma imagen qr.jpg -->
+                        <img src="qr.jpg" alt="Código QR para pagos"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='[QR CODE]'">
+                    </div>
+                    <small>Escanea para realizar el pago</small>
+                </div>
+
+                <!-- Garantía - MENOS LLAMATIVO Y ABAJO -->
+                <div class="warranty-info" id="warrantyPreview">
+                    <div class="warranty-text">
+                        <strong>Garantía:</strong> Este producto cuenta con garantía de 30 días contra defectos de fabricación. No Golpeados, No Mojados
+                  </div>
+                </div>
+
+                <!-- Notas -->
+                <div class="preview-notes">
+                    <div class="notes-title">NOTAS ADICIONALES</div>
+                    <div class="notes-content" id="previewNotes">Sin notas adicionales</div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="button" class="btn-generate" id="generateInvoice">Generar Factura PDF</button>
+                <button type="button" class="btn-whatsapp" id="sendWhatsApp" disabled>
+                    <span style="font-size: 20px;">📱</span> Enviar por WhatsApp
+                </button>
+                <button type="button" class="btn-reset" id="resetForm">Restablecer</button>
+            </div>
+        </section>
+
+        <footer>
+            <p>© 2024 NOTA Web - Sistema rápido de facturación. Santa Cruz, Bolivia. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fecha y hora actual automática
+            updateDateTime();
+            
+            // Actualizar fecha y hora cada minuto
+            setInterval(updateDateTime, 60000);
+            
+            // Toggle de tema claro/oscuro
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('light-theme');
+                
+                if (document.body.classList.contains('light-theme')) {
+                    themeToggle.textContent = 'Modo Oscuro';
+                    document.documentElement.style.setProperty('--primary-dark', '#f5f5f5');
+                    document.documentElement.style.setProperty('--secondary-dark', '#ffffff');
+                    document.documentElement.style.setProperty('--tertiary-dark', '#e0e0e0');
+                    document.documentElement.style.setProperty('--text-primary', '#333333');
+                    document.documentElement.style.setProperty('--text-secondary', '#666666');
+                    document.documentElement.style.setProperty('--border-color', '#cccccc');
+                    document.documentElement.style.setProperty('--modern-bg', '#f0f2f5');
+                } else {
+                    themeToggle.textContent = 'Modo Claro';
+                    document.documentElement.style.setProperty('--primary-dark', '#121212');
+                    document.documentElement.style.setProperty('--secondary-dark', '#1e1e1e');
+                    document.documentElement.style.setProperty('--tertiary-dark', '#2d2d2d');
+                    document.documentElement.style.setProperty('--text-primary', '#e0e0e0');
+                    document.documentElement.style.setProperty('--text-secondary', '#a0a0a0');
+                    document.documentElement.style.setProperty('--border-color', '#404040');
+                    document.documentElement.style.setProperty('--modern-bg', '#1a1a2e');
+                }
+            });
+            
+            // Selección de método de pago
+            const paymentOptions = document.querySelectorAll('.payment-option');
+            const paymentMethodInput = document.getElementById('paymentMethod');
+            const qrContainer = document.getElementById('qrContainer');
+            
+            paymentOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remover selección previa
+                    paymentOptions.forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Seleccionar actual
+                    this.classList.add('selected');
+                    
+                    // Actualizar valor
+                    const method = this.getAttribute('data-payment');
+                    paymentMethodInput.value = method;
+                    
+                    // Mostrar/ocultar QR
+                    if (method === 'qr') {
+                        qrContainer.style.display = 'block';
+                    } else {
+                        qrContainer.style.display = 'none';
+                    }
+                    
+                    // Actualizar vista previa
+                    updatePreview();
+                });
+            });
+            
+            // Seleccionar efectivo por defecto
+            document.querySelector('.payment-option.cash').classList.add('selected');
+            
+            // Manejar garantía personalizada
+            const warrantySelect = document.getElementById('warrantyPeriod');
+            const customWarrantyDiv = document.getElementById('customWarranty');
+            const customWarrantyInput = document.getElementById('customWarrantyDays');
+            
+            warrantySelect.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customWarrantyDiv.style.display = 'block';
+                    customWarrantyInput.required = true;
+                } else {
+                    customWarrantyDiv.style.display = 'none';
+                    customWarrantyInput.required = false;
+                }
+                updatePreview();
+            });
+            
+            customWarrantyInput.addEventListener('input', updatePreview);
+            
+            // Agregar nuevo artículo
+            const addItemBtn = document.getElementById('addItem');
+            const itemsBody = document.getElementById('itemsBody');
+            
+            addItemBtn.addEventListener('click', function() {
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td><input type="text" class="item-desc" placeholder="Descripción del artículo"></td>
+                    <td><input type="number" class="item-total-input" placeholder="0.00" step="0.01"></td>
+                `;
+                itemsBody.appendChild(newRow);
+                
+                // Agregar event listeners a los nuevos inputs
+                const inputs = newRow.querySelectorAll('input');
+                inputs.forEach(input => {
+                    input.addEventListener('input', updatePreview);
+                });
+            });
+            
+            // Actualizar fecha y hora
+            function updateDateTime() {
+                const now = new Date();
+                const dateStr = formatDate(now);
+                const timeStr = formatTime(now);
+                
+                document.getElementById('previewDate').textContent = dateStr;
+                document.getElementById('previewTime').textContent = timeStr;
+            }
+            
+            // Actualizar vista previa completa
+            function updatePreview() {
+                // Actualizar información del cliente
+                const clientName = document.getElementById('clientName').value || 'Nombre del Cliente';
+                const clientPhone = document.getElementById('clientPhone').value || 'No especificado';
+                const notes = document.getElementById('notes').value || 'Sin notas adicionales';
+                
+                document.getElementById('previewClientName').textContent = clientName;
+                document.getElementById('previewClientPhone').textContent = 'Tel: ' + clientPhone;
+                document.getElementById('previewNotes').textContent = notes;
+                
+                // Habilitar/deshabilitar botón WhatsApp
+                const whatsappBtn = document.getElementById('sendWhatsApp');
+                if (clientPhone.length >= 8) {
+                    whatsappBtn.disabled = false;
+                    whatsappBtn.title = 'Enviar factura al número: ' + clientPhone;
+                } else {
+                    whatsappBtn.disabled = true;
+                    whatsappBtn.title = 'Ingrese un número de teléfono válido';
+                }
+                
+                // Actualizar método de pago
+                const paymentMethod = paymentMethodInput.value;
+                if (paymentMethod === 'efectivo') {
+                    document.getElementById('previewPaymentMethod').textContent = 'Método de Pago: Efectivo';
+                    document.getElementById('previewPaymentDetails').textContent = 'Pago realizado en efectivo al momento de la entrega';
+                    document.getElementById('previewQrSection').style.display = 'none';
+                } else {
+                    document.getElementById('previewPaymentMethod').textContent = 'Método de Pago: QR/Pago Móvil';
+                    document.getElementById('previewPaymentDetails').textContent = 'Pago realizado mediante código QR o transferencia móvil';
+                    document.getElementById('previewQrSection').style.display = 'block';
+                }
+                
+                // Actualizar garantía
+                const warrantySelect = document.getElementById('warrantyPeriod');
+                const warrantyValue = warrantySelect.value;
+                let warrantyDays = 0;
+                
+                if (warrantyValue === 'custom') {
+                    warrantyDays = parseInt(document.getElementById('customWarrantyDays').value) || 0;
+                } else {
+                    warrantyDays = parseInt(warrantyValue) || 0;
+                }
+                
+                const warrantyPreview = document.getElementById('warrantyPreview');
+                if (warrantyDays > 0) {
+                    warrantyPreview.style.display = 'block';
+                    const warrantyText = warrantyDays === 1 ? '1 día' : 
+                                        warrantyDays === 30 ? '30 días' :
+                                        warrantyDays === 60 ? '60 días' :
+                                        warrantyDays === 90 ? '90 días' :
+                                        warrantyDays === 180 ? '6 meses' :
+                                        warrantyDays === 365 ? '1 año' :
+                                        `${warrantyDays} días`;
+                    
+                    warrantyPreview.innerHTML = `
+                        <div class="warranty-text">
+                            <strong>Garantía:</strong> Este producto cuenta con garantía de ${warrantyText} contra defectos de fabricación.
+                        </div>
+                    `;
+                } else {
+                    warrantyPreview.style.display = 'none';
+                }
+                
+                // Actualizar items en vista previa
+                const itemRows = document.querySelectorAll('#itemsBody tr');
+                const previewItems = document.getElementById('previewItems');
+                previewItems.innerHTML = '';
+                
+                let total = 0;
+                
+                itemRows.forEach(row => {
+                    const descInput = row.querySelector('.item-desc');
+                    const totalInput = row.querySelector('.item-total-input');
+                    
+                    const desc = descInput.value || 'Artículo sin descripción';
+                    const itemTotal = parseFloat(totalInput.value) || 0;
+                    
+                    if (desc || itemTotal > 0) {
+                        const saleItem = document.createElement('div');
+                        saleItem.className = 'sale-item';
+                        saleItem.innerHTML = `
+                            <div class="item-info">
+                                <div class="item-desc">${desc}</div>
+                            </div>
+                            <div class="item-total-preview">${itemTotal.toFixed(2)} Bs.</div>
+                        `;
+                        previewItems.appendChild(saleItem);
+                        total += itemTotal;
+                    }
+                });
+                
+                // Actualizar total
+                document.getElementById('previewTotal').textContent = total.toFixed(2) + ' Bs.';
+            }
+            
+            // Formatear fecha de Date a DD/MM/YYYY
+            function formatDate(date) {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            }
+            
+            // Formatear hora de Date a HH:MM AM/PM
+            function formatTime(date) {
+                const hours = date.getHours();
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const hour12 = hours % 12 || 12;
+                return `${hour12}:${minutes} ${ampm}`;
+            }
+            
+            // Generar factura (simulación)
+            document.getElementById('generateInvoice').addEventListener('click', function() {
+                const clientName = document.getElementById('clientName').value || 'Cliente';
+                const total = document.getElementById('previewTotal').textContent;
+                
+                alert(`✅ Factura generada exitosamente para: ${clientName}\n` +
+                      `📅 Fecha: ${document.getElementById('previewDate').textContent}\n` +
+                      `⏰ Hora: ${document.getElementById('previewTime').textContent}\n` +
+                      `💰 Total: ${total}\n\n` +
+                      'En una aplicación real, aquí se generaría un PDF para descargar o imprimir.');
+            });
+            
+            // Enviar por WhatsApp
+            document.getElementById('sendWhatsApp').addEventListener('click', function() {
+                const phone = document.getElementById('clientPhone').value;
+                const clientName = document.getElementById('clientName').value || 'Cliente';
+                const total = document.getElementById('previewTotal').textContent;
+                const date = document.getElementById('previewDate').textContent;
+                const time = document.getElementById('previewTime').textContent;
+                
+                if (!phone || phone.length < 8) {
+                    alert('❌ Ingrese un número de teléfono válido para enviar por WhatsApp');
+                    return;
+                }
+                
+                // Formatear número para WhatsApp (eliminar espacios, +, etc)
+                const cleanPhone = phone.replace(/\D/g, '');
+                
+                // Crear mensaje para WhatsApp
+                const message = encodeURIComponent(
+                    `✅ *FACTURA GENERADA*\n\n` +
+                    `👤 *Cliente:* ${clientName}\n` +
+                    `📅 *Fecha:* ${date}\n` +
+                    `⏰ *Hora:* ${time}\n` +
+                    `💰 *Total:* ${total}\n\n` +
+                    `📋 *Detalles de la factura:*\n` +
+                    `Método de pago: ${paymentMethodInput.value === 'efectivo' ? 'Efectivo' : 'QR'}\n\n` +
+                    `Gracias por su compra! 🛍️`
+                );
+                
+                // Crear enlace de WhatsApp
+                const whatsappLink = `https://wa.me/${cleanPhone}?text=${message}`;
+                
+                // Abrir WhatsApp en nueva ventana
+                window.open(whatsappLink, '_blank');
+                
+                // Mostrar confirmación
+                alert(`📱 Enlace de WhatsApp generado para el número: ${phone}\n\n` +
+                      `El enlace se ha abierto en una nueva ventana.`);
+            });
+            
+            // Restablecer formulario
+            document.getElementById('resetForm').addEventListener('click', function() {
+                if (confirm('¿Está seguro de que desea restablecer el formulario? Se perderán todos los datos.')) {
+                    document.getElementById('invoiceForm').reset();
+                    
+                    // Restablecer items (solo 1 fila)
+                    itemsBody.innerHTML = `
+                        <tr>
+                            <td><input type="text" class="item-desc" placeholder="Descripción del artículo"></td>
+                            <td><input type="number" class="item-total-input" placeholder="0.00" step="0.01"></td>
+                        </tr>
+                    `;
+                    
+                    // Restablecer método de pago
+                    paymentOptions.forEach(opt => opt.classList.remove('selected'));
+                    document.querySelector('.payment-option.cash').classList.add('selected');
+                    paymentMethodInput.value = 'efectivo';
+                    qrContainer.style.display = 'none';
+                    
+                    // Restablecer garantía
+                    warrantySelect.value = '30';
+                    customWarrantyDiv.style.display = 'none';
+                    
+                    // Deshabilitar WhatsApp
+                    document.getElementById('sendWhatsApp').disabled = true;
+                    
+                    updatePreview();
+                }
+            });
+            
+            // Agregar event listeners a los inputs iniciales
+            const formInputs = document.querySelectorAll('#invoiceForm input, #invoiceForm textarea, #invoiceForm select');
+            formInputs.forEach(input => {
+                input.addEventListener('input', updatePreview);
+                input.addEventListener('change', updatePreview);
+            });
+            
+            const initialItemInputs = document.querySelectorAll('#itemsBody input');
+            initialItemInputs.forEach(input => {
+                input.addEventListener('input', updatePreview);
+            });
+            
+            // Inicializar vista previa
+            updateDateTime();
+            updatePreview();
+        });
+    </script>
+</head>
+</html>
