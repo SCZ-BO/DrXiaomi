@@ -1,5 +1,6 @@
 marca,modelo,tipo,proveedor,precio_compra,precio_venta
 Honor,X6 B,LCD,OSMobil,140,290
+Honor,200,amoled,OSMobil,800,1050
 Infinix,50i,LCD,OSMobil,150,300
 Infinix,Hot 20S,LCD,OSMobil,160,320
 Infinix,Note 12,OLED,OSMobil,450,650
@@ -11,7 +12,9 @@ Redmi,Note 12 Pro,OLED,OSMobil,450,620
 Samsung,Galaxy A23,LCD,OSMobil,135,270
 Tecno,Pova 5,LCD,OSMobil,150,300
 Tecno,Spark 10C,LCD,OSMobil,130,280
+Tecno,Spark 20,LCD,OSMobil,110,280
 Tecno,Spark 6,LCD,OSMobil,140,290
+Tecno,Camon 30s,OLED,OSMobil,650,880
 Xiaomi,Mi 13T Pro,OLED,OSMobil,850,1150
 Xiaomi,Mi Pad 6,OLED,OSMobil,750,1050
 Xiaomi,Mi 14T Pro,OLED,OSMobil,850,1150
@@ -28,7 +31,7 @@ Xiaomi,Poco M4 Pro,OLED,OSMobil,750,1050
 Xiaomi,Poco M4 Pro,OLED,BITE,360,600
 Xiaomi,Poco M4 Pro,Incell,OSMobil,150,350
 Xiaomi,Poco F5 Pro,OLED,OSMobil,900,1300
-Xiaomi,Poco X6 Pro,OLED,OSMobil,900,1300
+Xiaomi,Poco X6 Pro,OLED,OSMobil,800,1100
 Xiaomi,Poco X5 Pro,OLED,OSMobil,350,520
 Xiaomi,Redmi 9T,LCD,OSMobil,150,310
 Xiaomi,Redmi 9,OLED,BITE,290,380
