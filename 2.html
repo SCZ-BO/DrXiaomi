@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DR XIAOMI • Price Finder</title>
+
+<style>
+/* ===================== THEME ===================== */
+:root{
+  --bg-primary:#0b0f14;
+  --bg-secondary:#101826;
+  --bg-tertiary:#162233;
+
+  --text-primary:#eaf2ff;
+  --text-secondary:#9fb1c7;
+
+  --accent:#ff7b00;
+  --accent-hover:#ff9a3d;
+
+  --border:rgba(255,255,255,.10);
+
+  --success:#4caf50;
+  --error:#f44336;
+  --oled:#c084fc;
+  --lcd:#60a5fa;
+  --edit:#fbbf24;
+
+  --radius:14px;
+  --shadow:0 14px 40px rgba(0,0,0,.45);
+  --shadow-soft:0 10px 24px rgba(0,0,0,.25);
+}
+
+/* ===================== RESET ===================== */
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  background:
+    radial-gradient(1100px 700px at 15% -10%, rgba(255,123,0,.16), transparent 55%),
+    radial-gradient(900px 600px at 100% 0%, rgba(96,165,250,.14), transparent 55%),
+    radial-gradient(900px 700px at 40% 120%, rgba(192,132,252,.12), transparent 60%),
+    var(--bg-primary);
+  color:var(--text-primary);
+  padding:12px;
+}
+
+/* ===================== LAYOUT ===================== */
+.container{
+  max-width:1400px;
+  margin:auto;
+  padding:14px;
+  border-radius:22px;
+  background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow:var(--shadow-soft);
+}
+
+/* ===================== HEADER ===================== */
+header{
+  padding:14px;
+  border-radius:var(--radius);
+  background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+  text-align:center;
+  margin-bottom:14px;
+}
+
+h1{
+  color:var(--accent);
+  letter-spacing:.5px;
+  text-shadow:0 0 18px rgba(255,123,0,.2);
+  font-size:1.8rem;
+}
+
+.subtitle{
+  font-size:.9rem;
+  color:var(--text-secondary);
+  margin-top:4px;
+}
+
+/* ===================== CONTROLS ===================== */
+.search-controls{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+  padding:10px;
+  border-radius:var(--radius);
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 8px 24px rgba(0,0,0,.18);
+}
+
+.search-box{flex:1}
+
+input[type="search"]{
+  width:100%;
+  padding:12px 14px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;
+  color:var(--text-primary);
+  font-size:14px;
+  outline:none;
+}
+input[type="search"]:focus{
+  border-color:rgba(255,123,0,.65);
+  box-shadow:0 0 0 3px rgba(255,123,0,.18);
+}
+
+/* quitar voz / recomendado */
+input[type="search"]{
+  -webkit-appearance:none;
+  appearance:none;
+}
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration{
+  -webkit-appearance:none;
+}
+
+/* ===================== SWITCH ===================== */
+.switch-container{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 12px;
+  border-radius:14px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.10);
+  font-size:13px;
+}
+
+.switch{
+  position:relative;
+  width:38px;
+  height:20px;
+}
+.switch input{opacity:0}
+.slider{
+  position:absolute;
+  inset:0;
+  background:#233044;
+  border-radius:999px;
+  cursor:pointer;
+}
+.slider:before{
+  content:"";
+  position:absolute;
+  width:14px;
+  height:14px;
+  background:white;
+  border-radius:50%;
+  left:3px;
+  top:3px;
+  transition:.3s;
+}
+.switch input:checked + .slider{
+  background:var(--accent);
+}
+.switch input:checked + .slider:before{
+  transform:translateX(18px);
+}
+
+/* ===================== TABLE ===================== */
+.table-container{
+  overflow:auto;
+  border-radius:var(--radius);
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.02);
+  box-shadow:var(--shadow);
+  max-height:calc(100vh - 240px);
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:600px;
+}
+
+thead th{
+  position:sticky;
+  top:0;
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(12px);
+  padding:10px;
+  font-size:12px;
+  text-align:left;
+  cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+
+tbody td{
+  padding:8px 10px;
+  font-size:12px;
+  background:rgba(255,255,255,.03);
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+tbody tr:nth-child(even) td{
+  background:rgba(255,255,255,.02);
+}
+tbody tr:hover td{
+  background:rgba(255,255,255,.06);
+}
+
+.price-compra{color:var(--accent);font-weight:600}
+.price-venta{color:var(--success);font-weight:600}
+.tipo-oled{color:var(--oled)}
+.tipo-lcd{color:var(--lcd)}
+
+.hidden-price{
+  opacity:.4;
+  font-style:italic;
+}
+
+/* ===================== EDIT INPUT ===================== */
+input.editable{
+  width:100%;
+  padding:6px 8px;
+  background:rgba(0,0,0,.2);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;
+  color:var(--text-primary);
+}
+input.editable:focus{
+  border-color:rgba(255,123,0,.65);
+  outline:none;
+}
+
+/* ===================== BUTTONS ===================== */
+.action-buttons{
+  display:flex;
+  gap:6px;
+  justify-content:center;
+}
+.action-btn{
+  padding:4px 10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.10);
+  color:var(--text-secondary);
+  cursor:pointer;
+}
+.action-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 22px rgba(0,0,0,.25);
+}
+.add-btn{
+  background:linear-gradient(135deg,#4caf50,#22c55e);
+  color:#04110a;
+}
+
+/* ===================== STATUS ===================== */
+.status{
+  margin-bottom:10px;
+  padding:10px;
+  border-radius:14px;
+  text-align:center;
+  backdrop-filter:blur(10px);
+}
+.status.success{background:rgba(76,175,80,.15);color:#a5d6a7}
+.status.error{background:rgba(244,67,54,.15);color:#ef9a9a}
+.status.info{background:rgba(33,150,243,.15);color:#90caf9}
+
+/* ===================== HIDE COLUMNS ===================== */
+.hide-columns .col-proveedor,
+.hide-columns .col-compra{
+  display:none;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <h1>🔍 DR XIAOMI <span style="opacity:.6;font-weight:500">• Price Finder</span></h1>
+  <div class="subtitle">Pantallas por calidad y proveedor</div>
+</header>
+
+<div class="search-controls">
+  <div class="search-box">
+    <input type="search" id="searchInput"
+      placeholder="Buscar marca, modelo, tipo..."
+      autocomplete="off" autocorrect="off"
+      autocapitalize="off" spellcheck="false">
+  </div>
+
+  <div class="switch-container">
+    <label class="switch">
+      <input type="checkbox" id="showProvidersToggle">
+      <span class="slider"></span>
+    </label>
+    <span id="providersLabel">Importadoras</span>
+  </div>
+</div>
+
+<div id="statusMessage" class="status" style="display:none"></div>
+
+<div class="table-container">
+<table>
+<thead>
+<tr>
+  <th>Marca</th>
+  <th>Modelo</th>
+  <th>Tipo</th>
+  <th class="col-proveedor">Proveedor</th>
+  <th class="col-compra">Compra</th>
+  <th>Venta</th>
+  <th>Acciones</th>
+</tr>
+</thead>
+<tbody id="resultsBody"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const CONFIG = [
+  { nombre:"JA", archivo:"https://xiaomi.scz.red/precio/data/ja.csv" },
+  { nombre:"Centralcell", archivo:"https://xiaomi.scz.red/precio/data/centralcel.csv" },
+  { nombre:"Osmobil", archivo:"https://xiaomi.scz.red/precio/data/osmobil.csv" },
+  { nombre:"BITE", archivo:"https://xiaomi.scz.red/precio/data/boe.csv" }
+];
+
+let allData=[], filteredData=[];
+let showProviders=false, providersAccess=false;
+
+/* ===================== INIT ===================== */
+document.addEventListener("DOMContentLoaded",()=>{
+  loadAllData();
+  searchInput.addEventListener("input",applyFilters);
+  showProvidersToggle.addEventListener("change",handleToggle);
+});
+
+/* ===================== DATA ===================== */
+async function loadAllData(){
+  const lists = await Promise.all(CONFIG.map(l =>
+    fetch(l.archivo,{cache:"no-store"})
+      .then(r=>r.text())
+      .then(t=>parseCSV(t,l.nombre))
+  ));
+  allData = lists.flat();
+  applyFilters();
+}
+
+function parseCSV(text,lista){
+  const lines=text.trim().split("\n");
+  const headers=lines[0].split(",").map(h=>h.trim());
+  return lines.slice(1).map(l=>{
+    const v=l.split(",");
+    let o={lista};
+    headers.forEach((h,i)=>{
+      if(h.includes("precio")) o[h]=parseFloat(v[i])||null;
+      else o[h]=v[i];
+    });
+    return o;
+  });
+}
+
+/* ===================== FILTER ===================== */
+function applyFilters(){
+  const q=searchInput.value.toLowerCase();
+  filteredData=allData.filter(r=>
+    r.marca.toLowerCase().includes(q) ||
+    r.modelo.toLowerCase().includes(q) ||
+    r.tipo.toLowerCase().includes(q)
+  );
+  render();
+}
+
+function handleToggle(e){
+  if(!providersAccess){
+    providersAccess=true;
+    showProviders=true;
+  }else showProviders=e.target.checked;
+  document.querySelector(".table-container")
+    .classList.toggle("hide-columns",!showProviders);
+}
+
+/* ===================== RENDER ===================== */
+function render(){
+  resultsBody.innerHTML="";
+  filteredData.forEach(r=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${r.marca}</td>
+      <td>${r.modelo}</td>
+      <td class="${r.tipo==="OLED"?"tipo-oled":"tipo-lcd"}">${r.tipo}</td>
+      <td class="col-proveedor">${showProviders?r.proveedor:"🔒"}</td>
+      <td class="col-compra">${showProviders?`<span class="price-compra">${r.precio_compra?.toFixed(2)||""}</span>`:"🔒"}</td>
+      <td><span class="price-venta">${r.precio_venta?.toFixed(2)||""}</span></td>
+      <td>
+        <div class="action-buttons">
+          <button class="action-btn">✏️</button>
+          <button class="action-btn add-btn">➕</button>
+        </div>
+      </td>`;
+    resultsBody.appendChild(tr);
+  });
+}
+</script>
+
+</body>
+</html>
