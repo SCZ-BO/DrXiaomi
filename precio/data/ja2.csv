@@ -2,7 +2,8 @@ marca,modelo,tipo,precio_compra,precio_venta
 Honor,50 Lite,LCD,215,380
 Honor,90 Lite,LCD,135,280
 Honor,Magic 5 Lite,INCELL,230,390
-Honor,Magic 6 Lite,OLED,485,680
+Honor,Magic 6 Lite,OLED,485,650
+Honor,Magic 7 Lite,OLED,370,680
 Honor,X5,LCD,125,330
 Honor,X5 Plus,LCD,125,330
 Honor,X6s,LCD,110,250
@@ -22,9 +23,11 @@ Huawei,Y9s,LCD,175,300
 Infinix,Hot 10 Lite,LCD,115,270
 Infinix,Hot 11 Play,LCD,130,290
 Infinix,Hot 20s,LCD,135,300
-Infinix,Note 12,LCD,130,290
+Infinix,Note 12,incel,300,530
+Infinix,Note 12,oled,120,270
 Infinix,Note 30 Pro,OLED,300,520
-Infinix,Note 40 Pro,LCD,210,400
+Infinix,Note 40 Pro,LCD,170,360
+Infinix,Note 40 Pro,OLED,700,960
 Infinix,Zero 30,OLED,450,720
 Infinix,Zero 30,LCD,230,390
 LG,K50,LCD,100,230
@@ -60,7 +63,8 @@ Tecno,Pop 5 Lite,LCD,105,230
 Tecno,Pop 7,LCD,105,230
 Tecno,Pova 2,LCD,140,290
 Tecno,Pova 4 Pro,INCELL,140,300
-Tecno,Pova 5,LCD,145,310
+Tecno,Pova 5,LCD,145,300
+Tecno,Pova 7,LCD,130,320
 Tecno,Spark 10C,LCD,100,260
 Tecno,Spark 20,LCD,130,290
 Tecno,Spark 20 Pro Plus,LCD,170,350
