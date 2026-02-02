@@ -5,7 +5,9 @@ Honor,X8B,OLED,CentralCel,320,530,
 
 Infinix,Hot 30i,LCD,CentralCel,110,250,
 Infinix,Hot 40 Lite,LCD,CentralCel,120,280,
+Infinix,Note 30 pro,LCD,CentralCel,130,300,
 Infinix,Note 12,OLED,CentralCel,380,550,
+Infinix,Zero 30,OLED,CentralCel,600,880,
 
 LG,K50,LCD,CentralCel,130,290,
 
@@ -37,8 +39,9 @@ Samsung,Tab S6 Lite,OLED,CentralCel,460,680,
 
 Tecno,Camon 20 Pro,Incell,CentralCel,170,290,
 Tecno,Camon 20 Pro,OLED,CentralCel,410,620,
-Tecno,Pova 5,LCD,CentralCel,170,350,
+Tecno,Pova 5,LCD,CentralCel,150,300,
 Tecno,Spark 6,LCD,CentralCel,140,300,
+Tecno,Pova 7,LCD,CentralCel,130,330,
 Tecno,Spark 30 Pro,OLED,CentralCel,600,850,
 
 Xiaomi,Mi 11 ULTRA,INCEL,CentralCel,190,390,
@@ -67,6 +70,6 @@ Xiaomi,Redmi Note 12 Pro Plus,Incell,CentralCel,170,350,
 Xiaomi,Redmi Note 12 Pro Plus,OLED,CentralCel,370,580,
 Xiaomi,Redmi Note 12S,LCD,CentralCel,150,320,
 Xiaomi,Redmi Note 12S,OLED,CentralCel,350,520,
-Xiaomi,Redmi Note 13 Pro Plus,OLED,CentralCel,320,550,
+Xiaomi,Redmi Note 13 Pro Plus,OLED,CentralCel,320,570,
 Xiaomi,Redmi Note 14,OLED,CentralCel,640,850,
 Xiaomi,Redmi K50 Gaming,ORIG,CentralCel,350,590,
