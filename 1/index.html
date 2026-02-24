@@ -350,7 +350,7 @@
           <label class="required-field">Nombre</label>
           <input type="text" id="nombre" required placeholder="Ej: Juan Pérez">
           <label class="required-field">Teléfono</label>
-          <input type="tel" id="telefono" required placeholder="Ej: 75522004" pattern="[0-9]{7,8}">
+          <input type="tel" id="telefono" required placeholder="Ej: 75959450" pattern="[0-9]{7,8}">
         </fieldset>
 
         <fieldset>
@@ -463,7 +463,7 @@
     const config = {
       nombreTienda: "DR . XIAOMI SCZ",
       direccion: "Centro Comercial Cañoto #k1, Santa Cruz",
-      telefono: "75522004",
+      telefono: "75959450",
       horario: "Lunes a Sabado 9:00 - 20:00"
     };
 
@@ -728,20 +728,21 @@
           const { jsPDF } = window.jspdf;
           const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
 
-          // ====== DATOS BÁSICOS ======
-          const fecha = new Date();
-          const nombreCompleto = document.getElementById('nombre').value.trim();
-          const nombreCliente = nombreCompleto.split(' ')[0] || 'Cliente';
-          const telefono = document.getElementById('telefono').value;
-          const marca = document.getElementById('marca').value;
-          const modelo = document.getElementById('modelo').value;
-          const imei = document.getElementById('imei').value;
-          const enciende = document.getElementById('enciende').value;
-          const estado = document.getElementById('estado').value || '-';
-          const falla = document.getElementById('falla').value || '-';
-          const tipoSeguridad = document.getElementById('tipoSeguridad').value;
-          const pin = document.getElementById('pinInput').value || '-';
-          const patron = document.getElementById('patternValue').value || '-';
+  // ====== DATOS BÁSICOS ======
+const fecha = new Date();
+const nombreCompleto = document.getElementById('nombre').value.trim();
+const nombreCliente = nombreCompleto.split(' ')[0] || 'Cliente';
+const telefono = document.getElementById('telefono').value;
+const whatsappLink = `https://wa.me/591${telefono}`; // Generar enlace para WhatsApp
+const marca = document.getElementById('marca').value;
+const modelo = document.getElementById('modelo').value;
+const imei = document.getElementById('imei').value;
+const enciende = document.getElementById('enciende').value;
+const estado = document.getElementById('estado').value || '-';
+const falla = document.getElementById('falla').value || '-';
+const tipoSeguridad = document.getElementById('tipoSeguridad').value;
+const pin = document.getElementById('pinInput').value || '-';
+const patron = document.getElementById('patternValue').value || '-';
 
           // Número de recibo consistente + guardado
           contadorRecibos++;
