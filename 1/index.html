@@ -804,11 +804,11 @@
         pdf.text(`Nombre: ${nombreCompleto}`, marginLeft, y);
         y += 5;
         pdf.text(`Teléfono: `, marginLeft, y);
-        pdf.text(
-          `wa.me/591${telefono}`,
-          200 - marginLeft,
-          y,
-          { align: 'right', link: whatsappLink } // Asegurarse de que el enlace sea clickeable
+        pdf.textWithLink(
+          `wa.me/591${telefono}`, // Enlace de WhatsApp
+          200 - marginLeft, // Posición horizontal
+          y, // Posición vertical
+          { align: 'right', url: whatsappLink } // Enlace clickeable
         );
 
         // ====== DATOS DEL EQUIPO ======
@@ -998,6 +998,7 @@
     });
   });
 </script>
+
 
   
 </body>
