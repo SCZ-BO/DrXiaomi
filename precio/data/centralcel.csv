@@ -17,6 +17,9 @@ Realme,12 Pro Plus,OLED,CentralCel,320,530,REALME
 Realme,C61,LCD,CentralCel,100,270,REALME
 Realme,GT,OLED,CentralCel,500,700,REALME
 Realme,GT 2 Pro,ORIGINAL,CentralCel,1030,1300,REALME
+Realme,Gt neo 2,OLED,CentralCel,670,920,REALME
+Realme,Gt neo 2,INCEL,CentralCel,130,320,REALME
+
 Samsung,A16,INCELL,CentralCel,190,300,SAMSUNG
 Samsung,A16,OLED,CentralCel,540,750,SAMSUNG
 Samsung,A21S,LCD,CentralCel,110,230,SAMSUNG
@@ -28,8 +31,10 @@ Samsung,Note 9,OLED,CentralCel,1780,2100,SAMSUNG
 Samsung,Note 20 Ultra,OLED,CentralCel,2200,2550,SAMSUNG
 Samsung,S20 Ultra,OLED,CentralCel,2300,2600,SAMSUNG
 Samsung,S21 FE,OLED,CentralCel,1030,1350,SAMSUNG
-Samsung,S22 Ultra,OLED,CentralCel,2450,2750,SAMSUNG
+Samsung,S22 Ultra,SERVIPAK,CentralCel,2450,2750,SAMSUNG
 Samsung,S22 Plus,OLED,CentralCel,1420,1700,SAMSUNG
+Samsung,S23 Ultra,SERVIPAK,CentralCel,2550,2850,SAMSUNG
+Samsung,S24 Ultra,SERVIPAK,CentralCel,2640,2950,SAMSUNG
 Samsung,Tab S6 Lite,OLED,CentralCel,460,680,SAMSUNG
 Samsung,Z Flip 3,OLED,CentralCel,2250,2600,SAMSUNG
 Tecno,Camon 20 Pro,INCELL,CentralCel,170,290,TECNO
