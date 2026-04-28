@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Prueba de Hardware para Android | Diagnóstico Completo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 16px 12px 40px;
+            color: #0f172a;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            text-align: center;
+            margin: 0 0 6px 0;
+            background: linear-gradient(135deg, #1e293b, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .sub {
+            text-align: center;
+            color: #475569;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 12px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 28px;
+            padding: 18px 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .card-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 5px solid #3b82f6;
+            padding-left: 14px;
+        }
+
+        .grid-2 {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .btn {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 10px 16px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #1e293b;
+            flex: 1 0 auto;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 6px rgba(59,130,246,0.3);
+        }
+
+        .btn-success {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            border-color: #f59e0b;
+            color: white;
+        }
+
+        .result-box {
+            background: #f1f5f9;
+            border-radius: 20px;
+            padding: 12px 16px;
+            margin-top: 14px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            word-break: break-word;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .status {
+            font-weight: bold;
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+        }
+
+        .pass {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .fail {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .touch-area {
+            background: #eef2ff;
+            border: 2px dashed #3b82f6;
+            border-radius: 32px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 12px;
+            min-height: 140px;
+            user-select: none;
+            transition: 0.1s;
+        }
+
+        .touch-log {
+            font-size: 0.75rem;
+            max-height: 90px;
+            overflow-y: auto;
+            background: #0f172a10;
+            border-radius: 20px;
+            padding: 8px;
+            margin-top: 10px;
+        }
+
+        canvas {
+            width: 100%;
+            background: #000;
+            border-radius: 20px;
+            margin-top: 8px;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 20px;
+            background: #1e293b;
+            max-height: 260px;
+            object-fit: cover;
+        }
+
+        .sensor-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 500px) {
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+            .card-title {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📱 Prueba de Hardware</h1>
+    <div class="sub">Diagnóstico completo para Android | IMEI • Cámara • Sonido • Pantalla • Sensores</div>
+
+    <!-- Información del dispositivo -->
+    <div class="card">
+        <div class="card-title">📲 Información del dispositivo</div>
+        <div class="result-box" id="deviceInfoBox">Cargando datos...</div>
+        <div class="grid-2" style="margin-top: 12px;">
+            <button class="btn" id="refreshInfoBtn">🔄 Refrescar</button>
+            <button class="btn btn-primary" id="copyInfoBtn">📋 Copiar info</button>
+        </div>
+    </div>
+
+    <!-- Prueba de pantalla táctil (con área interactiva) -->
+    <div class="card">
+        <div class="card-title">🖐️ Prueba de pantalla táctil</div>
+        <div class="touch-area" id="touchArea">
+            ✨ Toca, desliza o mantén presionado ✨
+            <div id="touchCoords" style="font-size:0.8rem; margin-top:10px;">(x, y) aparecerán aquí</div>
+        </div>
+        <div class="touch-log" id="touchLog"></div>
+        <button class="btn" id="clearTouchLogBtn">🗑️ Limpiar registro táctil</button>
+    </div>
+
+    <!-- Prueba de cámara -->
+    <div class="card">
+        <div class="card-title">📷 Cámara (frontal / trasera)</div>
+        <video id="videoCam" autoplay playsinline muted></video>
+        <div class="grid-2">
+            <button class="btn" id="startCamBtn">📸 Iniciar cámara trasera</button>
+            <button class="btn" id="startFrontCamBtn">🤳 Frontal</button>
+            <button class="btn btn-warning" id="stopCamBtn">⏹️ Detener</button>
+        </div>
+        <div id="cameraStatus" class="result-box" style="margin-top: 12px;">Estado: Esperando acción</div>
+    </div>
+
+    <!-- Prueba de sonido + micrófono -->
+    <div class="card">
+        <div class="card-title">🔊 Sonido y Micrófono</div>
+        <div class="grid-2">
+            <button class="btn btn-primary" id="playSoundBtn">🔔 Reproducir tono (beep)</button>
+            <button class="btn" id="stopSoundBtn">🔇 Parar sonido</button>
+            <button class="btn btn-success" id="startMicTestBtn">🎤 Probar micrófono (grabar)</button>
+            <button class="btn btn-warning" id="stopMicTestBtn">⏹️ Detener grabación</button>
+        </div>
+        <div id="micResult" class="result-box">🎙️ Presiona "Probar micrófono" y habla, se reproducirá tu voz.</div>
+        <audio id="audioPlayback" controls style="width:100%; margin-top: 8px; display: none;"></audio>
+    </div>
+
+    <!-- Sensores: acelerómetro, orientación, proximidad, batería -->
+    <div class="card">
+        <div class="card-title">⚙️ Sensores y Batería</div>
+        <div id="sensorsData" class="result-box">🔄 Leyendo sensores...</div>
+        <button class="btn" id="refreshSensorsBtn">🔄 Actualizar sensores</button>
+    </div>
+
+    <!-- WiFi y Bluetooth info (navegador limitado, pero mostramos conexión) -->
+    <div class="card">
+        <div class="card-title">📡 Red y Conectividad</div>
+        <div id="networkInfo" class="result-box">Obteniendo información...</div>
+        <div class="grid-2">
+            <button class="btn" id="checkConnectionBtn">📶 Verificar conexión</button>
+        </div>
+    </div>
+
+    <!-- Prueba vibración -->
+    <div class="card">
+        <div class="card-title">📳 Vibración</div>
+        <button class="btn btn-primary" id="vibrateShortBtn">🔘 Vibración corta (200ms)</button>
+        <button class="btn" id="vibratePatternBtn">〰️ Patrón (corto-largo)</button>
+        <div id="vibeStatus" class="result-box" style="margin-top:8px;">Soporte: comprobando...</div>
+    </div>
+
+    <footer>⚠️ Algunas pruebas como IMEI dependen de permisos y API del sistema. La cámara/micrófono requieren HTTPS o localhost en Android 10+.</footer>
+</div>
+
+<script>
+    // ----- UTILIDADES -----
+    function logToElement(elId, msg, isError = false) {
+        const el = document.getElementById(elId);
+        if (el) {
+            el.innerHTML = msg;
+            if (isError) el.style.borderLeftColor = "#ef4444";
+            else el.style.borderLeftColor = "#3b82f6";
+        }
+    }
+
+    // Información del dispositivo (IMEI limitado por Web, pero se puede mostrar modelo y versión)
+    async function updateDeviceInfo() {
+        let html = "";
+        // Modelo, plataforma, agente
+        const ua = navigator.userAgent;
+        const platform = navigator.platform || "desconocido";
+        const language = navigator.language;
+        const vendor = navigator.vendor || "";
+        const hardwareConcurrency = navigator.hardwareConcurrency ? navigator.hardwareConcurrency + " núcleos" : "N/A";
+        
+        html += `<strong>📱 Modelo / Marca:</strong> ${vendor} ${platform}<br>`;
+        html += `<strong>🤖 User Agent:</strong> ${ua.substring(0, 110)}...<br>`;
+        html += `<strong>🌐 Idioma:</strong> ${language}<br>`;
+        html += `<strong>⚡ CPU lógicos:</strong> ${hardwareConcurrency}<br>`;
+        
+        // Intentar obtener información de pantalla
+        const screenW = screen.width, screenH = screen.height;
+        const pixelRatio = window.devicePixelRatio || 1;
+        html += `<strong>🖥️ Pantalla:</strong> ${screenW} x ${screenH} (ratio: ${pixelRatio})<br>`;
+        
+        // Memoria (disponible solo si la API está soportada)
+        if (performance.memory) {
+            const mem = (performance.memory.jsHeapSizeLimit / (1024**3)).toFixed(2);
+            html += `<strong>🧠 Límite memoria JS:</strong> ${mem} GB<br>`;
+        } else {
+            html += `<strong>🧠 Memoria JS:</strong> No disponible<br>`;
+        }
+        
+        // Intento de IMEI? No directamente disponible por seguridad, pero podemos leer sim/telefonía si existe (solo en contexto autorizado)
+        // mostramos un mensaje alternativo
+        if ('getIMEI' in navigator) {
+            // NO ESTÁNDAR, pero algunos WebViews podrían exponer, ignoramos.
+        }
+        html += `<strong>🆔 IMEI / ID único:</strong> No accesible por políticas web. Usa código nativo.<br>`;
+        html += `<span style="font-size:0.7rem;">💡 Para ver IMEI real marca *#06# en el marcador.</span><br>`;
+        
+        // Batería
+        if ('getBattery' in navigator) {
+            try {
+                const battery = await navigator.getBattery();
+                const level = (battery.level * 100).toFixed(0);
+                const charging = battery.charging ? "🔌 Cargando" : "🔋 En batería";
+                html += `<strong>🔋 Batería:</strong> ${level}% (${charging})<br>`;
+            } catch(e) { html += `<strong>🔋 Batería:</strong> Error leyendo<br>`; }
+        } else {
+            html += `<strong>🔋 Batería API:</strong> No soportada (chrome 38+ sí)<br>`;
+        }
+        document.getElementById("deviceInfoBox").innerHTML = html;
+    }
+    
+    // Actualizar info de red y conexión
+    function updateNetworkInfo() {
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        let netHtml = "";
+        if (connection) {
+            netHtml = `<strong>📶 Tipo:</strong> ${connection.effectiveType || 'desconocido'}<br>`;
+            netHtml += `<strong>⚡ Downlink:</strong> ${connection.downlink ? connection.downlink + ' Mbps' : 'N/A'}<br>`;
+            netHtml += `<strong>🔄 RTT:</strong> ${connection.rtt ? connection.rtt + 'ms' : 'N/A'}`;
+        } else {
+            netHtml = "⚠️ API de red no soportada, pero puedes probar conectividad.";
+        }
+        netHtml += `<br><strong>🌐 Online:</strong> ${navigator.onLine ? "Sí ✅" : "No ❌"}`;
+        document.getElementById("networkInfo").innerHTML = netHtml;
+    }
+    
+    // Sensores: acelerómetro / orientación usando DeviceOrientation y DeviceMotion
+    let sensorInterval = null;
+    function startSensorsPolling() {
+        if (sensorInterval) clearInterval(sensorInterval);
+        const sensorDiv = document.getElementById("sensorsData");
+        let lastAccel = {x:'N/A', y:'N/A', z:'N/A'};
+        let lastOrientation = {alpha:'N/A', beta:'N/A', gamma:'N/A'};
+        
+        function updateSensorDisplay() {
+            sensorDiv.innerHTML = `<strong>📳 Acelerómetro (m/s²):</strong> X: ${lastAccel.x} | Y: ${lastAccel.y} | Z: ${lastAccel.z}<br>
+                                   <strong>🧭 Orientación (grados):</strong> α: ${lastOrientation.alpha} | β: ${lastOrientation.beta} | γ: ${lastOrientation.gamma}<br>
+                                   <small>🔁 Mueve el dispositivo para ver cambios</small>`;
+        }
+        
+        window.addEventListener('devicemotion', (e) => {
+            if (e.accelerationIncludingGravity) {
+                let acc = e.accelerationIncludingGravity;
+                lastAccel = {
+                    x: acc.x ? acc.x.toFixed(2) : 'N/A',
+                    y: acc.y ? acc.y.toFixed(2) : 'N/A',
+                    z: acc.z ? acc.z.toFixed(2) : 'N/A'
+                };
+                updateSensorDisplay();
+            }
+        });
+        window.addEventListener('deviceorientation', (e) => {
+            lastOrientation = {
+                alpha: e.alpha ? e.alpha.toFixed(1) : 'N/A',
+                beta: e.beta ? e.beta.toFixed(1) : 'N/A',
+                gamma: e.gamma ? e.gamma.toFixed(1) : 'N/A'
+            };
+            updateSensorDisplay();
+        });
+        sensorDiv.innerHTML = "⏳ Esperando datos de sensores... mueve el dispositivo.";
+        setTimeout(() => {
+            if(lastAccel.x === 'N/A') sensorDiv.innerHTML += "<br>⚠️ Si no hay datos, verifica permisos o si tu dispositivo soporta DeviceMotionEvent.";
+        }, 1500);
+    }
+    
+    // --- Touch test interactivo ---
+    const touchArea = document.getElementById('touchArea');
+    const touchCoordsDiv = document.getElementById('touchCoords');
+    const touchLogDiv = document.getElementById('touchLog');
+    function addTouchLog(msg) {
+        const p = document.createElement('div');
+        p.textContent = `${new Date().toLocaleTimeString()} - ${msg}`;
+        touchLogDiv.appendChild(p);
+        touchLogDiv.scrollTop = touchLogDiv.scrollHeight;
+        if(touchLogDiv.children.length > 15) touchLogDiv.removeChild(touchLogDiv.children[0]);
+    }
+    function handleTouch(e) {
+        e.preventDefault();
+        const rect = touchArea.getBoundingClientRect();
+        for (let i=0; i<e.touches.length; i++) {
+            const touch = e.touches[i];
+            const x = (touch.clientX - rect.left).toFixed(0);
+            const y = (touch.clientY - rect.top).toFixed(0);
+            touchCoordsDiv.innerHTML = `📍 toque #${i+1}: (${x}, ${y})`;
+            addTouchLog(`Toque en (${x}, ${y}) - fuerza: ${touch.force || '?'}`);
+        }
+        if(e.type === 'touchstart') addTouchLog('⬇️ Inicio de toque');
+        if(e.type === 'touchend') addTouchLog('⬆️ Fin de toque');
+    }
+    touchArea.addEventListener('touchstart', handleTouch);
+    touchArea.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const rect = touchArea.getBoundingClientRect();
+        if(e.touches[0]) {
+            const x = (e.touches[0].clientX - rect.left).toFixed(0);
+            const y = (e.touches[0].clientY - rect.top).toFixed(0);
+            touchCoordsDiv.innerHTML = `🖱️ Movimiento: (${x}, ${y})`;
+        }
+    });
+    touchArea.addEventListener('touchend', handleTouch);
+    document.getElementById('clearTouchLogBtn').addEventListener('click', () => { touchLogDiv.innerHTML = ''; addTouchLog('Registro limpiado'); });
+    
+    // ---- Cámara ----
+    let currentStream = null;
+    const video = document.getElementById('videoCam');
+    const camStatus = document.getElementById('cameraStatus');
+    async function startCamera(facingMode = 'environment') {
+        if (currentStream) {
+            stopCameraTracks();
+        }
+        try {
+            const constraints = {
+                video: { facingMode: { exact: facingMode } },
+                audio: false
+            };
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            currentStream = stream;
+            video.srcObject = stream;
+            camStatus.innerHTML = `✅ Cámara ${facingMode === 'environment' ? 'trasera' : 'frontal'} activa.`;
+        } catch (err) {
+            // fallback si no soporta facingMode exact
+            try {
+                const constraintsSimple = { video: true };
+                const stream = await navigator.mediaDevices.getUserMedia(constraintsSimple);
+                currentStream = stream;
+                video.srcObject = stream;
+                camStatus.innerHTML = `⚠️ Cámara activada (modo por defecto)`;
+            } catch(e) {
+                camStatus.innerHTML = `❌ Error cámara: ${err.message}`;
+            }
+        }
+    }
+    function stopCameraTracks() {
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+            currentStream = null;
+            video.srcObject = null;
+            camStatus.innerHTML = 'Cámara detenida.';
+        }
+    }
+    document.getElementById('startCamBtn').addEventListener('click', () => startCamera('environment'));
+    document.getElementById('startFrontCamBtn').addEventListener('click', () => startCamera('user'));
+    document.getElementById('stopCamBtn').addEventListener('click', stopCameraTracks);
+    
+    // --- Sonido: generar tono con Web Audio API
+    let audioCtx = null;
+    let osc = null;
+    let gainNode = null;
+    function playBeep() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (osc) {
+            try { osc.stop(); } catch(e) {}
+        }
+        osc = audioCtx.createOscillator();
+        gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        gainNode.gain.value = 0.3;
+        osc.start();
+        gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.8);
+        osc.stop(audioCtx.currentTime + 0.8);
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    document.getElementById('playSoundBtn').addEventListener('click', () => playBeep());
+    document.getElementById('stopSoundBtn').addEventListener('click', () => {
+        if (osc) {
+            try { osc.stop(); } catch(e) {}
+            osc = null;
+        }
+    });
+    
+    // --- Micrófono: grabar y reproducir
+    let mediaRecorder;
+    let audioChunks = [];
+    let micStream = null;
+    const audioPlayback = document.getElementById('audioPlayback');
+    const micResultDiv = document.getElementById('micResult');
+    document.getElementById('startMicTestBtn').addEventListener('click', async () => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            micResultDiv.innerHTML = "⚠️ Ya estamos grabando, detén primero.";
+            return;
+        }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            micStream = stream;
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = event => {
+                if (event.data.size > 0) audioChunks.push(event.data);
+            };
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                audioPlayback.src = audioUrl;
+                audioPlayback.style.display = 'block';
+                micResultDiv.innerHTML = "🎧 Grabación completada. Reproduce para verificar micrófono.";
+                if (micStream) micStream.getTracks().forEach(t => t.stop());
+                micStream = null;
+            };
+            mediaRecorder.start();
+            micResultDiv.innerHTML = "🎙️ Grabando... Habla y presiona 'Detener grabación'.";
+        } catch(err) {
+            micResultDiv.innerHTML = `❌ Error micrófono: ${err.message}`;
+        }
+    });
+    document.getElementById('stopMicTestBtn').addEventListener('click', () => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+        } else {
+            micResultDiv.innerHTML = "No hay grabación activa.";
+        }
+        if (micStream) {
+            micStream.getTracks().forEach(t => t.stop());
+            micStream = null;
+        }
+    });
+    
+    // --- Vibración ---
+    function checkVibrationSupport() {
+        const vibeDiv = document.getElementById('vibeStatus');
+        if ('vibrate' in navigator) {
+            vibeDiv.innerHTML = "✅ Este dispositivo soporta vibración.";
+        } else {
+            vibeDiv.innerHTML = "❌ Vibración no soportada en este navegador/dispositivo.";
+        }
+    }
+    document.getElementById('vibrateShortBtn').addEventListener('click', () => {
+        if (navigator.vibrate) navigator.vibrate(200);
+        else document.getElementById('vibeStatus').innerHTML = "Vibración no disponible";
+    });
+    document.getElementById('vibratePatternBtn').addEventListener('click', () => {
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+        else alert("Sin soporte de vibración");
+    });
+    
+    // Actualizar conexión y sensores periódico
+    document.getElementById('checkConnectionBtn').addEventListener('click', () => updateNetworkInfo());
+    document.getElementById('refreshInfoBtn').addEventListener('click', () => updateDeviceInfo());
+    document.getElementById('refreshSensorsBtn').addEventListener('click', () => startSensorsPolling());
+    document.getElementById('copyInfoBtn').addEventListener('click', () => {
+        const infoText = document.getElementById('deviceInfoBox').innerText;
+        navigator.clipboard.writeText(infoText).then(() => alert("Información copiada al portapapeles"));
+    });
+    
+    // ejecución inicial
+    updateDeviceInfo();
+    updateNetworkInfo();
+    startSensorsPolling();
+    checkVibrationSupport();
+    
+    // solicitar permisos activos si es necesario para audio (el usuario iniciará micrófono/cámara cuando quiera)
+    // adicionalmente, mostrar mensaje sobre no imei
+    window.addEventListener('load', () => {
+        // Solicitar permisos de movimiento si es necesario en iOS/Android
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // Para iOS 13+, se requiere interacción para sensores. No forzamos, solo mostramos info.
+        }
+        // se pueden pedir permisos de notificacion? mejor no.
+    });
+    
+    // tiempo extra para mostrar batería dinámica
+    setInterval(() => {
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(battery => {
+                const level = (battery.level * 100).toFixed(0);
+                const deviceDiv = document.getElementById('deviceInfoBox');
+                if (deviceDiv && !deviceDiv.innerHTML.includes("Batería actualizada")) {
+                    // actualización sutil
+                }
+            }).catch(()=>{});
+        }
+    }, 30000);
+</script>
+</body>
+</html>
