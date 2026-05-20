@@ -21,6 +21,7 @@ Realme,Gt neo 2,OLED,CentralCel,670,920,REALME
 Realme,Gt neo 2,INCEL,CentralCel,130,320,REALME
 
 Samsung,A16,INCELL,CentralCel,190,300,SAMSUNG
+Samsung,A15,OLED,CentralCel,310,500,SAMSUNG
 Samsung,A16,OLED,CentralCel,540,750,SAMSUNG
 Samsung,A21S,LCD,CentralCel,110,230,SAMSUNG
 Samsung,A32,OLED,CentralCel,270,430,SAMSUNG
@@ -30,6 +31,7 @@ Samsung,A54,OLED,CentralCel,340,490,SAMSUNG
 Samsung,Note 9,OLED,CentralCel,1780,2100,SAMSUNG
 Samsung,Note 20 Ultra,OLED,CentralCel,2200,2550,SAMSUNG
 Samsung,S20 Ultra,OLED,CentralCel,2300,2600,SAMSUNG
+Samsung,S21 ULTRA,OLED,CentralCel,1800,2150,SAMSUNG
 Samsung,S21 FE,OLED,CentralCel,1030,1350,SAMSUNG
 Samsung,S22 Ultra,SERVIPAK,CentralCel,2450,2750,SAMSUNG
 Samsung,S22 Plus,OLED,CentralCel,1420,1700,SAMSUNG
@@ -55,7 +57,7 @@ Xiaomi,Redmi Note 11S,LCD,CentralCel,120,260,XIAOMI
 Xiaomi,Redmi Note 11S,OLED,CentralCel,350,550,XIAOMI
 Xiaomi,Redmi Note 13 4G,OLED,CentralCel,400,650,XIAOMI
 Xiaomi,Poco F3,OLED,CentralCel,300,520,XIAOMI
-Xiaomi,Poco F4,OLED,CentralCel,380,580,XIAOMI
+Xiaomi,Poco F4,OLED,CentralCel,300,500,XIAOMI
 Xiaomi,Poco F4 GT,ORIGINAL,CentralCel,350,590,XIAOMI
 Xiaomi,Poco F5 Pro,INCELL,CentralCel,140,300,XIAOMI
 Xiaomi,Poco X3 GT,LCD,CentralCel,140,300,XIAOMI
@@ -72,6 +74,7 @@ Xiaomi,Redmi Note 12 Pro Plus,INCELL,CentralCel,170,350,XIAOMI
 Xiaomi,Redmi Note 12 Pro Plus,OLED,CentralCel,370,580,XIAOMI
 Xiaomi,Redmi Note 12S,LCD,CentralCel,150,320,XIAOMI
 Xiaomi,Redmi Note 12S,OLED,CentralCel,350,520,XIAOMI
+Xiaomi,Redmi Note 13 ,OLED,CentralCel,300,520,XIAOMI
 Xiaomi,Redmi Note 13 Pro Plus,OLED,CentralCel,320,570,XIAOMI
 Xiaomi,Redmi Note 14 4g,ORIG,CentralCel,500,790,XIAOMI
 Xiaomi,Redmi Note 14 4g,INCEL,CentralCel,140,320,XIAOMI
