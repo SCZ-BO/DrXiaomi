@@ -21,15 +21,19 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* Fondo OSCURO como el original */
     :root {
+      --bg-primary: #0a0a0a;
       --bg-gradient-start: #0f172a;
       --bg-gradient-end: #020617;
-      --surface: rgba(30, 41, 59, 0.85);
+      --surface: rgba(30, 41, 59, 0.9);
       --surface-hover: rgba(51, 65, 85, 0.95);
-      --border: rgba(148, 163, 184, 0.15);
+      --border: rgba(148, 163, 184, 0.2);
       --text-primary: #ffffff;
       --text-secondary: #94a3b8;
       --accent: #f97316;
+      --accent-glow: rgba(249, 115, 22, 0.3);
+      --success: #10b981;
       --card-radius: 16px;
     }
 
@@ -51,6 +55,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      background: transparent;
     }
 
     .header {
@@ -83,6 +88,7 @@
       align-items: center;
       justify-content: center;
       font-size: 18px;
+      box-shadow: 0 0 15px rgba(249, 115, 22, 0.3);
     }
 
     .logo h1 {
@@ -131,6 +137,7 @@
     .search-input:focus {
       outline: none;
       border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
     }
 
     .search-actions {
@@ -167,7 +174,7 @@
       border-radius: var(--card-radius);
       padding: 12px;
       border: 1px solid var(--border);
-      transition: transform 0.1s ease;
+      transition: transform 0.1s ease, background 0.2s ease;
     }
 
     .product-card:active {
@@ -184,6 +191,7 @@
     .card-title {
       font-weight: 700;
       font-size: 15px;
+      color: var(--accent);
     }
 
     .card-model {
@@ -203,11 +211,15 @@
     .card-type {
       padding: 2px 8px;
       border-radius: 20px;
-      background: rgba(0,0,0,0.2);
+      background: rgba(0,0,0,0.3);
     }
 
     .card-type.oled {
       color: #f97316;
+    }
+
+    .card-type.lcd {
+      color: #60a5fa;
     }
 
     .card-price-row {
@@ -220,18 +232,18 @@
     }
 
     .card-price {
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 700;
-      color: var(--accent);
+      color: var(--success);
       cursor: pointer;
       padding: 4px 10px;
       border-radius: 30px;
-      background: rgba(249, 115, 22, 0.1);
-      transition: background 0.1s ease;
+      background: rgba(16, 185, 129, 0.15);
+      transition: all 0.1s ease;
     }
 
     .card-price:active {
-      background: var(--accent);
+      background: var(--success);
       color: white;
     }
 
@@ -267,12 +279,12 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(15, 23, 42, 0.98);
       backdrop-filter: blur(20px);
       border-top: 1px solid var(--border);
       display: flex;
-      padding: 6px 16px 12px;
-      gap: 4px;
+      padding: 8px 16px 16px;
+      gap: 8px;
       z-index: 100;
     }
 
@@ -281,8 +293,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
-      padding: 6px;
+      gap: 4px;
+      padding: 8px;
       border: none;
       background: transparent;
       color: var(--text-secondary);
@@ -302,7 +314,7 @@
     }
 
     .nav-item i {
-      font-size: 18px;
+      font-size: 20px;
     }
 
     .modal {
@@ -331,6 +343,7 @@
     .modal-content h3 {
       margin-bottom: 14px;
       font-size: 18px;
+      color: var(--accent);
     }
 
     .modal-content input {
@@ -362,7 +375,7 @@
       bottom: 80px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.95);
       backdrop-filter: blur(10px);
       padding: 8px 16px;
       border-radius: 30px;
@@ -384,9 +397,13 @@
     }
 
     .results-count {
-      padding: 6px 16px;
-      font-size: 11px;
+      padding: 8px 16px;
+      font-size: 12px;
       color: var(--text-secondary);
+      background: rgba(0,0,0,0.3);
+      margin: 4px 12px;
+      border-radius: 30px;
+      text-align: center;
     }
 
     .skeleton-card {
@@ -396,7 +413,7 @@
     }
 
     .skeleton {
-      background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
+      background: linear-gradient(90deg, rgba(30,41,59,0.5) 25%, rgba(51,65,85,0.7) 50%, rgba(30,41,59,0.5) 75%);
       background-size: 200% 100%;
       animation: loading 1.5s infinite;
       border-radius: 8px;
@@ -418,6 +435,20 @@
       opacity: 0.5;
       margin-bottom: 12px;
     }
+
+    /* Scrollbar personalizado */
+    .main-content::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .main-content::-webkit-scrollbar-track {
+      background: var(--surface);
+    }
+
+    .main-content::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 3px;
+    }
   </style>
 </head>
 <body>
@@ -434,6 +465,9 @@
         </button>
         <button class="icon-btn" id="receiptBtn" title="Recibo">
           <i class="fas fa-receipt"></i>
+        </button>
+        <button class="icon-btn" id="shuffleBtn" title="Mezclar productos">
+          <i class="fas fa-random"></i>
         </button>
       </div>
     </div>
@@ -491,11 +525,32 @@
   const searchInput = document.getElementById("searchInput");
   const resultsCount = document.getElementById("resultsCount");
 
+  // Función para mezclar array (algoritmo Fisher-Yates)
+  function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
+
   async function init() {
     showSkeleton();
     await loadData();
     setupEventListeners();
+    // Mezclar resultados al inicio
+    shuffleResults();
     render();
+  }
+
+  function shuffleResults() {
+    if (allData.length > 0) {
+      filteredData = shuffleArray(allData);
+      updateResultsCount();
+      render();
+      showToast("🎲 Productos mezclados aleatoriamente");
+    }
   }
 
   async function loadData() {
@@ -509,7 +564,8 @@
           console.error(`Error cargando ${source.name}:`, error);
         }
       }
-      filteredData = [...allData];
+      // Mezclar al cargar
+      filteredData = shuffleArray(allData);
       updateResultsCount();
       render();
     } catch (error) {
@@ -641,8 +697,8 @@
             </div>
             <div class="card-specs">
               <span class="card-type ${item.tipo === 'OLED' ? 'oled' : 'lcd'}">${item.tipo}</span>
-              ${techMode ? `<span style="color: #fbbf24;">${escapeHtml(item.proveedor)}</span>` : ''}
-              ${techMode ? `<span>Compra: Bs. ${item.compra.toLocaleString()}</span>` : ''}
+              ${techMode ? `<span style="color: #fbbf24;">📦 ${escapeHtml(item.proveedor)}</span>` : ''}
+              ${techMode ? `<span style="color: #fbbf24;">💰 Compra: Bs. ${item.compra.toLocaleString()}</span>` : ''}
             </div>
             <div class="card-price-row">
               <span class="card-price" onclick="copyPriceToClipboard('${item.id}')">Bs. ${item.venta.toLocaleString()}</span>
@@ -657,23 +713,20 @@
     `;
   }
 
-  // Abrir ventana popup con Google Images (tamaño personalizado, con barra de herramientas)
+  // Abrir ventana popup con Google Images
   function openGooglePopup(productId) {
     const product = allData.find(p => p.id === productId);
     if (!product) return;
     
-    // Construir la búsqueda
     const searchTerm = `LCD ${product.modelo} ${product.marca} pantalla repuesto`;
     const encodedTerm = encodeURIComponent(searchTerm);
     const googleUrl = `https://www.google.com/search?q=${encodedTerm}&tbm=isch`;
     
-    // Calcular tamaño centrado
     const width = Math.min(450, screen.width - 40);
     const height = Math.min(650, screen.height - 80);
     const left = (screen.width - width) / 2;
     const top = (screen.height - height) / 2;
     
-    // Características del popup
     const features = [
       `width=${width}`,
       `height=${height}`,
@@ -683,28 +736,18 @@
       'location=yes',
       'menubar=yes',
       'scrollbars=yes',
-      'resizable=yes',
-      'status=yes'
+      'resizable=yes'
     ].join(',');
     
-    // Abrir popup
     popupWindow = window.open(googleUrl, 'GoogleImagesPopup', features);
-    
-    // Enfocar el popup
-    if (popupWindow) {
-      popupWindow.focus();
-    }
-    
-    // Feedback táctil
+    if (popupWindow) popupWindow.focus();
     if (navigator.vibrate) navigator.vibrate(50);
-    
-    // Mensaje de confirmación
     showToast(`🔍 Buscando: ${product.modelo}`);
   }
 
   function search(term) {
     if (!term.trim()) {
-      filteredData = [...allData];
+      filteredData = shuffleArray([...allData]);
     } else {
       const lowerTerm = term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       filteredData = allData.filter(item => {
@@ -718,7 +761,8 @@
 
   function updateResultsCount() {
     if (resultsCount) {
-      resultsCount.textContent = `${filteredData.length} producto${filteredData.length !== 1 ? 's' : ''}`;
+      const count = filteredData.length;
+      resultsCount.textContent = `📱 ${count} producto${count !== 1 ? 's' : ''}`;
     }
   }
 
@@ -769,7 +813,7 @@
     if (container) {
       container.innerHTML = `
         <div class="cards-view">
-          ${Array(5).fill().map(() => `
+          ${Array(6).fill().map(() => `
             <div class="skeleton-card">
               <div class="skeleton"></div>
             </div>
@@ -796,10 +840,11 @@
     let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
     compareData.forEach(p => {
       html += `
-        <div style="background: var(--surface); padding: 12px; border-radius: 12px;">
-          <strong>${escapeHtml(p.marca)} ${escapeHtml(p.modelo)}</strong><br>
-          Tipo: ${p.tipo}<br>
-          <span style="color: #f97316; font-weight: 700;">Bs. ${p.venta.toLocaleString()}</span>
+        <div style="background: var(--surface); padding: 12px; border-radius: 12px; border-left: 3px solid var(--accent);">
+          <strong style="color: var(--accent);">${escapeHtml(p.marca)}</strong>
+          <div>${escapeHtml(p.modelo)}</div>
+          <div style="font-size: 11px; color: var(--text-secondary);">${p.tipo}</div>
+          <div style="font-size: 18px; font-weight: 700; color: var(--success); margin-top: 8px;">Bs. ${p.venta.toLocaleString()}</div>
         </div>
       `;
     });
@@ -807,7 +852,7 @@
     
     const modalHtml = `
       <div id="compareModal" class="modal" style="display: flex;">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 350px;">
           <h3><i class="fas fa-chart-line"></i> Comparar</h3>
           ${html}
         </div>
@@ -839,6 +884,10 @@
     
     document.getElementById("techModeBtn")?.addEventListener("click", showTechModal);
     
+    document.getElementById("shuffleBtn")?.addEventListener("click", () => {
+      shuffleResults();
+    });
+    
     document.getElementById("confirmTechBtn")?.addEventListener("click", () => {
       const pwd = document.getElementById("techPassword").value;
       if (pwd === CONFIG.passwords.tech) {
@@ -865,14 +914,6 @@
         render();
         if (navigator.vibrate) navigator.vibrate(30);
       });
-    });
-    
-    // Cerrar popup con tecla Escape
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && popupWindow && !popupWindow.closed) {
-        popupWindow.close();
-        popupWindow = null;
-      }
     });
   }
 
