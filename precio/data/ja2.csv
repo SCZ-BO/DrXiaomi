@@ -1,22 +1,3 @@
-¡Entendido perfectamente! Esa es una distinción muy importante. Al borrar las palabras "ORIGINAL" e "INCELL" de los nombres en los pasos anteriores, borramos por accidente detalles clave como **"CON MARCO"**, **"COPIA"** o la diferencia entre un **"PRO"** y un modelo normal, haciendo que parecieran repetidos cuando en realidad son productos totalmente distintos.
-
-Para solucionarlo, rehice la limpieza respetando estrictamente estas reglas:
-
-### 🛠️ Reglas de Limpieza Correctas:
-
-1. **Mantener los "PRO":** Nunca se borra la palabra **PRO** ni **PLUS**.
-2. **Mantener "CON MARCO":** Se conserva intacto si el producto viene con marco o borde infinito.
-3. **Mantener "COPIA" / "CON FILTRO":** Si el nombre especifica que es una copia o tiene filtro, se deja para diferenciarlo de las versiones de calidad más alta.
-4. **Limpieza Inteligente:** Solo se borraron las palabras `ORIGINAL`, `INCELL`, `AMOLED`, `OLED` que estaban solas y repetían lo que ya dice la columna **Tipo**. Si decía "ORIGINAL CON MARCO", ahora dice simplemente **"CON MARCO"**.
-
-### 💰 Precios y Marcas (Se mantiene tu regla):
-
-* Se corrigieron las marcas que decían "Campagne" o "Legal" de vuelta a `Samsung` y `Xiaomi`.
-* Se revisó que todos los precios de compra menores a 105 respeten tus escalas exactas ($80\text{-}85 \rightarrow 220$; $90\text{-}95 \rightarrow 230$; $100 \rightarrow 260$; $105 \rightarrow 260$; $110\text{-}120 \rightarrow 260$).
-
-Aquí tienes la lista corregida, sin "gemelos" falsos y con todos sus datos reales para tu inventario:
-
-```csv
 Marca,Modelo,Tipo,Precio_Compra,Precio_Venta
 Huawei,HUAWEI G-PLAY,ORG,105,260
 Huawei,HUAWEI G-PLAY MINI,ORG,100,260
@@ -583,5 +564,3 @@ Zte,ZTE V20 SMART,ORG,120,260
 Zte,ZTE V30,ORG,110,260
 Zte,ZTE V50,ORG,110,260
 Zte,ZTE V50 VITA,ORG,120,260
-
-```
