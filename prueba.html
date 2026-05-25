@@ -2,9 +2,28 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Dr. Xiaomi">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Dr. Xiaomi">
   <title>Dr. Xiaomi · Pantallas</title>
+  
+  <link rel="manifest" href="data:application/manifest+json,{
+    %22name%22:%22Dr. Xiaomi%22,
+    %22short_name%22:%22Xiaomi%22,
+    %22description%22:%22Gesti%C3%B3n%20de%20precios%20de%20pantallas%22,
+    %22start_url%22:%22.%22,
+    %22display%22:%22standalone%22,
+    %22theme_color%22:%22%230f172a%22,
+    %22background_color%22:%22%230f172a%22,
+    %22icons%22:[
+      {%22src%22:%22https://via.placeholder.com/192x192/f97316/white?text=D%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22},
+      {%22src%22:%22https://via.placeholder.com/512x512/f97316/white?text=D%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}
+    ]
+  }">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -31,7 +50,7 @@
       --accent-glow: rgba(249, 115, 22, 0.3);
       --success: #10b981;
       --card-radius: 16px;
-      --transition: 200ms ease;
+      --transition: 200ms cubic-bezier(0.2, 0.9, 0.4, 1.1);
     }
 
     [data-theme="light"] {
@@ -50,25 +69,30 @@
       color: var(--text-primary);
       min-height: 100vh;
       overflow-x: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
     }
 
     .app {
       max-width: 100%;
+      height: 100%;
       margin: 0 auto;
-      min-height: 100vh;
       position: relative;
-      overflow-x: hidden;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
-    /* Header compacto */
+    /* Header con efecto de blur */
     .header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
       background: rgba(15, 23, 42, 0.9);
       backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
       padding: 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     .header-top {
@@ -93,6 +117,12 @@
       align-items: center;
       justify-content: center;
       font-size: 18px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
     }
 
     .logo h1 {
@@ -117,9 +147,34 @@
       color: var(--text-primary);
       cursor: pointer;
       font-size: 12px;
+      transition: transform 0.1s ease;
     }
 
-    /* Búsqueda compacta */
+    .icon-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Pull to refresh */
+    .pull-to-refresh {
+      position: fixed;
+      top: -50px;
+      left: 0;
+      right: 0;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      transition: transform 0.2s;
+      z-index: 99;
+    }
+
+    .pull-to-refresh i {
+      font-size: 20px;
+      color: var(--accent);
+    }
+
+    /* Search */
     .search-container {
       position: relative;
     }
@@ -132,36 +187,22 @@
       border-radius: 30px;
       color: var(--text-primary);
       font-size: 14px;
+      transition: all 0.2s;
     }
 
     .search-input:focus {
       outline: none;
       border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
     }
 
-    .search-actions {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      gap: 6px;
-    }
-
-    .search-actions button {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    /* Vista tarjetas (principal para móvil) */
+    /* Cards View */
     .cards-view {
       display: flex;
       flex-direction: column;
       gap: 10px;
       padding: 12px;
+      padding-bottom: 80px;
     }
 
     .product-card {
@@ -171,6 +212,22 @@
       padding: 12px;
       border: 1px solid var(--border);
       transition: var(--transition);
+      animation: fadeInUp 0.3s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .product-card:active {
+      transform: scale(0.98);
     }
 
     .card-header {
@@ -193,7 +250,8 @@
 
     .card-specs {
       display: flex;
-      gap: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
       margin: 8px 0;
       font-size: 11px;
     }
@@ -206,10 +264,6 @@
 
     .card-type.oled {
       color: #f97316;
-    }
-
-    .card-type.lcd {
-      color: #94a3b8;
     }
 
     .card-price-row {
@@ -226,83 +280,19 @@
       font-weight: 700;
       color: var(--accent);
       cursor: pointer;
-      padding: 4px 8px;
+      padding: 4px 12px;
       border-radius: 30px;
       background: rgba(249, 115, 22, 0.1);
+      transition: all 0.1s ease;
     }
 
     .card-price:active {
       background: var(--accent);
       color: white;
+      transform: scale(0.95);
     }
 
-    .card-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .share-card-btn {
-      background: #25D366;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 30px;
-      color: white;
-      font-size: 11px;
-      cursor: pointer;
-    }
-
-    .fav-btn {
-      background: none;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px;
-    }
-
-    /* Vista tabla (compacta para móvil, sin scroll horizontal) */
-    .table-view {
-      margin: 12px;
-      background: var(--surface);
-      border-radius: var(--card-radius);
-      overflow-x: auto;
-      border: 1px solid var(--border);
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .product-table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 100%;
-    }
-
-    .product-table th {
-      padding: 10px 8px;
-      text-align: left;
-      font-weight: 600;
-      font-size: 11px;
-      color: var(--text-secondary);
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-    }
-
-    .product-table td {
-      padding: 10px 8px;
-      border-bottom: 1px solid var(--border);
-      font-size: 12px;
-    }
-
-    .price-cell {
-      color: var(--success);
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 20px;
-      background: rgba(16, 185, 129, 0.1);
-      white-space: nowrap;
-    }
-
-    /* Bottom navigation */
+    /* Bottom Navigation con efecto */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -315,6 +305,12 @@
       padding: 6px 16px 12px;
       gap: 4px;
       z-index: 100;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
     }
 
     .nav-item {
@@ -330,6 +326,11 @@
       border-radius: 30px;
       cursor: pointer;
       font-size: 10px;
+      transition: all 0.1s ease;
+    }
+
+    .nav-item:active {
+      transform: scale(0.95);
     }
 
     .nav-item.active {
@@ -341,73 +342,11 @@
       font-size: 18px;
     }
 
-    /* Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.95);
-      backdrop-filter: blur(20px);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .modal-content {
+    /* Loading skeleton mejorado */
+    .skeleton-card {
       background: var(--surface);
-      border-radius: 24px;
-      padding: 20px;
-      max-width: 300px;
-      width: 100%;
-    }
-
-    .modal-content h3 {
-      margin-bottom: 14px;
-      font-size: 18px;
-    }
-
-    .modal-content input {
-      width: 100%;
+      border-radius: var(--card-radius);
       padding: 12px;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--border);
-      border-radius: 30px;
-      color: var(--text-primary);
-      font-size: 14px;
-      margin-bottom: 14px;
-    }
-
-    .modal-buttons {
-      display: flex;
-      gap: 10px;
-    }
-
-    .modal-buttons button {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.9);
-      backdrop-filter: blur(10px);
-      padding: 8px 16px;
-      border-radius: 30px;
-      color: white;
-      font-size: 12px;
-      z-index: 150;
-      white-space: nowrap;
     }
 
     .skeleton {
@@ -422,6 +361,83 @@
       100% { background-position: -200% 0; }
     }
 
+    /* Modal mejorado */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(20px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 20px;
+      max-width: 300px;
+      width: 100%;
+      animation: modalSlide 0.2s ease;
+    }
+
+    @keyframes modalSlide {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 30px;
+      color: white;
+      font-size: 12px;
+      z-index: 150;
+      white-space: nowrap;
+      animation: toastIn 0.2s ease;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    /* Main content area con scroll */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
     .results-count {
       padding: 6px 16px;
       font-size: 11px;
@@ -433,35 +449,50 @@
       padding: 60px 20px;
     }
 
-    .empty-state i {
-      font-size: 48px;
-      opacity: 0.5;
-      margin-bottom: 12px;
-    }
-
-    /* Scroll suave */
-    .main-content {
-      padding-bottom: 70px;
-      overflow-y: auto;
-      height: calc(100vh - 120px);
-    }
-
-    /* Ocultar vista tabla por defecto en móvil */
-    .table-view {
-      display: none;
-    }
-
-    .cards-view {
+    .install-banner {
+      background: var(--surface);
+      margin: 8px 12px;
+      padding: 10px;
+      border-radius: 12px;
       display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: slideDown 0.3s ease;
     }
 
-    .view-toggle {
-      display: none;
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Scrollbar personalizado */
+    .main-content::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .main-content::-webkit-scrollbar-track {
+      background: var(--surface);
+    }
+
+    .main-content::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 3px;
     }
   </style>
 </head>
 <body>
 <div class="app">
+  <!-- Pull to refresh indicator -->
+  <div class="pull-to-refresh" id="pullToRefresh">
+    <i class="fas fa-arrow-down"></i>
+  </div>
+
   <header class="header">
     <div class="header-top">
       <div class="logo">
@@ -474,6 +505,9 @@
         </button>
         <button class="icon-btn" id="receiptBtn" title="Recibo">
           <i class="fas fa-receipt"></i>
+        </button>
+        <button class="icon-btn" id="installBtn" style="display: none;" title="Instalar App">
+          <i class="fas fa-download"></i>
         </button>
         <button class="icon-btn" id="themeToggle">
           <i class="fas fa-moon"></i>
@@ -489,8 +523,10 @@
     </div>
   </header>
 
-  <div id="resultsCount" class="results-count"></div>
-  <div id="resultsContainer" class="main-content"></div>
+  <div class="main-content" id="mainContent">
+    <div id="resultsCount" class="results-count"></div>
+    <div id="resultsContainer"></div>
+  </div>
 
   <nav class="bottom-nav">
     <button class="nav-item active" data-tab="home"><i class="fas fa-home"></i><span>Inicio</span></button>
@@ -504,9 +540,9 @@
   <div class="modal-content">
     <h3><i class="fas fa-microchip"></i> Modo Técnico</h3>
     <input type="password" id="techPassword" placeholder="Clave">
-    <div class="modal-buttons">
-      <button onclick="closeModal('techModal')">Cancelar</button>
-      <button id="confirmTechBtn">Acceder</button>
+    <div class="modal-buttons" style="display: flex; gap: 10px; margin-top: 10px;">
+      <button onclick="closeModal('techModal')" style="flex:1; padding: 10px;">Cancelar</button>
+      <button id="confirmTechBtn" style="flex:1; padding: 10px; background: #f97316; border: none; border-radius: 30px; color: white;">Acceder</button>
     </div>
   </div>
 </div>
@@ -529,10 +565,77 @@
   let techMode = false;
   let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
   let currentTab = "home";
+  let deferredPrompt = null;
+  let pullStartY = 0;
+  let pullMove = false;
 
   const container = document.getElementById("resultsContainer");
   const searchInput = document.getElementById("searchInput");
   const resultsCount = document.getElementById("resultsCount");
+  const mainContent = document.getElementById("mainContent");
+
+  // Service Worker y PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
+  }
+
+  // Detectar instalación PWA
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const installBtn = document.getElementById('installBtn');
+    installBtn.style.display = 'flex';
+    installBtn.onclick = () => {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        installBtn.style.display = 'none';
+        deferredPrompt = null;
+      });
+    };
+  });
+
+  // Pull to Refresh
+  let touchStartY = 0;
+  let isRefreshing = false;
+
+  mainContent.addEventListener('touchstart', (e) => {
+    if (mainContent.scrollTop === 0) {
+      touchStartY = e.touches[0].clientY;
+    }
+  });
+
+  mainContent.addEventListener('touchmove', (e) => {
+    if (mainContent.scrollTop === 0 && !isRefreshing) {
+      const moveY = e.touches[0].clientY;
+      const pullDistance = moveY - touchStartY;
+      if (pullDistance > 50) {
+        e.preventDefault();
+        refreshData();
+      }
+    }
+  });
+
+  async function refreshData() {
+    if (isRefreshing) return;
+    isRefreshing = true;
+    const pullEl = document.getElementById('pullToRefresh');
+    pullEl.style.transform = 'translateY(50px)';
+    
+    await loadData();
+    
+    setTimeout(() => {
+      pullEl.style.transform = '';
+      isRefreshing = false;
+      showToast('✅ Actualizado');
+    }, 1000);
+  }
+
+  // Haptic feedback (vibración)
+  function vibrate() {
+    if ('vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
+  }
 
   async function init() {
     showSkeleton();
@@ -542,10 +645,24 @@
     
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "light") toggleTheme();
+    
+    // Detectar modo offline
+    window.addEventListener('online', () => showToast('✅ Conexión restaurada'));
+    window.addEventListener('offline', () => showToast('⚠️ Modo offline'));
   }
 
   async function loadData() {
     try {
+      // Intentar cargar desde caché primero
+      const cached = localStorage.getItem('products_cache');
+      if (cached && !navigator.onLine) {
+        allData = JSON.parse(cached);
+        filteredData = [...allData];
+        updateResultsCount();
+        render();
+        return;
+      }
+      
       allData = [];
       for (const source of CONFIG.dataSources) {
         try {
@@ -555,6 +672,10 @@
           console.error(`Error cargando ${source.name}:`, error);
         }
       }
+      
+      // Guardar en caché
+      localStorage.setItem('products_cache', JSON.stringify(allData));
+      
       filteredData = [...allData];
       updateResultsCount();
     } catch (error) {
@@ -678,8 +799,8 @@
     
     return `
       <div class="cards-view">
-        ${data.map(item => `
-          <div class="product-card">
+        ${data.map((item, index) => `
+          <div class="product-card" style="animation-delay: ${index * 0.02}s">
             <div class="card-header">
               <div>
                 <div class="card-title">${escapeHtml(item.marca)}</div>
@@ -696,7 +817,7 @@
             </div>
             <div class="card-price-row">
               <span class="card-price" onclick="copyPriceToClipboard('${item.id}')">Bs. ${item.venta.toLocaleString()}</span>
-              <button class="share-card-btn" onclick="shareToWhatsApp('${item.id}')"><i class="fab fa-whatsapp"></i> Enviar</button>
+              <button class="share-card-btn" onclick="shareToWhatsApp('${item.id}')" style="background: #25D366; border: none; padding: 6px 12px; border-radius: 30px; color: white; font-size: 11px;"><i class="fab fa-whatsapp"></i> Enviar</button>
             </div>
           </div>
         `).join('')}
@@ -731,6 +852,8 @@
     const product = allData.find(p => p.id === productId);
     if (!product) return;
     
+    vibrate(); // Feedback háptico
+    
     const message = `📱 *PRECIO DE PANTALLA*\n${product.marca} ${product.modelo}\n💰 Precio: Bs. ${product.venta.toLocaleString()}`;
     
     navigator.clipboard.writeText(message).then(() => {
@@ -744,11 +867,15 @@
     const product = allData.find(p => p.id === productId);
     if (!product) return;
     
+    vibrate();
+    
     const message = `📱 *PRECIO DE PANTALLA*\n${product.marca} ${product.modelo}\n💰 Precio: Bs. ${product.venta.toLocaleString()}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
   }
 
   function toggleFavorite(productId) {
+    vibrate();
+    
     if (favorites.includes(productId)) {
       favorites = favorites.filter(id => id !== productId);
       showToast("⭐ Eliminado");
@@ -762,10 +889,13 @@
 
   function showTechModal() {
     document.getElementById("techModal").style.display = "flex";
+    document.getElementById("techPassword").focus();
   }
 
   function closeModal(modalId) {
     document.getElementById(modalId).style.display = "none";
+    const input = document.querySelector(`#${modalId} input`);
+    if (input) input.value = "";
   }
 
   function showToast(message) {
@@ -781,7 +911,7 @@
       container.innerHTML = `
         <div class="cards-view">
           ${Array(5).fill().map(() => `
-            <div class="product-card">
+            <div class="skeleton-card">
               <div class="skeleton" style="height: 80px;"></div>
             </div>
           `).join('')}
@@ -803,6 +933,7 @@
   }
 
   function toggleTheme() {
+    vibrate();
     const isLight = document.documentElement.getAttribute("data-theme") === "light";
     document.documentElement.setAttribute("data-theme", isLight ? "dark" : "light");
     localStorage.setItem("theme", isLight ? "dark" : "light");
@@ -829,7 +960,7 @@
           <h3><i class="fas fa-chart-line"></i> Comparar</h3>
           ${html}
           <div class="modal-buttons" style="margin-top: 16px;">
-            <button onclick="closeModal('compareModal')">Cerrar</button>
+            <button onclick="closeModal('compareModal')" style="flex:1; padding: 10px; border: none; border-radius: 30px;">Cerrar</button>
           </div>
         </div>
       </div>
@@ -858,20 +989,27 @@
       search("");
     });
     
-    document.getElementById("techModeBtn")?.addEventListener("click", showTechModal);
+    document.getElementById("techModeBtn")?.addEventListener("click", () => {
+      vibrate();
+      showTechModal();
+    });
+    
     document.getElementById("confirmTechBtn")?.addEventListener("click", () => {
       const pwd = document.getElementById("techPassword").value;
       if (pwd === CONFIG.passwords.tech) {
         techMode = true;
         closeModal("techModal");
+        vibrate();
         showToast("✅ Modo técnico activado");
         render();
       } else {
+        vibrate();
         showToast("❌ Clave incorrecta");
       }
     });
     
     document.getElementById("receiptBtn")?.addEventListener("click", () => {
+      vibrate();
       window.open("http://xiaomi.scz.red/1/", "_blank");
     });
     
@@ -879,6 +1017,7 @@
     
     document.querySelectorAll(".nav-item").forEach(item => {
       item.addEventListener("click", () => {
+        vibrate();
         currentTab = item.dataset.tab;
         document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
         item.classList.add("active");
@@ -887,10 +1026,12 @@
     });
   }
 
+  // Exponer funciones globales
   window.copyPriceToClipboard = copyPriceToClipboard;
   window.shareToWhatsApp = shareToWhatsApp;
   window.toggleFavorite = toggleFavorite;
   window.closeModal = closeModal;
+  window.refreshData = refreshData;
 
   init();
 </script>
