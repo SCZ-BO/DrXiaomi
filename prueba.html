@@ -1,592 +1,655 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>CIT Hardware Test Pro | Diagnóstico estilo Xiaomi</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#090d16" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Dr. Xiaomi - Gestión de precios de pantallas" />
+  <title>Dr. Xiaomi</title>
 
-        body {
-            font-family: 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: #0b0f17;
-            color: #eef2ff;
-            overflow-x: hidden;
-        }
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-        /* Status bar style */
-        .status-bar {
-            background: #070b12;
-            padding: 12px 20px 8px;
-            font-size: 0.7rem;
-            color: #60a5fa;
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #1e293b;
-        }
+  <style>
+    :root {
+      --bg-primary: #090d16;
+      --bg-secondary: #111827;
+      --bg-tertiary: #1f2937;
+      --text-primary: #ffffff;
+      --text-secondary: #9ca3af;
+      --accent: #ff7b00;
+      --accent-light: #ff9d42;
+      --accent-dark: #cc6200;
+      --border: rgba(255, 255, 255, 0.06);
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --edit: #f59e0b;
+      --whatsapp: #22c55e;
+      --card-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.4), 0 4px 12px -2px rgba(0, 0, 0, 0.2);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-        /* Main container */
-        .container {
-            max-width: 680px;
-            margin: 0 auto;
-            padding: 16px 14px 80px;
-        }
+    .light-mode {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f1f5f9;
+      --text-primary: #0f172a;
+      --text-secondary: #64748b;
+      --border: rgba(15, 23, 42, 0.06);
+      --card-shadow: 0 10px 20px -5px rgba(51, 65, 85, 0.1), 0 4px 6px -2px rgba(51, 65, 85, 0.05);
+    }
 
-        /* Cards estilo CIT (Engineering Mode) */
-        .cit-card {
-            background: rgba(18, 25, 45, 0.85);
-            backdrop-filter: blur(8px);
-            border-radius: 28px;
-            margin-bottom: 20px;
-            border: 1px solid #2d3a5e;
-            overflow: hidden;
-            transition: all 0.2s;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.3);
-        }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; background: #030712; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
 
-        .cit-header {
-            background: linear-gradient(95deg, #0f172a, #1e293b);
-            padding: 16px 20px;
-            border-bottom: 2px solid #3b82f6;
-            font-weight: 700;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            letter-spacing: -0.3px;
-        }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-        .cit-body {
-            padding: 18px;
-        }
+    /* Estructura Base de Aplicación de Escritorio / Móvil */
+    .app-container {
+      max-width: 430px; width: 100%; height: 100vh;
+      display: flex; flex-direction: column; background: var(--bg-primary);
+      position: relative; transition: var(--transition);
+    }
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr;
-            gap: 12px 8px;
-            font-size: 0.85rem;
-        }
+    @media (min-width: 480px) {
+      .app-container {
+        height: 88vh;
+        border-radius: 32px;
+        box-shadow: var(--card-shadow), 0 0 0 1px rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+    }
 
-        .info-label {
-            color: #94a3b8;
-            font-weight: 500;
-        }
+    /* Header Estilo Desfoque de Cristal de Alta Gama */
+    .app-header {
+      background: rgba(9, 13, 22, 0.7);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      padding: 20px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
 
-        .info-value {
-            color: #f1f5f9;
-            font-weight: 500;
-            word-break: break-word;
-        }
+    .header-content { display: flex; align-items: center; justify-content: space-between; }
+    .app-title { display: flex; align-items: center; gap: 12px; }
+    h1 { color: var(--text-primary); font-size: 1.4rem; font-weight: 800; letter-spacing: -0.03em; }
+    h1 span { color: var(--accent); }
 
-        .badge-imei {
-            background: #0f2d3c;
-            color: #22d3ee;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-        }
+    .app-icon {
+      width: 38px; height: 38px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.15rem; color: #fff;
+      box-shadow: 0 4px 14px rgba(255, 123, 0, 0.3);
+    }
 
-        .btn-cit {
-            background: #1e2a44;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 0.8rem;
-            color: #cbd5e6;
-            cursor: pointer;
-            transition: 0.2s;
-            margin: 6px 6px 0 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
+    .subtitle { color: var(--text-secondary); font-size: 0.78rem; margin-top: 6px; font-weight: 500; }
+    .admin-access { display: flex; gap: 10px; align-items: center; }
 
-        .btn-cit-primary {
-            background: #2563eb;
-            color: white;
-            box-shadow: 0 2px 8px rgba(37,99,235,0.3);
-        }
+    .admin-btn {
+      background: rgba(255, 255, 255, 0.03); color: var(--text-secondary);
+      border: 1px solid var(--border); width: 38px; height: 38px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 12px; cursor: pointer; transition: var(--transition);
+    }
+    .admin-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); border-color: var(--accent); transform: scale(1.05); }
 
-        .btn-cit-danger {
-            background: #b91c1c;
-            color: white;
-        }
+    /* Switch Deslizante de Estado Premium (iOS 17 Look) */
+    .admin-toggle {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
+      padding: 7px 14px; border-radius: 14px; cursor: pointer; transition: var(--transition);
+    }
+    .toggle-label { font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.03em; }
+    .toggle-pill { width: 32px; height: 18px; border-radius: 999px; background: #374151; position: relative; transition: var(--transition); }
+    .toggle-circle { position: absolute; width: 14px; height: 14px; border-radius: 999px; background: #9ca3af; top: 2px; left: 2px; transition: var(--transition); }
+    
+    .admin-toggle.on { border-color: rgba(34, 197, 94, 0.3); background: rgba(34, 197, 94, 0.08); }
+    .admin-toggle.on .toggle-pill { background: var(--success); }
+    .admin-toggle.on .toggle-circle { transform: translateX(14px); background: #fff; }
+    .admin-toggle.on .toggle-label { color: var(--success); }
 
-        .test-area {
-            background: #0f172a;
-            border-radius: 24px;
-            padding: 16px;
-            margin-top: 12px;
-        }
+    /* Campo de Búsqueda de Interfaz Fluida */
+    .search-section { padding: 14px 20px; background: var(--bg-primary); }
+    .search-box { width: 100%; position: relative; }
+    input[type="text"] {
+      width: 100%; padding: 15px 16px 15px 46px;
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 16px; color: var(--text-primary); font-size: 15px;
+      transition: var(--transition); font-weight: 500;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    input[type="text"]:focus { 
+      outline: none; border-color: var(--accent); background: var(--bg-secondary); 
+      box-shadow: 0 0 0 4px rgba(255, 123, 0, 0.12), inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); transition: var(--transition); font-size: 0.95rem; }
+    input[type="text"]:focus + .search-icon { color: var(--accent); }
 
-        /* Pantalla pruebas multi-touch */
-        .touchscreen-area {
-            background: #020617;
-            border: 2px solid #3b82f6;
-            border-radius: 28px;
-            height: 200px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            touch-action: none;
-            margin-top: 12px;
-        }
+    /* Contenedor Principal Ajustado para Scroll Amortiguado de Smartphone */
+    .main-content { flex: 1; padding: 4px 20px; overflow-y: auto; display: flex; flex-direction: column; -webkit-overflow-scrolling: touch; }
+    .results-count { color: var(--text-secondary); font-size: 0.72rem; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.8; }
 
-        video {
-            width: 100%;
-            border-radius: 20px;
-            max-height: 220px;
-            background: #000;
-        }
+    /* Contenedor de Fichas Dinámicas (Reemplaza a la tabla pesada clásica) */
+    .list-container { display: flex; flex-direction: column; gap: 12px; padding-bottom: 95px; }
+    
+    .item-card {
+      background: linear-gradient(145deg, var(--bg-secondary) 0%, rgba(17, 24, 39, 0.7) 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 16px; display: flex; justify-content: space-between;
+      align-items: center; transition: var(--transition); box-shadow: var(--card-shadow);
+    }
+    .item-card:hover { transform: translateY(-3px) scale(1.01); border-color: rgba(255, 123, 0, 0.25); background: var(--bg-tertiary); }
+    
+    .item-info { display: flex; flex-direction: column; gap: 6px; max-width: 65%; }
+    .item-model-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .item-brand { font-size: 10px; font-weight: 800; text-transform: uppercase; background: rgba(255, 123, 0, 0.12); color: var(--accent-light); padding: 3px 8px; border-radius: 8px; letter-spacing: 0.02em; }
+    .item-model { font-size: 14.5px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em; }
+    .item-meta-line { display: flex; gap: 10px; font-size: 11.5px; color: var(--text-secondary); font-weight: 600; align-items: center; }
+    
+    .badge-tipo { font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .badge-tipo.oled { color: var(--accent-light); }
+    .badge-tipo.lcd { color: #60a5fa; }
+    .item-prov { color: #818cf8; font-weight: 700; background: rgba(99, 102, 241, 0.1); padding: 1px 6px; border-radius: 6px; font-size: 10.5px; }
 
-        .sensor-bar {
-            background: #1e293b;
-            border-radius: 20px;
-            height: 6px;
-            margin: 8px 0;
-            overflow: hidden;
-        }
+    .item-actions-wrapper { display: flex; align-items: center; gap: 10px; }
+    .card-action-btn { background: none; border: none; color: var(--text-secondary); font-size: 1.05rem; cursor: pointer; transition: var(--transition); padding: 4px; }
+    .card-action-btn:hover { color: var(--accent); transform: scale(1.1); }
+    .card-action-btn.fav-active { color: #ef4444; }
 
-        .sensor-fill {
-            width: 0%;
-            height: 100%;
-            background: #10b981;
-            transition: width 0.05s linear;
-        }
+    .item-prices { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .price-buy { font-size: 11px; color: var(--text-secondary); font-weight: 600; }
+    .price-buy span { color: var(--accent-light); font-weight: 700; }
+    
+    /* Botón de Venta Interactivo Estilo Badge */
+    .price-sell-badge {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+      color: #fff; font-weight: 700; font-size: 14px; padding: 8px 16px;
+      border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+      transition: var(--transition); box-shadow: 0 4px 14px rgba(255, 123, 0, 0.25);
+    }
+    .price-sell-badge:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(255, 123, 0, 0.4); filter: brightness(1.1); }
+    
+    .card-input {
+      background: var(--bg-primary); border: 1px solid var(--border);
+      color: var(--text-primary); padding: 6px 10px; border-radius: 10px;
+      width: 75px; text-align: center; font-size: 13px; font-weight: 700;
+    }
+    .card-input:focus { outline: none; border-color: var(--accent); }
 
-        footer {
-            text-align: center;
-            font-size: 0.65rem;
-            color: #475569;
-            margin-top: 24px;
-            padding: 16px;
-        }
-    </style>
+    /* Modales tipo Hojas Inferiores Desplazables (iOS Bottom Sheets) */
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(2, 6, 23, 0.6); z-index: 1000; align-items: flex-end; justify-content: center;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: var(--transition);
+    }
+    .modal-content {
+      background: var(--bg-secondary); padding: 26px; border-radius: 28px 28px 0 0; width: 100%; max-width: 430px;
+      border-top: 1px solid var(--border); box-shadow: 0 -10px 40px rgba(0,0,0,0.5); 
+      transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.15, 0.85, 0.45, 1);
+    }
+    .modal.show { display: flex; }
+    .modal.show .modal-content { transform: translateY(0); }
+    
+    @media (min-width: 480px) {
+      .modal { align-items: center; }
+      .modal-content { border-radius: 24px; border: 1px solid var(--border); transform: translateY(30px); }
+      .modal.show .modal-content { transform: translateY(0); }
+    }
+
+    .modal h2 { font-size: 1.2rem; margin-bottom: 14px; color: var(--text-primary); font-weight: 700; display: flex; align-items: center; gap: 10px; justify-content: center; }
+    .modal-input {
+      width: 100%; padding: 14px; margin: 16px 0; background: var(--bg-primary);
+      border: 1px solid var(--border); border-radius: 14px; color: var(--text-primary);
+      font-size: 16px; text-align: center; font-weight: 600;
+    }
+    .modal-buttons { display: flex; gap: 10px; margin-top: 10px; }
+    .modal-btn { flex: 1; padding: 14px; border: none; border-radius: 14px; cursor: pointer; font-weight: 700; font-size: 14px; transition: var(--transition); text-align: center; }
+    .modal-btn.primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%); color: #fff; box-shadow: 0 4px 12px rgba(255,123,0,0.2); }
+    .modal-btn.secondary { background: var(--bg-tertiary); color: var(--text-primary); }
+
+    /* Barra de Navegación Estilo Dock Autónomo Flotante */
+    .bottom-nav {
+      position: absolute; bottom: 12px; left: 16px; right: 16px;
+      background: rgba(17, 24, 39, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border); display: flex; padding: 10px; z-index: 100;
+      border-radius: 20px; box-shadow: var(--card-shadow);
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: var(--text-secondary); text-decoration: none; cursor: pointer; transition: var(--transition);
+      border-radius: 14px; padding: 6px 4px;
+    }
+    .nav-item.active { color: var(--accent-light); background: rgba(255, 123, 0, 0.08); font-weight: 700; }
+    .nav-icon { font-size: 1.15rem; margin-bottom: 4px; }
+    .nav-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* Avisos e Historiales */
+    .status {
+      position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+      padding: 12px 24px; border-radius: 16px; font-size: 13.5px; font-weight: 700;
+      z-index: 1100; box-shadow: var(--card-shadow); display: none; animation: slideDown 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes slideDown { from { transform: translate(-50%, -30px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+    .status.success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); backdrop-filter: blur(10px); }
+    .status.info { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); backdrop-filter: blur(10px); }
+    .status.error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); backdrop-filter: blur(10px); }
+
+    .hide-pricing .tech-only { display: none !important; }
+    .edit-notice { background: rgba(245, 158, 11, 0.1); border: 1px solid var(--edit); padding: 12px; border-radius: 14px; color: var(--edit); font-size: 12px; text-align: center; margin: 0 20px 10px; font-weight: 600; }
+    .empty { text-align: center; padding: 80px 20px; color: var(--text-secondary); }
+    .empty i { font-size: 3rem; margin-bottom: 16px; color: var(--accent); opacity: 0.3; }
+    mark { background: var(--accent); color: #fff; padding: 1px 3px; border-radius: 4px; }
+  </style>
 </head>
-<body>
-<div class="status-bar">
-    <span>🔧 CIT Mode v4.0</span>
-    <span>⚡ Hardware Diagnostic</span>
-</div>
-<div class="container">
-    <!-- ========== INFO SISTEMA + MODELO + IMEI (simulado pero con máxima info real) ========= -->
-    <div class="cit-card">
-        <div class="cit-header">
-            📱 Información del dispositivo
-        </div>
-        <div class="cit-body">
-            <div class="info-grid" id="deviceFullInfoGrid">
-                <div class="info-label">Fabricante:</div><div class="info-value" id="deviceBrand">--</div>
-                <div class="info-label">Modelo (Producto):</div><div class="info-value" id="deviceModel">--</div>
-                <div class="info-label">Nombre dispositivo:</div><div class="info-value" id="deviceName">--</div>
-                <div class="info-label">Android versión:</div><div class="info-value" id="androidVersion">--</div>
-                <div class="info-label">API Level:</div><div class="info-value" id="apiLevel">--</div>
-                <div class="info-label">Resolución pantalla:</div><div class="info-value" id="screenRes">--</div>
-                <div class="info-label">RAM total:</div><div class="info-value" id="ramTotal">--</div>
-                <div class="info-label">CPU Arquitectura:</div><div class="info-value" id="cpuArch">--</div>
-                <div class="info-label">🆔 IMEI / ID:</div><div class="info-value" id="imeiInfo">--</div>
-            </div>
-            <div style="margin-top: 16px;">
-                <button class="btn-cit btn-cit-primary" id="copyAllSpecsBtn">📋 Copiar diagnóstico</button>
-                <button class="btn-cit" id="refreshDeviceSpecsBtn">🔄 Releer datos</button>
-            </div>
-            <div class="test-area" style="margin-top: 12px; font-size:0.75rem;">
-                💡 <strong>Nota CIT:</strong> IMEI no es accesible por API web estándar (seguridad). Se muestra ID generado único + información de SIM/telefonía si está disponible. Para IMEI real, marca <code>*#06#</code> en el dialer.
-            </div>
-        </div>
-    </div>
 
-    <!-- ========== PRUEBA DE COLORES (LCD TEST) ========= -->
-    <div class="cit-card">
-        <div class="cit-header">🎨 Prueba LCD / Colores (CIT Style)</div>
-        <div class="cit-body">
-            <div class="info-grid" style="grid-template-columns: repeat(3,1fr); gap: 8px;">
-                <button class="btn-cit btn-cit-primary" id="lcdRed">🔴 ROJO</button>
-                <button class="btn-cit btn-cit-primary" id="lcdGreen">🟢 VERDE</button>
-                <button class="btn-cit btn-cit-primary" id="lcdBlue">🔵 AZUL</button>
-                <button class="btn-cit" id="lcdWhite">⚪ BLANCO</button>
-                <button class="btn-cit" id="lcdBlack">⚫ NEGRO</button>
-                <button class="btn-cit btn-cit-danger" id="lcdExit">❌ SALIR</button>
-            </div>
-            <div class="test-area">✅ Verifica píxeles muertos, uniformidad y fugas de luz.</div>
+<body class="hide-pricing">
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-content">
+        <div class="app-title">
+          <div class="app-icon"><i class="fas fa-bolt"></i></div>
+          <h1>DR. <span>XIAOMI</span></h1>
         </div>
-    </div>
 
-    <!-- ========== CÁMARAS MÚLTIPLES + FRONTAL/TRASERA ========= -->
-    <div class="cit-card">
-        <div class="cit-header">📸 Cámaras (Multi-lente)</div>
-        <div class="cit-body">
-            <div id="camListCIT" class="test-area" style="margin-bottom:8px;">🔍 Detectando cámaras...</div>
-            <video id="citVideo" autoplay playsinline muted></video>
-            <div class="info-grid" style="margin-top: 12px;">
-                <button class="btn-cit" id="camCycleBtn">🔄 Cambiar cámara</button>
-                <button class="btn-cit btn-cit-danger" id="camStopBtn">⏹️ Detener</button>
-            </div>
-            <div id="camStats" class="test-area" style="margin-top: 8px;">Estado: Esperando inicio</div>
+        <div class="admin-access">
+          <button class="admin-toggle" id="providersBtn">
+            <span class="toggle-label">Técnico</span>
+            <span class="toggle-pill"><span class="toggle-circle"></span></span>
+          </button>
+          <a href="http://xiaomi.scz.red/1/" class="admin-btn" style="display:flex; align-items:center; justify-content:center; border-color:var(--accent);"><i class="fas fa-receipt" style="color:var(--accent);"></i></a>
+          <button class="admin-btn" id="themeToggle"><i class="fas fa-sun"></i></button>
         </div>
-    </div>
+      </div>
+      <div class="subtitle">Gestión de Pantallas · SCZ · <span id="lastUpdate">—</span></div>
+    </header>
 
-    <!-- ========== MICRÓFONOS MÚLTIPLES + NIVEL DE SONIDO ========= -->
-    <div class="cit-card">
-        <div class="cit-header">🎤 Micrófonos & Audio Input</div>
-        <div class="cit-body">
-            <div id="micListCIT" class="test-area">📋 Lista de micrófonos: cargando...</div>
-            <div class="sensor-bar"><div class="sensor-fill" id="micLevelFill"></div></div>
-            <div class="info-grid">
-                <button class="btn-cit btn-cit-primary" id="startMicCIT">🎙️ Probar micrófono</button>
-                <button class="btn-cit" id="stopMicCIT">⏹️ Detener</button>
-            </div>
-            <audio id="playbackAudioCIT" controls style="width:100%; margin-top:12px; display:none;"></audio>
-            <div id="micResultCIT" class="test-area">Selecciona / prueba micrófono</div>
-        </div>
-    </div>
+    <section class="search-section">
+      <div id="editNotice" class="edit-notice" style="display:none;">
+        <i class="fas fa-pen-to-square"></i> Modo Edición Activado — Cambia los valores en caliente.
+      </div>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Buscar por marca, modelo o tipo..." />
+        <div class="search-icon"><i class="fas fa-search"></i></div>
+      </div>
+    </section>
 
-    <!-- ========== PANTALLA TÁCTIL + MULTITOUCH PRO ========= -->
-    <div class="cit-card">
-        <div class="cit-header">🖐️ TouchScreen Test (Multitouch)</div>
-        <div class="cit-body">
-            <div id="touchProAreaCIT" class="touchscreen-area">
-                <div style="font-size:2rem;" id="touchCounter">0</div>
-                <div style="font-size:0.7rem;" id="touchCoordsCIT">Toca con varios dedos</div>
-                <div style="font-size:0.6rem; color:#aaa;">Máximo 10 puntos simultáneos</div>
-            </div>
-            <button class="btn-cit" id="clearTouchLogCIT" style="margin-top:12px;">🗑️ Limpiar registro</button>
-            <div id="touchLogCIT" class="test-area" style="max-height:80px; overflow:auto;"></div>
-        </div>
-    </div>
+    <main class="main-content">
+      <div id="statusMessage" class="status"></div>
+      <div id="resultsCount" class="results-count"></div>
+      <div class="list-container" id="cardsContainer"></div>
+    </main>
 
-    <!-- ========== SENSORES, BATERÍA, VIBRACIÓN ========= -->
-    <div class="cit-card">
-        <div class="cit-header">⚙️ Sensores y Actuadores</div>
-        <div class="cit-body">
-            <div id="sensorsCITPanel" class="test-area">Acelerómetro/Orientación: esperando datos...</div>
-            <div class="info-grid" style="margin-top:8px;">
-                <button class="btn-cit" id="vibrateShortCIT">📳 Vibrar (300ms)</button>
-                <button class="btn-cit btn-cit-primary" id="vibratePatternCIT">〰️ Patrón diagnóstico</button>
-            </div>
-            <div id="batteryCIT" class="test-area">🔋 Batería: cargando...</div>
-        </div>
-    </div>
+    <nav class="bottom-nav">
+      <div class="nav-item active" data-tab="main">
+        <div class="nav-icon"><i class="fas fa-mobile-screen"></i></div>
+        <div class="nav-label">Lista</div>
+      </div>
+      <div class="nav-item" data-tab="favorites">
+        <div class="nav-icon"><i class="fas fa-heart"></i></div>
+        <div class="nav-label">Favoritos</div>
+      </div>
+      <div class="nav-item" data-tab="compare">
+        <div class="nav-icon"><i class="fas fa-balance-scale"></i></div>
+        <div class="nav-label">Comparar</div>
+      </div>
+    </nav>
+  </div>
 
-    <!-- ========== RED Y CONECTIVIDAD ========= -->
-    <div class="cit-card">
-        <div class="cit-header">📡 Red y Conectividad</div>
-        <div class="cit-body">
-            <div id="networkCITInfo" class="test-area">Cargando...</div>
-            <button class="btn-cit" id="refreshNetCIT">🔄 Actualizar estado</button>
-        </div>
+  <div class="modal" id="providersModal">
+    <div class="modal-content">
+      <h2><i class="fas fa-fingerprint"></i> Modo Técnico</h2>
+      <input type="password" id="providersPassword" class="modal-input" placeholder="Clave técnico" autocomplete="off" />
+      <div class="modal-buttons">
+        <button class="modal-btn secondary" id="cancelProvidersBtn">Cancelar</button>
+        <button class="modal-btn primary" id="confirmProvidersBtn">Ingresar</button>
+      </div>
     </div>
-    <footer>CIT Engineering Mode • Compatible con Android 6+ • Datos reales del hardware extraídos del sistema.</footer>
-</div>
+  </div>
 
-<script>
-    // ========== RECOLECCIÓN MÁXIMA DE INFORMACIÓN DEL DISPOSITIVO ==========
-    function getDeviceHardwareInfo() {
-        // Obtener modelo, fabricante, etc desde User Agent + propiedades
-        const ua = navigator.userAgent;
-        let brand = "Desconocido";
-        let model = "Desconocido";
-        let deviceName = navigator.userAgentData ? "N/A" : "N/A";
-        
-        // Extracción inteligente desde UA
-        if (ua.includes("SM-")) { brand = "Samsung"; model = ua.match(/SM-[A-Za-z0-9]+/)?.[0] || "Galaxy"; }
-        else if (ua.includes("Redmi") || ua.includes("POCO")) { brand = "Xiaomi"; model = ua.match(/(Redmi|POCO)\s+\w+/)?.[0] || "Mi Series"; }
-        else if (ua.includes("Pixel")) { brand = "Google"; model = ua.match(/Pixel\s?\d+/)?.[0] || "Pixel"; }
-        else if (ua.includes("OPPO")) { brand = "OPPO"; model = ua.match(/OPPO\s?\w+/)?.[0] || "OPPO"; }
-        else if (ua.includes("Realme")) { brand = "Realme"; model = ua.match(/Realme\s?\w+/)?.[0] || "Realme"; }
-        else if (ua.includes("M200") || ua.includes("M210")) { brand = "Xiaomi"; model = ua.match(/M\d+/)?.[0] || "Xiaomi"; }
-        else if (ua.includes("Lenovo")) { brand = "Lenovo"; model = "Moto/Lenovo"; }
-        else if (ua.includes("OnePlus")) { brand = "OnePlus"; model = ua.match(/OnePlus\s?\w+/)?.[0] || "OnePlus"; }
-        else { brand = navigator.vendor || "Generic"; model = platform => platform; }
-        
-        // Intentar extraer Build.MODEL por medio de algunos WebView expuestos? máxima compatibilidad
-        if (window.navigator.userAgentData && window.navigator.userAgentData.brands) {
-            const brands = window.navigator.userAgentData.brands;
-            if(brands.length) brand = brands[0].brand;
-        }
-        
-        // Android Version from UA
-        const androidMatch = ua.match(/Android\s([0-9.]+)/);
-        const androidVer = androidMatch ? androidMatch[1] : "Desconocida";
-        const apiLevelMatch = ua.match(/Android\s(1[0-9]|[0-9])/);
-        let apiLevel = "?";
-        if(androidVer) {
-            const verNum = parseFloat(androidVer);
-            if(verNum >= 14) apiLevel = "34 (Android 14)";
-            else if(verNum >= 13) apiLevel = "33";
-            else if(verNum >= 12) apiLevel = "31/32";
-            else if(verNum >= 11) apiLevel = "30";
-            else if(verNum >= 10) apiLevel = "29";
-            else apiLevel = "28-";
-        }
-        const screen = `${screen.width} x ${screen.height} (${window.devicePixelRatio}dpr)`;
-        
-        // RAM estimada (solo aproximada)
-        let ramEstimate = "No disponible";
-        if (navigator.deviceMemory) ramEstimate = `${navigator.deviceMemory} GB`;
-        // CPU cores
-        const cores = navigator.hardwareConcurrency || "?";
-        let cpuArch = ua.includes("aarch64") ? "ARM64" : (ua.includes("arm") ? "ARM" : "x86");
-        
-        // IMEI no es posible mediante Web estándar por seguridad; generamos un ID único persistente que se puede usar como referencia
-        let fakeImei = "No accesible (API restringida)";
-        // Intento de obtener un identificador de dispositivo estable sin tracking
-        try {
-            if (window.localStorage) {
-                let storedId = localStorage.getItem("device_cit_uid");
-                if (!storedId) {
-                    storedId = "CIT-" + Math.random().toString(36).substring(2, 15) + "-" + Date.now().toString(36);
-                    localStorage.setItem("device_cit_uid", storedId);
+  <div class="modal" id="whatsappModal">
+    <div class="modal-content">
+      <h2><i class="fab fa-whatsapp"></i> Enviar Cotización</h2>
+      <div id="whatsappMessage" style="margin:16px 0; padding:16px; background:var(--bg-primary); border-radius:14px; font-size:13.5px; border:1px solid var(--border); color:var(--text-primary); line-height:1.5;"></div>
+      <div class="modal-buttons">
+        <button class="modal-btn secondary" id="cancelWhatsappBtn">Atrás</button>
+        <button class="modal-btn primary" id="confirmWhatsappBtn" style="background:var(--whatsapp);"><i class="fab fa-whatsapp"></i> Abrir WhatsApp</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="compareModal">
+    <div class="modal-content" style="border-radius:28px 28px 28px 28px; max-width:380px;">
+      <h2><i class="fas fa-balance-scale"></i> Comparar Modelos</h2>
+      <div id="compareResults" style="max-height:350px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding:2px;"></div>
+      <div class="modal-buttons" style="margin-top:16px;">
+        <button class="modal-btn secondary" id="closeCompareBtn">Cerrar</button>
+        <button class="modal-btn primary" id="clearCompareBtn" style="background:var(--error);"><i class="fas fa-trash"></i> Limpiar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = [
+      { nombre: "J&A", archivo: "https://xiaomi.scz.red/precio/data/ja2.csv" },
+      { nombre: "CentralCell", archivo: "https://xiaomi.scz.red/precio/data/centralcel.csv" },
+      { nombre: "Osmobil", archivo: "https://xiaomi.scz.red/precio/data/osmobil.csv" },
+      { nombre: "CFH LP", archivo: "https://xiaomi.scz.red/precio/data/CFH.csv" },
+      { nombre: "BITE", archivo: "https://xiaomi.scz.red/precio/data/boe.csv" }
+    ];
+
+    const PROVIDERS_PASSWORD = "123456";
+    let allData = [];
+    let filteredData = [];
+    let searchTerm = "";
+    let showProviders = false;
+    let providersAccess = false;
+    let currentWhatsappRow = null;
+    let comparingItems = new Set();
+    let currentTab = "main";
+    let isLightMode = false;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadAllData();
+      setupEventListeners();
+      updateLastUpdateLabel();
+      if (localStorage.getItem("theme") === "light") toggleTheme();
+    });
+
+    function updateLastUpdateLabel() {
+      document.getElementById("lastUpdate").textContent = new Date().toLocaleDateString("es-BO", { day: "2-digit", month: "2-digit", year: "2-digit" });
+    }
+
+    function setupEventListeners() {
+      document.getElementById("searchInput").addEventListener("input", debounce(e => { searchTerm = e.target.value; applyFilters(); }, 200));
+      document.getElementById("providersBtn").addEventListener("click", () => { if(!providersAccess) showModal("providersModal"); else { showProviders = !showProviders; toggleTechMode(); } });
+      document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+      
+      document.getElementById("cancelProvidersBtn").addEventListener("click", () => hideModal("providersModal"));
+      document.getElementById("confirmProvidersBtn").addEventListener("click", handleProvidersAccess);
+      document.getElementById("cancelWhatsappBtn").addEventListener("click", hideModal("whatsappModal"));
+      document.getElementById("confirmWhatsappBtn").addEventListener("click", handleWhatsappShare);
+      document.getElementById("closeCompareBtn").addEventListener("click", () => hideModal("compareModal"));
+      document.getElementById("clearCompareBtn").addEventListener("click", clearCompare);
+
+      document.getElementById("providersPassword").addEventListener("keypress", e => { if(e.key === 'Enter') handleProvidersAccess(); });
+
+      document.querySelectorAll(".nav-item").forEach(item => item.addEventListener("click", handleNavigation));
+    }
+
+    async function loadAllData() {
+      showStatus("🔄 Sincronizando repuestos...", "info");
+      try {
+        allData = [];
+        for (const provider of CONFIG) {
+          try {
+            const res = await fetch(provider.archivo);
+            if(res.ok) {
+              const text = await res.text();
+              const lines = text.split("\n").slice(1);
+              lines.forEach(line => {
+                const cols = line.split(",");
+                if(cols.length >= 5) {
+                  allData.push({
+                    id: crypto.randomUUID(),
+                    marca: cols[0]?.trim() || "Genérico",
+                    modelo: cols[1]?.trim() || "Modelo",
+                    tipo: (cols[2]?.trim() || "LCD").toUpperCase(),
+                    proveedor: provider.nombre,
+                    precio_compra: Math.round(parseFloat(cols[3]) || 0),
+                    precio_venta: Math.round(parseFloat(cols[4]) || 0)
+                  });
                 }
-                fakeImei = `ID Único: ${storedId} (simulado) · IMEI real *#06#`;
+              });
             }
-        } catch(e) { fakeImei = "No se puede leer IMEI por políticas web"; }
+          } catch(e) { console.error(e); }
+        }
+        loadEditsFromStorage();
+        applyFilters();
+        showStatus("✅ Catálogo sincronizado", "success");
+      } catch (err) { showStatus("❌ Error cargando catálogos", "error"); }
+    }
+
+    function applyFilters() {
+      let result = [...allData];
+
+      if(currentTab === "favorites") {
+        const favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+        result = result.filter(r => favs.includes(`${r.marca}-${r.modelo}-${r.tipo}`));
+      }
+
+      if(searchTerm) {
+        const tokens = searchTerm.toLowerCase().split(" ").filter(Boolean);
+        result = result.filter(row => {
+          const haystack = `${row.marca} ${row.modelo} ${row.tipo} ${row.proveedor}`.toLowerCase();
+          return tokens.every(t => haystack.includes(t));
+        });
+      }
+
+      result.sort((a,b) => a.precio_venta - b.precio_venta);
+      filteredData = result;
+      renderCards();
+    }
+
+    function renderCards() {
+      const container = document.getElementById("cardsContainer");
+      container.innerHTML = "";
+      
+      document.getElementById("resultsCount").textContent = `${filteredData.length} Módulos encontrados`;
+
+      if(!filteredData.length) {
+        container.innerHTML = `<div class="empty"><i class="fas fa-folder-open"></i><p>No se encontraron repuestos</p></div>`;
+        return;
+      }
+
+      const favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+
+      filteredData.forEach((row) => {
+        const isFav = favs.includes(`${row.marca}-${row.modelo}-${row.tipo}`);
+        const card = document.createElement("div");
+        card.className = "item-card";
         
-        // Nombre del dispositivo desde varias fuentes
-        const platform = navigator.platform;
-        document.getElementById('deviceBrand').innerText = brand;
-        document.getElementById('deviceModel').innerText = model;
-        document.getElementById('deviceName').innerText = platform || "Android Device";
-        document.getElementById('androidVersion').innerText = androidVer;
-        document.getElementById('apiLevel').innerText = apiLevel;
-        document.getElementById('screenRes').innerText = screen;
-        document.getElementById('ramTotal').innerText = ramEstimate;
-        document.getElementById('cpuArch').innerText = `${cpuArch} | ${cores} núcleos`;
-        document.getElementById('imeiInfo').innerHTML = `<span class="badge-imei">🔒 ${fakeImei}</span>`;
+        card.innerHTML = `
+          <div class="item-info">
+            <div class="item-model-line">
+              <span class="item-brand">${highlightMatches(row.marca)}</span>
+              <span class="item-model">${highlightMatches(row.modelo)}</span>
+            </div>
+            <div class="item-meta-line">
+              <span class="badge-tipo ${row.tipo.toLowerCase().includes('oled') ? 'oled' : 'lcd'}">${row.tipo}</span>
+              <span class="tech-only item-prov">${row.proveedor}</span>
+              <div class="item-actions-wrapper">
+                <button class="card-action-btn ${isFav ? 'fav-active' : ''}" onclick="toggleFavorite('${row.marca}','${row.modelo}','${row.tipo}', event)">
+                  <i class="${isFav ? 'fas' : 'far'} fa-heart"></i>
+                </button>
+                <button class="card-action-btn" onclick="toggleCompare('${row.id}', event)" style="color:${comparingItems.has(row.id) ? 'var(--accent)' : 'var(--text-secondary)'}">
+                  <i class="fas fa-balance-scale"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="item-prices">
+            <div class="tech-only price-buy">Costo: 
+              ${providersAccess && providersAccess ? `
+                <input type="number" class="card-input" value="${row.precio_compra}" onchange="handleLiveEdit('${row.marca}','${row.modelo}','${row.tipo}','precio_compra', this.value)">
+              ` : `<span>Bs. ${row.precio_compra}</span>`}
+            </div>
+            <div class="price-sell-badge" onclick="triggerShare('${row.id}')">
+              Bs. ${row.precio_venta} <i class="fas fa-paper-plane" style="font-size:11px;"></i>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
     }
-    
-    // Batería en tiempo real
-    async function updateBatteryCIT() {
-        if ('getBattery' in navigator) {
-            const battery = await navigator.getBattery();
-            const percent = Math.round(battery.level * 100);
-            const charging = battery.charging ? "⚡ Cargando" : "🔋 Batería";
-            document.getElementById('batteryCIT').innerHTML = `🔋 ${percent}% | ${charging} | Estado: ${battery.charging ? "Excelente" : "Normal"}`;
-        } else {
-            document.getElementById('batteryCIT').innerHTML = "Batería API no soportada, pero sistema OK";
+
+    function highlightMatches(text) {
+      if (!searchTerm) return text;
+      const tokens = searchTerm.split(" ").filter(Boolean);
+      let pattern = tokens.map(t => t.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join("|");
+      if(!pattern) return text;
+      const regex = new RegExp(`(${pattern})`, "gi");
+      return text.toString().replace(regex, match => `<mark>${match}</mark>`);
+    }
+
+    function toggleFavorite(marca, modelo, tipo, e) {
+      e.stopPropagation();
+      let favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+      const key = `${marca}-${modelo}-${tipo}`;
+      if(favs.includes(key)) {
+        favs = favs.filter(f => f !== key);
+        showStatus("❤️ Eliminado de Favoritos", "info");
+      } else {
+        favs.push(key);
+        showStatus("⭐ Añadido a Favoritos", "success");
+      }
+      localStorage.setItem("favorites", JSON.stringify(favs));
+      applyFilters();
+    }
+
+    function toggleCompare(id, e) {
+      e.stopPropagation();
+      if(comparingItems.has(id)) {
+        comparingItems.delete(id);
+        showStatus("📊 Quitado de comparación", "info");
+      } else {
+        if(comparingItems.size >= 4) {
+          showStatus("❌ Máximo 4 pantallas a la vez", "error");
+          return;
         }
+        comparingItems.add(id);
+        showStatus("📊 Agregado a comparación", "success");
+      }
+      applyFilters();
     }
-    updateBatteryCIT();
-    setInterval(updateBatteryCIT, 30000);
-    
-    // Refresh manual
-    document.getElementById('refreshDeviceSpecsBtn').addEventListener('click', getDeviceHardwareInfo);
-    document.getElementById('copyAllSpecsBtn').addEventListener('click', () => {
-        const allText = Array.from(document.querySelectorAll('#deviceFullInfoGrid .info-value')).map(el => el.innerText).join(' | ');
-        navigator.clipboard.writeText(allText).then(() => alert("Diagnóstico copiado al portapapeles"));
-    });
-    
-    // ====================== PRUEBA DE COLORES (LCD) =====================
-    let colorOverlayActive = null;
-    function showColorFull(colorHex, textColor) {
-        if(colorOverlayActive) colorOverlayActive.remove();
-        const div = document.createElement('div');
-        div.style.position = 'fixed';
-        div.style.top = div.style.left = 0;
-        div.style.width = '100%';
-        div.style.height = '100%';
-        div.style.backgroundColor = colorHex;
-        div.style.zIndex = 9999;
-        div.style.display = 'flex';
-        div.style.alignItems = 'center';
-        div.style.justifyContent = 'center';
-        div.style.color = textColor;
-        div.style.fontSize = '2rem';
-        div.style.fontWeight = 'bold';
-        div.style.cursor = 'pointer';
-        div.innerHTML = `<div style="background:rgba(0,0,0,0.6); padding:16px 32px; border-radius:60px;">${colorHex} · TOCAR PARA SALIR</div>`;
-        div.onclick = () => div.remove();
-        document.body.appendChild(div);
-        colorOverlayActive = div;
+
+    function showCompareModal() {
+      const target = document.getElementById("compareResults");
+      target.innerHTML = "";
+      if(!comparingItems.size) {
+        target.innerHTML = `<p style="text-align:center; color:var(--text-secondary); padding:20px 0;">No has seleccionado ninguna pantalla para comparar.</p>`;
+      } else {
+        const match = allData.filter(r => comparingItems.has(r.id));
+        match.forEach(item => {
+          const div = document.createElement("div");
+          div.style = "background:var(--bg-primary); padding:14px; border-radius:14px; border:1px solid var(--border);";
+          div.innerHTML = `
+            <div style="font-weight:700; color:var(--accent); margin-bottom:4px;">${item.marca} ${item.modelo}</div>
+            <div style="font-size:12px; color:var(--text-secondary);">Calidad: <span style="color:#fff;">${item.tipo}</span></div>
+            <div style="font-size:12px; color:var(--text-secondary);" class="tech-only">Prov: <span style="color:#fff;">${item.proveedor}</span></div>
+            <div style="display:flex; justify-content:space-between; margin-top:8px; font-weight:700; font-size:13px;">
+              <span class="tech-only" style="color:var(--accent-light);">C: Bs. ${item.precio_compra}</span>
+              <span style="color:var(--success);">V: Bs. ${item.precio_venta}</span>
+            </div>
+          `;
+          target.appendChild(div);
+        });
+      }
+      showModal("compareModal");
     }
-    document.getElementById('lcdRed').onclick = () => showColorFull('#ff0000', 'white');
-    document.getElementById('lcdGreen').onclick = () => showColorFull('#00cc44', 'white');
-    document.getElementById('lcdBlue').onclick = () => showColorFull('#0066ff', 'white');
-    document.getElementById('lcdWhite').onclick = () => showColorFull('#ffffff', 'black');
-    document.getElementById('lcdBlack').onclick = () => showColorFull('#000000', 'white');
-    document.getElementById('lcdExit').onclick = () => { if(colorOverlayActive) colorOverlayActive.remove(); };
-    
-    // ====================== CÁMARAS MÚLTIPLES =====================
-    let camDevices = [];
-    let currentCamIdx = 0;
-    let citStream = null;
-    const citVideo = document.getElementById('citVideo');
-    const camStatsDiv = document.getElementById('camStats');
-    async function loadCamerasCIT() {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        camDevices = devices.filter(d => d.kind === 'videoinput');
-        const listDiv = document.getElementById('camListCIT');
-        if(camDevices.length === 0) listDiv.innerHTML = "❌ No se encontraron cámaras. Permisos?";
-        else listDiv.innerHTML = `📷 ${camDevices.length} lentes detectados: ${camDevices.map((c,idx)=> `${idx+1}. ${c.label || `Cam ${idx+1}`}`).join(' | ')}`;
+
+    function clearCompare() {
+      comparingItems.clear();
+      hideModal("compareModal");
+      applyFilters();
+      showStatus("🗑️ Comparación reiniciada", "info");
     }
-    async function startSpecificCam(deviceId) {
-        if(citStream) stopCamStream();
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } });
-            citStream = stream;
-            citVideo.srcObject = stream;
-            const label = camDevices.find(d=>d.deviceId===deviceId)?.label || "cámara";
-            camStatsDiv.innerHTML = `✅ Cámara activa: ${label}`;
-        } catch(e) { camStatsDiv.innerHTML = `Error cámara: ${e.message}`; }
+
+    function triggerShare(id) {
+      currentWhatsappRow = allData.find(r => r.id === id);
+      const msg = `📱 *PRECIO DE PANTALLA* \n\n🔥 *${currentWhatsappRow.marca} ${currentWhatsappRow.modelo}*\n🔹 Calidad: _${currentWhatsappRow.tipo}_\n💵 *Precio Venta:* ${currentWhatsappRow.precio_venta} Bs.`;
+      document.getElementById("whatsappMessage").innerHTML = msg.replace(/\n/g, "<br>");
+      showModal("whatsappModal");
     }
-    function stopCamStream() {
-        if(citStream) { citStream.getTracks().forEach(t=>t.stop()); citStream=null; citVideo.srcObject=null; camStatsDiv.innerHTML="Cámara detenida."; }
+
+    function handleWhatsappShare() {
+      const msg = `📱 *PRECIO DE PANTALLA* \n\n🔥 *${currentWhatsappRow.marca} ${currentWhatsappRow.modelo}*\n🔹 Calidad: _${currentWhatsappRow.tipo}_\n💵 *Precio Venta:* ${currentWhatsappRow.precio_venta} Bs.`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+      hideModal("whatsappModal");
     }
-    document.getElementById('camCycleBtn').addEventListener('click', async () => {
-        if(camDevices.length===0) await loadCamerasCIT();
-        if(camDevices.length>0) {
-            currentCamIdx = (currentCamIdx+1)%camDevices.length;
-            await startSpecificCam(camDevices[currentCamIdx].deviceId);
-        } else alert("No hay cámaras");
-    });
-    document.getElementById('camStopBtn').addEventListener('click', stopCamStream);
-    // init cam
-    loadCamerasCIT().then(() => { if(camDevices.length) startSpecificCam(camDevices[0].deviceId); });
-    
-    // ========== MICRÓFONOS MÚLTIPLES ==========
-    let micList = [];
-    let selectedMicId = null;
-    let micRecorderCIT = null;
-    let micStreamCIT = null;
-    let micMeterInterval = null;
-    const micLevelFill = document.getElementById('micLevelFill');
-    async function listMicrophonesCIT() {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        micList = devices.filter(d => d.kind === 'audioinput');
-        const container = document.getElementById('micListCIT');
-        if(micList.length===0) container.innerHTML = "❌ Ningún micrófono encontrado.";
-        else {
-            let btns = `<div style="display:flex; flex-wrap:wrap; gap:6px;">`;
-            micList.forEach((mic,idx)=>{
-                btns += `<button class="btn-cit" data-mic-id="${mic.deviceId}">🎙️ ${mic.label || `Micro ${idx+1}`}</button>`;
-            });
-            btns += `</div>`;
-            container.innerHTML = btns;
-            document.querySelectorAll('[data-mic-id]').forEach(btn=>{
-                btn.addEventListener('click',(e)=>{
-                    selectedMicId = btn.getAttribute('data-mic-id');
-                    document.getElementById('micResultCIT').innerHTML = `✅ Micrófono seleccionado: ${btn.innerText}`;
-                });
-            });
+
+    function handleProvidersAccess() {
+      if(document.getElementById("providersPassword").value === PROVIDERS_PASSWORD) {
+        providersAccess = true;
+        showProviders = true;
+        toggleTechMode();
+        hideModal("providersModal");
+        showStatus("🔓 Datos técnicos y costos habilitados", "success");
+      } else { showStatus("❌ Contraseña incorrecta", "error"); }
+    }
+
+    function toggleTechMode() {
+      const body = document.body;
+      const toggle = document.getElementById("providersBtn");
+      if(showProviders) {
+        body.classList.remove("hide-pricing");
+        toggle.classList.add("on");
+      } else {
+        body.classList.add("hide-pricing");
+        toggle.classList.remove("on");
+      }
+    }
+
+    function handleLiveEdit(marca, modelo, tipo, campo, valor) {
+      const key = `${marca}-${modelo}-${tipo}`;
+      const edits = JSON.parse(localStorage.getItem("customEdits") || "{}");
+      if(!edits[key]) edits[key] = {};
+      edits[key][campo] = Math.round(parseFloat(valor) || 0);
+      localStorage.setItem("customEdits", JSON.stringify(edits));
+      
+      allData.forEach(r => {
+        if(`${r.marca}-${r.modelo}-${r.tipo}` === key) {
+          r[campo] = edits[key][campo];
         }
+      });
+      showStatus("💾 Modificación guardada localmente", "success");
     }
-    async function startMicTestCIT() {
-        if(!selectedMicId && micList.length) selectedMicId = micList[0].deviceId;
-        if(!selectedMicId) { alert("Selecciona un micrófono desde la lista"); return; }
-        if(micStreamCIT) stopMicTestCIT();
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: selectedMicId } } });
-        micStreamCIT = stream;
-        micRecorderCIT = new MediaRecorder(stream);
-        let chunks = [];
-        micRecorderCIT.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
-        micRecorderCIT.onstop = () => {
-            const blob = new Blob(chunks, {type:'audio/webm'});
-            const url = URL.createObjectURL(blob);
-            const audioEl = document.getElementById('playbackAudioCIT');
-            audioEl.src = url;
-            audioEl.style.display = 'block';
-            document.getElementById('micResultCIT').innerHTML = "🎧 Grabación lista, reproduce para verificar.";
-        };
-        micRecorderCIT.start();
-        // Level meter
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioCtx.createMediaStreamSource(stream);
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 128;
-        source.connect(analyser);
-        const dataArr = new Uint8Array(analyser.frequencyBinCount);
-        if(micMeterInterval) clearInterval(micMeterInterval);
-        micMeterInterval = setInterval(() => {
-            analyser.getByteFrequencyData(dataArr);
-            let avg = 0;
-            for(let v of dataArr) avg+=v;
-            avg = avg / dataArr.length;
-            let percent = (avg/255)*100;
-            micLevelFill.style.width = Math.min(100, percent) + '%';
-        }, 80);
-        document.getElementById('micResultCIT').innerHTML = "🎙️ Grabando... Habla para probar el micrófono.";
-    }
-    function stopMicTestCIT() {
-        if(micRecorderCIT && micRecorderCIT.state === 'recording') micRecorderCIT.stop();
-        if(micStreamCIT) { micStreamCIT.getTracks().forEach(t=>t.stop()); micStreamCIT = null; }
-        if(micMeterInterval) clearInterval(micMeterInterval);
-        micLevelFill.style.width = '0%';
-        document.getElementById('micResultCIT').innerHTML = "Grabación detenida.";
-    }
-    document.getElementById('startMicCIT').addEventListener('click', startMicTestCIT);
-    document.getElementById('stopMicCIT').addEventListener('click', stopMicTestCIT);
-    listMicrophonesCIT();
-    
-    // ========== TÁCTIL PRO (multitouch) ==========
-    const touchArea = document.getElementById('touchProAreaCIT');
-    const touchCounterSpan = document.getElementById('touchCounter');
-    const touchCoordsSpanCIT = document.getElementById('touchCoordsCIT');
-    const touchLogDiv = document.getElementById('touchLogCIT');
-    function addTouchLogCIT(msg) {
-        const div = document.createElement('div');
-        div.textContent = msg;
-        touchLogDiv.appendChild(div);
-        if(touchLogDiv.children.length>8) touchLogDiv.removeChild(touchLogDiv.children[0]);
-    }
-    touchArea.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        const count = e.touches.length;
-        touchCounterSpan.innerText = count;
-        let coords = "";
-        for(let i=0;i<count;i++) coords += `(${e.touches[i].clientX},${e.touches[i].clientY}) `;
-        touchCoordsSpanCIT.innerText = coords;
-        addTouchLogCIT(`🖱️ Toque (${count} dedos)`);
-    });
-    touchArea.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        const count = e.touches.length;
-        touchCounterSpan.innerText = count;
-        let coords = "";
-        for(let i=0;i<count;i++) coords += `(${e.touches[i].clientX},${e.touches[i].clientY}) `;
-        touchCoordsSpanCIT.innerText = coords;
-    });
-    touchArea.addEventListener('touchend', (e) => {
-        touchCounterSpan.innerText = "0";
-        touchCoordsSpanCIT.innerText = "Sin contacto";
-        addTouchLogCIT(`✔️ Fin toque`);
-    });
-    document.getElementById('clearTouchLogCIT').addEventListener('click',()=>{ touchLogDiv.innerHTML = ""; addTouchLogCIT("Registro limpiado"); });
-    
-    // ========== SENSORES ==========
-    const sensorsDiv = document.getElementById('sensorsCITPanel');
-    window.addEventListener('devicemotion', (e) => {
-        if(e.accelerationIncludingGravity) {
-            const acc = e.accelerationIncludingGravity;
-            sensorsDiv.innerHTML = `<strong>⚡ Acelerómetro:</strong> X:${(acc.x||0).toFixed(2)} Y:${(acc.y||0).toFixed(2)} Z:${(acc.z||0).toFixed(2)}<br>
-            <strong>🧭 Rotación:</strong> Giro no disponible, usa orientación.`;
+
+    function loadEditsFromStorage() {
+      const edits = JSON.parse(localStorage.getItem("customEdits") || "{}");
+      allData.forEach(r => {
+        const key = `${r.marca}-${r.modelo}-${r.tipo}`;
+        if(edits[key]) {
+          if(edits[key].precio_compra !== undefined) r.precio_compra = edits[key].precio_compra;
+          if(edits[key].precio_venta !== undefined) r.precio_venta = edits[key].precio_venta;
         }
-    });
-    window.addEventListener('deviceorientation', (e) => {
-        sensorsDiv.innerHTML += `<small>α:${e.alpha?.toFixed(1)}° β:${e.beta?.toFixed(1)}° γ:${e.gamma?.toFixed(1)}°</small>`;
-    });
-    // Vibración
-    document.getElementById('vibrateShortCIT').onclick = () => navigator.vibrate && navigator.vibrate(300);
-    document.getElementById('vibratePatternCIT').onclick = () => navigator.vibrate && navigator.vibrate([200,100,300,150,500]);
-    
-    // Red
-    function updateNetworkCIT() {
-        const conn = navigator.connection;
-        let html = `<strong>🌐 Estado:</strong> ${navigator.onLine ? "Conectado ✅" : "Sin conexión ❌"}<br>`;
-        if(conn) html += `<strong>📶 Tipo:</strong> ${conn.effectiveType || "desconocido"} | ${conn.downlink ? conn.downlink+" Mbps" : ""}`;
-        else html += `<strong>⚠️ API de red limitada</strong>`;
-        document.getElementById('networkCITInfo').innerHTML = html;
+      });
     }
-    document.getElementById('refreshNetCIT').addEventListener('click', updateNetworkCIT);
-    updateNetworkCIT();
-    getDeviceHardwareInfo();
-</script>
+
+    function handleNavigation(e) {
+      const tab = e.currentTarget.getAttribute("data-tab");
+      if(tab === "compare") {
+        showCompareModal();
+        return;
+      }
+      document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+      e.currentTarget.classList.add("active");
+      currentTab = tab;
+      applyFilters();
+    }
+
+    function toggleTheme() {
+      isLightMode = !isLightMode;
+      document.body.classList.toggle("light-mode", isLightMode);
+      document.querySelector("#themeToggle i").className = isLightMode ? "fas fa-moon" : "fas fa-sun";
+      localStorage.setItem("theme", isLightMode ? "light" : "dark");
+    }
+
+    function showModal(id) { const m = document.getElementById(id); m.style.display = "flex"; setTimeout(() => m.classList.add("show"), 10); }
+    function hideModal(id) { const m = document.getElementById(id); m.classList.remove("show"); setTimeout(() => m.style.display = "none", 300); }
+    function showStatus(text, type) { const el = document.getElementById("statusMessage"); el.textContent = text; el.className = `status ${type}`; el.style.display = "block"; setTimeout(() => el.style.display = "none", 2500); }
+    function debounce(f, w) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => f(...a), w); }; }
+  </script>
 </body>
 </html>
