@@ -61,7 +61,6 @@
       position: relative;
     }
 
-    /* Header */
     .header {
       position: sticky;
       top: 0;
@@ -128,7 +127,6 @@
       color: white;
     }
 
-    /* Search */
     .search-container {
       position: relative;
     }
@@ -168,7 +166,6 @@
       font-size: 18px;
     }
 
-    /* View Toggle */
     .view-toggle {
       display: flex;
       gap: 8px;
@@ -195,7 +192,6 @@
       color: white;
     }
 
-    /* Tabla */
     .table-view {
       margin: 0 16px 20px;
       background: var(--surface);
@@ -235,13 +231,17 @@
       font-weight: 700;
       cursor: pointer;
       transition: var(--transition);
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
     }
 
     .price-cell:active {
       transform: scale(0.95);
+      background: var(--accent);
+      color: white;
     }
 
-    /* Tarjetas */
     .cards-view {
       display: grid;
       gap: 12px;
@@ -281,6 +281,14 @@
       color: var(--accent);
       margin: 12px 0;
       cursor: pointer;
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    .card-price:active {
+      background: var(--accent);
+      color: white;
     }
 
     .card-actions {
@@ -299,7 +307,6 @@
       cursor: pointer;
     }
 
-    /* Bottom Nav */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -341,7 +348,6 @@
       font-size: 20px;
     }
 
-    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -406,7 +412,6 @@
       color: white;
     }
 
-    /* Toast */
     .toast {
       position: fixed;
       bottom: 100px;
@@ -445,13 +450,10 @@
       100% { background-position: -200% 0; }
     }
 
-    .tech-badge {
-      background: var(--accent);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 20px;
-      font-size: 10px;
-      margin-left: 8px;
+    .results-count {
+      padding: 8px 20px;
+      font-size: 12px;
+      color: var(--text-secondary);
     }
   </style>
 </head>
@@ -490,6 +492,7 @@
     <button class="view-btn" data-view="cards"><i class="fas fa-th-large"></i> Tarjetas</button>
   </div>
 
+  <div id="resultsCount" class="results-count"></div>
   <div id="resultsContainer"></div>
 
   <nav class="bottom-nav">
@@ -511,24 +514,15 @@
   </div>
 </div>
 
-<div id="priceModal" class="modal">
-  <div class="modal-content">
-    <h3><i class="fas fa-dollar-sign"></i> Precio</h3>
-    <p id="priceMessage" style="margin-bottom: 16px; text-align: center;"></p>
-    <div class="modal-buttons">
-      <button onclick="closeModal('priceModal')">Cancelar</button>
-      <button id="confirmWhatsappBtn"><i class="fab fa-whatsapp"></i> Enviar</button>
-    </div>
-  </div>
-</div>
-
 <script>
   // Configuración
   const CONFIG = {
     dataSources: [
-      "https://xiaomi.scz.red/precio/data/ja2.csv",
-      "https://xiaomi.scz.red/precio/data/centralcel.csv",
-      "https://xiaomi.scz.red/precio/data/osmobil.csv"
+      { name: "J&A", url: "https://xiaomi.scz.red/precio/data/ja2.csv" },
+      { name: "CentralCell", url: "https://xiaomi.scz.red/precio/data/centralcel.csv" },
+      { name: "Osmobil", url: "https://xiaomi.scz.red/precio/data/osmobil.csv" },
+      { name: "CFH LP", url: "https://xiaomi.scz.red/precio/data/CFH.csv" },
+      { name: "BITE", url: "https://xiaomi.scz.red/precio/data/boe.csv" }
     ],
     passwords: {
       tech: "123456"
@@ -541,13 +535,12 @@
   let currentView = "table";
   let techMode = false;
   let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-  let comparing = new Set();
   let currentTab = "home";
-  let currentPriceItem = null;
 
   // Elementos DOM
   const container = document.getElementById("resultsContainer");
   const searchInput = document.getElementById("searchInput");
+  const resultsCount = document.getElementById("resultsCount");
 
   // Inicialización
   async function init() {
@@ -556,54 +549,160 @@
     setupEventListeners();
     render();
     
-    // Cargar tema
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "light") toggleTheme();
   }
 
   async function loadData() {
     try {
-      const results = await Promise.all(CONFIG.dataSources.map(url => fetchCSV(url)));
-      allData = results.flat();
+      allData = [];
+      for (const source of CONFIG.dataSources) {
+        try {
+          const data = await fetchCSV(source.url, source.name);
+          allData.push(...data);
+          console.log(`✅ Cargados ${data.length} productos de ${source.name}`);
+        } catch (error) {
+          console.error(`Error cargando ${source.name}:`, error);
+        }
+      }
       filteredData = [...allData];
-      console.log(`✅ Cargados ${allData.length} productos`);
+      updateResultsCount();
     } catch (error) {
       console.error("Error loading data:", error);
       showError();
     }
   }
 
-  async function fetchCSV(url) {
+  async function fetchCSV(url, providerName) {
     const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const text = await response.text();
-    return parseCSV(text);
+    return parseCSV(text, providerName);
   }
 
-  function parseCSV(text) {
-    const lines = text.split("\n").slice(1);
-    return lines.filter(line => line.trim()).map(line => {
-      const cols = line.split(",");
-      return {
-        id: crypto.randomUUID(),
-        marca: (cols[0] || "N/A").trim(),
-        modelo: (cols[1] || "N/A").trim(),
-        tipo: (cols[2] || "LCD").trim().toUpperCase(),
-        proveedor: (cols[3] || "Desconocido").trim(),
-        compra: parseInt(cols[4]) || 0,
-        venta: parseInt(cols[5]) || 0
-      };
-    }).filter(p => p.modelo !== "N/A");
+  function parseCSV(text, providerName) {
+    const lines = text.split("\n").filter(line => line.trim() !== "");
+    if (lines.length < 2) return [];
+    
+    const data = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line.trim()) continue;
+      
+      // Parsear CSV respetando comillas
+      const columns = parseCSVLine(line);
+      
+      if (columns.length >= 6) {
+        const marca = cleanText(columns[0]);
+        const modelo = cleanText(columns[1]);
+        const tipo = cleanText(columns[2]).toUpperCase();
+        const proveedor = cleanText(columns[3]) || providerName;
+        const precio_compra = parsePrice(columns[4]);
+        const precio_venta = parsePrice(columns[5]);
+        
+        if (modelo && modelo !== "Modelo" && modelo !== "") {
+          data.push({
+            id: crypto.randomUUID(),
+            lista: providerName,
+            marca: marca || "N/A",
+            modelo: modelo,
+            tipo: tipo === "OLED" ? "OLED" : "LCD",
+            proveedor: proveedor,
+            compra: precio_compra,
+            venta: precio_venta
+          });
+        }
+      } else if (columns.length >= 5) {
+        const marca = cleanText(columns[0]);
+        const modelo = cleanText(columns[1]);
+        const tipo = cleanText(columns[2]).toUpperCase();
+        const precio_compra = parsePrice(columns[3]);
+        const precio_venta = parsePrice(columns[4]);
+        
+        if (modelo && modelo !== "Modelo" && modelo !== "") {
+          data.push({
+            id: crypto.randomUUID(),
+            lista: providerName,
+            marca: marca || "N/A",
+            modelo: modelo,
+            tipo: tipo === "OLED" ? "OLED" : "LCD",
+            proveedor: providerName,
+            compra: precio_compra,
+            venta: precio_venta
+          });
+        }
+      }
+    }
+    
+    return data;
+  }
+
+  function parseCSVLine(line) {
+    const result = [];
+    let current = "";
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === "," && !inQuotes) {
+        result.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    
+    return result.map(field => field.replace(/^"|"$/g, ""));
+  }
+
+  function cleanText(text) {
+    if (!text) return "";
+    return text.trim().replace(/^"|"$/g, "");
+  }
+
+  function parsePrice(priceStr) {
+    if (!priceStr || priceStr.trim() === "") return 0;
+    
+    let str = priceStr.toString().trim();
+    str = str.replace(/[^\d.,-]/g, "");
+    
+    const isNegative = str.startsWith("-");
+    if (isNegative) str = str.substring(1);
+    
+    const lastComma = str.lastIndexOf(",");
+    const lastDot = str.lastIndexOf(".");
+    
+    let cleaned;
+    if (lastComma > lastDot) {
+      cleaned = str.replace(/\./g, "").replace(",", ".");
+    } else {
+      cleaned = str.replace(/,/g, "");
+    }
+    
+    const num = parseFloat(cleaned);
+    if (isNaN(num)) return 0;
+    const rounded = Math.round(num);
+    return isNegative ? -rounded : rounded;
   }
 
   function render() {
     if (!container) return;
     
-    if (currentTab === "favorites") {
-      const favData = filteredData.filter(p => favorites.includes(p.id));
-      container.innerHTML = currentView === "table" ? renderTable(favData) : renderCards(favData);
-    } else {
-      container.innerHTML = currentView === "table" ? renderTable(filteredData) : renderCards(filteredData);
+    let dataToShow = currentTab === "favorites" 
+      ? filteredData.filter(p => favorites.includes(p.id))
+      : filteredData;
+    
+    if (currentTab === "compare") {
+      showCompareModal();
+      return;
     }
+    
+    container.innerHTML = currentView === "table" ? renderTable(dataToShow) : renderCards(dataToShow);
+    updateResultsCount();
   }
 
   function renderTable(data) {
@@ -629,8 +728,8 @@
                 <td>${escapeHtml(item.marca)}</td>
                 <td><strong>${escapeHtml(item.modelo)}</strong></td>
                 <td><span style="color: ${item.tipo === 'OLED' ? '#f97316' : '#94a3b8'}">${item.tipo}</span></td>
-                ${techMode ? `<td style="font-size: 12px;">${escapeHtml(item.proveedor)}</td><td style="color: #fbbf24;">Bs. ${item.compra}</td>` : ''}
-                <td class="price-cell" onclick="copyPriceToClipboard('${item.id}')">Bs. ${item.venta}</td>
+                ${techMode ? `<td style="font-size: 12px;">${escapeHtml(item.proveedor)}</td><td style="color: #fbbf24;">Bs. ${item.compra.toLocaleString()}</td>` : ''}
+                <td><span class="price-cell" onclick="copyPriceToClipboard('${item.id}')">Bs. ${item.venta.toLocaleString()}</span></td>
               </tr>
             `).join('')}
           </tbody>
@@ -652,11 +751,14 @@
               <div>
                 <div class="card-title">${escapeHtml(item.marca)}</div>
                 <div class="card-model">${escapeHtml(item.modelo)}</div>
-                ${techMode ? `<div style="font-size: 10px; color: #fbbf24; margin-top: 4px;">${escapeHtml(item.proveedor)} | Compra: Bs. ${item.compra}</div>` : ''}
+                <div style="font-size: 11px; margin-top: 4px;">
+                  <span style="color: ${item.tipo === 'OLED' ? '#f97316' : '#94a3b8'}">${item.tipo}</span>
+                  ${techMode ? `<span style="color: #fbbf24; margin-left: 8px;">${escapeHtml(item.proveedor)}</span>` : ''}
+                </div>
               </div>
-              <i class="fas fa-heart" style="color: ${favorites.includes(item.id) ? '#ef4444' : '#94a3b8'}; cursor: pointer;" onclick="toggleFavorite('${item.id}')"></i>
+              <i class="fas fa-heart" style="color: ${favorites.includes(item.id) ? '#ef4444' : '#94a3b8'}; font-size: 20px; cursor: pointer;" onclick="toggleFavorite('${item.id}')"></i>
             </div>
-            <div class="card-price" onclick="copyPriceToClipboard('${item.id}')">Bs. ${item.venta}</div>
+            <div class="card-price" onclick="copyPriceToClipboard('${item.id}')">Bs. ${item.venta.toLocaleString()}</div>
             <div class="card-actions">
               <button class="share-card-btn" onclick="shareToWhatsApp('${item.id}')"><i class="fab fa-whatsapp"></i> Compartir</button>
             </div>
@@ -670,21 +772,30 @@
     if (!term.trim()) {
       filteredData = [...allData];
     } else {
-      const lowerTerm = term.toLowerCase();
-      filteredData = allData.filter(item => 
-        item.modelo.toLowerCase().includes(lowerTerm) ||
-        item.marca.toLowerCase().includes(lowerTerm) ||
-        item.tipo.toLowerCase().includes(lowerTerm)
-      );
+      const lowerTerm = term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      filteredData = allData.filter(item => {
+        const modeloNorm = item.modelo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const marcaNorm = item.marca.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        return modeloNorm.includes(lowerTerm) || marcaNorm.includes(lowerTerm);
+      });
     }
     render();
+  }
+
+  function updateResultsCount() {
+    if (resultsCount) {
+      const total = currentTab === "favorites" 
+        ? filteredData.filter(p => favorites.includes(p.id)).length
+        : filteredData.length;
+      resultsCount.textContent = `${total} resultado${total !== 1 ? 's' : ''}`;
+    }
   }
 
   function copyPriceToClipboard(productId) {
     const product = allData.find(p => p.id === productId);
     if (!product) return;
     
-    const message = `📱 *PRECIO DE PANTALLA*\n${product.marca} ${product.modelo}\n💰 Precio: Bs. ${product.venta}`;
+    const message = `📱 *PRECIO DE PANTALLA*\n${product.marca} ${product.modelo}\n💰 Precio: Bs. ${product.venta.toLocaleString()}`;
     
     navigator.clipboard.writeText(message).then(() => {
       showToast("✅ Mensaje copiado al portapapeles");
@@ -697,7 +808,7 @@
     const product = allData.find(p => p.id === productId);
     if (!product) return;
     
-    const message = `📱 *PRECIO DE PANTALLA*\n${product.marca} ${product.modelo}\n💰 Precio: Bs. ${product.venta}`;
+    const message = `📱 *PRECIO DE PANTALLA*\n${product.marca} ${product.modelo}\n💰 Precio: Bs. ${product.venta.toLocaleString()}`;
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${encoded}`, "_blank");
   }
@@ -711,8 +822,7 @@
       showToast("❤️ Agregado a favoritos");
     }
     localStorage.setItem("favorites", JSON.stringify(favorites));
-    if (currentTab === "favorites") render();
-    else render();
+    render();
   }
 
   function showTechModal() {
@@ -761,99 +871,15 @@
     if (icon) icon.className = isLight ? "fas fa-moon" : "fas fa-sun";
   }
 
-  function escapeHtml(str) {
-    if (!str) return "";
-    return str.replace(/[&<>]/g, function(m) {
-      if (m === "&") return "&amp;";
-      if (m === "<") return "&lt;";
-      if (m === ">") return "&gt;";
-      return m;
-    });
-  }
-
-  function setupEventListeners() {
-    // Búsqueda
-    searchInput?.addEventListener("input", (e) => search(e.target.value));
-    
-    // Limpiar búsqueda
-    document.getElementById("clearSearchBtn")?.addEventListener("click", () => {
-      searchInput.value = "";
-      search("");
-    });
-    
-    // Búsqueda por voz
-    const voiceBtn = document.getElementById("voiceSearchBtn");
-    if ("webkitSpeechRecognition" in window && voiceBtn) {
-      voiceBtn.addEventListener("click", () => {
-        const recognition = new webkitSpeechRecognition();
-        recognition.lang = "es-ES";
-        recognition.onresult = (e) => {
-          searchInput.value = e.results[0][0].transcript;
-          search(searchInput.value);
-        };
-        recognition.start();
-      });
-    } else if (voiceBtn) {
-      voiceBtn.style.display = "none";
-    }
-    
-    // Cambio de vista
-    document.querySelectorAll(".view-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        currentView = btn.dataset.view;
-        document.querySelectorAll(".view-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        render();
-      });
-    });
-    
-    // Modo técnico
-    document.getElementById("techModeBtn")?.addEventListener("click", showTechModal);
-    document.getElementById("confirmTechBtn")?.addEventListener("click", () => {
-      const pwd = document.getElementById("techPassword").value;
-      if (pwd === CONFIG.passwords.tech) {
-        techMode = true;
-        closeModal("techModal");
-        showToast("✅ Modo técnico activado");
-        render();
-      } else {
-        showToast("❌ Clave incorrecta");
-      }
-    });
-    
-    // Botón recibo
-    document.getElementById("receiptBtn")?.addEventListener("click", () => {
-      window.open("http://xiaomi.scz.red/1/", "_blank");
-    });
-    
-    // Tema
-    document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
-    
-    // Navegación
-    document.querySelectorAll(".nav-item").forEach(item => {
-      item.addEventListener("click", () => {
-        currentTab = item.dataset.tab;
-        document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
-        item.classList.add("active");
-        
-        if (currentTab === "compare") {
-          showCompareModal();
-        } else {
-          render();
-        }
-      });
-    });
-  }
-
   function showCompareModal() {
     const compareData = filteredData.slice(0, 4);
     let html = '<div style="display: grid; gap: 12px;">';
     compareData.forEach(p => {
       html += `
         <div style="background: var(--surface); padding: 16px; border-radius: 16px;">
-          <strong>${p.marca} ${p.modelo}</strong><br>
+          <strong>${escapeHtml(p.marca)} ${escapeHtml(p.modelo)}</strong><br>
           Tipo: ${p.tipo}<br>
-          Precio: <span style="color: #f97316; font-weight: 700;">Bs. ${p.venta}</span>
+          Precio: <span style="color: #f97316; font-weight: 700;">Bs. ${p.venta.toLocaleString()}</span>
         </div>
       `;
     });
@@ -876,7 +902,78 @@
     document.body.insertAdjacentHTML("beforeend", modalHtml);
   }
 
-  // Exponer funciones globales para onclick
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === "&") return "&amp;";
+      if (m === "<") return "&lt;";
+      if (m === ">") return "&gt;";
+      return m;
+    });
+  }
+
+  function setupEventListeners() {
+    searchInput?.addEventListener("input", (e) => search(e.target.value));
+    
+    document.getElementById("clearSearchBtn")?.addEventListener("click", () => {
+      searchInput.value = "";
+      search("");
+    });
+    
+    const voiceBtn = document.getElementById("voiceSearchBtn");
+    if ("webkitSpeechRecognition" in window && voiceBtn) {
+      voiceBtn.addEventListener("click", () => {
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = "es-ES";
+        recognition.onresult = (e) => {
+          searchInput.value = e.results[0][0].transcript;
+          search(searchInput.value);
+        };
+        recognition.start();
+      });
+    } else if (voiceBtn) {
+      voiceBtn.style.display = "none";
+    }
+    
+    document.querySelectorAll(".view-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentView = btn.dataset.view;
+        document.querySelectorAll(".view-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        render();
+      });
+    });
+    
+    document.getElementById("techModeBtn")?.addEventListener("click", showTechModal);
+    document.getElementById("confirmTechBtn")?.addEventListener("click", () => {
+      const pwd = document.getElementById("techPassword").value;
+      if (pwd === CONFIG.passwords.tech) {
+        techMode = true;
+        closeModal("techModal");
+        showToast("✅ Modo técnico activado");
+        render();
+      } else {
+        showToast("❌ Clave incorrecta");
+      }
+    });
+    
+    document.getElementById("receiptBtn")?.addEventListener("click", () => {
+      window.open("http://xiaomi.scz.red/1/", "_blank");
+    });
+    
+    document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
+    
+    document.querySelectorAll(".nav-item").forEach(item => {
+      item.addEventListener("click", () => {
+        currentTab = item.dataset.tab;
+        document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+        item.classList.add("active");
+        render();
+      });
+    });
+  }
+
+  // Exponer funciones globales
   window.copyPriceToClipboard = copyPriceToClipboard;
   window.shareToWhatsApp = shareToWhatsApp;
   window.toggleFavorite = toggleFavorite;
