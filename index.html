@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#FF6900">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Dr. Xiaomi · Pantallas</title>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Xiaomi Parts</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <style>
@@ -21,31 +21,54 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Fondo OSCURO como el original */
+    /* Xiaomi Modern Colors */
     :root {
-      --bg-primary: #0a0a0a;
-      --bg-gradient-start: #0f172a;
-      --bg-gradient-end: #020617;
-      --surface: rgba(30, 41, 59, 0.9);
-      --surface-hover: rgba(51, 65, 85, 0.95);
-      --border: rgba(148, 163, 184, 0.2);
-      --text-primary: #ffffff;
-      --text-secondary: #94a3b8;
-      --accent: #f97316;
-      --accent-glow: rgba(249, 115, 22, 0.3);
-      --success: #10b981;
-      --card-radius: 16px;
+      --xiaomi-orange: #FF6900;
+      --xiaomi-orange-soft: #FF8A3C;
+      --xiaomi-orange-light: #FFF3E8;
+      --xiaomi-black: #1A1A1A;
+      --xiaomi-dark: #2C2C2C;
+      --xiaomi-gray: #F5F5F5;
+      --xiaomi-gray-light: #FAFAFA;
+      --xiaomi-gray-medium: #E0E0E0;
+      --xiaomi-gray-dark: #757575;
+      --xiaomi-white: #FFFFFF;
+      --xiaomi-success: #00C853;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
+      --transition: all 0.2s ease;
+    }
+
+    /* Modo Oscuro (por defecto) */
+    [data-theme="dark"] {
+      --bg-primary: #1A1A1A;
+      --bg-secondary: #2C2C2C;
+      --bg-card: #2C2C2C;
+      --text-primary: #FFFFFF;
+      --text-secondary: #A0A0A0;
+      --border: #3A3A3A;
+    }
+
+    /* Modo Claro */
+    [data-theme="light"] {
+      --bg-primary: #FFFFFF;
+      --bg-secondary: #F8F8F8;
+      --bg-card: #FFFFFF;
+      --text-primary: #1A1A1A;
+      --text-secondary: #757575;
+      --border: #E8E8E8;
     }
 
     body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: radial-gradient(circle at top, #1f2933 0, #020617 45%, #000 100%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
       color: var(--text-primary);
       min-height: 100vh;
       overflow-x: hidden;
       position: fixed;
       width: 100%;
       height: 100%;
+      transition: background 0.3s ease;
     }
 
     .app {
@@ -55,12 +78,12 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      background: transparent;
+      background: var(--bg-primary);
     }
 
+    /* Header Minimalista */
     .header {
-      background: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(20px);
+      background: var(--bg-primary);
       border-bottom: 1px solid var(--border);
       padding: 12px 16px;
       flex-shrink: 0;
@@ -70,7 +93,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
     .logo {
@@ -80,69 +103,79 @@
     }
 
     .logo-icon {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, #f97316, #ea580c);
-      border-radius: 10px;
+      width: 32px;
+      height: 32px;
+      background: var(--xiaomi-orange);
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      box-shadow: 0 0 15px rgba(249, 115, 22, 0.3);
+      font-size: 14px;
+      font-weight: 700;
+      color: white;
     }
 
     .logo h1 {
       font-size: 18px;
-      font-weight: 700;
-      background: linear-gradient(135deg, #f97316, #fbbf24);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+    }
+
+    .logo span {
+      font-weight: 400;
+      color: var(--text-secondary);
     }
 
     .header-actions {
       display: flex;
-      gap: 6px;
+      gap: 8px;
     }
 
     .icon-btn {
-      background: var(--surface);
-      border: 1px solid var(--border);
+      background: transparent;
+      border: none;
       border-radius: 30px;
-      padding: 6px 10px;
-      color: var(--text-primary);
+      padding: 8px;
+      color: var(--text-secondary);
       cursor: pointer;
-      font-size: 12px;
-      transition: transform 0.1s ease;
+      font-size: 16px;
+      transition: var(--transition);
     }
 
     .icon-btn:active {
       transform: scale(0.95);
+      color: var(--xiaomi-orange);
     }
 
+    /* Search Minimalista */
     .search-container {
       position: relative;
     }
 
     .search-input {
       width: 100%;
-      padding: 10px 40px 10px 14px;
-      background: var(--surface);
+      padding: 12px 44px 12px 16px;
+      background: var(--bg-secondary);
       border: 1px solid var(--border);
-      border-radius: 30px;
+      border-radius: 12px;
       color: var(--text-primary);
-      font-size: 14px;
+      font-size: 15px;
+      transition: var(--transition);
     }
 
     .search-input:focus {
       outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-glow);
+      border-color: var(--xiaomi-orange);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-secondary);
     }
 
     .search-actions {
       position: absolute;
-      right: 10px;
+      right: 12px;
       top: 50%;
       transform: translateY(-50%);
     }
@@ -152,8 +185,10 @@
       border: none;
       color: var(--text-secondary);
       cursor: pointer;
+      font-size: 16px;
     }
 
+    /* Cards estilo Xiaomi - Moderno y Minimalista */
     .main-content {
       flex: 1;
       overflow-y: auto;
@@ -163,18 +198,17 @@
     .cards-view {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      padding: 12px;
+      gap: 12px;
+      padding: 16px;
       padding-bottom: 80px;
     }
 
     .product-card {
-      background: var(--surface);
-      backdrop-filter: blur(10px);
-      border-radius: var(--card-radius);
-      padding: 12px;
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
       border: 1px solid var(--border);
-      transition: transform 0.1s ease, background 0.2s ease;
+      transition: var(--transition);
     }
 
     .product-card:active {
@@ -185,81 +219,90 @@
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
 
-    .card-title {
-      font-weight: 700;
-      font-size: 15px;
-      color: var(--accent);
+    .card-brand {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--xiaomi-orange);
+      letter-spacing: -0.2px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
     }
 
     .card-model {
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-top: 2px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
     }
 
     .card-specs {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin: 8px 0;
-      font-size: 11px;
+      margin: 12px 0;
     }
 
     .card-type {
-      padding: 2px 8px;
+      padding: 4px 10px;
       border-radius: 20px;
-      background: rgba(0,0,0,0.3);
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
     }
 
     .card-type.oled {
-      color: #f97316;
+      background: rgba(255, 105, 0, 0.1);
+      color: var(--xiaomi-orange);
     }
 
-    .card-type.lcd {
-      color: #60a5fa;
+    .supplier-badge, .price-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
     }
 
     .card-price-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 10px;
-      padding-top: 10px;
+      margin-top: 12px;
+      padding-top: 12px;
       border-top: 1px solid var(--border);
     }
 
     .card-price {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 700;
-      color: var(--success);
+      color: var(--text-primary);
       cursor: pointer;
-      padding: 4px 10px;
-      border-radius: 30px;
-      background: rgba(16, 185, 129, 0.15);
-      transition: all 0.1s ease;
+      transition: var(--transition);
+      letter-spacing: -0.5px;
     }
 
     .card-price:active {
-      background: var(--success);
-      color: white;
+      color: var(--xiaomi-orange);
     }
 
     .card-actions-group {
       display: flex;
-      gap: 6px;
+      gap: 8px;
     }
 
     .image-btn, .whatsapp-btn {
       border: none;
-      padding: 5px 10px;
+      padding: 8px 14px;
       border-radius: 30px;
-      color: white;
-      font-size: 10px;
+      font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
-      transition: transform 0.1s ease;
+      transition: var(--transition);
     }
 
     .image-btn:active, .whatsapp-btn:active {
@@ -267,24 +310,26 @@
     }
 
     .image-btn {
-      background: #3b82f6;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
     }
 
     .whatsapp-btn {
       background: #25D366;
+      color: white;
     }
 
+    /* Bottom Navigation Minimalista */
     .bottom-nav {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(15, 23, 42, 0.98);
-      backdrop-filter: blur(20px);
+      background: var(--bg-primary);
       border-top: 1px solid var(--border);
       display: flex;
-      padding: 8px 16px 16px;
-      gap: 8px;
+      padding: 8px 20px 20px;
+      gap: 12px;
       z-index: 100;
     }
 
@@ -298,10 +343,11 @@
       border: none;
       background: transparent;
       color: var(--text-secondary);
-      border-radius: 30px;
+      border-radius: 12px;
       cursor: pointer;
-      font-size: 10px;
-      transition: all 0.1s ease;
+      font-size: 11px;
+      font-weight: 500;
+      transition: var(--transition);
     }
 
     .nav-item:active {
@@ -309,14 +355,14 @@
     }
 
     .nav-item.active {
-      color: var(--accent);
-      background: var(--surface);
+      color: var(--xiaomi-orange);
     }
 
     .nav-item i {
       font-size: 20px;
     }
 
+    /* Modal Minimalista */
     .modal {
       display: none;
       position: fixed;
@@ -324,8 +370,8 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.95);
-      backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
       z-index: 200;
       align-items: center;
       justify-content: center;
@@ -333,56 +379,78 @@
     }
 
     .modal-content {
-      background: var(--surface);
-      border-radius: 24px;
-      padding: 20px;
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 24px;
       max-width: 300px;
       width: 100%;
+      border: 1px solid var(--border);
     }
 
     .modal-content h3 {
-      margin-bottom: 14px;
+      margin-bottom: 16px;
       font-size: 18px;
-      color: var(--accent);
+      font-weight: 600;
+      color: var(--text-primary);
     }
 
     .modal-content input {
       width: 100%;
-      padding: 12px;
-      background: rgba(0, 0, 0, 0.3);
+      padding: 14px;
+      background: var(--bg-secondary);
       border: 1px solid var(--border);
-      border-radius: 30px;
+      border-radius: 12px;
       color: var(--text-primary);
-      margin-bottom: 14px;
+      font-size: 15px;
+      margin-bottom: 16px;
+    }
+
+    .modal-content input:focus {
+      outline: none;
+      border-color: var(--xiaomi-orange);
     }
 
     .modal-buttons {
       display: flex;
-      gap: 10px;
+      gap: 12px;
     }
 
     .modal-buttons button {
       flex: 1;
-      padding: 10px;
+      padding: 12px;
       border: none;
-      border-radius: 30px;
+      border-radius: 12px;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 500;
+      font-size: 14px;
+      transition: var(--transition);
     }
 
+    .modal-buttons button:first-child {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .modal-buttons button:last-child {
+      background: var(--xiaomi-orange);
+      color: white;
+    }
+
+    /* Toast */
     .toast {
       position: fixed;
-      bottom: 80px;
+      bottom: 90px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.95);
-      backdrop-filter: blur(10px);
-      padding: 8px 16px;
+      background: var(--bg-secondary);
+      padding: 10px 20px;
       border-radius: 30px;
-      color: white;
-      font-size: 12px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 500;
       z-index: 150;
       animation: fadeInUp 0.2s ease;
+      border: 1px solid var(--border);
     }
 
     @keyframes fadeInUp {
@@ -396,28 +464,28 @@
       }
     }
 
+    /* Results count */
     .results-count {
-      padding: 8px 16px;
-      font-size: 12px;
+      padding: 12px 20px 0;
+      font-size: 13px;
       color: var(--text-secondary);
-      background: rgba(0,0,0,0.3);
-      margin: 4px 12px;
-      border-radius: 30px;
-      text-align: center;
+      text-align: left;
     }
 
+    /* Skeleton */
     .skeleton-card {
-      background: var(--surface);
-      border-radius: var(--card-radius);
-      padding: 12px;
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
     }
 
     .skeleton {
-      background: linear-gradient(90deg, rgba(30,41,59,0.5) 25%, rgba(51,65,85,0.7) 50%, rgba(30,41,59,0.5) 75%);
+      background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--border) 50%, var(--bg-secondary) 75%);
       background-size: 200% 100%;
       animation: loading 1.5s infinite;
-      border-radius: 8px;
-      height: 80px;
+      border-radius: 12px;
+      height: 90px;
     }
 
     @keyframes loading {
@@ -428,25 +496,26 @@
     .empty-state {
       text-align: center;
       padding: 60px 20px;
+      color: var(--text-secondary);
     }
 
     .empty-state i {
       font-size: 48px;
-      opacity: 0.5;
-      margin-bottom: 12px;
+      opacity: 0.3;
+      margin-bottom: 16px;
     }
 
-    /* Scrollbar personalizado */
+    /* Scrollbar */
     .main-content::-webkit-scrollbar {
       width: 3px;
     }
 
     .main-content::-webkit-scrollbar-track {
-      background: var(--surface);
+      background: var(--border);
     }
 
     .main-content::-webkit-scrollbar-thumb {
-      background: var(--accent);
+      background: var(--xiaomi-orange);
       border-radius: 3px;
     }
   </style>
@@ -456,17 +525,20 @@
   <header class="header">
     <div class="header-top">
       <div class="logo">
-        <div class="logo-icon">📱</div>
-        <h1>Dr. Xiaomi</h1>
+        <div class="logo-icon">MI</div>
+        <h1>Xiaomi <span>Parts</span></h1>
       </div>
       <div class="header-actions">
+        <button class="icon-btn" id="themeToggle" title="Tema">
+          <i class="fas fa-sun"></i>
+        </button>
         <button class="icon-btn" id="techModeBtn" title="Modo Técnico">
           <i class="fas fa-microchip"></i>
         </button>
         <button class="icon-btn" id="receiptBtn" title="Recibo">
           <i class="fas fa-receipt"></i>
         </button>
-        <button class="icon-btn" id="shuffleBtn" title="Mezclar productos">
+        <button class="icon-btn" id="shuffleBtn" title="Mezclar">
           <i class="fas fa-random"></i>
         </button>
       </div>
@@ -493,7 +565,7 @@
 
 <div id="techModal" class="modal">
   <div class="modal-content">
-    <h3><i class="fas fa-microchip"></i> Modo Técnico</h3>
+    <h3>Acceso Técnico</h3>
     <input type="password" id="techPassword" placeholder="Clave">
     <div class="modal-buttons">
       <button onclick="closeModal('techModal')">Cancelar</button>
@@ -520,12 +592,12 @@
   let techMode = false;
   let currentTab = "home";
   let popupWindow = null;
+  let currentTheme = "dark";
 
   const container = document.getElementById("resultsContainer");
   const searchInput = document.getElementById("searchInput");
   const resultsCount = document.getElementById("resultsCount");
 
-  // Función para mezclar array (algoritmo Fisher-Yates)
   function shuffleArray(array) {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -539,9 +611,32 @@
     showSkeleton();
     await loadData();
     setupEventListeners();
-    // Mezclar resultados al inicio
     shuffleResults();
     render();
+    loadTheme();
+  }
+
+  function loadTheme() {
+    const saved = localStorage.getItem("xiaomi_theme");
+    if (saved === "light") {
+      currentTheme = "light";
+      document.documentElement.setAttribute("data-theme", "light");
+      const icon = document.querySelector("#themeToggle i");
+      if (icon) icon.className = "fas fa-moon";
+    }
+  }
+
+  function toggleTheme() {
+    if (currentTheme === "dark") {
+      currentTheme = "light";
+      document.documentElement.setAttribute("data-theme", "light");
+      document.querySelector("#themeToggle i").className = "fas fa-moon";
+    } else {
+      currentTheme = "dark";
+      document.documentElement.setAttribute("data-theme", "dark");
+      document.querySelector("#themeToggle i").className = "fas fa-sun";
+    }
+    localStorage.setItem("xiaomi_theme", currentTheme);
   }
 
   function shuffleResults() {
@@ -549,7 +644,7 @@
       filteredData = shuffleArray(allData);
       updateResultsCount();
       render();
-      showToast("🎲 Productos mezclados aleatoriamente");
+      showToast("Productos mezclados");
     }
   }
 
@@ -564,7 +659,6 @@
           console.error(`Error cargando ${source.name}:`, error);
         }
       }
-      // Mezclar al cargar
       filteredData = shuffleArray(allData);
       updateResultsCount();
       render();
@@ -691,17 +785,17 @@
           <div class="product-card">
             <div class="card-header">
               <div>
-                <div class="card-title">${escapeHtml(item.marca)}</div>
+                <div class="card-brand">${escapeHtml(item.marca)}</div>
                 <div class="card-model">${escapeHtml(item.modelo)}</div>
               </div>
             </div>
             <div class="card-specs">
-              <span class="card-type ${item.tipo === 'OLED' ? 'oled' : 'lcd'}">${item.tipo}</span>
-              ${techMode ? `<span style="color: #fbbf24;">📦 ${escapeHtml(item.proveedor)}</span>` : ''}
-              ${techMode ? `<span style="color: #fbbf24;">💰 Compra: Bs. ${item.compra.toLocaleString()}</span>` : ''}
+              <span class="card-type ${item.tipo === 'OLED' ? 'oled' : ''}">${item.tipo}</span>
+              ${techMode ? `<span class="supplier-badge">${escapeHtml(item.proveedor)}</span>` : ''}
+              ${techMode ? `<span class="price-badge">Compra: ${item.compra.toLocaleString()} Bs</span>` : ''}
             </div>
             <div class="card-price-row">
-              <span class="card-price" onclick="copyPriceToClipboard('${item.id}')">Bs. ${item.venta.toLocaleString()}</span>
+              <span class="card-price" onclick="copyPriceToClipboard('${item.id}')">${item.venta.toLocaleString()} Bs</span>
               <div class="card-actions-group">
                 <button class="image-btn" onclick="openGooglePopup('${item.id}')"><i class="fab fa-google"></i> LCD</button>
                 <button class="whatsapp-btn" onclick="shareToWhatsApp('${item.id}')"><i class="fab fa-whatsapp"></i></button>
@@ -713,12 +807,11 @@
     `;
   }
 
-  // Abrir ventana popup con Google Images
   function openGooglePopup(productId) {
     const product = allData.find(p => p.id === productId);
     if (!product) return;
     
-    const searchTerm = `LCD ${product.modelo} ${product.marca} pantalla repuesto`;
+    const searchTerm = `LCD ${product.modelo} ${product.marca} pantalla`;
     const encodedTerm = encodeURIComponent(searchTerm);
     const googleUrl = `https://www.google.com/search?q=${encodedTerm}&tbm=isch`;
     
@@ -742,7 +835,7 @@
     popupWindow = window.open(googleUrl, 'GoogleImagesPopup', features);
     if (popupWindow) popupWindow.focus();
     if (navigator.vibrate) navigator.vibrate(50);
-    showToast(`🔍 Buscando: ${product.modelo}`);
+    showToast(`Buscando: ${product.modelo}`);
   }
 
   function search(term) {
@@ -762,7 +855,7 @@
   function updateResultsCount() {
     if (resultsCount) {
       const count = filteredData.length;
-      resultsCount.textContent = `📱 ${count} producto${count !== 1 ? 's' : ''}`;
+      resultsCount.textContent = `${count} producto${count !== 1 ? 's' : ''}`;
     }
   }
 
@@ -770,13 +863,13 @@
     const product = allData.find(p => p.id === productId);
     if (!product) return;
     
-    const message = `📱 *PRECIO DE PANTALLA*\n${product.marca} ${product.modelo}\n💰 Precio: Bs. ${product.venta.toLocaleString()}`;
+    const message = `📱 ${product.marca} ${product.modelo}\n💰 ${product.venta.toLocaleString()} Bs.`;
     
     navigator.clipboard.writeText(message).then(() => {
-      showToast("✅ Precio copiado");
+      showToast("Precio copiado");
       if (navigator.vibrate) navigator.vibrate(50);
     }).catch(() => {
-      showToast("❌ Error al copiar");
+      showToast("Error");
     });
   }
 
@@ -784,7 +877,7 @@
     const product = allData.find(p => p.id === productId);
     if (!product) return;
     
-    const message = `📱 *PRECIO DE PANTALLA*\n${product.marca} ${product.modelo}\n💰 Precio: Bs. ${product.venta.toLocaleString()}`;
+    const message = `📱 ${product.marca} ${product.modelo}\n💰 ${product.venta.toLocaleString()} Bs.`;
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${encoded}`, "_blank");
     if (navigator.vibrate) navigator.vibrate(50);
@@ -829,7 +922,7 @@
         <div class="empty-state">
           <i class="fas fa-exclamation-triangle"></i>
           <p>Error cargando datos</p>
-          <button onclick="location.reload()" style="margin-top: 16px; padding: 10px 20px; background: #f97316; border: none; border-radius: 30px; color: white;">Reintentar</button>
+          <button onclick="location.reload()" style="margin-top: 16px; padding: 12px 24px; background: var(--xiaomi-orange); border: none; border-radius: 30px; color: white; font-weight: 500;">Reintentar</button>
         </div>
       `;
     }
@@ -837,23 +930,23 @@
 
   function showCompareModal() {
     const compareData = filteredData.slice(0, 4);
-    let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
     compareData.forEach(p => {
       html += `
-        <div style="background: var(--surface); padding: 12px; border-radius: 12px; border-left: 3px solid var(--accent);">
-          <strong style="color: var(--accent);">${escapeHtml(p.marca)}</strong>
-          <div>${escapeHtml(p.modelo)}</div>
-          <div style="font-size: 11px; color: var(--text-secondary);">${p.tipo}</div>
-          <div style="font-size: 18px; font-weight: 700; color: var(--success); margin-top: 8px;">Bs. ${p.venta.toLocaleString()}</div>
+        <div style="background: var(--bg-secondary); padding: 14px; border-radius: 16px; border-left: 3px solid var(--xiaomi-orange);">
+          <div style="font-size: 12px; color: var(--xiaomi-orange); font-weight: 500;">${escapeHtml(p.marca)}</div>
+          <div style="font-size: 15px; font-weight: 500; margin: 4px 0;">${escapeHtml(p.modelo)}</div>
+          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">${p.tipo}</div>
+          <div style="font-size: 22px; font-weight: 700; color: var(--text-primary);">${p.venta.toLocaleString()} Bs</div>
         </div>
       `;
     });
-    html += '</div><div class="modal-buttons" style="margin-top: 16px;"><button onclick="closeModal(\'compareModal\')" style="flex:1; padding: 10px; background: var(--accent); border: none; border-radius: 30px; color: white;">Cerrar</button></div>';
+    html += '</div><div class="modal-buttons" style="margin-top: 16px;"><button onclick="closeModal(\'compareModal\')" style="flex:1; padding: 12px; background: var(--xiaomi-orange); border: none; border-radius: 30px; color: white; font-weight: 500;">Cerrar</button></div>';
     
     const modalHtml = `
       <div id="compareModal" class="modal" style="display: flex;">
         <div class="modal-content" style="max-width: 350px;">
-          <h3><i class="fas fa-chart-line"></i> Comparar</h3>
+          <h3>Comparar</h3>
           ${html}
         </div>
       </div>
@@ -882,21 +975,19 @@
       search("");
     });
     
+    document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
     document.getElementById("techModeBtn")?.addEventListener("click", showTechModal);
-    
-    document.getElementById("shuffleBtn")?.addEventListener("click", () => {
-      shuffleResults();
-    });
+    document.getElementById("shuffleBtn")?.addEventListener("click", () => shuffleResults());
     
     document.getElementById("confirmTechBtn")?.addEventListener("click", () => {
       const pwd = document.getElementById("techPassword").value;
       if (pwd === CONFIG.passwords.tech) {
         techMode = true;
         closeModal("techModal");
-        showToast("✅ Modo técnico activado");
+        showToast("Modo técnico activado");
         render();
       } else {
-        showToast("❌ Clave incorrecta");
+        showToast("Clave incorrecta");
         if (navigator.vibrate) navigator.vibrate(200);
       }
     });
@@ -917,7 +1008,6 @@
     });
   }
 
-  // Exponer funciones globales
   window.copyPriceToClipboard = copyPriceToClipboard;
   window.shareToWhatsApp = shareToWhatsApp;
   window.openGooglePopup = openGooglePopup;
