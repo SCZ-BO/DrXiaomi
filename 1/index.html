@@ -2,388 +2,522 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DR.Xiaomi - Servicio Técnico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#FF6900">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>DR.Xiaomi · Recibo</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
   <style>
-    :root {
-      --bg-primary: #121212;
-      --bg-secondary: #1a1a1a;
-      --bg-tertiary: #2d2d2d;
-      --text-primary: #f9fafb;
-      --text-secondary: #9ca3af;
-      --accent: #ff7b00;
-      --accent-hover: #ff9a3d;
-      --border: #374151;
-      --success: #16a34a;
-      --error: #f97373;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    *{margin:0;padding:0;box-sizing:border-box}
+    /* Xiaomi Modern Colors */
+    :root {
+      --xiaomi-orange: #FF6900;
+      --xiaomi-orange-dark: #E55A00;
+      --xiaomi-orange-soft: #FF8A3C;
+      --xiaomi-black: #1A1A1A;
+      --xiaomi-dark: #2C2C2C;
+      --xiaomi-gray: #F5F5F5;
+      --xiaomi-gray-light: #FAFAFA;
+      --xiaomi-gray-medium: #E0E0E0;
+      --xiaomi-gray-dark: #757575;
+      --xiaomi-white: #FFFFFF;
+      --xiaomi-success: #00C853;
+      --transition: all 0.2s ease;
+    }
 
-    body{
-      font-family:'Roboto',sans-serif;
+    [data-theme="dark"] {
+      --bg-primary: #0D0D0D;
+      --bg-secondary: #1A1A1A;
+      --bg-card: #1A1A1A;
+      --text-primary: #FFFFFF;
+      --text-secondary: #A0A0A0;
+      --border: #2A2A2A;
+      --card-border: #333333;
+      --separator: #FF6900;
+      --input-bg: #2C2C2C;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #F8F8F8;
+      --bg-secondary: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --text-primary: #1A1A1A;
+      --text-secondary: #666666;
+      --border: #E8E8E8;
+      --card-border: #E0E0E0;
+      --separator: #FF6900;
+      --input-bg: #F5F5F5;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background: radial-gradient(circle at top, #1f2933 0, #020617 45%, #000 100%);
       color: var(--text-primary);
-      display:flex;
-      justify-content:center;
-      padding:20px;
-      min-height:100vh;
+      min-height: 100vh;
+      padding: 16px;
+      transition: background 0.3s ease;
     }
 
-    .container{
-      width:100%;
-      max-width:430px;
-      background:var(--bg-primary);
-      border-radius:24px;
-      box-shadow:0 20px 40px rgba(0,0,0,0.6),
-                 0 0 0 1px rgba(148,163,184,0.15);
-      overflow:hidden;
+    [data-theme="light"] body {
+      background: radial-gradient(circle at top, #e8e8e8 0, #f5f5f5 45%, #ffffff 100%);
     }
 
-    header{
-      background:rgba(15,23,42,0.95);
-      padding:14px 16px;
-      text-align:center;
-      border-bottom:1px solid rgba(148,163,184,0.3);
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background: var(--bg-primary);
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      border: 2px solid var(--border);
+      overflow: hidden;
     }
 
-    header h1{
-      color:var(--accent);
-      font-size:18px;
-      margin:0;
-      letter-spacing:0.06em;
+    header {
+      background: var(--bg-secondary);
+      padding: 16px 20px;
+      text-align: center;
+      border-bottom: 2px solid var(--border);
+      position: relative;
     }
 
-    main{
-      padding:16px 14px 18px;
-      background:var(--bg-primary);
+    header::before {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 20%;
+      right: 20%;
+      height: 2px;
+      background: var(--xiaomi-orange);
     }
 
-    fieldset{
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:12px 10px;
-      margin-bottom:14px;
-      background:var(--bg-secondary);
+    header h1 {
+      color: var(--xiaomi-orange);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      margin: 0;
     }
 
-    legend{
-      padding:0 8px;
-      font-weight:600;
-      color:var(--text-primary);
-      font-size:13px;
+    header p {
+      color: var(--text-secondary);
+      font-size: 11px;
+      margin-top: 4px;
     }
 
-    label{
-      display:block;
-      margin-top:8px;
-      color:var(--text-secondary);
-      font-size:13px;
+    main {
+      padding: 20px;
+      background: var(--bg-primary);
     }
 
-    input,select,textarea,button{
-      width:100%;
-      font-size:14px;
+    fieldset {
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 20px;
+      background: var(--bg-card);
+      position: relative;
+      transition: var(--transition);
     }
 
-    input,select,textarea{
-      padding:8px 10px;
-      margin-top:4px;
-      border:1px solid var(--border);
-      border-radius:10px;
-      background:var(--bg-tertiary);
-      color:var(--text-primary);
+    fieldset::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 16px;
+      bottom: 16px;
+      width: 4px;
+      background: var(--separator);
+      border-radius: 4px;
     }
 
-    input::placeholder,
-    textarea::placeholder{
-      color:#6b7280;
-      font-size:13px;
+    legend {
+      padding: 0 12px;
+      font-weight: 700;
+      color: var(--xiaomi-orange);
+      font-size: 13px;
+      background: var(--bg-card);
+      margin-left: 8px;
     }
 
-    button{
-      padding:12px;
-      background:var(--accent);
-      color:#fff;
-      border:none;
-      border-radius:999px;
-      cursor:pointer;
-      margin-top:16px;
-      font-weight:600;
-      letter-spacing:0.03em;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      box-shadow:0 8px 20px rgba(255,123,0,0.35);
-      transition:all 0.25s ease;
+    label {
+      display: block;
+      margin-top: 12px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
     }
 
-    button:hover{
-      background:var(--accent-hover);
-      transform:translateY(-1px);
-      box-shadow:0 12px 26px rgba(255,123,0,0.4);
+    .required-field::after {
+      content: " *";
+      color: var(--xiaomi-orange);
     }
 
-    .button-icon{
-      font-size:16px;
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: var(--input-bg);
+      color: var(--text-primary);
+      transition: var(--transition);
+      margin-top: 6px;
     }
 
-    .date-container{
-      margin-bottom:8px;
-      text-align:right;
-      color:var(--text-secondary);
-      font-size:11px;
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--xiaomi-orange);
     }
 
-    #pattern-container{
-      position:relative;
-      width:100%;
-      height:220px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      background:var(--bg-primary);
-      margin-top:8px;
-      overflow:hidden;
+    .date-container {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 500;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
     }
 
-    #pattern-container canvas{
-      position:absolute;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
+    #pattern-container {
+      position: relative;
+      width: 100%;
+      height: 220px;
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      background: var(--bg-primary);
+      margin-top: 12px;
+      overflow: hidden;
     }
 
-    #pattern-sequence{
-      margin-top:8px;
-      text-align:center;
-      color:var(--text-secondary);
-      font-size:13px;
+    #pattern-container canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
     }
 
-    #imagePreview{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:8px;
+    #pattern-sequence {
+      margin-top: 10px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
     }
 
-    .preview-image{
-      width:80px;
-      height:80px;
-      object-fit:cover;
-      border-radius:10px;
-      border:1px solid var(--border);
+    #imagePreview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
     }
 
-    #photoCounter{
-      font-size:11px;
-      color:var(--text-secondary);
-      margin-top:4px;
+    .preview-image {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 2px solid var(--border);
     }
 
-    #confirmation{
-      display:none;
-      background:rgba(22,163,74,0.15);
-      color:#bbf7d0;
-      padding:10px 12px;
-      border-radius:999px;
-      margin-top:12px;
-      text-align:center;
-      font-size:12px;
-      border:1px solid rgba(34,197,94,0.5);
+    #photoCounter {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 8px;
     }
 
-    .costos-container{
-      display:flex;
-      gap:12px;
-      margin-top:12px;
+    .costos-container {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
     }
 
-    .costo-box{
-      flex:1;
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:10px;
-      background:var(--bg-tertiary);
+    .costo-box {
+      flex: 1;
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      position: relative;
     }
 
-    .costo-box label{
-      font-weight:600;
-      color:var(--text-secondary);
-      font-size:12px;
+    .costo-box::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 3px;
+      background: var(--separator);
+      border-radius: 3px;
     }
 
-    .costo-box input{
-      text-align:right;
-      font-weight:600;
-      border:none;
-      background:transparent;
-      color:var(--text-primary);
-      margin-top:6px;
-      font-size:15px;
+    .costo-box label {
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 11px;
+      margin-top: 0;
     }
 
-    .servicios-container{margin-top:10px;}
-
-    .servicio-item{
-      display:flex;
-      gap:8px;
-      margin-bottom:8px;
-      align-items:center;
+    .costo-box input {
+      text-align: right;
+      font-weight: 700;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      margin-top: 6px;
+      font-size: 18px;
+      padding: 0;
     }
 
-    .servicio-item input{
-      flex:3;
+    .servicios-container {
+      margin-top: 8px;
     }
 
-    .servicio-item input[type="number"]{
-      flex:1.2;
-      text-align:right;
+    .servicio-item {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      align-items: center;
     }
 
-    .servicio-item button{
-      flex:0 0 34px;
-      margin-top:0;
-      padding:6px 0;
-      border-radius:999px;
-      background:var(--bg-tertiary);
-      box-shadow:none;
-      color:var(--text-secondary);
+    .servicio-item input:first-child {
+      flex: 3;
     }
 
-    .servicio-item button:hover{
-      background:#7f1d1d;
-      color:#fecaca;
-      box-shadow:0 0 0 1px rgba(248,113,113,0.6);
-      transform:none;
+    .servicio-item input[type="number"] {
+      flex: 1.2;
+      text-align: right;
     }
 
-    #addServicio{
-      background:#2563eb;
-      box-shadow:0 8px 18px rgba(37,99,235,0.35);
-      width:auto;
-      padding-inline:14px;
-      font-size:13px;
+    .servicio-item button {
+      flex: 0 0 36px;
+      margin-top: 0;
+      padding: 8px 0;
+      border-radius: 30px;
+      background: var(--bg-secondary);
+      box-shadow: none;
+      color: var(--text-secondary);
+      border: 2px solid var(--border);
     }
 
-    #addServicio:hover{
-      background:#1d4ed8;
+    button {
+      padding: 14px;
+      background: var(--xiaomi-orange);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      cursor: pointer;
+      margin-top: 16px;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: var(--transition);
+      width: 100%;
     }
 
-    input:focus,select:focus,textarea:focus{
-      border-color:var(--accent);
-      outline:none;
-      box-shadow:0 0 0 1px rgba(255,123,0,0.6);
+    button:active {
+      transform: scale(0.97);
     }
 
-    .required-field::after{
-      content:" *";
-      color:#f97373;
+    #addServicio {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 2px solid var(--border);
+      box-shadow: none;
+      margin-top: 8px;
     }
 
-    #loading{
-      display:none;
-      position:fixed;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
-      background:rgba(0,0,0,0.6);
-      z-index:1000;
-      justify-content:center;
-      align-items:center;
+    .whatsapp-action {
+      display: none;
+      background: rgba(37, 211, 102, 0.1);
+      border: 2px solid #25D366;
+      border-radius: 20px;
+      padding: 16px;
+      margin-top: 16px;
+      text-align: center;
     }
 
-    #loading div{
-      background:var(--bg-secondary);
-      padding:20px 24px;
-      border-radius:16px;
-      text-align:center;
-      color:var(--text-primary);
-      border:1px solid var(--border);
-      box-shadow:0 18px 40px rgba(0,0,0,0.8);
-      font-size:13px;
+    .whatsapp-action.show {
+      display: block;
+      animation: fadeInUp 0.3s ease;
     }
 
-    .spinner{
-      border:4px solid #1f2937;
-      border-top:4px solid var(--accent);
-      border-radius:50%;
-      width:30px;
-      height:30px;
-      animation:spin 1s linear infinite;
-      margin:0 auto 10px;
+    .whatsapp-action h4 {
+      color: #25D366;
+      margin-bottom: 12px;
+      font-size: 14px;
     }
 
-    @keyframes spin{
-      0%{transform:rotate(0deg)}
-      100%{transform:rotate(360deg)}
+    .whatsapp-action p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
     }
 
-    @media(max-width:480px){
-      body{padding:10px;}
-      .container{border-radius:0;max-width:100%;box-shadow:none;}
-      header h1{font-size:16px;}
-      label{font-size:12px;}
-      .servicio-item{flex-direction:column;align-items:stretch;}
-      .servicio-item button{align-self:flex-end;}
-      .costos-container{flex-direction:column;}
+    .whatsapp-btn-pdf {
+      background: #25D366;
+      margin-top: 8px;
+    }
+
+    #confirmation {
+      display: none;
+      background: rgba(0, 200, 83, 0.12);
+      color: var(--xiaomi-success);
+      padding: 12px 16px;
+      border-radius: 40px;
+      margin-top: 16px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+      border: 2px solid var(--xiaomi-success);
+    }
+
+    .theme-toggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 48px;
+      height: 48px;
+      border-radius: 30px;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: var(--transition);
+    }
+
+    #loading {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #loading div {
+      background: var(--bg-card);
+      padding: 24px;
+      border-radius: 24px;
+      text-align: center;
+      color: var(--text-primary);
+      border: 2px solid var(--border);
+    }
+
+    .spinner {
+      border: 3px solid var(--border);
+      border-top: 3px solid var(--xiaomi-orange);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 8px; }
+      .container { border-radius: 20px; }
+      main { padding: 16px; }
+      .servicio-item { flex-direction: column; align-items: stretch; }
+      .servicio-item button { align-self: flex-end; width: 40px; }
+      .costos-container { flex-direction: column; }
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--border);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--xiaomi-orange);
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <header><h1>RECIBO DR:XIAOMI</h1></header>
+    <header>
+      <h1>DR. XIAOMI</h1>
+      <p>Servicio Técnico Especializado</p>
+    </header>
     <main>
       <form id="formRecibo">
         <fieldset>
-          <legend>Datos del Cliente</legend>
+          <legend>DATOS DEL CLIENTE</legend>
           <div class="date-container">
             <span id="dateTimeDisplay"></span>
-            <span id="numeroReciboDisplay" style="margin-left:10px;"></span>
+            <span id="numeroReciboDisplay"></span>
           </div>
-          <label class="required-field">Nombre</label>
+          <label class="required-field">Nombre completo</label>
           <input type="text" id="nombre" required placeholder="Ej: Juan Pérez">
-          <label class="required-field">Teléfono</label>
-          <input type="tel" id="telefono" required placeholder="Ej: 75959450" pattern="[0-9]{7,8}">
+          <label class="required-field">Teléfono / WhatsApp</label>
+          <input type="tel" id="telefono" required placeholder="75959450" pattern="[0-9]{7,8}">
         </fieldset>
 
         <fieldset>
-          <legend>Dispositivo</legend>
+          <legend>DISPOSITIVO</legend>
           <label class="required-field">Marca</label>
           <select id="marca" required>
             <option value="">Seleccionar</option>
-            <option>Xiaomi</option>
-            <option>Samsung</option>
-            <option>Huawei</option>
-            <option>Tecno</option>
-            <option>Honor</option>
-            <option>Infinix</option>
-            <option>iPhone</option>
+            <option>Xiaomi</option><option>Samsung</option><option>Huawei</option>
+            <option>Tecno</option><option>Honor</option><option>Infinix</option><option>iPhone</option>
           </select>
-
           <label class="required-field">Modelo</label>
           <input type="text" id="modelo" required placeholder="Ej: Redmi Note 10">
-
-          <label>IMEI/Serial (opcional)</label>
+          <label>IMEI / Serial (opcional)</label>
           <input type="text" id="imei" placeholder="15 dígitos">
-
           <label class="required-field">¿Enciende?</label>
           <select id="enciende" required>
             <option value="">Seleccionar</option>
-            <option>Sí</option>
-            <option>No</option>
-            <option>A veces</option>
+            <option>Sí</option><option>No</option><option>A veces</option>
           </select>
         </fieldset>
 
         <fieldset>
-          <legend>Estado y Falla</legend>
+          <legend>ESTADO Y FALLA</legend>
           <label>Estado del equipo</label>
           <textarea id="estado" rows="2" placeholder="Describa el estado físico del equipo"></textarea>
           <label>Falla reportada</label>
@@ -391,21 +525,21 @@
         </fieldset>
 
         <fieldset>
-          <legend>Seguridad</legend>
-          <label>Tipo</label>
+          <legend>SEGURIDAD</legend>
+          <label>Tipo de seguridad</label>
           <select id="tipoSeguridad">
             <option value="patron">Patrón</option>
             <option value="pin">PIN</option>
             <option value="ninguno">Ninguno</option>
           </select>
-          <div id="pinContainer" style="display:none;margin-top:8px">
-            <label>PIN</label>
+          <div id="pinContainer" style="display:none; margin-top: 12px">
+            <label>PIN de acceso</label>
             <input type="password" id="pinInput" maxlength="6" placeholder="6 dígitos">
           </div>
         </fieldset>
 
         <fieldset id="field-patron">
-          <legend>Patrón</legend>
+          <legend>PATRÓN</legend>
           <div id="pattern-container">
             <canvas id="bgCanvas" width="300" height="220"></canvas>
             <canvas id="lineCanvas" width="300" height="220"></canvas>
@@ -414,41 +548,52 @@
         </fieldset>
 
         <fieldset>
-          <legend>Fotos (máx.4)</legend>
+          <legend>FOTOS (máx. 4)</legend>
           <input type="file" id="fotos" accept="image/*" multiple>
           <div id="photoCounter">0/4 fotos seleccionadas</div>
           <div id="imagePreview"></div>
         </fieldset>
         
         <fieldset>
-          <legend>Servicios y Costos (Bs.)</legend>
+          <legend>SERVICIOS Y COSTOS</legend>
           <div class="servicios-container" id="serviciosList">
             <div class="servicio-item">
               <input type="text" class="servicio-desc" placeholder="Descripción del servicio">
-              <input type="number" class="servicio-costo" placeholder="Bs. 0.00" step="0.01" min="0">
-              <button type="button" class="removeServicio" style="display:none">×</button>
+              <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0">
+              <button type="button" class="removeServicio" style="display:none">✕</button>
             </div>
           </div>
           <button type="button" id="addServicio">+ Añadir otro servicio</button>
-          
           <div class="costos-container">
             <div class="costo-box">
-              <label>Costo total</label>
-              <input type="number" id="costoTotal" placeholder="Bs. 0.00" readonly>
+              <label>TOTAL</label>
+              <input type="number" id="costoTotal" placeholder="0.00" readonly>
             </div>
           </div>
         </fieldset>
         
         <input type="hidden" id="patternValue">
-        <div id="confirmation">Recibo generado con éxito!</div>
+        <div id="confirmation">✅ Recibo generado con éxito</div>
+        
+        <div id="whatsappAction" class="whatsapp-action">
+          <h4><i class="fab fa-whatsapp"></i> Enviar comprobante</h4>
+          <p id="whatsappMessage"></p>
+          <button id="sendWhatsappBtn" class="whatsapp-btn-pdf">
+            <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
+          </button>
+        </div>
+        
         <button type="submit" id="generateBtn">
-          <span class="button-icon">📄</span>
-          Generar Recibo PDF
+          <i class="fas fa-file-pdf"></i> Generar Recibo PDF
         </button>
       </form>
     </main>
   </div>
   
+  <button class="theme-toggle" id="themeToggle">
+    <i class="fas fa-sun"></i>
+  </button>
+
   <div id="loading">
     <div>
       <div class="spinner"></div>
@@ -457,39 +602,65 @@
   </div>
 
   <script>
-  // Contador de recibos persistente
-  let contadorRecibos = parseInt(localStorage.getItem('contadorRecibos') || '1340', 10);
+  // Tema
+  let currentTheme = localStorage.getItem("xiaomi_theme") || "dark";
+  function setTheme(theme) {
+    currentTheme = theme;
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("xiaomi_theme", theme);
+    const icon = document.querySelector("#themeToggle i");
+    if (icon) icon.className = theme === "dark" ? "fas fa-sun" : "fas fa-moon";
+  }
+  setTheme(currentTheme);
+  document.getElementById("themeToggle")?.addEventListener("click", () => {
+    setTheme(currentTheme === "dark" ? "light" : "dark");
+  });
+
+  // Generar número de recibo basado en fecha y hora (DDMMYY-HHMMSS)
+  function generarNumeroRecibo() {
+    const fecha = new Date();
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const anio = String(fecha.getFullYear()).slice(-2);
+    const horas = String(fecha.getHours()).padStart(2, '0');
+    const minutos = String(fecha.getMinutes()).padStart(2, '0');
+    const segundos = String(fecha.getSeconds()).padStart(2, '0');
+    return `${dia}${mes}${anio}-${horas}${minutos}${segundos}`;
+  }
+
+  let ultimoReciboGenerado = null;
+  let ultimoTelefono = null;
+  let ultimoNombre = null;
 
   const config = {
-    nombreTienda: "DR . XIAOMI SCZ",
-    direccion: "Centro Comercial Cañoto #k1, Santa Cruz",
+    nombreTienda: "DR. XIAOMI SCZ",
+    direccion: "Centro Comercial Cañoto #K1, Santa Cruz",
     telefono: "75959450",
-    horario: "Lunes a Sabado 9:00 - 20:00"
+    horario: "Lunes a Sábado 9:00 - 20:00"
   };
 
-  function actualizarHeaderReciboPreview() {
+  function actualizarHeader() {
     const fechaSpan = document.getElementById('dateTimeDisplay');
     const numeroSpan = document.getElementById('numeroReciboDisplay');
-    if (!fechaSpan || !numeroSpan) return;
-
-    const numeroPreview = `REC-${contadorRecibos + 1}`;
-    fechaSpan.textContent = new Date().toLocaleString();
-    numeroSpan.textContent = `Recibo #${numeroPreview}`;
+    if (fechaSpan && numeroSpan) {
+      fechaSpan.textContent = new Date().toLocaleString();
+      numeroSpan.textContent = `REC-${generarNumeroRecibo()}`;
+    }
   }
   
   document.addEventListener('DOMContentLoaded', () => {
-    actualizarHeaderReciboPreview();
+    actualizarHeader();
+    setInterval(actualizarHeader, 1000);
 
     // Toggle seguridad
-    const tipo = document.getElementById('tipoSeguridad'), 
-          pinCont = document.getElementById('pinContainer'), 
-          fieldP = document.getElementById('field-patron');
+    const tipo = document.getElementById('tipoSeguridad');
+    const pinCont = document.getElementById('pinContainer');
+    const fieldP = document.getElementById('field-patron');
 
     tipo.addEventListener('change', () => { 
       pinCont.style.display = (tipo.value === 'pin') ? 'block' : 'none'; 
       fieldP.style.display = (tipo.value === 'patron') ? 'block' : 'none'; 
     });
-    // Estado inicial (select arranca en "patron")
     pinCont.style.display = 'none';
     fieldP.style.display = 'block';
     
@@ -502,22 +673,19 @@
       imagePreview.innerHTML = '';
       const files = this.files;
       if (files.length > 4) {
-        photoCounter.textContent = 'Máximo 4 fotos. Has seleccionado demasiadas.';
-        photoCounter.style.color = '#f97373';
+        photoCounter.textContent = '❌ Máximo 4 fotos';
+        photoCounter.style.color = '#ef4444';
         this.value = '';
         setTimeout(() => {
           photoCounter.textContent = '0/4 fotos seleccionadas';
-          photoCounter.style.color = 'var(--text-secondary)';
+          photoCounter.style.color = '';
         }, 2500);
         return;
       }
-
       photoCounter.textContent = `${files.length}/4 fotos seleccionadas`;
-      
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         if (!file.type.match('image.*')) continue;
-        
         const reader = new FileReader();
         reader.onload = function(e) {
           const img = document.createElement('img');
@@ -529,7 +697,7 @@
       }
     });
 
-    // Gestión de servicios
+    // Servicios
     const serviciosList = document.getElementById('serviciosList');
     const addServicioBtn = document.getElementById('addServicio');
     const costoTotal = document.getElementById('costoTotal');
@@ -547,17 +715,15 @@
       servicioItem.className = 'servicio-item';
       servicioItem.innerHTML = `
         <input type="text" class="servicio-desc" placeholder="Descripción del servicio">
-        <input type="number" class="servicio-costo" placeholder="Bs. 0.00" step="0.01" min="0">
-        <button type="button" class="removeServicio">×</button>
+        <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0">
+        <button type="button" class="removeServicio">✕</button>
       `;
       serviciosList.appendChild(servicioItem);
-      
       servicioItem.querySelector('.removeServicio').addEventListener('click', function() {
         serviciosList.removeChild(servicioItem);
         calcularTotal();
         updateRemoveButtons();
       });
-      
       servicioItem.querySelector('.servicio-costo').addEventListener('input', calcularTotal);
       updateRemoveButtons();
     }
@@ -566,21 +732,15 @@
       const items = serviciosList.querySelectorAll('.servicio-item');
       items.forEach((item) => {
         const removeBtn = item.querySelector('.removeServicio');
-        removeBtn.style.display = items.length > 1 ? 'block' : 'none';
+        if (removeBtn) removeBtn.style.display = items.length > 1 ? 'flex' : 'none';
       });
     }
     
-    addServicioBtn.addEventListener('click', () => {
-      addServicio();
-    });
+    addServicioBtn.addEventListener('click', addServicio);
     
-    // Eventos iniciales del primer servicio
     const firstCosto = serviciosList.querySelector('.servicio-costo');
     const firstRemove = serviciosList.querySelector('.removeServicio');
-
-    if (firstCosto) {
-      firstCosto.addEventListener('input', calcularTotal);
-    }
+    if (firstCosto) firstCosto.addEventListener('input', calcularTotal);
     if (firstRemove) {
       firstRemove.addEventListener('click', function() {
         if (serviciosList.querySelectorAll('.servicio-item').length > 1) {
@@ -590,10 +750,9 @@
         }
       });
     }
-
     updateRemoveButtons();
     
-    // Validación de teléfono (solo números)
+    // Validación teléfono
     document.getElementById('telefono').addEventListener('input', function() {
       this.value = this.value.replace(/[^0-9]/g, '');
     });
@@ -680,7 +839,7 @@
       render(c){
         this.lnc.clearRect(0,0,this.w,this.h);
         if(!this.path.length)return;
-        this.lnc.strokeStyle='#f97316';
+        this.lnc.strokeStyle='#FF6900';
         this.lnc.lineWidth=4;
         this.lnc.lineCap='round';
         this.lnc.beginPath();
@@ -691,24 +850,55 @@
         this.path.forEach(p=>{
           this.lnc.beginPath();
           this.lnc.arc(p.x,p.y,this.r/2,0,2*Math.PI);
-          this.lnc.fillStyle='#f97316';
+          this.lnc.fillStyle='#FF6900';
           this.lnc.fill();
         });
       }
     }
     const lock = new PatternLock();
     
-    // Generar PDF profesional mejorado
+    // Enviar WhatsApp
+    function enviarWhatsApp(numero, nombreCliente, numeroRecibo, total, marca, modelo) {
+      const mensaje = `Hola ${nombreCliente}, gracias por confiar en DR. XIAOMI.
+
+✅ COMPROBANTE DE RECEPCION
+📄 Recibo: ${numeroRecibo}
+📅 Fecha: ${new Date().toLocaleString()}
+📱 Equipo: ${marca} ${modelo}
+💰 Presupuesto: Bs. ${total}
+
+Su equipo ha sido ingresado a nuestro taller. Le notificaremos cuando esté listo.
+
+🔧 DR. XIAOMI SCZ
+Centro Comercial Cañoto #K1
+Tel: 75959450`;
+      
+      const telefonoLimpio = numero.replace(/\D/g, '');
+      const url = `https://wa.me/591${telefonoLimpio}?text=${encodeURIComponent(mensaje)}`;
+      window.open(url, '_blank');
+    }
+    
+    document.getElementById('sendWhatsappBtn')?.addEventListener('click', () => {
+      if (ultimoTelefono && ultimoReciboGenerado) {
+        const total = document.getElementById('costoTotal').value || '0';
+        const marca = document.getElementById('marca').value;
+        const modelo = document.getElementById('modelo').value;
+        enviarWhatsApp(ultimoTelefono, ultimoNombre, ultimoReciboGenerado, total, marca, modelo);
+      } else {
+        alert('⚠️ Primero genere el recibo para poder enviarlo por WhatsApp');
+      }
+    });
+    
+    // Generar PDF
     document.getElementById('formRecibo').addEventListener('submit', async e => {
       e.preventDefault();
 
       const form = document.getElementById('formRecibo');
       if (!form.checkValidity()) {
-        alert('Por favor complete todos los campos requeridos');
+        alert('⚠️ Por favor complete todos los campos requeridos');
         return;
       }
 
-      // Validar que haya al menos un servicio con descripción o costo > 0
       const servicios = Array.from(document.querySelectorAll('.servicio-item'));
       const hayServicioValido = servicios.some(item => {
         const desc = item.querySelector('.servicio-desc').value.trim();
@@ -717,7 +907,7 @@
       });
 
       if (!hayServicioValido) {
-        alert('Agrega al menos un servicio con descripción o costo mayor a 0.');
+        alert('⚠️ Agrega al menos un servicio con descripción o costo');
         return;
       }
 
@@ -728,12 +918,10 @@
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
 
-        // ====== DATOS BÁSICOS ======
         const fecha = new Date();
         const nombreCompleto = document.getElementById('nombre').value.trim();
-        const nombreCliente = nombreCompleto.split(' ')[0] || 'Cliente';
+        const nombreCliente = nombreCompleto.split(' ')[0];
         const telefono = document.getElementById('telefono').value;
-        const whatsappLink = `https://wa.me/591${telefono}`; // Generar enlace para WhatsApp
         const marca = document.getElementById('marca').value;
         const modelo = document.getElementById('modelo').value;
         const imei = document.getElementById('imei').value;
@@ -744,24 +932,21 @@
         const pin = document.getElementById('pinInput').value || '-';
         const patron = document.getElementById('patternValue').value || '-';
 
-        // Número de recibo consistente + guardado
-        contadorRecibos++;
-        localStorage.setItem('contadorRecibos', contadorRecibos);
-        const numeroRecibo = `REC-${contadorRecibos}`;
-        actualizarHeaderReciboPreview();
+        const numeroRecibo = `REC-${generarNumeroRecibo()}`;
+        
+        ultimoReciboGenerado = numeroRecibo;
+        ultimoTelefono = telefono;
+        ultimoNombre = nombreCliente;
+        
+        actualizarHeader();
 
-        // ====== FUENTE GENERAL ======
-        pdf.setFont('courier', 'normal');
-        pdf.setFontSize(9);
-        pdf.setTextColor(0);
-
+        pdf.setFont('helvetica');
         let y = 10;
         const marginLeft = 15;
         const centerX = 105;
 
-        // ====== ENCABEZADO TIENDA ======
         pdf.setFontSize(14);
-        pdf.setTextColor(255, 152, 0);
+        pdf.setTextColor(255, 105, 0);
         pdf.text(config.nombreTienda, centerX, y + 5, { align: 'center' });
 
         pdf.setFontSize(8);
@@ -769,56 +954,41 @@
         pdf.text(config.direccion, centerX, y + 9, { align: 'center' });
         pdf.text(`Tel: ${config.telefono} · ${config.horario}`, centerX, y + 13, { align: 'center' });
 
-        pdf.setDrawColor(255, 152, 0);
+        pdf.setDrawColor(255, 105, 0);
         pdf.line(20, y + 16, 190, y + 16);
 
-        // ====== TÍTULO ======
         y += 24;
         pdf.setFontSize(11);
         pdf.setTextColor(0);
-        pdf.setFont('courier', 'bold');
-        pdf.text('RECIBO DE SERVICIO TÉCNICO', centerX, y, { align: 'center' });
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('RECIBO DE SERVICIO TECNICO', centerX, y, { align: 'center' });
 
-        // Número y fecha
         y += 6;
         pdf.setFontSize(8);
-        pdf.setFont('courier', 'normal');
+        pdf.setFont('helvetica', 'normal');
         pdf.text(`N° Recibo: ${numeroRecibo}`, marginLeft, y);
-        pdf.text(
-          `Fecha: ${fecha.toLocaleDateString()} ${fecha.toLocaleTimeString().slice(0, 5)}`,
-          200 - marginLeft,
-          y,
-          { align: 'right' }
-        );
+        pdf.text(`Fecha: ${fecha.toLocaleDateString()} ${fecha.toLocaleTimeString().slice(0, 5)}`, 200 - marginLeft, y, { align: 'right' });
 
-        // ====== DATOS DEL CLIENTE ======
         y += 8;
-        pdf.setFont('courier', 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.text('DATOS DEL CLIENTE', marginLeft, y);
         pdf.setDrawColor(200);
         pdf.line(marginLeft, y + 1, 195, y + 1);
 
         y += 5;
-        pdf.setFont('courier', 'normal');
+        pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(9);
         pdf.text(`Nombre: ${nombreCompleto}`, marginLeft, y);
         y += 5;
-        pdf.text(`Teléfono: `, marginLeft, y);
-        pdf.textWithLink(
-          `wa.me/591${telefono}`, // Enlace de WhatsApp
-          200 - marginLeft, // Posición horizontal
-          y, // Posición vertical
-          { align: 'right', url: whatsappLink } // Enlace clickeable
-        );
+        pdf.text(`Telefono: ${telefono}`, marginLeft, y);
 
-        // ====== DATOS DEL EQUIPO ======
         y += 8;
-        pdf.setFont('courier', 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.text('DATOS DEL EQUIPO', marginLeft, y);
         pdf.setDrawColor(200);
         pdf.line(marginLeft, y + 1, 195, y + 1);
 
-        pdf.setFont('courier', 'normal');
+        pdf.setFont('helvetica', 'normal');
         y += 5;
         pdf.text(`Marca: ${marca}`, marginLeft, y);
         y += 5;
@@ -830,23 +1000,21 @@
           pdf.text(`IMEI/Serial: ${imei}`, marginLeft, y);
         }
 
-        // ====== ESTADO Y FALLA ======
         y += 8;
-        pdf.setFont('courier', 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.text('ESTADO Y FALLA', marginLeft, y);
         pdf.setDrawColor(200);
         pdf.line(marginLeft, y + 1, 195, y + 1);
 
-        pdf.setFont('courier', 'normal');
+        pdf.setFont('helvetica', 'normal');
         y += 5;
         pdf.text(`Estado: ${estado}`, marginLeft, y);
         y += 5;
-        pdf.text(`Falla reportada: ${falla}`, marginLeft, y);
+        pdf.text(`Falla: ${falla}`, marginLeft, y);
 
-        // ====== SERVICIOS ======
         y += 8;
-        pdf.setFont('courier', 'bold');
-        pdf.text('SERVICIOS Y COSTOS (Bs.)', marginLeft, y);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('SERVICIOS Y COSTOS', marginLeft, y);
         pdf.setDrawColor(200);
         pdf.line(marginLeft, y + 1, 195, y + 1);
 
@@ -859,54 +1027,46 @@
 
         pdf.autoTable({
           startY: y + 4,
-          head: [['Descripción', 'Costo (Bs.)']],
+          head: [['Descripcion', 'Costo (Bs.)']],
           body: serviciosData,
-          styles: { fontSize: 8, font: 'courier' },
-          headStyles: { fillColor: [50, 50, 50], textColor: 255 },
-          columnStyles: {
-            0: { cellWidth: 120 },
-            1: { halign: 'right' }
-          },
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [255, 105, 0], textColor: 255 },
+          columnStyles: { 0: { cellWidth: 120 }, 1: { halign: 'right' } },
           margin: { left: marginLeft, right: 15 }
         });
 
         y = pdf.autoTable.previous.finalY + 4;
-
         const total = parseFloat(document.getElementById('costoTotal').value) || 0;
-        pdf.setFont('courier', 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(10);
-        pdf.setDrawColor(255, 152, 0);
+        pdf.setDrawColor(255, 105, 0);
         pdf.setFillColor(255, 250, 240);
-
         pdf.roundedRect(120, y - 4, 70, 8, 2, 2, 'FD');
         pdf.text(`TOTAL: Bs. ${total.toFixed(2)}`, 155, y + 1, { align: 'center' });
 
-        // ====== SEGURIDAD ======
         y += 12;
-        pdf.setFont('courier', 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(9);
-        pdf.text('SEGURIDAD DEL DISPOSITIVO', marginLeft, y);
+        pdf.text('SEGURIDAD', marginLeft, y);
         pdf.setDrawColor(200);
         pdf.line(marginLeft, y + 1, 195, y + 1);
 
-        pdf.setFont('courier', 'normal');
+        pdf.setFont('helvetica', 'normal');
         y += 5;
-        pdf.text(`Tipo de seguridad: ${tipoSeguridad}`, marginLeft, y);
-
+        pdf.text(`Tipo: ${tipoSeguridad}`, marginLeft, y);
         if (tipoSeguridad === 'pin') {
           y += 5;
           pdf.text(`PIN: ${pin}`, marginLeft, y);
         } else if (tipoSeguridad === 'patron') {
           y += 5;
-          pdf.text(`Secuencia patrón: ${patron}`, marginLeft, y);
+          pdf.text(`Patron: ${patron}`, marginLeft, y);
         }
 
-        // ====== IMÁGENES ======
         const files = document.getElementById('fotos').files;
         if (files.length > 0) {
           y += 10;
-          pdf.setFont('courier', 'bold');
-          pdf.text('IMÁGENES DEL EQUIPO', marginLeft, y);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('IMAGENES', marginLeft, y);
           pdf.setDrawColor(200);
           pdf.line(marginLeft, y + 1, 195, y + 1);
 
@@ -921,54 +1081,32 @@
               r.readAsDataURL(file);
             });
 
-            if (yImg > 230) {
-              pdf.addPage();
-              yImg = 20;
-              xImg = marginLeft;
-            }
-
+            if (yImg > 230) { pdf.addPage(); yImg = 20; xImg = marginLeft; }
             pdf.addImage(imageData, 'JPEG', xImg, yImg, 80, 40);
-
-            if (i % 2 === 0) {
-              xImg += 90;
-            } else {
-              xImg = marginLeft;
-              yImg += 45;
-            }
+            if (i % 2 === 0) { xImg += 90; } else { xImg = marginLeft; yImg += 45; }
           }
-
           y = yImg + 50;
-        } else {
-          y += 8;
-        }
+        } else { y += 8; }
 
-        // ====== CONDICIONES ======
-        if (y > 230) {
-          pdf.addPage();
-          y = 20;
-        }
+        if (y > 230) { pdf.addPage(); y = 20; }
 
-        pdf.setFont('courier', 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(9);
         pdf.text('CONDICIONES DEL SERVICIO', marginLeft, y);
         pdf.setDrawColor(200);
         pdf.line(marginLeft, y + 1, 195, y + 1);
 
-        pdf.setFont('courier', 'normal');
+        pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(7);
         y += 5;
-
         const condiciones = [
-          '1. Conserve este recibo; solo con él puede retirar su equipo.',
-          '2. La fecha de entrega está sujeta a disponibilidad de repuestos.',
-          '3. El retiro debe hacerse Max dentro de los 10 días posteriores al aviso.',
-          '4. Pasados 20 días sin retiro, el equipo se considera abandonado.',
-          '5. Garantía: 30 días en repuesto / 60 días en mano de obra.'
+          '1. Conserve este recibo; solo con el puede retirar su equipo.',
+          '2. La fecha de entrega esta sujeta a disponibilidad de repuestos.',
+          '3. El retiro debe hacerse dentro de los 10 dias posteriores al aviso.',
+          '4. Pasados 20 dias sin retiro, el equipo se considera abandonado.',
+          '5. Garantia: 30 dias en repuesto / 60 dias en mano de obra.'
         ];
-
-        condiciones.forEach((txt, i) => {
-          pdf.text(txt, marginLeft, y + i * 4);
-        });
+        condiciones.forEach((txt, i) => pdf.text(txt, marginLeft, y + i * 4));
 
         const firmaY = y + condiciones.length * 4 + 10;
         pdf.line(130, firmaY, 190, firmaY);
@@ -976,30 +1114,29 @@
 
         pdf.setFontSize(7);
         pdf.setTextColor(120);
-        pdf.text(
-          `© ${fecha.getFullYear()} ${config.nombreTienda} · Todos los derechos reservados`,
-          centerX,
-          287,
-          { align: 'center' }
-        );
+        pdf.text(`© ${fecha.getFullYear()} ${config.nombreTienda} · Todos los derechos reservados`, centerX, 287, { align: 'center' });
 
         pdf.save(`Recibo_${numeroRecibo}_${nombreCliente}.pdf`);
 
+        const whatsappAction = document.getElementById('whatsappAction');
+        whatsappAction.classList.add('show');
+        
+        const mensajeElement = document.getElementById('whatsappMessage');
+        mensajeElement.innerHTML = `<i class="fab fa-whatsapp"></i> <strong>${nombreCompleto}</strong> (${telefono})<br>
+        <span style="font-size: 11px;">Mensaje: "Gracias por su confianza, le enviamos el comprobante de recepcion"</span>`;
+
         const confirmation = document.getElementById('confirmation');
-        confirmation.textContent = `Recibo ${numeroRecibo} generado con éxito!`;
+        confirmation.textContent = `✅ Recibo ${numeroRecibo} generado con exito`;
         confirmation.style.display = 'block';
-        setTimeout(() => (confirmation.style.display = 'none'), 4000);
+        setTimeout(() => confirmation.style.display = 'none', 4000);
 
       } catch (err) {
-        alert('Error al generar PDF: ' + err.message);
+        alert('❌ Error al generar PDF: ' + err.message);
       } finally {
         loading.style.display = 'none';
       }
     });
   });
-</script>
-
-
-  
+  </script>
 </body>
 </html>
