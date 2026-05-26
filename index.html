@@ -39,7 +39,19 @@
       --transition: all 0.2s ease;
     }
 
-    /* Modo Oscuro (por defecto) */
+    /* Modo Claro (por defecto) */
+    [data-theme="light"] {
+      --bg-primary: #F8F8F8;
+      --bg-secondary: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --text-primary: #1A1A1A;
+      --text-secondary: #666666;
+      --border: #E8E8E8;
+      --card-border: #DDDDDD;
+      --separator: #FF6900;
+    }
+
+    /* Modo Oscuro */
     [data-theme="dark"] {
       --bg-primary: #0D0D0D;
       --bg-secondary: #1A1A1A;
@@ -48,18 +60,6 @@
       --text-secondary: #A0A0A0;
       --border: #2A2A2A;
       --card-border: #333333;
-      --separator: #FF6900;
-    }
-
-    /* Modo Claro */
-    [data-theme="light"] {
-      --bg-primary: #F8F8F8;
-      --bg-secondary: #FFFFFF;
-      --bg-card: #FFFFFF;
-      --text-primary: #1A1A1A;
-      --text-secondary: #666666;
-      --border: #E8E8E8;
-      --card-border: #E0E0E0;
       --separator: #FF6900;
     }
 
@@ -215,6 +215,7 @@
       border: 2px solid var(--card-border);
       transition: var(--transition);
       position: relative;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     /* Línea lateral imponente (color naranja) */
@@ -309,10 +310,13 @@
       cursor: pointer;
       transition: var(--transition);
       letter-spacing: -0.5px;
+      padding: 4px 8px;
+      border-radius: 12px;
     }
 
     .card-price:active {
       color: var(--xiaomi-orange);
+      background: rgba(255, 105, 0, 0.1);
       transform: scale(0.98);
     }
 
@@ -560,7 +564,7 @@
       </div>
       <div class="header-actions">
         <button class="icon-btn" id="themeToggle" title="Tema">
-          <i class="fas fa-sun"></i>
+          <i class="fas fa-moon"></i>
         </button>
         <button class="icon-btn" id="techModeBtn" title="Modo Técnico">
           <i class="fas fa-microchip"></i>
@@ -622,7 +626,7 @@
   let techMode = false;
   let currentTab = "home";
   let popupWindow = null;
-  let currentTheme = "dark";
+  let currentTheme = "light";
 
   const container = document.getElementById("resultsContainer");
   const searchInput = document.getElementById("searchInput");
@@ -648,7 +652,12 @@
 
   function loadTheme() {
     const saved = localStorage.getItem("xiaomi_theme");
-    if (saved === "light") {
+    if (saved === "dark") {
+      currentTheme = "dark";
+      document.documentElement.setAttribute("data-theme", "dark");
+      const icon = document.querySelector("#themeToggle i");
+      if (icon) icon.className = "fas fa-sun";
+    } else {
       currentTheme = "light";
       document.documentElement.setAttribute("data-theme", "light");
       const icon = document.querySelector("#themeToggle i");
@@ -657,16 +666,17 @@
   }
 
   function toggleTheme() {
-    if (currentTheme === "dark") {
-      currentTheme = "light";
-      document.documentElement.setAttribute("data-theme", "light");
-      document.querySelector("#themeToggle i").className = "fas fa-moon";
-    } else {
+    if (currentTheme === "light") {
       currentTheme = "dark";
       document.documentElement.setAttribute("data-theme", "dark");
       document.querySelector("#themeToggle i").className = "fas fa-sun";
+    } else {
+      currentTheme = "light";
+      document.documentElement.setAttribute("data-theme", "light");
+      document.querySelector("#themeToggle i").className = "fas fa-moon";
     }
     localStorage.setItem("xiaomi_theme", currentTheme);
+    render();
   }
 
   function shuffleResults() {
@@ -837,6 +847,34 @@
     `;
   }
 
+  // ========== FUNCIONES CORREGIDAS ==========
+  
+  // 1. Copiar precio al portapapeles (al hacer clic en el precio)
+  function copyPriceToClipboard(productId) {
+    const product = allData.find(p => p.id === productId);
+    if (!product) return;
+    
+    const message = `📱 ${product.marca} ${product.modelo}\n💰 Precio: ${product.venta.toLocaleString()} Bs.`;
+    
+    navigator.clipboard.writeText(message).then(() => {
+      showToast("✅ Precio copiado");
+      if (navigator.vibrate) navigator.vibrate(50);
+    }).catch(() => {
+      showToast("❌ Error al copiar");
+    });
+  }
+
+  // 2. Compartir por WhatsApp con el precio
+  function shareToWhatsApp(productId) {
+    const product = allData.find(p => p.id === productId);
+    if (!product) return;
+    
+    const message = `📱 *${product.marca} ${product.modelo}*\n💰 Precio: ${product.venta.toLocaleString()} Bs.`;
+    const encoded = encodeURIComponent(message);
+    window.open(`https://wa.me/?text=${encoded}`, "_blank");
+    if (navigator.vibrate) navigator.vibrate(50);
+  }
+
   function openGooglePopup(productId) {
     const product = allData.find(p => p.id === productId);
     if (!product) return;
@@ -865,7 +903,7 @@
     popupWindow = window.open(googleUrl, 'GoogleImagesPopup', features);
     if (popupWindow) popupWindow.focus();
     if (navigator.vibrate) navigator.vibrate(50);
-    showToast(`Buscando: ${product.modelo}`);
+    showToast(`🔍 Buscando: ${product.modelo}`);
   }
 
   function search(term) {
@@ -887,30 +925,6 @@
       const count = filteredData.length;
       resultsCount.textContent = `${count} producto${count !== 1 ? 's' : ''}`;
     }
-  }
-
-  function copyPriceToClipboard(productId) {
-    const product = allData.find(p => p.id === productId);
-    if (!product) return;
-    
-    const message = `📱 ${product.marca} ${product.modelo}\n💰 ${product.venta.toLocaleString()} Bs.`;
-    
-    navigator.clipboard.writeText(message).then(() => {
-      showToast("Precio copiado");
-      if (navigator.vibrate) navigator.vibrate(50);
-    }).catch(() => {
-      showToast("Error");
-    });
-  }
-
-  function shareToWhatsApp(productId) {
-    const product = allData.find(p => p.id === productId);
-    if (!product) return;
-    
-    const message = `📱 ${product.marca} ${product.modelo}\n💰 ${product.venta.toLocaleString()} Bs.`;
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/?text=${encoded}`, "_blank");
-    if (navigator.vibrate) navigator.vibrate(50);
   }
 
   function showTechModal() {
@@ -1014,10 +1028,10 @@
       if (pwd === CONFIG.passwords.tech) {
         techMode = true;
         closeModal("techModal");
-        showToast("Modo técnico activado");
+        showToast("✅ Modo técnico activado");
         render();
       } else {
-        showToast("Clave incorrecta");
+        showToast("❌ Clave incorrecta");
         if (navigator.vibrate) navigator.vibrate(200);
       }
     });
