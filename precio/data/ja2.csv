@@ -137,7 +137,7 @@ Infinix,Smart 7,ORG,110,260
 Infinix,Smart 9,ORG,90,230
 Infinix,Smart 10,ORG,95,230
 Infinix,Zero 30,INCELL,160,310
-Infinix,Zero 30,OLED,100,260
+Infinix,Zero 30,OLED,450,650
 iPhone,5C,ORG,80,220
 iPhone,8,ORG,170,370
 LG,G4,ORG,90,230
@@ -186,13 +186,7 @@ Realme,C53,ORG,100,260
 Realme,C55,ORG,100,260
 Realme,GT Master,ORG,380,580
 Realme,GT Master,INCELL,130,280
-Samsung,Galaxy A10,ORG,100,260
-Samsung,Galaxy A14 4G,ORG,100,260
-Samsung,Galaxy A14 5G,ORG,105,260
-Samsung,Galaxy A51,AMOLED,260,460
-Samsung,Galaxy A23 4G,ORG,100,260
 Samsung,Galaxy A01 Core,ORG,85,220
-Samsung,Galaxy A01,ORG,85,220
 Samsung,Galaxy A01,ORG,85,220
 Samsung,Galaxy A02,ORG,85,220
 Samsung,Galaxy A02s,ORG,85,220
@@ -208,78 +202,53 @@ Samsung,Galaxy A07,ORG,95,230
 Samsung,Galaxy A10,ORG,85,220
 Samsung,Galaxy A10s,ORG,85,220
 Samsung,Galaxy A11,ORG,95,230
-Samsung,Galaxy A11,ORG,100,260
 Samsung,Galaxy A12,ORG,85,220
-Samsung,Galaxy A12,ORG,110,260
 Samsung,Galaxy A13 4G,ORG,100,260
-Samsung,Galaxy A15,ORG,290,450
-Samsung,Galaxy A15,INCELL,135,280
+Samsung,Galaxy A14 4G,ORG,100,260
+Samsung,Galaxy A14 5G,ORG,105,260
+Samsung,Galaxy A15,INCELL,135,285
+Samsung,Galaxy A15,ORG,290,490
 Samsung,Galaxy A16,INCELL,130,280
-Samsung,Galaxy A16,INCELL,130,280
-Samsung,Galaxy A20,AMOLED,250,450
-Samsung,Galaxy A20,AMOLED,260,460
 Samsung,Galaxy A20,INCELL,110,260
-Samsung,Galaxy A20,INCELL,120,260
-Samsung,Galaxy A20,ORG,330,530
+Samsung,Galaxy A20,AMOLED,250,450
 Samsung,Galaxy A20s,ORG,85,220
 Samsung,Galaxy A21,ORG,90,230
 Samsung,Galaxy A21s,ORG,90,230
-Samsung,Galaxy A21s,ORG,120,260
+Samsung,Galaxy A22 4G,INCELL,150,300
 Samsung,Galaxy A22 4G,AMOLED,240,440
-Samsung,Galaxy A22 4G,INCELL,150,290
-Samsung,Galaxy A22 4G,ORG,390,590
 Samsung,Galaxy A22 5G,ORG,100,260
-Samsung,Galaxy A24,OLED,290,490
+Samsung,Galaxy A23 4G,ORG,100,260
 Samsung,Galaxy A24,INCELL,140,290
-Samsung,Galaxy A25,ORG,290,490
+Samsung,Galaxy A24,OLED,290,490
 Samsung,Galaxy A25,INCELL,150,300
-Samsung,Galaxy A30,AMOLED,240,440
-Samsung,Galaxy A30,AMOLED,250,450
+Samsung,Galaxy A25,ORG,290,490
 Samsung,Galaxy A30,INCELL,110,260
-Samsung,Galaxy A30,INCELL,130,280
-Samsung,Galaxy A30,ORG,280,480
+Samsung,Galaxy A30,AMOLED,240,440
 Samsung,Galaxy A30s,INCELL,130,280
-Samsung,Galaxy A30s,AMOLED,250,450
-Samsung,Galaxy A30s,AMOLED,260,460
-Samsung,Galaxy A30s,ORG,330,530
-Samsung,Galaxy A30s,INCELL,130,280
-Samsung,Galaxy A31,AMOLED,240,440
 Samsung,Galaxy A31,INCELL,130,280
-Samsung,Galaxy A31,ORG,350,550
-Samsung,Galaxy A32 4G,AMOLED,260,460
-Samsung,Galaxy A32 4G,ORG,460,660
+Samsung,Galaxy A31,AMOLED,240,440
 Samsung,Galaxy A32,INCELL,130,280
-Samsung,Galaxy A33 4G,AMOLED,280,480
-Samsung,Galaxy A33 4G,AMOLED,290,490
+Samsung,Galaxy A32 4G,AMOLED,260,460
 Samsung,Galaxy A33,INCELL,140,280
+Samsung,Galaxy A33 4G,AMOLED,280,480
 Samsung,Galaxy A34,INCELL,180,330
 Samsung,Galaxy A34,OLED,300,500
-Samsung,Galaxy A34,OLED,320,520
 Samsung,Galaxy A41,ORG,280,480
 Samsung,Galaxy A5,AMOLED,150,300
 Samsung,Galaxy A5 2016,AMOLED,165,320
 Samsung,Galaxy A5 2017,AMOLED,165,330
-Samsung,Galaxy A50,AMOLED,240,440
-Samsung,Galaxy A50,AMOLED,250,450
 Samsung,Galaxy A50,INCELL,110,260
-Samsung,Galaxy A50,INCELL,130,280
-Samsung,Galaxy A50,ORG,350,550
-Samsung,Galaxy A51,AMOLED,250,450
-Samsung,Galaxy A51,AMOLED,260,460
+Samsung,Galaxy A50,AMOLED,240,440
 Samsung,Galaxy A51,INCELL,130,280
-Samsung,Galaxy A51,ORG,400,600
+Samsung,Galaxy A51,AMOLED,250,450
+Samsung,Galaxy A52,INCELL,150,300
 Samsung,Galaxy A52,ORG,290,490
 Samsung,Galaxy A52 4G,AMOLED,260,460
-Samsung,Galaxy A52,INCELL,150,300
-Samsung,Galaxy A52,ORG,740,940
-Samsung,Galaxy A53 4G,OLED,290,490
 Samsung,Galaxy A53 4G,INCELL,160,310
-Samsung,Galaxy A53 4G,ORG,750,950
 Samsung,Galaxy A53 4G,OLED,280,480
 Samsung,Galaxy A54,INCELL,180,330
 Samsung,Galaxy A54,ORG,300,500
 Samsung,Galaxy A55,INCELL,170,320
-Samsung,Galaxy A55,INCELL,200,350
 Samsung,Galaxy A6,AMOLED,130,250
 Samsung,Galaxy A6 Plus,AMOLED,210,350
 Samsung,Galaxy A6 Plus,INCELL,110,260
@@ -287,26 +256,16 @@ Samsung,Galaxy A7 2016,AMOLED,180,300
 Samsung,Galaxy A7 2017,AMOLED,180,300
 Samsung,Galaxy A7 2018,AMOLED,300,450
 Samsung,Galaxy A7 2018,INCELL,105,250
-Samsung,Galaxy A7 2018,ORG,300,450
-Samsung,Galaxy A70,AMOLED,200,400
-Samsung,Galaxy A70,AMOLED,410,610
-Samsung,Galaxy A70,AMOLED,240,440
-Samsung,Galaxy A70,ORG,480,680
 Samsung,Galaxy A70,INCELL,120,260
-Samsung,Galaxy A70,INCELL,130,280
-Samsung,Galaxy A71,AMOLED,230,430
-Samsung,Galaxy A71,ORG,320,520
+Samsung,Galaxy A70,AMOLED,240,440
 Samsung,Galaxy A71,INCELL,150,300
-Samsung,Galaxy A71,ORG,500,700
-Samsung,Galaxy A72,AMOLED,220,420
-Samsung,Galaxy A72,ORG,290,490
+Samsung,Galaxy A71,AMOLED,230,430
 Samsung,Galaxy A72,INCELL,160,310
-Samsung,Galaxy A72,ORG,480,680
+Samsung,Galaxy A72,AMOLED,220,420
 Samsung,Galaxy A73,INCELL,170,320
 Samsung,Galaxy A8 2018,AMOLED,315,460
 Samsung,Galaxy A8 Plus,AMOLED,300,450
 Samsung,Galaxy A80,AMOLED,380,580
-Samsung,Galaxy A80,ORG,380,580
 Samsung,Galaxy A9,AMOLED,290,430
 Samsung,Galaxy A9 2018,AMOLED,300,480
 Samsung,Galaxy A90,AMOLED,250,450
@@ -320,33 +279,32 @@ Samsung,Galaxy J4 Core,ORG,85,230
 Samsung,Galaxy J4,INCELL,110,260
 Samsung,Galaxy J4 Plus,ORG,85,230
 Samsung,Galaxy J4,AMOLED,190,390
-Samsung,Galaxy J5 2016,AMOLED,170,370
 Samsung,Galaxy J5 2016,INCELL,110,260
+Samsung,Galaxy J5 2016,AMOLED,170,370
 Samsung,Galaxy J5,AMOLED,170,370
 Samsung,Galaxy J5,INCELL,115,260
 Samsung,Galaxy J5 Prime,ORG,85,230
 Samsung,Galaxy J5 Pro,AMOLED,210,410
 Samsung,Galaxy J5 Pro,INCELL,110,260
-Samsung,Galaxy J6,AMOLED,220,420
 Samsung,Galaxy J6,INCELL,95,230
+Samsung,Galaxy J6,AMOLED,220,420
 Samsung,Galaxy J6 Plus,ORG,85,230
-Samsung,Galaxy J7 2016,AMOLED,200,350
 Samsung,Galaxy J7 2016,INCELL,120,260
+Samsung,Galaxy J7 2016,AMOLED,200,350
 Samsung,Galaxy J7,AMOLED,200,350
 Samsung,Galaxy J7,INCELL,120,260
-Samsung,Galaxy J7 Neo,AMOLED,200,350
 Samsung,Galaxy J7 Neo,INCELL,120,270
+Samsung,Galaxy J7 Neo,AMOLED,200,350
 Samsung,Galaxy J7 Prime,ORG,90,230
-Samsung,Galaxy J7 Pro,AMOLED,200,400
 Samsung,Galaxy J7 Pro,INCELL,130,280
+Samsung,Galaxy J7 Pro,AMOLED,200,400
 Samsung,Galaxy J720 Duos,AMOLED,160,300
-Samsung,Galaxy J8,AMOLED,220,320
 Samsung,Galaxy J8,INCELL,95,230
+Samsung,Galaxy J8,AMOLED,220,320
 Samsung,Galaxy M10,ORG,100,260
 Samsung,Galaxy M21,AMOLED,240,440
 Samsung,Galaxy M30,AMOLED,240,440
 Samsung,Galaxy M31,INCELL,115,260
-Samsung,Galaxy M31,INCELL,125,270
 Samsung,Galaxy M31,AMOLED,240,440
 Samsung,Galaxy M51,ORG,140,340
 Samsung,Galaxy M52 4G,ORG,450,650
@@ -400,6 +358,8 @@ Tecno,Pop 7,ORG,90,230
 Tecno,Pop 7 Pro,ORG,90,230
 Tecno,Pop 9,ORG,95,230
 Tecno,Pova,ORG,95,230
+Tecno,Pova 2,ORG,115,260
+Tecno,Pova 3,ORG,115,260
 Tecno,Pova 4,ORG,105,260
 Tecno,Pova 4 Pro,INCELL,125,270
 Tecno,Pova 5,ORG,105,260
@@ -407,15 +367,13 @@ Tecno,Pova 6,ORG,125,320
 Tecno,Pova 7,ORG,125,320
 Tecno,Pova Neo,ORG,95,230
 Tecno,Pova Neo 2,ORG,105,260
-Tecno,Pova 2,ORG,115,260
-Tecno,Pova 3,ORG,115,260
-Tecno,Spark 30 4G,ORG,115,260
 Tecno,Spark 10,ORG,105,260
 Tecno,Spark 10 Pro,ORG,105,260
 Tecno,Spark 10C,ORG,90,230
 Tecno,Spark 20,ORG,100,260
 Tecno,Spark 20 Pro,ORG,105,260
 Tecno,Spark 20C,ORG,100,260
+Tecno,Spark 30 4G,ORG,115,260
 Tecno,Spark 30 5G,ORG,100,260
 Tecno,Spark 30 Pro,INCELL,130,280
 Tecno,Spark 30C,ORG,100,260
@@ -441,8 +399,8 @@ Vivo,Y20i,ORG,100,260
 Xiaomi,F4,INCELL,125,270
 Xiaomi,Mi 10 Lite,ORG,190,390
 Xiaomi,Mi 10T,INCELL,140,290
-Xiaomi,Mi 11 Lite,ORG,290,490
 Xiaomi,Mi 11 Lite,INCELL,130,280
+Xiaomi,Mi 11 Lite,ORG,290,490
 Xiaomi,Mi 11T,ORG,140,300
 Xiaomi,Mi 6,ORG,140,300
 Xiaomi,Mi 8,ORG,150,300
@@ -459,48 +417,9 @@ Xiaomi,Mi A3,INCELL,120,260
 Xiaomi,Mi A3,AMOLED,250,400
 Xiaomi,Mi Max,ORG,160,300
 Xiaomi,Mi Note 10 Pro,ORG,290,490
-Xiaomi,Redmi Note 10 5G,ORG,105,260
-Xiaomi,Redmi Note 10 Pro 4G,INCELL,120,260
-Xiaomi,Redmi Note 10 Pro 4G,OLED,280,480
-Xiaomi,Redmi Note 10 Pro 5G,ORG,140,290
-Xiaomi,Redmi Note 11 2022,ORG,280,480
-Xiaomi,Redmi Note 11 4G,INCELL,120,260
-Xiaomi,Redmi Note 11 4G,OLED,280,480
-Xiaomi,Redmi Note 11 5G,ORG,115,260
-Xiaomi,Redmi Note 11 Pro 4G,INCELL,120,260
-Xiaomi,Redmi Note 11 Pro 4G,OLED,280,480
-Xiaomi,Redmi Note 11S 4G,OLED,280,480
-Xiaomi,Redmi Note 12 4G,INCELL,120,260
-Xiaomi,Redmi Note 12 4G,OLED,300,500
-Xiaomi,Redmi Note 12 Pro 4G,INCELL,120,260
-Xiaomi,Redmi Note 12 Pro 4G,OLED,280,480
-Xiaomi,Redmi Note 12 Pro 5G,OLED,270,470
-Xiaomi,Redmi Note 12S,INCELL,120,260
-Xiaomi,Redmi Note 13 4G,INCELL,120,260
-Xiaomi,Redmi Note 13 Pro 4G,INCELL,130,280
-Xiaomi,Redmi Note 14,INCELL,125,270
-Xiaomi,Redmi Note 14 Pro,INCELL,150,300
-Xiaomi,Redmi Note 14 Pro,OLED,510,710
-Xiaomi,Redmi Note 5,ORG,90,230
-Xiaomi,Redmi Note 5 Plus,ORG,90,230
-Xiaomi,Redmi Note 5 Pro,ORG,90,230
-Xiaomi,Redmi Note 6,ORG,100,260
-Xiaomi,Redmi Note 6 Pro,ORG,100,260
-Xiaomi,Redmi Note 7,ORG,90,230
-Xiaomi,Redmi Note 8,INCELL,90,230
-Xiaomi,Redmi Note 8,ORG,95,230
-Xiaomi,Redmi Note 8 Pro,ORG,95,230
-Xiaomi,Redmi Note 8 Pro,INCELL,90,230
-Xiaomi,Redmi Note 9,ORG,95,230
-Xiaomi,Redmi Note 9 Pro,ORG,95,230
-Xiaomi,Redmi Note 9S,ORG,95,230
-Xiaomi,Redmi Note 9T,ORG,95,230
-Xiaomi,Redmi Note 10 4G,INCELL,120,260
-Xiaomi,Redmi Note 7 Pro,ORG,90,230
 Xiaomi,Poco C40,ORG,95,230
 Xiaomi,Poco F1,ORG,120,260
 Xiaomi,Poco F2 Pro,ORG,110,260
-Xiaomi,Poco F2 Pro,ORG,320,500
 Xiaomi,Poco M3,ORG,90,230
 Xiaomi,Poco M3 Pro,ORG,110,260
 Xiaomi,Poco M4,ORG,120,260
@@ -543,14 +462,50 @@ Xiaomi,Redmi A2,ORG,90,230
 Xiaomi,Redmi A3,ORG,95,230
 Xiaomi,Redmi A5,ORG,100,260
 Xiaomi,Redmi Note 10,ORG,250,460
-Xiaomi,Redmi Note 10 4G,ORG,250,460
+Xiaomi,Redmi Note 10 4G,INCELL,120,260
+Xiaomi,Redmi Note 10 5G,ORG,105,260
+Xiaomi,Redmi Note 10 Pro 4G,INCELL,120,260
+Xiaomi,Redmi Note 10 Pro 4G,OLED,280,480
+Xiaomi,Redmi Note 10 Pro 5G,ORG,140,290
 Xiaomi,Redmi Note 10S,ORG,250,460
+Xiaomi,Redmi Note 11 4G,INCELL,120,260
+Xiaomi,Redmi Note 11 4G,OLED,280,480
+Xiaomi,Redmi Note 11 5G,ORG,115,260
+Xiaomi,Redmi Note 11 Pro 4G,INCELL,120,260
+Xiaomi,Redmi Note 11 Pro 4G,OLED,280,480
+Xiaomi,Redmi Note 11S 4G,OLED,280,480
+Xiaomi,Redmi Note 12 4G,INCELL,120,260
+Xiaomi,Redmi Note 12 4G,OLED,300,500
+Xiaomi,Redmi Note 12 Pro 4G,INCELL,120,260
+Xiaomi,Redmi Note 12 Pro 4G,OLED,280,480
+Xiaomi,Redmi Note 12 Pro 5G,OLED,270,470
+Xiaomi,Redmi Note 12S,INCELL,120,260
+Xiaomi,Redmi Note 13 4G,INCELL,120,260
+Xiaomi,Redmi Note 13 Pro 4G,INCELL,130,280
+Xiaomi,Redmi Note 14,INCELL,125,270
+Xiaomi,Redmi Note 14 Pro,INCELL,150,300
+Xiaomi,Redmi Note 14 Pro,OLED,510,710
+Xiaomi,Redmi Note 5,ORG,90,230
+Xiaomi,Redmi Note 5 Plus,ORG,90,230
+Xiaomi,Redmi Note 5 Pro,ORG,90,230
+Xiaomi,Redmi Note 6,ORG,100,260
+Xiaomi,Redmi Note 6 Pro,ORG,100,260
+Xiaomi,Redmi Note 7,ORG,90,230
+Xiaomi,Redmi Note 7 Pro,ORG,90,230
+Xiaomi,Redmi Note 8,INCELL,90,230
+Xiaomi,Redmi Note 8,ORG,95,230
+Xiaomi,Redmi Note 8 Pro,INCELL,90,230
+Xiaomi,Redmi Note 8 Pro,ORG,95,230
+Xiaomi,Redmi Note 9,ORG,95,230
+Xiaomi,Redmi Note 9 Pro,ORG,95,230
+Xiaomi,Redmi Note 9S,ORG,95,230
+Xiaomi,Redmi Note 9T,ORG,95,230
 Xiaomi,S2,ORG,110,260
 ZTE,A3 2020,ORG,450,600
 ZTE,A31,ORG,100,260
 ZTE,A31 Lite,ORG,100,260
 ZTE,A31 Plus,ORG,90,230
-ZTE,A34,ORG,120,260
+ZTE,A34,ORG,100,260
 ZTE,A35e,ORG,95,230
 ZTE,A5 2020,ORG,100,260
 ZTE,A51,ORG,100,260
