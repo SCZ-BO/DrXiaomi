@@ -2,32 +2,16 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#FF6900">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Dr. Xiaomi">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="application-name" content="Dr. Xiaomi">
-  <title>Dr. Xiaomi · Pantallas</title>
-  
-  <link rel="manifest" href="data:application/manifest+json,{
-    %22name%22:%22Dr. Xiaomi%22,
-    %22short_name%22:%22Xiaomi%22,
-    %22description%22:%22Gesti%C3%B3n%20de%20precios%20de%20pantallas%22,
-    %22start_url%22:%22.%22,
-    %22display%22:%22standalone%22,
-    %22theme_color%22:%22%230f172a%22,
-    %22background_color%22:%22%230f172a%22,
-    %22icons%22:[
-      {%22src%22:%22https://via.placeholder.com/192x192/f97316/white?text=D%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22},
-      {%22src%22:%22https://via.placeholder.com/512x512/f97316/white?text=D%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}
-    ]
-  }">
+  <meta name="description" content="Catálogo de pantallas y repuestos - Precios actualizados">
+  <title>DR. XIAOMI | Pantallas y Repuestos</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <style>
@@ -39,278 +23,455 @@
     }
 
     :root {
-      --bg-gradient-start: #0f172a;
-      --bg-gradient-end: #020617;
-      --surface: rgba(30, 41, 59, 0.85);
-      --surface-hover: rgba(51, 65, 85, 0.95);
-      --border: rgba(148, 163, 184, 0.15);
-      --text-primary: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --accent: #f97316;
-      --accent-glow: rgba(249, 115, 22, 0.3);
-      --success: #10b981;
-      --card-radius: 16px;
-      --transition: 200ms cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      --xiaomi-orange: #FF6900;
+      --xiaomi-orange-dark: #E55A00;
+      --xiaomi-orange-soft: #FF8A3C;
+      --xiaomi-orange-glow: rgba(255, 105, 0, 0.15);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+      --transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1);
     }
 
     [data-theme="light"] {
-      --bg-gradient-start: #f8fafc;
-      --bg-gradient-end: #e2e8f0;
-      --surface: rgba(255, 255, 255, 0.9);
-      --surface-hover: rgba(255, 255, 255, 1);
-      --border: rgba(203, 213, 225, 0.5);
-      --text-primary: #0f172a;
-      --text-secondary: #475569;
+      --bg-primary: #F5F5F7;
+      --bg-secondary: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --text-primary: #1D1D1F;
+      --text-secondary: #6E6E73;
+      --text-tertiary: #8E8E93;
+      --border: #E5E5EA;
+      --card-border: #F0F0F3;
+      --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --separator: #FF6900;
+      --suggestion-bg: #FFFFFF;
+      --suggestion-hover: #F5F5F7;
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #0A0A0C;
+      --bg-secondary: #1C1C1E;
+      --bg-card: #1C1C1E;
+      --text-primary: #F5F5F7;
+      --text-secondary: #A1A1A6;
+      --text-tertiary: #6E6E73;
+      --border: #2C2C2E;
+      --card-border: #2C2C2E;
+      --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --separator: #FF6900;
+      --suggestion-bg: #1C1C1E;
+      --suggestion-hover: #2C2C2E;
     }
 
     body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
       color: var(--text-primary);
       min-height: 100vh;
       overflow-x: hidden;
       position: fixed;
       width: 100%;
       height: 100%;
+      transition: background 0.35s ease;
+      -webkit-font-smoothing: antialiased;
     }
 
     .app {
       max-width: 100%;
       height: 100%;
       margin: 0 auto;
-      position: relative;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
+      background: var(--bg-primary);
     }
 
-    /* Header con efecto de blur */
     .header {
-      background: rgba(15, 23, 42, 0.9);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 16px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      background: var(--bg-primary);
+      border-bottom: 1px solid transparent;
+      padding: 14px 18px 12px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 50;
     }
 
     .header-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
     .logo {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .logo-icon {
       width: 36px;
       height: 36px;
-      background: linear-gradient(135deg, #f97316, #ea580c);
+      background: linear-gradient(135deg, var(--xiaomi-orange), var(--xiaomi-orange-dark));
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      box-shadow: 0 2px 8px var(--xiaomi-orange-glow);
     }
 
     .logo h1 {
-      font-size: 18px;
+      font-size: 19px;
       font-weight: 700;
-      background: linear-gradient(135deg, #f97316, #fbbf24);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      letter-spacing: -0.4px;
+      color: var(--text-primary);
+    }
+
+    .logo span {
+      font-weight: 500;
+      color: var(--text-secondary);
     }
 
     .header-actions {
       display: flex;
-      gap: 6px;
+      gap: 4px;
     }
 
     .icon-btn {
-      background: var(--surface);
+      background: var(--bg-secondary);
       border: 1px solid var(--border);
       border-radius: 30px;
-      padding: 6px 10px;
-      color: var(--text-primary);
+      padding: 8px 10px;
+      color: var(--text-secondary);
       cursor: pointer;
-      font-size: 12px;
-      transition: transform 0.1s ease;
-    }
-
-    .icon-btn:active {
-      transform: scale(0.95);
-    }
-
-    /* Pull to refresh */
-    .pull-to-refresh {
-      position: fixed;
-      top: -50px;
-      left: 0;
-      right: 0;
-      height: 50px;
+      font-size: 15px;
+      transition: var(--transition);
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--surface);
-      transition: transform 0.2s;
-      z-index: 99;
+      width: 36px;
+      height: 36px;
     }
 
-    .pull-to-refresh i {
-      font-size: 20px;
-      color: var(--accent);
+    .icon-btn:active {
+      transform: scale(0.92);
+      color: var(--xiaomi-orange);
+      border-color: var(--xiaomi-orange);
     }
 
-    /* Search */
+    .search-wrapper {
+      position: relative;
+    }
+
     .search-container {
       position: relative;
     }
 
     .search-input {
       width: 100%;
-      padding: 10px 40px 10px 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
+      padding: 13px 86px 13px 18px;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
       border-radius: 30px;
       color: var(--text-primary);
-      font-size: 14px;
-      transition: all 0.2s;
+      font-size: 15px;
+      font-weight: 500;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+      letter-spacing: -0.2px;
     }
 
     .search-input:focus {
       outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-glow);
+      border-color: var(--xiaomi-orange);
+      box-shadow: 0 0 0 4px var(--xiaomi-orange-glow);
     }
 
-    /* Cards View */
+    .search-input::placeholder {
+      color: var(--text-tertiary);
+      font-weight: 400;
+    }
+
+    .search-actions {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      gap: 2px;
+    }
+
+    .search-actions button {
+      background: var(--bg-primary);
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 6px 10px;
+      border-radius: 20px;
+      transition: var(--transition);
+    }
+
+    .suggestions-panel {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 8px;
+      background: var(--suggestion-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      max-height: 280px;
+      overflow-y: auto;
+      display: none;
+      z-index: 60;
+    }
+
+    .suggestions-panel.active {
+      display: block;
+    }
+
+    .suggestion-header {
+      padding: 10px 18px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .suggestion-item {
+      padding: 12px 18px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: var(--transition);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .suggestion-item:active,
+    .suggestion-item.active {
+      background: var(--suggestion-hover);
+      color: var(--xiaomi-orange);
+    }
+
+    .suggestion-item i {
+      color: var(--text-tertiary);
+      font-size: 12px;
+      width: 16px;
+    }
+
+    .suggestion-highlight {
+      color: var(--xiaomi-orange);
+      font-weight: 700;
+    }
+
+    .quick-filters {
+      padding: 12px 18px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+    }
+    .quick-filters::-webkit-scrollbar { display: none; }
+
+    .filter-chip {
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: var(--transition);
+    }
+
+    .filter-chip.active {
+      background: var(--xiaomi-orange);
+      color: white;
+      border-color: var(--xiaomi-orange);
+    }
+
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
     .cards-view {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      padding: 12px;
+      gap: 14px;
+      padding: 18px;
       padding-bottom: 80px;
     }
 
     .product-card {
-      background: var(--surface);
-      backdrop-filter: blur(10px);
-      border-radius: var(--card-radius);
-      padding: 12px;
-      border: 1px solid var(--border);
+      background: var(--bg-card);
+      border-radius: 24px;
+      padding: 18px 20px;
+      border: 1px solid var(--card-border);
       transition: var(--transition);
-      animation: fadeInUp 0.3s ease;
+      position: relative;
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
     }
 
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .product-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 14px;
+      bottom: 14px;
+      width: 4px;
+      background: linear-gradient(180deg, var(--xiaomi-orange), var(--xiaomi-orange-soft));
+      border-radius: 4px;
     }
 
     .product-card:active {
-      transform: scale(0.98);
+      transform: scale(0.985);
     }
 
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 8px;
+      margin-bottom: 14px;
+      padding-left: 10px;
     }
 
-    .card-title {
+    .card-brand {
+      font-size: 11px;
       font-weight: 700;
-      font-size: 15px;
+      color: var(--xiaomi-orange);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
     }
 
     .card-model {
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-top: 2px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.4px;
     }
 
     .card-specs {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin: 8px 0;
-      font-size: 11px;
+      margin: 14px 0;
+      padding-left: 10px;
     }
 
     .card-type {
-      padding: 2px 8px;
-      border-radius: 20px;
-      background: rgba(0,0,0,0.2);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--bg-primary);
+      color: var(--text-secondary);
     }
 
     .card-type.oled {
-      color: #f97316;
+      background: rgba(255, 105, 0, 0.12);
+      color: var(--xiaomi-orange-dark);
+    }
+
+    .supplier-badge, .price-badge {
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--bg-primary);
+      color: var(--text-secondary);
     }
 
     .card-price-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 10px;
-      padding-top: 10px;
+      margin-top: 16px;
+      padding-top: 16px;
       border-top: 1px solid var(--border);
+      padding-left: 10px;
     }
 
     .card-price {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--accent);
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
       cursor: pointer;
+      transition: var(--transition);
+      letter-spacing: -0.8px;
       padding: 4px 12px;
-      border-radius: 30px;
-      background: rgba(249, 115, 22, 0.1);
-      transition: all 0.1s ease;
+      border-radius: 14px;
     }
 
     .card-price:active {
-      background: var(--accent);
-      color: white;
-      transform: scale(0.95);
+      color: var(--xiaomi-orange);
+      background: var(--xiaomi-orange-glow);
     }
 
-    /* Bottom Navigation con efecto */
+    .card-actions-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .image-btn, .whatsapp-btn {
+      border: none;
+      padding: 9px 18px;
+      border-radius: 40px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .image-btn:active, .whatsapp-btn:active {
+      transform: scale(0.93);
+    }
+
+    .image-btn {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .whatsapp-btn {
+      background: #25D366;
+      color: white;
+    }
+
     .bottom-nav {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(20px);
+      background: var(--bg-primary);
       border-top: 1px solid var(--border);
       display: flex;
-      padding: 6px 16px 12px;
-      gap: 4px;
+      padding: 8px 24px 16px;
+      gap: 12px;
       z-index: 100;
-      animation: slideUp 0.3s ease;
-    }
-
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
     }
 
     .nav-item {
@@ -318,50 +479,27 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
-      padding: 6px;
+      gap: 4px;
+      padding: 8px 10px;
       border: none;
       background: transparent;
-      color: var(--text-secondary);
-      border-radius: 30px;
+      color: var(--text-tertiary);
+      border-radius: 16px;
       cursor: pointer;
       font-size: 10px;
-      transition: all 0.1s ease;
-    }
-
-    .nav-item:active {
-      transform: scale(0.95);
+      font-weight: 600;
+      transition: var(--transition);
     }
 
     .nav-item.active {
-      color: var(--accent);
-      background: var(--surface);
+      color: var(--xiaomi-orange);
+      background: var(--xiaomi-orange-glow);
     }
 
     .nav-item i {
-      font-size: 18px;
+      font-size: 20px;
     }
 
-    /* Loading skeleton mejorado */
-    .skeleton-card {
-      background: var(--surface);
-      border-radius: var(--card-radius);
-      padding: 12px;
-    }
-
-    .skeleton {
-      background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
-      background-size: 200% 100%;
-      animation: loading 1.5s infinite;
-      border-radius: 8px;
-    }
-
-    @keyframes loading {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    /* Modal mejorado */
     .modal {
       display: none;
       position: fixed;
@@ -369,186 +507,272 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.95);
-      backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(12px);
       z-index: 200;
       align-items: center;
       justify-content: center;
-      padding: 20px;
-      animation: fadeIn 0.2s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      padding: 24px;
     }
 
     .modal-content {
-      background: var(--surface);
+      background: var(--bg-card);
       border-radius: 24px;
-      padding: 20px;
-      max-width: 300px;
+      padding: 28px;
+      max-width: 320px;
       width: 100%;
-      animation: modalSlide 0.2s ease;
+      border: 1px solid var(--border);
     }
 
-    @keyframes modalSlide {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .modal-content h3 {
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: 700;
     }
 
-    /* Toast */
+    .modal-content input {
+      width: 100%;
+      padding: 14px 18px;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      color: var(--text-primary);
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .modal-content input:focus {
+      outline: none;
+      border-color: var(--xiaomi-orange);
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 18px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .modal-buttons button:first-child {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .modal-buttons button:last-child {
+      background: var(--xiaomi-orange);
+      color: white;
+    }
+
     .toast {
       position: fixed;
-      bottom: 80px;
+      bottom: 90px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.9);
-      backdrop-filter: blur(10px);
-      padding: 8px 16px;
-      border-radius: 30px;
-      color: white;
-      font-size: 12px;
+      background: var(--bg-card);
+      padding: 10px 20px;
+      border-radius: 40px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 600;
       z-index: 150;
-      white-space: nowrap;
-      animation: toastIn 0.2s ease;
+      animation: fadeInUp 0.3s ease;
+      border: 1px solid var(--border);
     }
 
-    @keyframes toastIn {
-      from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-      }
-    }
-
-    /* Main content area con scroll */
-    .main-content {
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
 
     .results-count {
-      padding: 6px 16px;
-      font-size: 11px;
-      color: var(--text-secondary);
+      padding: 16px 20px 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-tertiary);
     }
 
     .empty-state {
       text-align: center;
-      padding: 60px 20px;
+      padding: 40px 20px;
+      color: var(--text-tertiary);
     }
 
-    .install-banner {
-      background: var(--surface);
-      margin: 8px 12px;
-      padding: 10px;
-      border-radius: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      animation: slideDown 0.3s ease;
+    .empty-state i {
+      font-size: 48px;
+      opacity: 0.2;
+      margin-bottom: 16px;
     }
 
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-100%);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Scrollbar personalizado */
-    .main-content::-webkit-scrollbar {
-      width: 3px;
-    }
-
-    .main-content::-webkit-scrollbar-track {
-      background: var(--surface);
-    }
-
-    .main-content::-webkit-scrollbar-thumb {
-      background: var(--accent);
-      border-radius: 3px;
-    }
+    .main-content::-webkit-scrollbar { width: 3px; }
+    .main-content::-webkit-scrollbar-track { background: transparent; }
+    .main-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
   </style>
 </head>
 <body>
 <div class="app">
-  <!-- Pull to refresh indicator -->
-  <div class="pull-to-refresh" id="pullToRefresh">
-    <i class="fas fa-arrow-down"></i>
-  </div>
-
   <header class="header">
     <div class="header-top">
       <div class="logo">
-        <div class="logo-icon">📱</div>
-        <h1>Dr. Xiaomi</h1>
+        <div class="logo-icon">MI</div>
+        <h1>DR XIAOMI <span>CatalogO</span></h1>
       </div>
       <div class="header-actions">
+        <button class="icon-btn" id="themeToggle" title="Tema">
+          <i class="fas fa-moon"></i>
+        </button>
         <button class="icon-btn" id="techModeBtn" title="Modo Técnico">
           <i class="fas fa-microchip"></i>
         </button>
         <button class="icon-btn" id="receiptBtn" title="Recibo">
           <i class="fas fa-receipt"></i>
         </button>
-        <button class="icon-btn" id="installBtn" style="display: none;" title="Instalar App">
-          <i class="fas fa-download"></i>
-        </button>
-        <button class="icon-btn" id="themeToggle">
-          <i class="fas fa-moon"></i>
+        <button class="icon-btn" id="shuffleBtn" title="Mezclar">
+          <i class="fas fa-random"></i>
         </button>
       </div>
     </div>
     
-    <div class="search-container">
-      <input type="text" id="searchInput" class="search-input" placeholder="Buscar modelo...">
-      <div class="search-actions">
-        <button id="clearSearchBtn"><i class="fas fa-times"></i></button>
+    <div class="search-wrapper">
+      <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="Buscar modelo exacto... Ej: Redmi Note 10 Pro" autocomplete="off">
+        <div class="search-actions">
+          <button id="clearSearchBtn" style="display: none;"><i class="fas fa-times"></i></button>
+        </div>
       </div>
+      <div class="suggestions-panel" id="suggestionsPanel"></div>
     </div>
   </header>
 
-  <div class="main-content" id="mainContent">
+  <div class="quick-filters" id="quickFilters">
+    <button class="filter-chip active" data-filter="all">📱 Todos</button>
+    <button class="filter-chip" data-filter="OLED">✨ OLED</button>
+    <button class="filter-chip" data-filter="LCD">📟 LCD</button>
+  </div>
+
+  <div class="main-content">
     <div id="resultsCount" class="results-count"></div>
     <div id="resultsContainer"></div>
   </div>
 
   <nav class="bottom-nav">
     <button class="nav-item active" data-tab="home"><i class="fas fa-home"></i><span>Inicio</span></button>
-    <button class="nav-item" data-tab="favorites"><i class="fas fa-heart"></i><span>Favoritos</span></button>
     <button class="nav-item" data-tab="compare"><i class="fas fa-chart-line"></i><span>Comparar</span></button>
   </nav>
 </div>
 
-<!-- Modales -->
 <div id="techModal" class="modal">
   <div class="modal-content">
-    <h3><i class="fas fa-microchip"></i> Modo Técnico</h3>
-    <input type="password" id="techPassword" placeholder="Clave">
-    <div class="modal-buttons" style="display: flex; gap: 10px; margin-top: 10px;">
-      <button onclick="closeModal('techModal')" style="flex:1; padding: 10px;">Cancelar</button>
-      <button id="confirmTechBtn" style="flex:1; padding: 10px; background: #f97316; border: none; border-radius: 30px; color: white;">Acceder</button>
+    <h3>🔐 Acceso Técnico</h3>
+    <input type="password" id="techPassword" placeholder="Clave de acceso" autocomplete="off">
+    <div class="modal-buttons">
+      <button onclick="closeModal('techModal')">Cancelar</button>
+      <button id="confirmTechBtn">Acceder</button>
     </div>
   </div>
 </div>
 
 <script>
-  // Configuración
+  // ============================================================
+  // MOTOR DE BÚSQUEDA PRECISA
+  // ============================================================
+  
+  function normalizeText(str) {
+    return str
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function getTokens(str) {
+    return normalizeText(str).split(" ").filter(t => t.length > 0);
+  }
+
+  /**
+   * BÚSQUEDA PRECISA: Todas las palabras de la búsqueda deben estar
+   * presentes en el modelo o marca del producto.
+   * Si buscas "note 10 pro", solo aparecen productos que tengan
+   * las 3 palabras: "note", "10" y "pro" en su nombre.
+   */
+  function performPreciseSearch(data, searchTerm) {
+    if (!searchTerm.trim()) return data;
+    
+    const searchTokens = getTokens(searchTerm);
+    
+    return data.filter(item => {
+      const modeloNormalized = normalizeText(item.modelo);
+      const marcaNormalized = normalizeText(item.marca);
+      const combinedText = modeloNormalized + " " + marcaNormalized;
+      
+      // TODAS las palabras deben estar presentes
+      return searchTokens.every(token => {
+        return combinedText.includes(token);
+      });
+    });
+  }
+
+  function generateSuggestions(searchTerm) {
+    if (!searchTerm.trim() || searchTerm.trim().length < 2) return [];
+    
+    const searchTokens = getTokens(searchTerm);
+    const suggestionsMap = new Map();
+    
+    allData.forEach(product => {
+      const modeloNormalized = normalizeText(product.modelo);
+      const marcaNormalized = normalizeText(product.marca);
+      const combinedText = modeloNormalized + " " + marcaNormalized;
+      
+      // El producto debe contener TODAS las palabras buscadas
+      const allTokensMatch = searchTokens.every(token => combinedText.includes(token));
+      
+      if (allTokensMatch) {
+        const key = `${product.marca}|${product.modelo}`;
+        if (!suggestionsMap.has(key)) {
+          suggestionsMap.set(key, {
+            marca: product.marca,
+            modelo: product.modelo,
+            tipo: product.tipo,
+            venta: product.venta
+          });
+        }
+      }
+    });
+    
+    return Array.from(suggestionsMap.values())
+      .sort((a, b) => a.venta - b.venta)
+      .slice(0, 8);
+  }
+
+  function highlightMatch(text, searchTerm) {
+    if (!searchTerm.trim()) return escapeHtml(text);
+    
+    const tokens = getTokens(searchTerm);
+    let result = escapeHtml(text);
+    
+    tokens.forEach(token => {
+      if (token.length < 1) return;
+      const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${escapedToken})`, 'gi');
+      result = result.replace(regex, '<span class="suggestion-highlight">$1</span>');
+    });
+    
+    return result;
+  }
+
+  // ============================================================
+  // CONFIGURACIÓN
+  // ============================================================
   const CONFIG = {
     dataSources: [
       { name: "J&A", url: "https://xiaomi.scz.red/precio/data/ja2.csv" },
@@ -563,106 +787,153 @@
   let allData = [];
   let filteredData = [];
   let techMode = false;
-  let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
   let currentTab = "home";
-  let deferredPrompt = null;
-  let pullStartY = 0;
-  let pullMove = false;
+  let currentFilter = "all";
+  let popupWindow = null;
+  let currentTheme = "light";
+  let selectedSuggestionIndex = -1;
 
   const container = document.getElementById("resultsContainer");
   const searchInput = document.getElementById("searchInput");
   const resultsCount = document.getElementById("resultsCount");
-  const mainContent = document.getElementById("mainContent");
+  const suggestionsPanel = document.getElementById("suggestionsPanel");
+  const clearSearchBtn = document.getElementById("clearSearchBtn");
 
-  // Service Worker y PWA
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
+  function applyFiltersAndSearch() {
+    let data = [...allData];
+    
+    if (currentFilter !== "all") {
+      data = data.filter(item => item.tipo === currentFilter);
+    }
+    
+    const searchTerm = searchInput.value.trim();
+    if (searchTerm) {
+      data = performPreciseSearch(data, searchTerm);
+      clearSearchBtn.style.display = 'block';
+    } else {
+      clearSearchBtn.style.display = 'none';
+    }
+    
+    // Ordenar por precio más barato
+    data.sort((a, b) => a.venta - b.venta);
+    
+    filteredData = data;
+    updateResultsCount();
+    render();
   }
 
-  // Detectar instalación PWA
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    const installBtn = document.getElementById('installBtn');
-    installBtn.style.display = 'flex';
-    installBtn.onclick = () => {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => {
-        installBtn.style.display = 'none';
-        deferredPrompt = null;
+  function updateSuggestions() {
+    const searchTerm = searchInput.value.trim();
+    selectedSuggestionIndex = -1;
+    
+    if (!searchTerm || searchTerm.length < 2) {
+      suggestionsPanel.classList.remove('active');
+      return;
+    }
+    
+    const suggestions = generateSuggestions(searchTerm);
+    
+    if (suggestions.length === 0) {
+      suggestionsPanel.classList.remove('active');
+      return;
+    }
+    
+    suggestionsPanel.innerHTML = `
+      <div class="suggestion-header">💡 COINCIDENCIAS (${suggestions.length})</div>
+      ${suggestions.map((s, index) => `
+        <div class="suggestion-item" data-index="${index}" data-modelo="${escapeHtml(s.modelo)}">
+          <i class="fas fa-mobile-alt"></i>
+          <div style="flex: 1;">
+            <div>${highlightMatch(s.modelo, searchTerm)}</div>
+            <div style="font-size: 11px; color: var(--text-tertiary);">${escapeHtml(s.marca)} · ${s.venta.toLocaleString()} Bs</div>
+          </div>
+          <span style="font-size: 10px; color: var(--text-tertiary); background: var(--bg-primary); padding: 2px 8px; border-radius: 10px;">${s.tipo}</span>
+        </div>
+      `).join('')}
+    `;
+    
+    suggestionsPanel.querySelectorAll('.suggestion-item').forEach(item => {
+      item.addEventListener('click', function() {
+        searchInput.value = this.dataset.modelo;
+        suggestionsPanel.classList.remove('active');
+        applyFiltersAndSearch();
+        if (navigator.vibrate) navigator.vibrate(30);
       });
-    };
-  });
-
-  // Pull to Refresh
-  let touchStartY = 0;
-  let isRefreshing = false;
-
-  mainContent.addEventListener('touchstart', (e) => {
-    if (mainContent.scrollTop === 0) {
-      touchStartY = e.touches[0].clientY;
-    }
-  });
-
-  mainContent.addEventListener('touchmove', (e) => {
-    if (mainContent.scrollTop === 0 && !isRefreshing) {
-      const moveY = e.touches[0].clientY;
-      const pullDistance = moveY - touchStartY;
-      if (pullDistance > 50) {
-        e.preventDefault();
-        refreshData();
-      }
-    }
-  });
-
-  async function refreshData() {
-    if (isRefreshing) return;
-    isRefreshing = true;
-    const pullEl = document.getElementById('pullToRefresh');
-    pullEl.style.transform = 'translateY(50px)';
+    });
     
-    await loadData();
-    
-    setTimeout(() => {
-      pullEl.style.transform = '';
-      isRefreshing = false;
-      showToast('✅ Actualizado');
-    }, 1000);
+    suggestionsPanel.classList.add('active');
   }
 
-  // Haptic feedback (vibración)
-  function vibrate() {
-    if ('vibrate' in navigator) {
-      navigator.vibrate(50);
+  function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
+    return shuffled;
   }
 
   async function init() {
     showSkeleton();
     await loadData();
     setupEventListeners();
+    setupQuickFilters();
+    // Iniciar ordenado por precio
+    filteredData = [...allData].sort((a, b) => a.venta - b.venta);
+    updateResultsCount();
     render();
-    
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "light") toggleTheme();
-    
-    // Detectar modo offline
-    window.addEventListener('online', () => showToast('✅ Conexión restaurada'));
-    window.addEventListener('offline', () => showToast('⚠️ Modo offline'));
+    loadTheme();
+  }
+
+  function loadTheme() {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark") {
+      currentTheme = "dark";
+      document.documentElement.setAttribute("data-theme", "dark");
+      document.querySelector("#themeToggle i").className = "fas fa-sun";
+    } else {
+      currentTheme = "light";
+      document.documentElement.setAttribute("data-theme", "light");
+      document.querySelector("#themeToggle i").className = "fas fa-moon";
+    }
+  }
+
+  function toggleTheme() {
+    if (currentTheme === "light") {
+      currentTheme = "dark";
+      document.documentElement.setAttribute("data-theme", "dark");
+      document.querySelector("#themeToggle i").className = "fas fa-sun";
+    } else {
+      currentTheme = "light";
+      document.documentElement.setAttribute("data-theme", "light");
+      document.querySelector("#themeToggle i").className = "fas fa-moon";
+    }
+    localStorage.setItem("theme", currentTheme);
+    render();
+  }
+
+  function shuffleResults() {
+    if (allData.length > 0) {
+      filteredData = shuffleArray(allData);
+      updateResultsCount();
+      render();
+      showToast("🔄 Productos mezclados");
+    }
+  }
+
+  function setupQuickFilters() {
+    document.querySelectorAll(".filter-chip").forEach(filter => {
+      filter.addEventListener("click", () => {
+        document.querySelectorAll(".filter-chip").forEach(f => f.classList.remove("active"));
+        filter.classList.add("active");
+        currentFilter = filter.dataset.filter;
+        applyFiltersAndSearch();
+      });
+    });
   }
 
   async function loadData() {
     try {
-      // Intentar cargar desde caché primero
-      const cached = localStorage.getItem('products_cache');
-      if (cached && !navigator.onLine) {
-        allData = JSON.parse(cached);
-        filteredData = [...allData];
-        updateResultsCount();
-        render();
-        return;
-      }
-      
       allData = [];
       for (const source of CONFIG.dataSources) {
         try {
@@ -672,12 +943,9 @@
           console.error(`Error cargando ${source.name}:`, error);
         }
       }
-      
-      // Guardar en caché
-      localStorage.setItem('products_cache', JSON.stringify(allData));
-      
-      filteredData = [...allData];
+      filteredData = [...allData].sort((a, b) => a.venta - b.venta);
       updateResultsCount();
+      render();
     } catch (error) {
       showError();
     }
@@ -779,45 +1047,48 @@
   function render() {
     if (!container) return;
     
-    let dataToShow = currentTab === "favorites" 
-      ? filteredData.filter(p => favorites.includes(p.id))
-      : filteredData;
-    
     if (currentTab === "compare") {
       showCompareModal();
       return;
     }
     
-    container.innerHTML = renderCards(dataToShow);
-    updateResultsCount();
+    container.innerHTML = renderCards(filteredData);
   }
 
   function renderCards(data) {
     if (data.length === 0) {
-      return `<div class="empty-state"><i class="fas fa-search"></i><p>No se encontraron resultados</p></div>`;
+      const searchTerm = searchInput.value.trim();
+      return `
+        <div class="empty-state">
+          <i class="fas fa-search"></i>
+          <p style="font-weight: 600; margin-bottom: 8px;">Sin resultados</p>
+          ${searchTerm ? `<p style="font-size: 13px;">No se encontró "${escapeHtml(searchTerm)}"</p>` : ''}
+          <p style="font-size: 11px; margin-top: 12px; color: var(--text-tertiary);">💡 Escribe el nombre exacto del modelo</p>
+        </div>
+      `;
     }
     
     return `
       <div class="cards-view">
-        ${data.map((item, index) => `
-          <div class="product-card" style="animation-delay: ${index * 0.02}s">
+        ${data.map((item) => `
+          <div class="product-card">
             <div class="card-header">
               <div>
-                <div class="card-title">${escapeHtml(item.marca)}</div>
+                <div class="card-brand">${escapeHtml(item.marca)}</div>
                 <div class="card-model">${escapeHtml(item.modelo)}</div>
               </div>
-              <button class="fav-btn" onclick="toggleFavorite('${item.id}')">
-                <i class="fas fa-heart" style="color: ${favorites.includes(item.id) ? '#ef4444' : '#94a3b8'}"></i>
-              </button>
             </div>
             <div class="card-specs">
-              <span class="card-type ${item.tipo === 'OLED' ? 'oled' : 'lcd'}">${item.tipo}</span>
-              ${techMode ? `<span style="color: #fbbf24;">${escapeHtml(item.proveedor)}</span>` : ''}
-              ${techMode ? `<span>Compra: Bs. ${item.compra.toLocaleString()}</span>` : ''}
+              <span class="card-type ${item.tipo === 'OLED' ? 'oled' : ''}">${item.tipo}</span>
+              ${techMode ? `<span class="supplier-badge">🏷️ ${escapeHtml(item.proveedor)}</span>` : ''}
+              ${techMode ? `<span class="price-badge">Compra: ${item.compra.toLocaleString()} Bs</span>` : ''}
             </div>
             <div class="card-price-row">
-              <span class="card-price" onclick="copyPriceToClipboard('${item.id}')">Bs. ${item.venta.toLocaleString()}</span>
-              <button class="share-card-btn" onclick="shareToWhatsApp('${item.id}')" style="background: #25D366; border: none; padding: 6px 12px; border-radius: 30px; color: white; font-size: 11px;"><i class="fab fa-whatsapp"></i> Enviar</button>
+              <span class="card-price" onclick="copyPriceToClipboard('${item.id}')">${item.venta.toLocaleString()} Bs</span>
+              <div class="card-actions-group">
+                <button class="image-btn" onclick="openGooglePopup('${item.id}')"><i class="fab fa-google"></i> LCD</button>
+                <button class="whatsapp-btn" onclick="shareToWhatsApp('${item.id}')"><i class="fab fa-whatsapp"></i></button>
+              </div>
             </div>
           </div>
         `).join('')}
@@ -825,41 +1096,17 @@
     `;
   }
 
-  function search(term) {
-    if (!term.trim()) {
-      filteredData = [...allData];
-    } else {
-      const lowerTerm = term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      filteredData = allData.filter(item => {
-        const modeloNorm = item.modelo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const marcaNorm = item.marca.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        return modeloNorm.includes(lowerTerm) || marcaNorm.includes(lowerTerm);
-      });
-    }
-    render();
-  }
-
-  function updateResultsCount() {
-    if (resultsCount) {
-      const total = currentTab === "favorites" 
-        ? filteredData.filter(p => favorites.includes(p.id)).length
-        : filteredData.length;
-      resultsCount.textContent = `${total} producto${total !== 1 ? 's' : ''}`;
-    }
-  }
-
   function copyPriceToClipboard(productId) {
     const product = allData.find(p => p.id === productId);
     if (!product) return;
     
-    vibrate(); // Feedback háptico
-    
-    const message = `📱 *PRECIO DE PANTALLA*\n${product.marca} ${product.modelo}\n💰 Precio: Bs. ${product.venta.toLocaleString()}`;
+    const message = `📱 ${product.marca} ${product.modelo}\n💰 Precio: ${product.venta.toLocaleString()} Bs.`;
     
     navigator.clipboard.writeText(message).then(() => {
       showToast("✅ Precio copiado");
+      if (navigator.vibrate) navigator.vibrate(50);
     }).catch(() => {
-      showToast("❌ Error");
+      showToast("❌ Error al copiar");
     });
   }
 
@@ -867,24 +1114,36 @@
     const product = allData.find(p => p.id === productId);
     if (!product) return;
     
-    vibrate();
-    
-    const message = `📱 *PRECIO DE PANTALLA*\n${product.marca} ${product.modelo}\n💰 Precio: Bs. ${product.venta.toLocaleString()}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+    const message = `📱 *${product.marca} ${product.modelo}*\n💰 Precio: ${product.venta.toLocaleString()} Bs.`;
+    const encoded = encodeURIComponent(message);
+    window.open(`https://wa.me/?text=${encoded}`, "_blank");
+    if (navigator.vibrate) navigator.vibrate(50);
   }
 
-  function toggleFavorite(productId) {
-    vibrate();
+  function openGooglePopup(productId) {
+    const product = allData.find(p => p.id === productId);
+    if (!product) return;
     
-    if (favorites.includes(productId)) {
-      favorites = favorites.filter(id => id !== productId);
-      showToast("⭐ Eliminado");
-    } else {
-      favorites.push(productId);
-      showToast("❤️ Agregado");
+    const searchTerm = `LCD ${product.modelo} ${product.marca} pantalla`;
+    const encodedTerm = encodeURIComponent(searchTerm);
+    const googleUrl = `https://www.google.com/search?q=${encodedTerm}&tbm=isch`;
+    
+    const width = Math.min(450, screen.width - 40);
+    const height = Math.min(650, screen.height - 80);
+    const left = (screen.width - width) / 2;
+    const top = (screen.height - height) / 2;
+    
+    popupWindow = window.open(googleUrl, 'GoogleImagesPopup', 
+      `width=${width},height=${height},left=${left},top=${top},toolbar=yes,location=yes,scrollbars=yes,resizable=yes`);
+    if (popupWindow) popupWindow.focus();
+    if (navigator.vibrate) navigator.vibrate(50);
+  }
+
+  function updateResultsCount() {
+    if (resultsCount) {
+      const count = filteredData.length;
+      resultsCount.textContent = `${count} producto${count !== 1 ? 's' : ''}`;
     }
-    localStorage.setItem("favorites", JSON.stringify(favorites));
-    render();
   }
 
   function showTechModal() {
@@ -899,20 +1158,23 @@
   }
 
   function showToast(message) {
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) existingToast.remove();
+    
     const toast = document.createElement("div");
     toast.className = "toast";
     toast.textContent = message;
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 1500);
+    setTimeout(() => toast.remove(), 2000);
   }
 
   function showSkeleton() {
     if (container) {
       container.innerHTML = `
         <div class="cards-view">
-          ${Array(5).fill().map(() => `
-            <div class="skeleton-card">
-              <div class="skeleton" style="height: 80px;"></div>
+          ${Array(6).fill().map(() => `
+            <div class="product-card" style="height: 120px;">
+              <div style="background: linear-gradient(90deg, var(--border) 25%, transparent 50%, var(--border) 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 12px; height: 100%;"></div>
             </div>
           `).join('')}
         </div>
@@ -926,42 +1188,32 @@
         <div class="empty-state">
           <i class="fas fa-exclamation-triangle"></i>
           <p>Error cargando datos</p>
-          <button onclick="location.reload()" style="margin-top: 16px; padding: 10px 20px; background: #f97316; border: none; border-radius: 30px; color: white;">Reintentar</button>
+          <button onclick="location.reload()" style="margin-top: 16px; padding: 12px 24px; background: var(--xiaomi-orange); border: none; border-radius: 30px; color: white; font-weight: 600;">Reintentar</button>
         </div>
       `;
     }
   }
 
-  function toggleTheme() {
-    vibrate();
-    const isLight = document.documentElement.getAttribute("data-theme") === "light";
-    document.documentElement.setAttribute("data-theme", isLight ? "dark" : "light");
-    localStorage.setItem("theme", isLight ? "dark" : "light");
-    const icon = document.querySelector("#themeToggle i");
-    if (icon) icon.className = isLight ? "fas fa-moon" : "fas fa-sun";
-  }
-
   function showCompareModal() {
     const compareData = filteredData.slice(0, 4);
-    let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
     compareData.forEach(p => {
       html += `
-        <div style="background: var(--surface); padding: 12px; border-radius: 12px;">
-          <strong>${escapeHtml(p.marca)} ${escapeHtml(p.modelo)}</strong><br>
-          <span style="color: #f97316; font-weight: 700;">Bs. ${p.venta.toLocaleString()}</span>
+        <div style="background: var(--bg-secondary); padding: 14px; border-radius: 16px; border-left: 4px solid var(--xiaomi-orange);">
+          <div style="font-size: 12px; color: var(--xiaomi-orange); font-weight: 700;">${escapeHtml(p.marca)}</div>
+          <div style="font-size: 15px; font-weight: 600; margin: 4px 0;">${escapeHtml(p.modelo)}</div>
+          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">${p.tipo}</div>
+          <div style="font-size: 22px; font-weight: 800;">${p.venta.toLocaleString()} Bs</div>
         </div>
       `;
     });
-    html += '</div>';
+    html += '</div><div class="modal-buttons" style="margin-top: 16px;"><button onclick="closeCompareModal()" style="flex:1; padding: 12px; background: var(--xiaomi-orange); border: none; border-radius: 30px; color: white; font-weight: 600;">Cerrar</button></div>';
     
     const modalHtml = `
       <div id="compareModal" class="modal" style="display: flex;">
-        <div class="modal-content">
-          <h3><i class="fas fa-chart-line"></i> Comparar</h3>
+        <div class="modal-content" style="max-width: 350px;">
+          <h3>📊 Comparar</h3>
           ${html}
-          <div class="modal-buttons" style="margin-top: 16px;">
-            <button onclick="closeModal('compareModal')" style="flex:1; padding: 10px; border: none; border-radius: 30px;">Cerrar</button>
-          </div>
         </div>
       </div>
     `;
@@ -971,67 +1223,92 @@
     document.body.insertAdjacentHTML("beforeend", modalHtml);
   }
 
+  function closeCompareModal() {
+    const modal = document.getElementById("compareModal");
+    if (modal) modal.remove();
+  }
+
   function escapeHtml(str) {
     if (!str) return "";
-    return str.replace(/[&<>]/g, function(m) {
-      if (m === "&") return "&amp;";
-      if (m === "<") return "&lt;";
-      if (m === ">") return "&gt;";
-      return m;
-    });
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 
   function setupEventListeners() {
-    searchInput?.addEventListener("input", (e) => search(e.target.value));
+    searchInput?.addEventListener("input", () => {
+      updateSuggestions();
+    });
+    
+    searchInput?.addEventListener("keydown", (e) => {
+      const items = suggestionsPanel.querySelectorAll('.suggestion-item');
+      
+      if (e.key === 'ArrowDown' && items.length > 0) {
+        e.preventDefault();
+        selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, items.length - 1);
+        items.forEach((item, i) => item.classList.toggle('active', i === selectedSuggestionIndex));
+      } else if (e.key === 'ArrowUp' && items.length > 0) {
+        e.preventDefault();
+        selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, 0);
+        items.forEach((item, i) => item.classList.toggle('active', i === selectedSuggestionIndex));
+      } else if (e.key === 'Enter') {
+        suggestionsPanel.classList.remove('active');
+        applyFiltersAndSearch();
+      } else if (e.key === 'Escape') {
+        suggestionsPanel.classList.remove('active');
+        selectedSuggestionIndex = -1;
+      }
+    });
     
     document.getElementById("clearSearchBtn")?.addEventListener("click", () => {
       searchInput.value = "";
-      search("");
+      suggestionsPanel.classList.remove('active');
+      clearSearchBtn.style.display = 'none';
+      applyFiltersAndSearch();
+      searchInput.focus();
     });
     
-    document.getElementById("techModeBtn")?.addEventListener("click", () => {
-      vibrate();
-      showTechModal();
-    });
+    document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
+    document.getElementById("techModeBtn")?.addEventListener("click", showTechModal);
+    document.getElementById("shuffleBtn")?.addEventListener("click", () => shuffleResults());
     
     document.getElementById("confirmTechBtn")?.addEventListener("click", () => {
-      const pwd = document.getElementById("techPassword").value;
-      if (pwd === CONFIG.passwords.tech) {
+      if (document.getElementById("techPassword").value === CONFIG.passwords.tech) {
         techMode = true;
         closeModal("techModal");
-        vibrate();
-        showToast("✅ Modo técnico activado");
+        showToast("🔧 Modo técnico activado");
         render();
       } else {
-        vibrate();
         showToast("❌ Clave incorrecta");
+        if (navigator.vibrate) navigator.vibrate(200);
       }
     });
     
     document.getElementById("receiptBtn")?.addEventListener("click", () => {
-      vibrate();
       window.open("http://xiaomi.scz.red/1/", "_blank");
     });
     
-    document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
-    
     document.querySelectorAll(".nav-item").forEach(item => {
       item.addEventListener("click", () => {
-        vibrate();
         currentTab = item.dataset.tab;
         document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
         item.classList.add("active");
         render();
       });
     });
+    
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".search-wrapper")) {
+        suggestionsPanel.classList.remove("active");
+      }
+    });
   }
 
-  // Exponer funciones globales
   window.copyPriceToClipboard = copyPriceToClipboard;
   window.shareToWhatsApp = shareToWhatsApp;
-  window.toggleFavorite = toggleFavorite;
+  window.openGooglePopup = openGooglePopup;
   window.closeModal = closeModal;
-  window.refreshData = refreshData;
+  window.closeCompareModal = closeCompareModal;
 
   init();
 </script>
