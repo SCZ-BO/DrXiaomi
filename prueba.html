@@ -623,7 +623,7 @@
     <div class="header-top">
       <div class="logo">
         <div class="logo-icon">MI</div>
-        <h1>DR XIAOMI <span>CatalogO</span></h1>
+        <h1>DR XIAOMI <span>Catálogo</span></h1>
       </div>
       <div class="header-actions">
         <button class="icon-btn" id="themeToggle" title="Tema">
@@ -699,12 +699,6 @@
     return normalizeText(str).split(" ").filter(t => t.length > 0);
   }
 
-  /**
-   * BÚSQUEDA PRECISA: Todas las palabras de la búsqueda deben estar
-   * presentes en el modelo o marca del producto.
-   * Si buscas "note 10 pro", solo aparecen productos que tengan
-   * las 3 palabras: "note", "10" y "pro" en su nombre.
-   */
   function performPreciseSearch(data, searchTerm) {
     if (!searchTerm.trim()) return data;
     
@@ -715,7 +709,6 @@
       const marcaNormalized = normalizeText(item.marca);
       const combinedText = modeloNormalized + " " + marcaNormalized;
       
-      // TODAS las palabras deben estar presentes
       return searchTokens.every(token => {
         return combinedText.includes(token);
       });
@@ -733,7 +726,6 @@
       const marcaNormalized = normalizeText(product.marca);
       const combinedText = modeloNormalized + " " + marcaNormalized;
       
-      // El producto debe contener TODAS las palabras buscadas
       const allTokensMatch = searchTokens.every(token => combinedText.includes(token));
       
       if (allTokensMatch) {
@@ -779,8 +771,8 @@
       { name: "CentralCell", url: "https://xiaomi.scz.red/precio/data/centralcel.csv" },
       { name: "Osmobil", url: "https://xiaomi.scz.red/precio/data/osmobil.csv" },
       { name: "CFH LP", url: "https://xiaomi.scz.red/precio/data/CFH.csv" },
-      { name: "BITE", url: "https://xiaomi.scz.red/precio/data/boe.csv" }
-      { name: "BITE", url: "https://xiaomi.scz.red/precio/data/mrpantalla.csv" }
+      { name: "BITE", url: "https://xiaomi.scz.red/precio/data/boe.csv" },
+      { name: "MR PANTALLA", url: "https://xiaomi.scz.red/precio/data/mrpantalla.csv" }
     ],
     passwords: { tech: "123456" }
   };
@@ -815,7 +807,6 @@
       clearSearchBtn.style.display = 'none';
     }
     
-    // Ordenar por precio más barato
     data.sort((a, b) => a.venta - b.venta);
     
     filteredData = data;
@@ -879,7 +870,6 @@
     await loadData();
     setupEventListeners();
     setupQuickFilters();
-    // Iniciar ordenado por precio
     filteredData = [...allData].sort((a, b) => a.venta - b.venta);
     updateResultsCount();
     render();
@@ -1101,7 +1091,7 @@
     const product = allData.find(p => p.id === productId);
     if (!product) return;
     
-    const message = `📱 ${product.marca} ${product.modelo}\n💰 Precio: ${product.venta.toLocaleString()} Bs.`;
+    const message = `📱 ${product.marca} ${product.modelo}\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
     
     navigator.clipboard.writeText(message).then(() => {
       showToast("✅ Precio copiado");
@@ -1115,7 +1105,7 @@
     const product = allData.find(p => p.id === productId);
     if (!product) return;
     
-    const message = `📱 *${product.marca} ${product.modelo}*\n💰 Precio: ${product.venta.toLocaleString()} Bs.`;
+    const message = `📱 *${product.marca} ${product.modelo}*\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${encoded}`, "_blank");
     if (navigator.vibrate) navigator.vibrate(50);
