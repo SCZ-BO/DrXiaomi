@@ -1,81 +1,80 @@
-marca,modelo,tipo,proveedor,precio_compra,precio_venta,categoria
-Honor,Magic 5 Lite,OLED,CentralCel,420,650,HONOR
-Honor,Magic 6 Lite,OLED,CentralCel,430,680,HONOR
-Honor,X8B,OLED,CentralCel,320,530,HONOR
-Infinix,Hot 30I,LCD,CentralCel,110,250,INFINIX
-Infinix,Hot 40 Lite,LCD,CentralCel,120,280,INFINIX
-Infinix,Note 30 Pro,LCD,CentralCel,130,300,INFINIX
-Infinix,Note 12,OLED,CentralCel,380,550,INFINIX
-Infinix,Zero 30,OLED,CentralCel,600,880,INFINIX
-LG,K50,LCD,CentralCel,130,290,LG
-Motorola,G20,LCD,CentralCel,120,270,MOTOROLA
-Nokia,5.4,LCD,CentralCel,150,320,NOKIA
-Realme,6 Pro,LCD,CentralCel,170,320,REALME
-Realme,8 Pro,OLED,CentralCel,490,720,REALME
-Realme,11 Pro Plus,OLED,CentralCel,370,530,REALME
-Realme,12 Pro Plus,OLED,CentralCel,320,530,REALME
-Realme,C61,LCD,CentralCel,100,270,REALME
-Realme,GT,OLED,CentralCel,500,700,REALME
-Realme,GT 2 Pro,ORIGINAL,CentralCel,1030,1300,REALME
-Realme,Gt neo 2,OLED,CentralCel,670,920,REALME
-Realme,Gt neo 2,INCEL,CentralCel,130,320,REALME
-
-Samsung,A16,INCELL,CentralCel,190,300,SAMSUNG
-Samsung,A15,OLED,CentralCel,310,500,SAMSUNG
-Samsung,A16,OLED,CentralCel,540,750,SAMSUNG
-Samsung,A21S,LCD,CentralCel,110,230,SAMSUNG
-Samsung,A32,OLED,CentralCel,270,430,SAMSUNG
-Samsung,A40,OLED,CentralCel,475,650,SAMSUNG
-Samsung,A54,INCELL,CentralCel,170,300,SAMSUNG
-Samsung,A54,OLED,CentralCel,340,490,SAMSUNG
-Samsung,Note 9,OLED,CentralCel,1780,2100,SAMSUNG
-Samsung,Note 20 Ultra,OLED,CentralCel,2200,2550,SAMSUNG
-Samsung,S20 Ultra,OLED,CentralCel,2300,2600,SAMSUNG
-Samsung,S21 ULTRA,OLED,CentralCel,1800,2150,SAMSUNG
-Samsung,S21 FE,OLED,CentralCel,1030,1350,SAMSUNG
-Samsung,S22 Ultra,SERVIPAK,CentralCel,2450,2750,SAMSUNG
-Samsung,S22 Plus,OLED,CentralCel,1420,1700,SAMSUNG
-Samsung,S23 Ultra,SERVIPAK,CentralCel,2550,2850,SAMSUNG
-Samsung,S24 Ultra,SERVIPAK,CentralCel,2640,2950,SAMSUNG
-Samsung,Tab S6 Lite,OLED,CentralCel,460,680,SAMSUNG
-Samsung,Z Flip 3,OLED,CentralCel,2250,2600,SAMSUNG
-Tecno,Camon 20 Pro,INCELL,CentralCel,170,290,TECNO
-Tecno,Camon 20 Pro,OLED,CentralCel,410,620,TECNO
-Tecno,Pova 5,LCD,CentralCel,150,300,TECNO
-Tecno,Spark 6,LCD,CentralCel,140,300,TECNO
-Tecno,Pova 7,LCD,CentralCel,130,330,TECNO
-Tecno,Spark 30 Pro,OLED,CentralCel,600,850,TECNO
-Xiaomi,Mi 11 Ultra,INCELL,CentralCel,190,390,XIAOMI
-Xiaomi,Mi 11 Lite,INCELL,CentralCel,120,270,XIAOMI
-Xiaomi,Mi 10T Pro,LCD,CentralCel,120,300,XIAOMI
-Xiaomi,Mi 11T Pro,OLED,CentralCel,420,750,XIAOMI
-Xiaomi,Mi 13T Pro,OLED,CentralCel,850,1150,XIAOMI
-Xiaomi,Mi Pad 6,OLED,CentralCel,750,1050,XIAOMI
-Xiaomi,Redmi Note 8 Pro,LCD,CentralCel,120,280,XIAOMI
-Xiaomi,Redmi Note 10S,OLED,CentralCel,340,510,XIAOMI
-Xiaomi,Redmi Note 11S,LCD,CentralCel,120,260,XIAOMI
-Xiaomi,Redmi Note 11S,OLED,CentralCel,350,550,XIAOMI
-Xiaomi,Redmi Note 13 4G,OLED,CentralCel,400,650,XIAOMI
-Xiaomi,Poco F3,OLED,CentralCel,300,520,XIAOMI
-Xiaomi,Poco F4,OLED,CentralCel,300,500,XIAOMI
-Xiaomi,Poco F4 GT,ORIGINAL,CentralCel,350,590,XIAOMI
-Xiaomi,Poco F5 Pro,INCELL,CentralCel,140,300,XIAOMI
-Xiaomi,Poco X3 GT,LCD,CentralCel,140,300,XIAOMI
-Xiaomi,Poco X6 Pro,OLED,CentralCel,290,550,XIAOMI
-Xiaomi,Redmi 9T,LCD,CentralCel,120,290,XIAOMI
-Xiaomi,Redmi 15C,LCD,CentralCel,120,290,XIAOMI
-Xiaomi,Redmi A1,LCD,CentralCel,120,230,XIAOMI
-Xiaomi,Redmi Note 9 Pro,LCD,CentralCel,160,320,XIAOMI
-Xiaomi,Redmi Note 10 Pro,OLED,CentralCel,290,490,XIAOMI
-Xiaomi,Redmi Note 11,INCELL,CentralCel,150,300,XIAOMI
-Xiaomi,Redmi Note 11,OLED,CentralCel,280,470,XIAOMI
-Xiaomi,Redmi Note 11 Pro,OLED,CentralCel,400,600,XIAOMI
-Xiaomi,Redmi Note 12 Pro Plus,INCELL,CentralCel,170,350,XIAOMI
-Xiaomi,Redmi Note 12 Pro Plus,OLED,CentralCel,370,580,XIAOMI
-Xiaomi,Redmi Note 12S,LCD,CentralCel,150,320,XIAOMI
-Xiaomi,Redmi Note 12S,OLED,CentralCel,350,520,XIAOMI
-Xiaomi,Redmi Note 13 ,OLED,CentralCel,300,520,XIAOMI
-Xiaomi,Redmi Note 13 Pro Plus,OLED,CentralCel,320,570,XIAOMI
-Xiaomi,Redmi Note 14 4g,ORIG,CentralCel,500,790,XIAOMI
-Xiaomi,Redmi Note 14 4g,INCEL,CentralCel,140,320,XIAOMI
-Xiaomi,Redmi K50 Gaming,ORIGINAL,CentralCel,350,590,XIAOMI
+Marca,Modelo,Tipo,Proveedor,Precio Compra,Precio Venta
+HONOR,Magic 5 Lite,OLED,CentralCel,420,650
+HONOR,Magic 6 Lite,OLED,CentralCel,430,680
+HONOR,X8B,OLED,CentralCel,320,530
+INFINIX,Hot 30I,LCD,CentralCel,110,250
+INFINIX,Hot 40 Lite,LCD,CentralCel,120,280
+INFINIX,Note 30 Pro,LCD,CentralCel,130,300
+INFINIX,Note 12,OLED,CentralCel,380,550
+INFINIX,Zero 30,OLED,CentralCel,600,880
+LG,K50,LCD,CentralCel,130,290
+MOTOROLA,G20,LCD,CentralCel,120,270
+NOKIA,5.4,LCD,CentralCel,150,320
+REALME,6 Pro,LCD,CentralCel,170,320
+REALME,8 Pro,OLED,CentralCel,490,720
+REALME,11 Pro Plus,OLED,CentralCel,370,530
+REALME,12 Pro Plus,OLED,CentralCel,320,530
+REALME,C61,LCD,CentralCel,100,270
+REALME,GT,OLED,CentralCel,500,700
+REALME,GT 2 Pro,OLED,CentralCel,1030,1300
+REALME,GT neo 2,OLED,CentralCel,670,920
+REALME,GT neo 2,INCELL,CentralCel,130,320
+SAMSUNG,A16,INCELL,CentralCel,190,300
+SAMSUNG,A15,OLED,CentralCel,310,500
+SAMSUNG,A16,OLED,CentralCel,540,750
+SAMSUNG,A21S,LCD,CentralCel,110,230
+SAMSUNG,A32,OLED,CentralCel,270,430
+SAMSUNG,A40,OLED,CentralCel,475,650
+SAMSUNG,A54,INCELL,CentralCel,170,300
+SAMSUNG,A54,OLED,CentralCel,340,490
+SAMSUNG,Note 9,OLED,CentralCel,1780,2100
+SAMSUNG,Note 20 Ultra,OLED,CentralCel,2200,2550
+SAMSUNG,S20 Ultra,OLED,CentralCel,2300,2600
+SAMSUNG,S21 ULTRA,OLED,CentralCel,1800,2150
+SAMSUNG,S21 FE,OLED,CentralCel,1030,1350
+SAMSUNG,S22 Ultra,SERVIPAK,CentralCel,2450,2750
+SAMSUNG,S22 Plus,OLED,CentralCel,1420,1700
+SAMSUNG,S23 Ultra,SERVIPAK,CentralCel,2550,2850
+SAMSUNG,S24 Ultra,SERVIPAK,CentralCel,2640,2950
+SAMSUNG,Tab S6 Lite,OLED,CentralCel,460,680
+SAMSUNG,Z Flip 3,OLED,CentralCel,2250,2600
+TECNO,Camon 20 Pro,INCELL,CentralCel,170,290
+TECNO,Camon 20 Pro,OLED,CentralCel,410,620
+TECNO,Pova 5,LCD,CentralCel,150,300
+TECNO,Spark 6,LCD,CentralCel,140,300
+TECNO,Pova 7,LCD,CentralCel,130,330
+TECNO,Spark 30 Pro,OLED,CentralCel,600,850
+XIAOMI,Mi 11 Ultra,INCELL,CentralCel,190,390
+XIAOMI,Mi 11 Lite,INCELL,CentralCel,120,270
+XIAOMI,Mi 10T Pro,LCD,CentralCel,120,300
+XIAOMI,Mi 11T Pro,OLED,CentralCel,420,750
+XIAOMI,Mi 13T Pro,OLED,CentralCel,850,1150
+XIAOMI,Mi Pad 6,OLED,CentralCel,750,1050
+XIAOMI,Redmi Note 8 Pro,LCD,CentralCel,120,280
+XIAOMI,Redmi Note 10S,OLED,CentralCel,340,510
+XIAOMI,Redmi Note 11S,LCD,CentralCel,120,260
+XIAOMI,Redmi Note 11S,OLED,CentralCel,350,550
+XIAOMI,Redmi Note 13 4G,OLED,CentralCel,400,650
+XIAOMI,Poco F3,OLED,CentralCel,300,520
+XIAOMI,Poco F4,OLED,CentralCel,300,500
+XIAOMI,Poco F4 GT,OLED,CentralCel,350,590
+XIAOMI,Poco F5 Pro,INCELL,CentralCel,140,300
+XIAOMI,Poco X3 GT,LCD,CentralCel,140,300
+XIAOMI,Poco X6 Pro,OLED,CentralCel,290,550
+XIAOMI,Redmi 9T,LCD,CentralCel,120,290
+XIAOMI,Redmi 15C,LCD,CentralCel,120,290
+XIAOMI,Redmi A1,LCD,CentralCel,120,230
+XIAOMI,Redmi Note 9 Pro,LCD,CentralCel,160,320
+XIAOMI,Redmi Note 10 Pro,OLED,CentralCel,290,490
+XIAOMI,Redmi Note 11,INCELL,CentralCel,150,300
+XIAOMI,Redmi Note 11,OLED,CentralCel,280,470
+XIAOMI,Redmi Note 11 Pro,OLED,CentralCel,400,600
+XIAOMI,Redmi Note 12 Pro Plus,INCELL,CentralCel,170,350
+XIAOMI,Redmi Note 12 Pro Plus,OLED,CentralCel,370,580
+XIAOMI,Redmi Note 12S,LCD,CentralCel,150,320
+XIAOMI,Redmi Note 12S,OLED,CentralCel,350,520
+XIAOMI,Redmi Note 13,OLED,CentralCel,300,520
+XIAOMI,Redmi Note 13 Pro Plus,OLED,CentralCel,320,570
+XIAOMI,Redmi Note 14 4g,OLED,CentralCel,500,790
+XIAOMI,Redmi Note 14 4g,INCELL,CentralCel,140,320
+XIAOMI,Redmi K50 Gaming,OLED,CentralCel,350,590
