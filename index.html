@@ -15,7 +15,7 @@
     [data-theme="dark"]{--bg:#0D0D0D;--card:#1A1A1A;--text:#fff;--text-sec:#A0A0A0;--border:#2A2A2A}
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);position:fixed;width:100%;height:100%;overflow:hidden}
     .app{height:100%;display:flex;flex-direction:column}
-    .header{background:var(--bg);padding:12px 16px;border-bottom:1px solid var(--border)}
+    .header{background:var(--card);padding:12px 16px;border-bottom:1px solid var(--border)}
     .header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
     .logo{display:flex;align-items:center;gap:8px}
     .logo-icon{width:32px;height:32px;background:var(--orange);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
@@ -24,34 +24,30 @@
     .header-actions{display:flex;gap:8px}
     .icon-btn{background:transparent;border:none;padding:8px;color:var(--text-sec);cursor:pointer;font-size:16px}
     .search-wrapper{position:relative}
-    .search-input{width:100%;padding:12px 44px 12px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px}
+    .search-input{width:100%;padding:12px 44px 12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px}
     .search-input:focus{outline:none;border-color:var(--orange)}
     .search-actions{position:absolute;right:12px;top:50%;transform:translateY(-50%)}
     .search-actions button{background:none;border:none;color:var(--text-sec);cursor:pointer}
-    .suggestions-panel{position:absolute;top:100%;left:0;right:0;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:12px;max-height:250px;overflow-y:auto;display:none;z-index:60}
-    .suggestions-panel.active{display:block}
-    .suggestion-item{padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;font-size:13px}
-    .suggestion-item:active{background:var(--bg)}
-    .suggestion-highlight{color:var(--orange);font-weight:700}
     .quick-filters{padding:10px 16px;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid var(--border)}
-    .filter-chip{padding:6px 16px;border-radius:30px;font-size:12px;font-weight:500;background:var(--card);color:var(--text-sec);border:1px solid var(--border);cursor:pointer;white-space:nowrap}
+    .filter-chip{padding:6px 16px;border-radius:30px;font-size:12px;font-weight:500;background:var(--bg);color:var(--text-sec);border:1px solid var(--border);cursor:pointer;white-space:nowrap}
     .filter-chip.active{background:var(--orange);color:#fff}
     .main-content{flex:1;overflow-y:auto}
     .cards-view{display:flex;flex-direction:column;gap:12px;padding:16px;padding-bottom:70px}
     .product-card{background:var(--card);border-radius:16px;padding:14px;border:1px solid var(--border);position:relative}
     .product-card::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:3px;background:var(--orange);border-radius:3px}
     .card-brand{font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase}
-    .card-model{font-size:16px;font-weight:700;margin-top:2px}
-    .card-specs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-    .card-type{padding:4px 12px;border-radius:30px;font-size:10px;font-weight:600;background:var(--bg);color:var(--text-sec)}
+    .card-model{font-size:15px;font-weight:700;margin-top:2px}
+    .card-specs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+    .card-type{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;background:var(--bg);color:var(--text-sec)}
     .card-type.oled{background:rgba(255,105,0,0.12);color:var(--orange)}
-    .card-price-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+    .card-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
     .card-price{font-size:22px;font-weight:800;cursor:pointer;padding:4px 8px;border-radius:10px}
     .card-price:active{color:var(--orange);background:rgba(255,105,0,0.1)}
+    .card-actions{display:flex;gap:8px}
     .image-btn,.whatsapp-btn{border:none;padding:6px 12px;border-radius:40px;font-size:11px;font-weight:600;cursor:pointer}
-    .image-btn{background:var(--card);color:var(--text);border:1px solid var(--border)}
+    .image-btn{background:var(--bg);color:var(--text);border:1px solid var(--border)}
     .whatsapp-btn{background:#25D366;color:#fff}
-    .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);display:flex;padding:6px 20px 12px;gap:8px}
+    .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding:6px 20px 12px;gap:8px}
     .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px;background:transparent;border:none;color:var(--text-sec);cursor:pointer;font-size:9px;font-weight:500;border-radius:12px}
     .nav-item.active{color:var(--orange);background:rgba(255,105,0,0.08)}
     .nav-item i{font-size:18px}
@@ -61,10 +57,13 @@
     .modal-buttons{display:flex;gap:10px}
     .modal-buttons button{flex:1;padding:10px;border:none;border-radius:12px;cursor:pointer;font-weight:600}
     .modal-buttons button:last-child{background:var(--orange);color:#fff}
-    .toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--card);padding:8px 16px;border-radius:30px;font-size:12px;z-index:150;animation:fadeInUp 0.2s;border:1px solid var(--orange)}
+    .toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--card);padding:8px 16px;border-radius:30px;font-size:12px;z-index:150;animation:fadeInUp 0.2s;border:1px solid var(--orange);white-space:nowrap}
     @keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
     .results-count{padding:12px 16px 0;font-size:12px;color:var(--text-sec)}
     .empty-state{text-align:center;padding:40px 20px;color:var(--text-sec)}
+    .loading{text-align:center;padding:40px;color:var(--text-sec)}
+    .did-you-mean{text-align:center;padding:12px 16px;color:var(--text-sec);font-size:13px;background:var(--bg);border-bottom:1px solid var(--border)}
+    .did-you-mean span{color:var(--orange);font-weight:600;cursor:pointer;text-decoration:underline}
   </style>
 </head>
 <body>
@@ -81,10 +80,9 @@
     </div>
     <div class="search-wrapper">
       <div class="search-container">
-        <input type="text" id="searchInput" class="search-input" placeholder="Buscar modelo..." autocomplete="off">
+        <input type="text" id="searchInput" class="search-input" placeholder="Buscar modelo... Ej: iPhone 11, Note 10" autocomplete="off">
         <div class="search-actions"><button id="clearSearchBtn"><i class="fas fa-times"></i></button></div>
       </div>
-      <div class="suggestions-panel" id="suggestionsPanel"></div>
     </div>
   </header>
   <div class="quick-filters" id="quickFilters">
@@ -94,7 +92,8 @@
   </div>
   <div class="main-content">
     <div id="resultsCount" class="results-count"></div>
-    <div id="resultsContainer"></div>
+    <div id="didYouMean" class="did-you-mean" style="display:none"></div>
+    <div id="resultsContainer" class="loading">📡 Cargando productos...</div>
   </div>
   <nav class="bottom-nav">
     <button class="nav-item active" data-tab="home"><i class="fas fa-home"></i><span>Inicio</span></button>
@@ -104,240 +103,362 @@
 <div id="techModal" class="modal"><div class="modal-content"><h3>🔐 Acceso Técnico</h3><input type="password" id="techPassword" placeholder="Clave"><div class="modal-buttons"><button onclick="closeModal('techModal')">Cancelar</button><button id="confirmTechBtn">Acceder</button></div></div></div>
 
 <script>
-  const CONFIG = {
-    dataSources: [
-      { name: "BOE", url: "https://xiaomi.scz.red/precio/data/boe.csv" },
-      { name: "CentralCel", url: "https://xiaomi.scz.red/precio/data/centralcel.csv" },
-      { name: "J&A", url: "https://xiaomi.scz.red/precio/data/ja2.csv" },
-      { name: "MR PANTALLA", url: "https://xiaomi.scz.red/precio/data/mrpantalla.csv" },
-      { name: "OSMobil", url: "https://xiaomi.scz.red/precio/data/osmobil.csv" }
-    ],
-    passwords: { tech: "123456" }
-  };
+  // ============================================================
+  // LISTA DE TUS CSV
+  // ============================================================
+  const CSV_FILES = ["boe.csv", "centralcel.csv", "ja2.csv", "mrpantalla.csv", "osmobil.csv"];
 
-  let allData = [], filteredData = [], techMode = false, currentTab = "home", currentFilter = "all";
+  let allData = [], filteredData = [], techMode = false, currentTab = "home", currentFilter = "all", currentTheme = "light";
+  let currentSearchTerm = "";
 
-  function normalize(str){return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"")}
-  function escapeHtml(s){if(!s)return"";return s.replace(/[&<>]/g,function(m){return m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'})}
-  function showToast(m){let t=document.querySelector('.toast');if(t)t.remove();t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2000);}
-  function closeModal(id){document.getElementById(id).style.display='none';}
+  // ============================================================
+  // FUNCIÓN PARA NORMALIZAR TEXTO (elimina acentos y caracteres especiales)
+  // ============================================================
+  function normalizeText(str) {
+    return str.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
 
-  function copyWithInput(text) {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.top = '-9999px';
-    textarea.style.left = '-9999px';
-    document.body.appendChild(textarea);
-    textarea.select();
-    textarea.setSelectionRange(0, text.length);
-    let success = false;
-    try {
-      success = document.execCommand('copy');
-    } catch (err) {
-      success = false;
+  // ============================================================
+  // BÚSQUEDA TOLERANTE A ERRORES (compara similitud de palabras)
+  // ============================================================
+  function searchProducts(data, searchTerm) {
+    if (!searchTerm.trim()) return data;
+    
+    const normalizedSearch = normalizeText(searchTerm);
+    const searchWords = normalizedSearch.split(" ");
+    
+    // Primero: búsqueda exacta por palabras
+    let results = data.filter(item => {
+      const fullText = normalizeText(item.marca + " " + item.modelo);
+      const itemWords = fullText.split(" ");
+      
+      // Verificar si todas las palabras de búsqueda están en el producto
+      let allWordsFound = true;
+      for (let sw of searchWords) {
+        let found = false;
+        for (let iw of itemWords) {
+          if (iw.includes(sw) || sw.includes(iw)) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          allWordsFound = false;
+          break;
+        }
+      }
+      return allWordsFound;
+    });
+    
+    return results;
+  }
+
+  // ============================================================
+  // CORRECCIÓN DE BÚSQUEDA (¿Quisiste decir?)
+  // ============================================================
+  function getSuggestedCorrection(searchTerm) {
+    if (!searchTerm.trim() || searchTerm.length < 3) return null;
+    
+    const normalizedSearch = normalizeText(searchTerm);
+    const searchWords = normalizedSearch.split(" ");
+    
+    let bestMatch = null;
+    let bestScore = 0;
+    
+    // Buscar productos similares
+    for (let product of allData.slice(0, 100)) {
+      const fullText = normalizeText(product.marca + " " + product.modelo);
+      const productWords = fullText.split(" ");
+      
+      let score = 0;
+      for (let sw of searchWords) {
+        for (let pw of productWords) {
+          // Comparar palabras similares (una contiene a la otra)
+          if (pw.includes(sw) || sw.includes(pw)) {
+            score += sw.length / Math.max(sw.length, pw.length);
+          }
+          // Levenshtein aproximado para palabras similares
+          else if (sw.length > 2 && pw.length > 2) {
+            const longer = Math.max(sw.length, pw.length);
+            const diff = Math.abs(sw.length - pw.length);
+            if (diff <= 2) {
+              let matches = 0;
+              for (let i = 0; i < Math.min(sw.length, pw.length); i++) {
+                if (sw[i] === pw[i]) matches++;
+              }
+              if (matches / longer > 0.5) {
+                score += 0.5;
+              }
+            }
+          }
+        }
+      }
+      
+      if (score > bestScore && score > 0.5) {
+        bestScore = score;
+        bestMatch = product.modelo;
+      }
     }
-    document.body.removeChild(textarea);
-    if (success) {
-      showToast("✅ Precio copiado");
-    } else {
-      showToast("❌ Error al copiar");
-    }
+    
+    return bestMatch;
   }
 
-  function copyPrice(marca, modelo, precio) {
-    const message = `📱 ${marca} ${modelo}\n💰 Precio: ${precio.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(message).then(() => {
-        showToast("✅ Precio copiado");
-      }).catch(() => {
-        copyWithInput(message);
-      });
-    } else {
-      copyWithInput(message);
-    }
-  }
-
-  function shareWA(marca, modelo, precio){
-    const message = `📱 *${marca} ${modelo}*\n💰 Precio: ${precio.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`,"_blank");
-  }
-  
-  function openGoogle(modelo,marca){
-    window.open(`https://www.google.com/search?q=LCD+${encodeURIComponent(modelo)}+${encodeURIComponent(marca)}+pantalla&tbm=isch`,"_blank");
-  }
-
-  function getDisplayType(tipo){
-    tipo=tipo.toUpperCase();
-    if(tipo.includes("OLED")||tipo.includes("AMOLED")||tipo.includes("ORIG")||tipo.includes("GX")) return "OLED";
-    if(tipo.includes("INCELL")) return "INCELL";
+  // ============================================================
+  // DETERMINAR TIPO DE PANTALLA
+  // ============================================================
+  function getDisplayType(tipoOriginal) {
+    const t = tipoOriginal.toUpperCase();
+    if (t.includes("ORIG") || t.includes("OLED") || t.includes("AMOLED") || t.includes("GX")) return "OLED";
+    if (t.includes("INCELL")) return "INCELL";
     return "LCD";
   }
 
-  function parseCSV(text,provider){
-    let lines=text.split("\n").filter(l=>l.trim());
-    if(lines.length<2)return[];
-    let data=[];
-    for(let i=1;i<lines.length;i++){
-      let cols=lines[i].split(",");
-      if(cols.length>=6){
-        let marca=cols[0].trim().replace(/^"|"$/g,'').toUpperCase();
-        let modelo=cols[1].trim().replace(/^"|"$/g,'');
-        let tipo=cols[2].trim().replace(/^"|"$/g,'');
-        let proveedor=cols[3].trim().replace(/^"|"$/g,'');
-        let compra=parseFloat(cols[4].replace(/[^0-9.-]/g,''))||0;
-        let venta=parseFloat(cols[5].replace(/[^0-9.-]/g,''))||0;
-        if(modelo&&modelo!=="Modelo"){
-          data.push({
-            id:crypto.randomUUID(),
-            marca:marca,
-            modelo:modelo,
-            tipo:getDisplayType(tipo),
-            tipoOriginal:tipo,
-            proveedor:proveedor||provider,
-            compra:compra,
-            venta:venta
-          });
-        }
-      }else if(cols.length>=5){
-        let marca=cols[0].trim().replace(/^"|"$/g,'').toUpperCase();
-        let modelo=cols[1].trim().replace(/^"|"$/g,'');
-        let tipo=cols[2].trim().replace(/^"|"$/g,'');
-        let compra=parseFloat(cols[3].replace(/[^0-9.-]/g,''))||0;
-        let venta=parseFloat(cols[4].replace(/[^0-9.-]/g,''))||0;
-        if(modelo&&modelo!=="Modelo"){
-          data.push({
-            id:crypto.randomUUID(),
-            marca:marca,
-            modelo:modelo,
-            tipo:getDisplayType(tipo),
-            tipoOriginal:tipo,
-            proveedor:provider,
-            compra:compra,
-            venta:venta
-          });
-        }
+  // ============================================================
+  // PARSEAR CSV
+  // ============================================================
+  function parseCSV(text, providerName) {
+    const lines = text.split("\n").filter(l => l.trim());
+    if (lines.length < 2) return [];
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(",");
+      if (cols.length >= 6) {
+        const marca = cols[0].trim().replace(/^"|"$/g, '').toUpperCase();
+        const modelo = cols[1].trim().replace(/^"|"$/g, '');
+        const tipoOriginal = cols[2].trim().replace(/^"|"$/g, '');
+        const proveedor = cols[3].trim().replace(/^"|"$/g, '') || providerName;
+        const compra = parseFloat(cols[4].replace(/[^0-9.-]/g, '')) || 0;
+        const venta = parseFloat(cols[5].replace(/[^0-9.-]/g, '')) || 0;
+        if (modelo && modelo !== "Modelo") data.push({id:crypto.randomUUID(), marca, modelo, tipo:getDisplayType(tipoOriginal), tipoOriginal, proveedor, compra, venta});
+      } else if (cols.length >= 5) {
+        const marca = cols[0].trim().replace(/^"|"$/g, '').toUpperCase();
+        const modelo = cols[1].trim().replace(/^"|"$/g, '');
+        const tipoOriginal = cols[2].trim().replace(/^"|"$/g, '');
+        const compra = parseFloat(cols[3].replace(/[^0-9.-]/g, '')) || 0;
+        const venta = parseFloat(cols[4].replace(/[^0-9.-]/g, '')) || 0;
+        if (modelo && modelo !== "Modelo") data.push({id:crypto.randomUUID(), marca, modelo, tipo:getDisplayType(tipoOriginal), tipoOriginal, proveedor:providerName, compra, venta});
       }
     }
     return data;
   }
 
-  async function loadCSV(url,name){
-    try{
-      let r=await fetch(url);
-      if(!r.ok)return[];
-      let txt=await r.text();
-      return parseCSV(txt,name);
-    }catch(e){return[]}
+  async function loadCSV(fileName) {
+    try {
+      const res = await fetch(`https://xiaomi.scz.red/precio/data/${fileName}`);
+      if (!res.ok) return [];
+      return parseCSV(await res.text(), fileName.replace(".csv", ""));
+    } catch(e) { return []; }
   }
 
-  async function loadAll(){
-    let all=[];
-    for(let s of CONFIG.dataSources){
-      let data=await loadCSV(s.url,s.name);
-      all.push(...data);
+  async function loadAllData() {
+    document.getElementById("resultsContainer").innerHTML = '<div class="loading">📡 Cargando productos...</div>';
+    allData = [];
+    for (const csv of CSV_FILES) {
+      const data = await loadCSV(csv);
+      allData.push(...data);
     }
-    allData=all;
-    filteredData=[...allData].sort((a,b)=>a.venta-b.venta);
-    document.getElementById("resultsCount").innerText=`${filteredData.length} productos`;
+    if (allData.length === 0) {
+      document.getElementById("resultsContainer").innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>No se pudieron cargar los CSV</p></div>';
+      return;
+    }
+    filteredData = [...allData].sort((a,b) => a.venta - b.venta);
+    updateResultsCount();
+    render();
+    showToast(`✅ ${allData.length} productos`);
+  }
+
+  function applyFiltersAndSearch() {
+    let data = [...allData];
+    if (currentFilter !== "all") data = data.filter(item => item.tipo === currentFilter);
+    
+    const searchTerm = document.getElementById("searchInput").value.trim();
+    currentSearchTerm = searchTerm;
+    
+    if (searchTerm) {
+      data = searchProducts(data, searchTerm);
+      document.getElementById("clearSearchBtn").style.display = "block";
+      
+      // Mostrar "¿Quisiste decir?" si no hay resultados
+      const didYouMeanDiv = document.getElementById("didYouMean");
+      if (data.length === 0) {
+        const suggestion = getSuggestedCorrection(searchTerm);
+        if (suggestion && suggestion !== searchTerm) {
+          didYouMeanDiv.style.display = "block";
+          didYouMeanDiv.innerHTML = `🔍 No encontramos "${escapeHtml(searchTerm)}". ¿Quizás quisiste decir <span onclick="searchSuggestion('${escapeHtml(suggestion)}')">"${escapeHtml(suggestion)}"</span>?`;
+        } else {
+          didYouMeanDiv.style.display = "none";
+        }
+      } else {
+        didYouMeanDiv.style.display = "none";
+      }
+    } else {
+      document.getElementById("clearSearchBtn").style.display = "none";
+      document.getElementById("didYouMean").style.display = "none";
+    }
+    
+    filteredData = data.sort((a,b) => a.venta - b.venta);
+    updateResultsCount();
     render();
   }
+  
+  function searchSuggestion(suggestion) {
+    document.getElementById("searchInput").value = suggestion;
+    applyFiltersAndSearch();
+  }
 
-  function render(){
-    let cont=document.getElementById("resultsContainer");
-    if(!cont)return;
-    if(currentTab==="compare"){showCompare();return;}
-    if(filteredData.length===0){cont.innerHTML='<div class="empty-state"><i class="fas fa-search"></i><p>Sin resultados</p></div>';return;}
-    cont.innerHTML=`<div class="cards-view">${filteredData.map(p=>`
+  function updateResultsCount() {
+    const c = document.getElementById("resultsCount");
+    if (c) c.textContent = `${filteredData.length} producto${filteredData.length !== 1 ? 's' : ''}`;
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+  function render() {
+    const container = document.getElementById("resultsContainer");
+    if (!container) return;
+    if (currentTab === "compare") { showCompareModal(); return; }
+    if (filteredData.length === 0 && currentSearchTerm) {
+      container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><p>No se encontraron resultados para "${escapeHtml(currentSearchTerm)}"</p><p style="font-size:12px;margin-top:8px">💡 Prueba con: iPhone 11, A54, Note 10</p></div>`;
+      return;
+    }
+    if (filteredData.length === 0) {
+      container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><p>No se encontraron resultados</p><p style="font-size:12px;margin-top:8px">💡 Prueba con: iPhone 11, A54, Note 10</p></div>`;
+      return;
+    }
+    container.innerHTML = `<div class="cards-view">${filteredData.map(p => `
       <div class="product-card">
-        <div><div class="card-brand">${escapeHtml(p.marca)}</div><div class="card-model">${escapeHtml(p.modelo)}</div></div>
-        <div class="card-specs"><span class="card-type ${p.tipo==='OLED'?'oled':''}">${escapeHtml(p.tipoOriginal)}</span>${techMode?`<span style="padding:2px 8px;background:var(--bg);border-radius:20px;font-size:10px">${escapeHtml(p.proveedor)}</span><span style="padding:2px 8px;background:var(--bg);border-radius:20px;font-size:10px">Compra: ${p.compra.toLocaleString()} Bs</span>`:''}</div>
-        <div class="card-price-row"><span class="card-price" onclick="copyPrice('${escapeHtml(p.marca)}','${escapeHtml(p.modelo)}',${p.venta})">${p.venta.toLocaleString()} Bs</span>
-        <div><button class="image-btn" onclick="openGoogle('${escapeHtml(p.modelo)}','${escapeHtml(p.marca)}')"><i class="fab fa-google"></i> LCD</button><button class="whatsapp-btn" onclick="shareWA('${escapeHtml(p.marca)}','${escapeHtml(p.modelo)}',${p.venta})"><i class="fab fa-whatsapp"></i></button></div></div>
+        <div>
+          <div class="card-brand">${escapeHtml(p.marca)}</div>
+          <div class="card-model">${escapeHtml(p.modelo)}</div>
+          <div class="card-specs">
+            <span class="card-type ${p.tipo === 'OLED' ? 'oled' : ''}">${escapeHtml(p.tipoOriginal)}</span>
+            ${techMode ? `<span style="padding:2px 8px;background:var(--bg);border-radius:20px;font-size:10px;margin-left:6px">${escapeHtml(p.proveedor)}</span>` : ''}
+            ${techMode ? `<span style="padding:2px 8px;background:var(--bg);border-radius:20px;font-size:10px;margin-left:6px">Compra: ${p.compra} Bs</span>` : ''}
+          </div>
+        </div>
+        <div class="card-bottom">
+          <span class="card-price" onclick="copyPriceToClipboard('${p.id}')">${p.venta.toLocaleString()} Bs</span>
+          <div class="card-actions">
+            <button class="image-btn" onclick="openGooglePopup('${p.id}')"><i class="fab fa-google"></i> LCD</button>
+            <button class="whatsapp-btn" onclick="shareToWhatsApp('${p.id}')"><i class="fab fa-whatsapp"></i></button>
+          </div>
+        </div>
       </div>`).join('')}</div>`;
   }
 
-  function applyFilter(){
-    let data=[...allData];
-    if(currentFilter!=="all")data=data.filter(p=>p.tipo===currentFilter);
-    let search=document.getElementById("searchInput").value.trim().toLowerCase();
-    if(search){
-      let tokens=normalize(search).split(" ").filter(t=>t);
-      data=data.filter(p=>tokens.every(t=>normalize(p.modelo+" "+p.marca).includes(t)));
-      document.getElementById("clearSearchBtn").style.display="block";
-    }else{document.getElementById("clearSearchBtn").style.display="none";}
-    filteredData=data.sort((a,b)=>a.venta-b.venta);
-    document.getElementById("resultsCount").innerText=`${filteredData.length} productos`;
-    render();
+  // ============================================================
+  // FUNCIONES DE COPIA
+  // ============================================================
+  function copyPriceToClipboard(productId) {
+    let product = allData.find(p => p.id === productId);
+    if (!product) product = filteredData.find(p => p.id === productId);
+    if (!product) { showToast("❌ Producto no encontrado"); return; }
+    const message = `📱 ${product.marca} ${product.modelo}\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
+    navigator.clipboard.writeText(message).then(() => showToast("✅ Precio copiado"))
+      .catch(() => {
+        const textarea = document.createElement('textarea');
+        textarea.value = message;
+        textarea.style.position = 'fixed';
+        textarea.style.top = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast("✅ Precio copiado");
+      });
   }
 
-  function generateSuggestions(term){
-    if(!term||term.length<2)return[];
-    let tokens=normalize(term).split(" ").filter(t=>t);
-    let map=new Map();
-    allData.forEach(p=>{
-      let text=normalize(p.modelo+" "+p.marca);
-      if(tokens.every(t=>text.includes(t))){
-        let key=p.marca+"|"+p.modelo;
-        if(!map.has(key))map.set(key,{marca:p.marca,modelo:p.modelo,tipo:p.tipo,venta:p.venta});
-      }
-    });
-    return Array.from(map.values()).sort((a,b)=>a.venta-b.venta).slice(0,6);
+  function shareToWhatsApp(productId) {
+    let product = allData.find(p => p.id === productId);
+    if (!product) product = filteredData.find(p => p.id === productId);
+    if (!product) return;
+    const message = `📱 *${product.marca} ${product.modelo}*\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
   }
 
-  function updateSuggestions(){
-    let term=document.getElementById("searchInput").value;
-    let panel=document.getElementById("suggestionsPanel");
-    if(!term||term.length<2){panel.classList.remove("active");return;}
-    let suggestions=generateSuggestions(term);
-    if(suggestions.length===0){panel.classList.remove("active");return;}
-    panel.innerHTML=`<div style="padding:8px 16px;font-size:11px;color:var(--text-sec)">💡 SUGERENCIAS</div>${suggestions.map(s=>`<div class="suggestion-item" onclick="document.getElementById('searchInput').value='${escapeHtml(s.modelo)}';document.getElementById('suggestionsPanel').classList.remove('active');applyFilter();"><i class="fas fa-search"></i><div><div>${escapeHtml(s.modelo)}</div><div style="font-size:10px;color:var(--text-sec)">${escapeHtml(s.marca)} · ${s.venta.toLocaleString()} Bs</div></div><span style="font-size:10px">${s.tipo}</span></div>`).join('')}<div class="suggestion-item" onclick="document.getElementById('suggestionsPanel').classList.remove('active')" style="opacity:0.6"><i class="fas fa-times"></i><span>Ocultar</span></div>`;
-    panel.classList.add("active");
+  function openGooglePopup(productId) {
+    let product = allData.find(p => p.id === productId);
+    if (!product) product = filteredData.find(p => p.id === productId);
+    if (!product) return;
+    window.open(`https://www.google.com/search?q=LCD+${encodeURIComponent(product.modelo)}+${encodeURIComponent(product.marca)}+pantalla&tbm=isch`, "_blank");
   }
 
-  function shuffleResults(){
-    filteredData=[...allData].sort(()=>Math.random()-0.5);
-    render();
-    showToast("🔄 Mezclado");
-  }
-  
-  function toggleTheme(){
-    let dark=document.documentElement.getAttribute("data-theme")!=="dark";
-    document.documentElement.setAttribute("data-theme",dark?"dark":"light");
-    localStorage.setItem("theme",dark?"dark":"light");
-  }
-  
-  function showCompare(){
-    let top4=filteredData.slice(0,4);
-    let html=`<div class="modal" id="compareModal" style="display:flex"><div class="modal-content"><h3>📊 Comparar</h3>`;
-    top4.forEach(p=>{html+=`<div style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:12px;border-left:3px solid var(--orange)"><div style="font-size:11px;color:var(--orange)">${escapeHtml(p.marca)}</div><div style="font-weight:600">${escapeHtml(p.modelo)}</div><div style="font-size:18px;font-weight:800">${p.venta.toLocaleString()} Bs</div></div>`;});
-    html+=`<button onclick="document.getElementById('compareModal').remove()" style="width:100%;padding:10px;background:var(--orange);border:none;border-radius:30px;color:#fff;font-weight:600">Cerrar</button></div></div>`;
-    document.body.insertAdjacentHTML("beforeend",html);
+  function showToast(msg) {
+    let t = document.querySelector('.toast');
+    if (t) t.remove();
+    t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2000);
   }
 
-  document.getElementById("themeToggle")?.addEventListener("click",toggleTheme);
-  document.getElementById("techModeBtn")?.addEventListener("click",()=>document.getElementById("techModal").style.display="flex");
-  document.getElementById("confirmTechBtn")?.addEventListener("click",()=>{if(document.getElementById("techPassword").value==="123456"){techMode=true;closeModal("techModal");showToast("🔧 Modo técnico activado");render();}else showToast("❌ Clave incorrecta");});
-  document.getElementById("receiptBtn")?.addEventListener("click",()=>window.open("http://xiaomi.scz.red/1/","_blank"));
-  document.getElementById("shuffleBtn")?.addEventListener("click",shuffleResults);
-  document.getElementById("clearSearchBtn")?.addEventListener("click",()=>{document.getElementById("searchInput").value="";document.getElementById("clearSearchBtn").style.display="none";applyFilter();});
-  
-  document.getElementById("searchInput")?.addEventListener("input",()=>{updateSuggestions();applyFilter();});
-  
-  // CORRECCIÓN: Enter cierra las sugerencias
-  document.getElementById("searchInput")?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      document.getElementById("suggestionsPanel").classList.remove("active");
-      applyFilter();
+  function escapeHtml(s) { if (!s) return ""; return s.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+  function shuffleArray(arr) { const s = [...arr]; for (let i = s.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [s[i], s[j]] = [s[j], s[i]]; } return s; }
+  function shuffleResults() { if (allData.length) { filteredData = shuffleArray(allData); updateResultsCount(); render(); showToast("🔄 Mezclado"); } }
+
+  function loadTheme() {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark") {
+      currentTheme = "dark";
+      document.documentElement.setAttribute("data-theme", "dark");
+      document.querySelector("#themeToggle i").className = "fas fa-sun";
+    } else {
+      currentTheme = "light";
+      document.documentElement.setAttribute("data-theme", "light");
+      document.querySelector("#themeToggle i").className = "fas fa-moon";
     }
-  });
-  
-  document.querySelectorAll(".filter-chip").forEach(f=>f.addEventListener("click",function(){document.querySelectorAll(".filter-chip").forEach(c=>c.classList.remove("active"));this.classList.add("active");currentFilter=this.dataset.filter;applyFilter();}));
-  document.querySelectorAll(".nav-item").forEach(n=>n.addEventListener("click",function(){document.querySelectorAll(".nav-item").forEach(nav=>nav.classList.remove("active"));this.classList.add("active");currentTab=this.dataset.tab;render();}));
-  document.addEventListener("click",(e)=>{if(!e.target.closest(".search-wrapper"))document.getElementById("suggestionsPanel").classList.remove("active");});
+  }
+  function toggleTheme() {
+    if (currentTheme === "light") {
+      currentTheme = "dark";
+      document.documentElement.setAttribute("data-theme", "dark");
+      document.querySelector("#themeToggle i").className = "fas fa-sun";
+    } else {
+      currentTheme = "light";
+      document.documentElement.setAttribute("data-theme", "light");
+      document.querySelector("#themeToggle i").className = "fas fa-moon";
+    }
+    localStorage.setItem("theme", currentTheme);
+    render();
+  }
 
-  if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");
-  loadAll();
+  function showCompareModal() {
+    const top4 = filteredData.slice(0,4);
+    let html = `<div class="modal" id="compareModal" style="display:flex"><div class="modal-content"><h3>📊 Comparar</h3>`;
+    top4.forEach(p => { html += `<div style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:12px;border-left:3px solid var(--orange)"><div style="font-size:11px;color:var(--orange)">${escapeHtml(p.marca)}</div><div style="font-weight:600">${escapeHtml(p.modelo)}</div><div style="font-size:20px;font-weight:800">${p.venta} Bs</div></div>`; });
+    html += `<button onclick="document.getElementById('compareModal').remove()" style="width:100%;padding:10px;background:var(--orange);border:none;border-radius:30px;color:#fff">Cerrar</button></div></div>`;
+    document.body.insertAdjacentHTML("beforeend", html);
+  }
+
+  function setupEventListeners() {
+    document.getElementById("searchInput")?.addEventListener("input", () => applyFiltersAndSearch());
+    document.getElementById("searchInput")?.addEventListener("keydown", (e) => { if (e.key === "Enter") applyFiltersAndSearch(); });
+    document.getElementById("clearSearchBtn")?.addEventListener("click", () => { document.getElementById("searchInput").value = ""; applyFiltersAndSearch(); });
+    document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
+    document.getElementById("techModeBtn")?.addEventListener("click", () => document.getElementById("techModal").style.display = "flex");
+    document.getElementById("receiptBtn")?.addEventListener("click", () => window.open("http://xiaomi.scz.red/1/", "_blank"));
+    document.getElementById("shuffleBtn")?.addEventListener("click", shuffleResults);
+    document.getElementById("confirmTechBtn")?.addEventListener("click", () => { if (document.getElementById("techPassword").value === "123456") { techMode = true; closeModal("techModal"); showToast("🔧 Modo técnico activado"); render(); } else showToast("❌ Clave incorrecta"); });
+    document.querySelectorAll(".filter-chip").forEach(f => f.addEventListener("click", function() { document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active")); this.classList.add("active"); currentFilter = this.dataset.filter; applyFiltersAndSearch(); }));
+    document.querySelectorAll(".nav-item").forEach(n => n.addEventListener("click", function() { document.querySelectorAll(".nav-item").forEach(nav => nav.classList.remove("active")); this.classList.add("active"); currentTab = this.dataset.tab; render(); }));
+  }
+
+  window.copyPriceToClipboard = copyPriceToClipboard;
+  window.shareToWhatsApp = shareToWhatsApp;
+  window.openGooglePopup = openGooglePopup;
+  window.closeModal = closeModal;
+  window.searchSuggestion = searchSuggestion;
+
+  loadTheme();
+  setupEventListeners();
+  loadAllData();
 </script>
 </body>
 </html>
