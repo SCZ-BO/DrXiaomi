@@ -5,403 +5,876 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#FF6900">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Catálogo de pantallas y repuestos - Precios actualizados">
   <title>DR. XIAOMI | Pantallas y Repuestos</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
   <style>
-    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    :root{--orange:#FF6900}
-    [data-theme="light"]{--bg:#F8F8F8;--card:#fff;--text:#1A1A1A;--text-sec:#666;--border:#E8E8E8}
-    [data-theme="dark"]{--bg:#0D0D0D;--card:#1A1A1A;--text:#fff;--text-sec:#A0A0A0;--border:#2A2A2A}
-    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);position:fixed;width:100%;height:100%;overflow:hidden}
-    .app{height:100%;display:flex;flex-direction:column}
-    .header{background:var(--card);padding:12px 16px;border-bottom:1px solid var(--border)}
-    .header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .logo{display:flex;align-items:center;gap:8px}
-    .logo-icon{width:32px;height:32px;background:var(--orange);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
-    .logo h1{font-size:18px;font-weight:600}
-    .logo span{font-weight:400;color:var(--text-sec)}
-    .header-actions{display:flex;gap:8px}
-    .icon-btn{background:transparent;border:none;padding:8px;color:var(--text-sec);cursor:pointer;font-size:16px}
-    .search-wrapper{position:relative}
-    .search-input{width:100%;padding:12px 44px 12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px}
-    .search-input:focus{outline:none;border-color:var(--orange)}
-    .search-actions{position:absolute;right:12px;top:50%;transform:translateY(-50%)}
-    .search-actions button{background:none;border:none;color:var(--text-sec);cursor:pointer}
-    .quick-filters{padding:10px 16px;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid var(--border)}
-    .filter-chip{padding:6px 16px;border-radius:30px;font-size:12px;font-weight:500;background:var(--bg);color:var(--text-sec);border:1px solid var(--border);cursor:pointer;white-space:nowrap}
-    .filter-chip.active{background:var(--orange);color:#fff}
-    .main-content{flex:1;overflow-y:auto}
-    .cards-view{display:flex;flex-direction:column;gap:12px;padding:16px;padding-bottom:70px}
-    .product-card{background:var(--card);border-radius:16px;padding:14px;border:1px solid var(--border);position:relative}
-    .product-card::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:3px;background:var(--orange);border-radius:3px}
-    .card-brand{font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase}
-    .card-model{font-size:15px;font-weight:700;margin-top:2px}
-    .card-specs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-    .card-type{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;background:var(--bg);color:var(--text-sec)}
-    .card-type.oled{background:rgba(255,105,0,0.12);color:var(--orange)}
-    .card-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
-    .card-price{font-size:22px;font-weight:800;cursor:pointer;padding:4px 8px;border-radius:10px}
-    .card-price:active{color:var(--orange);background:rgba(255,105,0,0.1)}
-    .card-actions{display:flex;gap:8px}
-    .image-btn,.whatsapp-btn{border:none;padding:6px 12px;border-radius:40px;font-size:11px;font-weight:600;cursor:pointer}
-    .image-btn{background:var(--bg);color:var(--text);border:1px solid var(--border)}
-    .whatsapp-btn{background:#25D366;color:#fff}
-    .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding:6px 20px 12px;gap:8px}
-    .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px;background:transparent;border:none;color:var(--text-sec);cursor:pointer;font-size:9px;font-weight:500;border-radius:12px}
-    .nav-item.active{color:var(--orange);background:rgba(255,105,0,0.08)}
-    .nav-item i{font-size:18px}
-    .modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:200;align-items:center;justify-content:center;padding:20px}
-    .modal-content{background:var(--card);border-radius:20px;padding:20px;max-width:280px;width:100%}
-    .modal-content input{width:100%;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:12px;margin:12px 0}
-    .modal-buttons{display:flex;gap:10px}
-    .modal-buttons button{flex:1;padding:10px;border:none;border-radius:12px;cursor:pointer;font-weight:600}
-    .modal-buttons button:last-child{background:var(--orange);color:#fff}
-    .toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--card);padding:8px 16px;border-radius:30px;font-size:12px;z-index:150;animation:fadeInUp 0.2s;border:1px solid var(--orange);white-space:nowrap}
-    @keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-    .results-count{padding:12px 16px 0;font-size:12px;color:var(--text-sec)}
-    .empty-state{text-align:center;padding:40px 20px;color:var(--text-sec)}
-    .loading{text-align:center;padding:40px;color:var(--text-sec)}
-    .did-you-mean{text-align:center;padding:12px 16px;color:var(--text-sec);font-size:13px;background:var(--bg);border-bottom:1px solid var(--border)}
-    .did-you-mean span{color:var(--orange);font-weight:600;cursor:pointer;text-decoration:underline}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --xiaomi-orange: #FF6900;
+      --xiaomi-orange-dark: #E55A00;
+      --xiaomi-orange-soft: #FF8A3C;
+      --xiaomi-orange-glow: rgba(255, 105, 0, 0.15);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+      --transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1);
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #F5F5F7;
+      --bg-secondary: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --text-primary: #1D1D1F;
+      --text-secondary: #6E6E73;
+      --text-tertiary: #8E8E93;
+      --border: #E5E5EA;
+      --card-border: #F0F0F3;
+      --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --separator: #FF6900;
+      --suggestion-bg: #FFFFFF;
+      --suggestion-hover: #F5F5F7;
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #0A0A0C;
+      --bg-secondary: #1C1C1E;
+      --bg-card: #1C1C1E;
+      --text-primary: #F5F5F7;
+      --text-secondary: #A1A1A6;
+      --text-tertiary: #6E6E73;
+      --border: #2C2C2E;
+      --card-border: #2C2C2E;
+      --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --separator: #FF6900;
+      --suggestion-bg: #1C1C1E;
+      --suggestion-hover: #2C2C2E;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      transition: background 0.35s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      max-width: 100%;
+      height: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg-primary);
+    }
+
+    .header {
+      background: var(--bg-primary);
+      border-bottom: 1px solid transparent;
+      padding: 14px 18px 12px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 50;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--xiaomi-orange), var(--xiaomi-orange-dark));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      box-shadow: 0 2px 8px var(--xiaomi-orange-glow);
+    }
+
+    .logo h1 {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      color: var(--text-primary);
+    }
+
+    .logo span {
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 8px 10px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 15px;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.92);
+      color: var(--xiaomi-orange);
+      border-color: var(--xiaomi-orange);
+    }
+
+    .search-wrapper {
+      position: relative;
+    }
+
+    .search-container {
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 13px 86px 13px 18px;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: 30px;
+      color: var(--text-primary);
+      font-size: 15px;
+      font-weight: 500;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+      letter-spacing: -0.2px;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--xiaomi-orange);
+      box-shadow: 0 0 0 4px var(--xiaomi-orange-glow);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-tertiary);
+      font-weight: 400;
+    }
+
+    .search-actions {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      gap: 2px;
+    }
+
+    .search-actions button {
+      background: var(--bg-primary);
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 6px 10px;
+      border-radius: 20px;
+      transition: var(--transition);
+    }
+
+    .suggestions-panel {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 8px;
+      background: var(--suggestion-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      max-height: 280px;
+      overflow-y: auto;
+      display: none;
+      z-index: 60;
+    }
+
+    .suggestions-panel.active {
+      display: block;
+    }
+
+    .suggestion-header {
+      padding: 10px 18px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .suggestion-item {
+      padding: 12px 18px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: var(--transition);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .suggestion-item:active,
+    .suggestion-item.active {
+      background: var(--suggestion-hover);
+      color: var(--xiaomi-orange);
+    }
+
+    .suggestion-item i {
+      color: var(--text-tertiary);
+      font-size: 12px;
+      width: 16px;
+    }
+
+    .suggestion-highlight {
+      color: var(--xiaomi-orange);
+      font-weight: 700;
+    }
+
+    .quick-filters {
+      padding: 12px 18px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+    }
+    .quick-filters::-webkit-scrollbar { display: none; }
+
+    .filter-chip {
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: var(--transition);
+    }
+
+    .filter-chip.active {
+      background: var(--xiaomi-orange);
+      color: white;
+      border-color: var(--xiaomi-orange);
+    }
+
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .cards-view {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 18px;
+      padding-bottom: 80px;
+    }
+
+    .product-card {
+      background: var(--bg-card);
+      border-radius: 24px;
+      padding: 18px 20px;
+      border: 1px solid var(--card-border);
+      transition: var(--transition);
+      position: relative;
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+    }
+
+    .product-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 14px;
+      bottom: 14px;
+      width: 4px;
+      background: linear-gradient(180deg, var(--xiaomi-orange), var(--xiaomi-orange-soft));
+      border-radius: 4px;
+    }
+
+    .product-card:active {
+      transform: scale(0.985);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+      padding-left: 10px;
+    }
+
+    .card-brand {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--xiaomi-orange);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .card-model {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.4px;
+    }
+
+    .card-specs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 14px 0;
+      padding-left: 10px;
+    }
+
+    .card-type {
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+    }
+
+    .card-type.oled {
+      background: rgba(255, 105, 0, 0.12);
+      color: var(--xiaomi-orange-dark);
+    }
+
+    .supplier-badge, .price-badge {
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+    }
+
+    .card-price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      padding-left: 10px;
+    }
+
+    .card-price {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: var(--transition);
+      letter-spacing: -0.8px;
+      padding: 4px 12px;
+      border-radius: 14px;
+    }
+
+    .card-price:active {
+      color: var(--xiaomi-orange);
+      background: var(--xiaomi-orange-glow);
+    }
+
+    .card-actions-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .image-btn, .whatsapp-btn {
+      border: none;
+      padding: 9px 18px;
+      border-radius: 40px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .image-btn:active, .whatsapp-btn:active {
+      transform: scale(0.93);
+    }
+
+    .image-btn {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .whatsapp-btn {
+      background: #25D366;
+      color: white;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding: 8px 24px 16px;
+      gap: 12px;
+      z-index: 100;
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-tertiary);
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .nav-item.active {
+      color: var(--xiaomi-orange);
+      background: var(--xiaomi-orange-glow);
+    }
+
+    .nav-item i {
+      font-size: 20px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(12px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border-radius: 24px;
+      padding: 28px;
+      max-width: 320px;
+      width: 100%;
+      border: 1px solid var(--border);
+    }
+
+    .modal-content h3 {
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .modal-content input {
+      width: 100%;
+      padding: 14px 18px;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      color: var(--text-primary);
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .modal-content input:focus {
+      outline: none;
+      border-color: var(--xiaomi-orange);
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 18px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .modal-buttons button:first-child {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .modal-buttons button:last-child {
+      background: var(--xiaomi-orange);
+      color: white;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card);
+      padding: 10px 20px;
+      border-radius: 40px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 150;
+      animation: fadeInUp 0.3s ease;
+      border: 1px solid var(--border);
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    .results-count {
+      padding: 16px 20px 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-tertiary);
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      opacity: 0.2;
+      margin-bottom: 16px;
+    }
+
+    .main-content::-webkit-scrollbar { width: 3px; }
+    .main-content::-webkit-scrollbar-track { background: transparent; }
+    .main-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
   </style>
 </head>
 <body>
 <div class="app">
   <header class="header">
     <div class="header-top">
-      <div class="logo"><div class="logo-icon">MI</div><h1>DR XIAOMI <span>Catálogo</span></h1></div>
+      <div class="logo">
+        <div class="logo-icon">MI</div>
+        <h1>DR XIAOMI <span>Catálogo</span></h1>
+      </div>
       <div class="header-actions">
-        <button class="icon-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
-        <button class="icon-btn" id="techModeBtn"><i class="fas fa-microchip"></i></button>
-        <button class="icon-btn" id="receiptBtn"><i class="fas fa-receipt"></i></button>
-        <button class="icon-btn" id="shuffleBtn"><i class="fas fa-random"></i></button>
+        <button class="icon-btn" id="themeToggle" title="Tema">
+          <i class="fas fa-moon"></i>
+        </button>
+        <button class="icon-btn" id="techModeBtn" title="Modo Técnico">
+          <i class="fas fa-microchip"></i>
+        </button>
+        <button class="icon-btn" id="receiptBtn" title="Recibo">
+          <i class="fas fa-receipt"></i>
+        </button>
+        <button class="icon-btn" id="shuffleBtn" title="Mezclar">
+          <i class="fas fa-random"></i>
+        </button>
       </div>
     </div>
+    
     <div class="search-wrapper">
       <div class="search-container">
-        <input type="text" id="searchInput" class="search-input" placeholder="Buscar modelo... Ej: iPhone 11, Note 10" autocomplete="off">
-        <div class="search-actions"><button id="clearSearchBtn"><i class="fas fa-times"></i></button></div>
+        <input type="text" id="searchInput" class="search-input" placeholder="Buscar modelo exacto... Ej: Redmi Note 10 Pro" autocomplete="off">
+        <div class="search-actions">
+          <button id="clearSearchBtn" style="display: none;"><i class="fas fa-times"></i></button>
+        </div>
       </div>
+      <div class="suggestions-panel" id="suggestionsPanel"></div>
     </div>
   </header>
+
   <div class="quick-filters" id="quickFilters">
     <button class="filter-chip active" data-filter="all">📱 Todos</button>
     <button class="filter-chip" data-filter="OLED">✨ OLED</button>
     <button class="filter-chip" data-filter="LCD">📟 LCD</button>
   </div>
+
   <div class="main-content">
     <div id="resultsCount" class="results-count"></div>
-    <div id="didYouMean" class="did-you-mean" style="display:none"></div>
-    <div id="resultsContainer" class="loading">📡 Cargando productos...</div>
+    <div id="resultsContainer"></div>
   </div>
+
   <nav class="bottom-nav">
     <button class="nav-item active" data-tab="home"><i class="fas fa-home"></i><span>Inicio</span></button>
     <button class="nav-item" data-tab="compare"><i class="fas fa-chart-line"></i><span>Comparar</span></button>
   </nav>
 </div>
-<div id="techModal" class="modal"><div class="modal-content"><h3>🔐 Acceso Técnico</h3><input type="password" id="techPassword" placeholder="Clave"><div class="modal-buttons"><button onclick="closeModal('techModal')">Cancelar</button><button id="confirmTechBtn">Acceder</button></div></div></div>
+
+<div id="techModal" class="modal">
+  <div class="modal-content">
+    <h3>🔐 Acceso Técnico</h3>
+    <input type="password" id="techPassword" placeholder="Clave de acceso" autocomplete="off">
+    <div class="modal-buttons">
+      <button onclick="closeModal('techModal')">Cancelar</button>
+      <button id="confirmTechBtn">Acceder</button>
+    </div>
+  </div>
+</div>
 
 <script>
   // ============================================================
-  // LISTA DE TUS CSV
+  // MOTOR DE BÚSQUEDA PRECISA
   // ============================================================
-  const CSV_FILES = ["boe.csv", "centralcel.csv", "ja2.csv", "mrpantalla.csv", "osmobil.csv"];
-
-  let allData = [], filteredData = [], techMode = false, currentTab = "home", currentFilter = "all", currentTheme = "light";
-  let currentSearchTerm = "";
-
-  // ============================================================
-  // FUNCIÓN PARA NORMALIZAR TEXTO (elimina acentos y caracteres especiales)
-  // ============================================================
+  
   function normalizeText(str) {
-    return str.toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    return str
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9\s]/g, " ")
       .replace(/\s+/g, " ")
       .trim();
   }
 
-  // ============================================================
-  // BÚSQUEDA TOLERANTE A ERRORES (compara similitud de palabras)
-  // ============================================================
-  function searchProducts(data, searchTerm) {
+  function getTokens(str) {
+    return normalizeText(str).split(" ").filter(t => t.length > 0);
+  }
+
+  function performPreciseSearch(data, searchTerm) {
     if (!searchTerm.trim()) return data;
     
-    const normalizedSearch = normalizeText(searchTerm);
-    const searchWords = normalizedSearch.split(" ");
+    const searchTokens = getTokens(searchTerm);
     
-    // Primero: búsqueda exacta por palabras
-    let results = data.filter(item => {
-      const fullText = normalizeText(item.marca + " " + item.modelo);
-      const itemWords = fullText.split(" ");
+    return data.filter(item => {
+      const modeloNormalized = normalizeText(item.modelo);
+      const marcaNormalized = normalizeText(item.marca);
+      const combinedText = modeloNormalized + " " + marcaNormalized;
       
-      // Verificar si todas las palabras de búsqueda están en el producto
-      let allWordsFound = true;
-      for (let sw of searchWords) {
-        let found = false;
-        for (let iw of itemWords) {
-          if (iw.includes(sw) || sw.includes(iw)) {
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          allWordsFound = false;
-          break;
+      return searchTokens.every(token => {
+        return combinedText.includes(token);
+      });
+    });
+  }
+
+  function generateSuggestions(searchTerm) {
+    if (!searchTerm.trim() || searchTerm.trim().length < 2) return [];
+    
+    const searchTokens = getTokens(searchTerm);
+    const suggestionsMap = new Map();
+    
+    allData.forEach(product => {
+      const modeloNormalized = normalizeText(product.modelo);
+      const marcaNormalized = normalizeText(product.marca);
+      const combinedText = modeloNormalized + " " + marcaNormalized;
+      
+      const allTokensMatch = searchTokens.every(token => combinedText.includes(token));
+      
+      if (allTokensMatch) {
+        const key = `${product.marca}|${product.modelo}`;
+        if (!suggestionsMap.has(key)) {
+          suggestionsMap.set(key, {
+            marca: product.marca,
+            modelo: product.modelo,
+            tipo: product.tipo,
+            venta: product.venta
+          });
         }
       }
-      return allWordsFound;
     });
     
-    return results;
+    return Array.from(suggestionsMap.values())
+      .sort((a, b) => a.venta - b.venta)
+      .slice(0, 8);
   }
 
-  // ============================================================
-  // CORRECCIÓN DE BÚSQUEDA (¿Quisiste decir?)
-  // ============================================================
-  function getSuggestedCorrection(searchTerm) {
-    if (!searchTerm.trim() || searchTerm.length < 3) return null;
+  function highlightMatch(text, searchTerm) {
+    if (!searchTerm.trim()) return escapeHtml(text);
     
-    const normalizedSearch = normalizeText(searchTerm);
-    const searchWords = normalizedSearch.split(" ");
+    const tokens = getTokens(searchTerm);
+    let result = escapeHtml(text);
     
-    let bestMatch = null;
-    let bestScore = 0;
+    tokens.forEach(token => {
+      if (token.length < 1) return;
+      const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${escapedToken})`, 'gi');
+      result = result.replace(regex, '<span class="suggestion-highlight">$1</span>');
+    });
     
-    // Buscar productos similares
-    for (let product of allData.slice(0, 100)) {
-      const fullText = normalizeText(product.marca + " " + product.modelo);
-      const productWords = fullText.split(" ");
-      
-      let score = 0;
-      for (let sw of searchWords) {
-        for (let pw of productWords) {
-          // Comparar palabras similares (una contiene a la otra)
-          if (pw.includes(sw) || sw.includes(pw)) {
-            score += sw.length / Math.max(sw.length, pw.length);
-          }
-          // Levenshtein aproximado para palabras similares
-          else if (sw.length > 2 && pw.length > 2) {
-            const longer = Math.max(sw.length, pw.length);
-            const diff = Math.abs(sw.length - pw.length);
-            if (diff <= 2) {
-              let matches = 0;
-              for (let i = 0; i < Math.min(sw.length, pw.length); i++) {
-                if (sw[i] === pw[i]) matches++;
-              }
-              if (matches / longer > 0.5) {
-                score += 0.5;
-              }
-            }
-          }
-        }
-      }
-      
-      if (score > bestScore && score > 0.5) {
-        bestScore = score;
-        bestMatch = product.modelo;
-      }
-    }
-    
-    return bestMatch;
+    return result;
   }
 
   // ============================================================
-  // DETERMINAR TIPO DE PANTALLA
+  // CONFIGURACIÓN
   // ============================================================
-  function getDisplayType(tipoOriginal) {
-    const t = tipoOriginal.toUpperCase();
-    if (t.includes("ORIG") || t.includes("OLED") || t.includes("AMOLED") || t.includes("GX")) return "OLED";
-    if (t.includes("INCELL")) return "INCELL";
-    return "LCD";
-  }
+  const CONFIG = {
+    dataSources: [
+      { name: "J&A", url: "https://xiaomi.scz.red/precio/data/ja2.csv" },
+      { name: "CentralCell", url: "https://xiaomi.scz.red/precio/data/centralcel.csv" },
+      { name: "Osmobil", url: "https://xiaomi.scz.red/precio/data/osmobil.csv" },
+      { name: "CFH LP", url: "https://xiaomi.scz.red/precio/data/CFH.csv" },
+      { name: "BITE", url: "https://xiaomi.scz.red/precio/data/boe.csv" },
+      { name: "MR PANTALLA", url: "https://xiaomi.scz.red/precio/data/mrpantalla.csv" }
+    ],
+    passwords: { tech: "123456" }
+  };
 
-  // ============================================================
-  // PARSEAR CSV
-  // ============================================================
-  function parseCSV(text, providerName) {
-    const lines = text.split("\n").filter(l => l.trim());
-    if (lines.length < 2) return [];
-    const data = [];
-    for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(",");
-      if (cols.length >= 6) {
-        const marca = cols[0].trim().replace(/^"|"$/g, '').toUpperCase();
-        const modelo = cols[1].trim().replace(/^"|"$/g, '');
-        const tipoOriginal = cols[2].trim().replace(/^"|"$/g, '');
-        const proveedor = cols[3].trim().replace(/^"|"$/g, '') || providerName;
-        const compra = parseFloat(cols[4].replace(/[^0-9.-]/g, '')) || 0;
-        const venta = parseFloat(cols[5].replace(/[^0-9.-]/g, '')) || 0;
-        if (modelo && modelo !== "Modelo") data.push({id:crypto.randomUUID(), marca, modelo, tipo:getDisplayType(tipoOriginal), tipoOriginal, proveedor, compra, venta});
-      } else if (cols.length >= 5) {
-        const marca = cols[0].trim().replace(/^"|"$/g, '').toUpperCase();
-        const modelo = cols[1].trim().replace(/^"|"$/g, '');
-        const tipoOriginal = cols[2].trim().replace(/^"|"$/g, '');
-        const compra = parseFloat(cols[3].replace(/[^0-9.-]/g, '')) || 0;
-        const venta = parseFloat(cols[4].replace(/[^0-9.-]/g, '')) || 0;
-        if (modelo && modelo !== "Modelo") data.push({id:crypto.randomUUID(), marca, modelo, tipo:getDisplayType(tipoOriginal), tipoOriginal, proveedor:providerName, compra, venta});
-      }
-    }
-    return data;
-  }
+  let allData = [];
+  let filteredData = [];
+  let techMode = false;
+  let currentTab = "home";
+  let currentFilter = "all";
+  let popupWindow = null;
+  let currentTheme = "light";
+  let selectedSuggestionIndex = -1;
 
-  async function loadCSV(fileName) {
-    try {
-      const res = await fetch(`https://xiaomi.scz.red/precio/data/${fileName}`);
-      if (!res.ok) return [];
-      return parseCSV(await res.text(), fileName.replace(".csv", ""));
-    } catch(e) { return []; }
-  }
-
-  async function loadAllData() {
-    document.getElementById("resultsContainer").innerHTML = '<div class="loading">📡 Cargando productos...</div>';
-    allData = [];
-    for (const csv of CSV_FILES) {
-      const data = await loadCSV(csv);
-      allData.push(...data);
-    }
-    if (allData.length === 0) {
-      document.getElementById("resultsContainer").innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>No se pudieron cargar los CSV</p></div>';
-      return;
-    }
-    filteredData = [...allData].sort((a,b) => a.venta - b.venta);
-    updateResultsCount();
-    render();
-    showToast(`✅ ${allData.length} productos`);
-  }
+  const container = document.getElementById("resultsContainer");
+  const searchInput = document.getElementById("searchInput");
+  const resultsCount = document.getElementById("resultsCount");
+  const suggestionsPanel = document.getElementById("suggestionsPanel");
+  const clearSearchBtn = document.getElementById("clearSearchBtn");
 
   function applyFiltersAndSearch() {
     let data = [...allData];
-    if (currentFilter !== "all") data = data.filter(item => item.tipo === currentFilter);
     
-    const searchTerm = document.getElementById("searchInput").value.trim();
-    currentSearchTerm = searchTerm;
-    
-    if (searchTerm) {
-      data = searchProducts(data, searchTerm);
-      document.getElementById("clearSearchBtn").style.display = "block";
-      
-      // Mostrar "¿Quisiste decir?" si no hay resultados
-      const didYouMeanDiv = document.getElementById("didYouMean");
-      if (data.length === 0) {
-        const suggestion = getSuggestedCorrection(searchTerm);
-        if (suggestion && suggestion !== searchTerm) {
-          didYouMeanDiv.style.display = "block";
-          didYouMeanDiv.innerHTML = `🔍 No encontramos "${escapeHtml(searchTerm)}". ¿Quizás quisiste decir <span onclick="searchSuggestion('${escapeHtml(suggestion)}')">"${escapeHtml(suggestion)}"</span>?`;
-        } else {
-          didYouMeanDiv.style.display = "none";
-        }
-      } else {
-        didYouMeanDiv.style.display = "none";
-      }
-    } else {
-      document.getElementById("clearSearchBtn").style.display = "none";
-      document.getElementById("didYouMean").style.display = "none";
+    if (currentFilter !== "all") {
+      data = data.filter(item => item.tipo === currentFilter);
     }
     
-    filteredData = data.sort((a,b) => a.venta - b.venta);
+    const searchTerm = searchInput.value.trim();
+    if (searchTerm) {
+      data = performPreciseSearch(data, searchTerm);
+      clearSearchBtn.style.display = 'block';
+    } else {
+      clearSearchBtn.style.display = 'none';
+    }
+    
+    data.sort((a, b) => a.venta - b.venta);
+    
+    filteredData = data;
     updateResultsCount();
     render();
   }
-  
-  function searchSuggestion(suggestion) {
-    document.getElementById("searchInput").value = suggestion;
-    applyFiltersAndSearch();
-  }
 
-  function updateResultsCount() {
-    const c = document.getElementById("resultsCount");
-    if (c) c.textContent = `${filteredData.length} producto${filteredData.length !== 1 ? 's' : ''}`;
-  }
-
-  // ============================================================
-  // RENDER
-  // ============================================================
-  function render() {
-    const container = document.getElementById("resultsContainer");
-    if (!container) return;
-    if (currentTab === "compare") { showCompareModal(); return; }
-    if (filteredData.length === 0 && currentSearchTerm) {
-      container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><p>No se encontraron resultados para "${escapeHtml(currentSearchTerm)}"</p><p style="font-size:12px;margin-top:8px">💡 Prueba con: iPhone 11, A54, Note 10</p></div>`;
+  function updateSuggestions() {
+    const searchTerm = searchInput.value.trim();
+    selectedSuggestionIndex = -1;
+    
+    if (!searchTerm || searchTerm.length < 2) {
+      suggestionsPanel.classList.remove('active');
       return;
     }
-    if (filteredData.length === 0) {
-      container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><p>No se encontraron resultados</p><p style="font-size:12px;margin-top:8px">💡 Prueba con: iPhone 11, A54, Note 10</p></div>`;
+    
+    const suggestions = generateSuggestions(searchTerm);
+    
+    if (suggestions.length === 0) {
+      suggestionsPanel.classList.remove('active');
       return;
     }
-    container.innerHTML = `<div class="cards-view">${filteredData.map(p => `
-      <div class="product-card">
-        <div>
-          <div class="card-brand">${escapeHtml(p.marca)}</div>
-          <div class="card-model">${escapeHtml(p.modelo)}</div>
-          <div class="card-specs">
-            <span class="card-type ${p.tipo === 'OLED' ? 'oled' : ''}">${escapeHtml(p.tipoOriginal)}</span>
-            ${techMode ? `<span style="padding:2px 8px;background:var(--bg);border-radius:20px;font-size:10px;margin-left:6px">${escapeHtml(p.proveedor)}</span>` : ''}
-            ${techMode ? `<span style="padding:2px 8px;background:var(--bg);border-radius:20px;font-size:10px;margin-left:6px">Compra: ${p.compra} Bs</span>` : ''}
+    
+    suggestionsPanel.innerHTML = `
+      <div class="suggestion-header">💡 COINCIDENCIAS (${suggestions.length})</div>
+      ${suggestions.map((s, index) => `
+        <div class="suggestion-item" data-index="${index}" data-modelo="${escapeHtml(s.modelo)}">
+          <i class="fas fa-mobile-alt"></i>
+          <div style="flex: 1;">
+            <div>${highlightMatch(s.modelo, searchTerm)}</div>
+            <div style="font-size: 11px; color: var(--text-tertiary);">${escapeHtml(s.marca)} · ${s.venta.toLocaleString()} Bs</div>
           </div>
+          <span style="font-size: 10px; color: var(--text-tertiary); background: var(--bg-primary); padding: 2px 8px; border-radius: 10px;">${s.tipo}</span>
         </div>
-        <div class="card-bottom">
-          <span class="card-price" onclick="copyPriceToClipboard('${p.id}')">${p.venta.toLocaleString()} Bs</span>
-          <div class="card-actions">
-            <button class="image-btn" onclick="openGooglePopup('${p.id}')"><i class="fab fa-google"></i> LCD</button>
-            <button class="whatsapp-btn" onclick="shareToWhatsApp('${p.id}')"><i class="fab fa-whatsapp"></i></button>
-          </div>
-        </div>
-      </div>`).join('')}</div>`;
-  }
-
-  // ============================================================
-  // FUNCIONES DE COPIA
-  // ============================================================
-  function copyPriceToClipboard(productId) {
-    let product = allData.find(p => p.id === productId);
-    if (!product) product = filteredData.find(p => p.id === productId);
-    if (!product) { showToast("❌ Producto no encontrado"); return; }
-    const message = `📱 ${product.marca} ${product.modelo}\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
-    navigator.clipboard.writeText(message).then(() => showToast("✅ Precio copiado"))
-      .catch(() => {
-        const textarea = document.createElement('textarea');
-        textarea.value = message;
-        textarea.style.position = 'fixed';
-        textarea.style.top = '-9999px';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        showToast("✅ Precio copiado");
+      `).join('')}
+    `;
+    
+    suggestionsPanel.querySelectorAll('.suggestion-item').forEach(item => {
+      item.addEventListener('click', function() {
+        searchInput.value = this.dataset.modelo;
+        suggestionsPanel.classList.remove('active');
+        applyFiltersAndSearch();
+        if (navigator.vibrate) navigator.vibrate(30);
       });
+    });
+    
+    suggestionsPanel.classList.add('active');
   }
 
-  function shareToWhatsApp(productId) {
-    let product = allData.find(p => p.id === productId);
-    if (!product) product = filteredData.find(p => p.id === productId);
-    if (!product) return;
-    const message = `📱 *${product.marca} ${product.modelo}*\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+  function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   }
 
-  function openGooglePopup(productId) {
-    let product = allData.find(p => p.id === productId);
-    if (!product) product = filteredData.find(p => p.id === productId);
-    if (!product) return;
-    window.open(`https://www.google.com/search?q=LCD+${encodeURIComponent(product.modelo)}+${encodeURIComponent(product.marca)}+pantalla&tbm=isch`, "_blank");
+  async function init() {
+    showSkeleton();
+    await loadData();
+    setupEventListeners();
+    setupQuickFilters();
+    filteredData = [...allData].sort((a, b) => a.venta - b.venta);
+    updateResultsCount();
+    render();
+    loadTheme();
   }
-
-  function showToast(msg) {
-    let t = document.querySelector('.toast');
-    if (t) t.remove();
-    t = document.createElement('div');
-    t.className = 'toast';
-    t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 2000);
-  }
-
-  function escapeHtml(s) { if (!s) return ""; return s.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
-  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-  function shuffleArray(arr) { const s = [...arr]; for (let i = s.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [s[i], s[j]] = [s[j], s[i]]; } return s; }
-  function shuffleResults() { if (allData.length) { filteredData = shuffleArray(allData); updateResultsCount(); render(); showToast("🔄 Mezclado"); } }
 
   function loadTheme() {
     const saved = localStorage.getItem("theme");
@@ -415,6 +888,7 @@
       document.querySelector("#themeToggle i").className = "fas fa-moon";
     }
   }
+
   function toggleTheme() {
     if (currentTheme === "light") {
       currentTheme = "dark";
@@ -429,36 +903,405 @@
     render();
   }
 
+  function shuffleResults() {
+    if (allData.length > 0) {
+      filteredData = shuffleArray(allData);
+      updateResultsCount();
+      render();
+      showToast("🔄 Productos mezclados");
+    }
+  }
+
+  function setupQuickFilters() {
+    document.querySelectorAll(".filter-chip").forEach(filter => {
+      filter.addEventListener("click", () => {
+        document.querySelectorAll(".filter-chip").forEach(f => f.classList.remove("active"));
+        filter.classList.add("active");
+        currentFilter = filter.dataset.filter;
+        applyFiltersAndSearch();
+      });
+    });
+  }
+
+  async function loadData() {
+    try {
+      allData = [];
+      for (const source of CONFIG.dataSources) {
+        try {
+          const data = await fetchCSV(source.url, source.name);
+          allData.push(...data);
+        } catch (error) {
+          console.error(`Error cargando ${source.name}:`, error);
+        }
+      }
+      filteredData = [...allData].sort((a, b) => a.venta - b.venta);
+      updateResultsCount();
+      render();
+    } catch (error) {
+      showError();
+    }
+  }
+
+  async function fetchCSV(url, providerName) {
+    const response = await fetch(url);
+    const text = await response.text();
+    return parseCSV(text, providerName);
+  }
+
+  function parseCSV(text, providerName) {
+    const lines = text.split("\n").filter(line => line.trim() !== "");
+    if (lines.length < 2) return [];
+    
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line.trim()) continue;
+      
+      const columns = parseCSVLine(line);
+      
+      if (columns.length >= 6) {
+        const marca = cleanText(columns[0]);
+        const modelo = cleanText(columns[1]);
+        const tipo = cleanText(columns[2]).toUpperCase();
+        const proveedor = cleanText(columns[3]) || providerName;
+        const precio_compra = parsePrice(columns[4]);
+        const precio_venta = parsePrice(columns[5]);
+        
+        if (modelo && modelo !== "Modelo" && modelo !== "") {
+          data.push({
+            id: crypto.randomUUID(),
+            marca: marca || "N/A",
+            modelo: modelo,
+            tipo: tipo === "OLED" ? "OLED" : "LCD",
+            proveedor: proveedor,
+            compra: precio_compra,
+            venta: precio_venta
+          });
+        }
+      } else if (columns.length >= 5) {
+        const marca = cleanText(columns[0]);
+        const modelo = cleanText(columns[1]);
+        const tipo = cleanText(columns[2]).toUpperCase();
+        const precio_compra = parsePrice(columns[3]);
+        const precio_venta = parsePrice(columns[4]);
+        
+        if (modelo && modelo !== "Modelo" && modelo !== "") {
+          data.push({
+            id: crypto.randomUUID(),
+            marca: marca || "N/A",
+            modelo: modelo,
+            tipo: tipo === "OLED" ? "OLED" : "LCD",
+            proveedor: providerName,
+            compra: precio_compra,
+            venta: precio_venta
+          });
+        }
+      }
+    }
+    return data;
+  }
+
+  function parseCSVLine(line) {
+    const result = [];
+    let current = "";
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === "," && !inQuotes) {
+        result.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result.map(field => field.replace(/^"|"$/g, ""));
+  }
+
+  function cleanText(text) {
+    if (!text) return "";
+    return text.trim().replace(/^"|"$/g, "");
+  }
+
+  function parsePrice(priceStr) {
+    if (!priceStr || priceStr.trim() === "") return 0;
+    let str = priceStr.toString().trim();
+    str = str.replace(/[^\d.,-]/g, "");
+    const num = parseFloat(str.replace(/,/g, "."));
+    if (isNaN(num)) return 0;
+    return Math.round(num);
+  }
+
+  function render() {
+    if (!container) return;
+    
+    if (currentTab === "compare") {
+      showCompareModal();
+      return;
+    }
+    
+    container.innerHTML = renderCards(filteredData);
+  }
+
+  function renderCards(data) {
+    if (data.length === 0) {
+      const searchTerm = searchInput.value.trim();
+      return `
+        <div class="empty-state">
+          <i class="fas fa-search"></i>
+          <p style="font-weight: 600; margin-bottom: 8px;">Sin resultados</p>
+          ${searchTerm ? `<p style="font-size: 13px;">No se encontró "${escapeHtml(searchTerm)}"</p>` : ''}
+          <p style="font-size: 11px; margin-top: 12px; color: var(--text-tertiary);">💡 Escribe el nombre exacto del modelo</p>
+        </div>
+      `;
+    }
+    
+    return `
+      <div class="cards-view">
+        ${data.map((item) => `
+          <div class="product-card">
+            <div class="card-header">
+              <div>
+                <div class="card-brand">${escapeHtml(item.marca)}</div>
+                <div class="card-model">${escapeHtml(item.modelo)}</div>
+              </div>
+            </div>
+            <div class="card-specs">
+              <span class="card-type ${item.tipo === 'OLED' ? 'oled' : ''}">${item.tipo}</span>
+              ${techMode ? `<span class="supplier-badge">🏷️ ${escapeHtml(item.proveedor)}</span>` : ''}
+              ${techMode ? `<span class="price-badge">Compra: ${item.compra.toLocaleString()} Bs</span>` : ''}
+            </div>
+            <div class="card-price-row">
+              <span class="card-price" onclick="copyPriceToClipboard('${item.id}')">${item.venta.toLocaleString()} Bs</span>
+              <div class="card-actions-group">
+                <button class="image-btn" onclick="openGooglePopup('${item.id}')"><i class="fab fa-google"></i> LCD</button>
+                <button class="whatsapp-btn" onclick="shareToWhatsApp('${item.id}')"><i class="fab fa-whatsapp"></i></button>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function copyPriceToClipboard(productId) {
+    const product = allData.find(p => p.id === productId);
+    if (!product) return;
+    
+    const message = `📱 ${product.marca} ${product.modelo}\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
+    
+    navigator.clipboard.writeText(message).then(() => {
+      showToast("✅ Precio copiado");
+      if (navigator.vibrate) navigator.vibrate(50);
+    }).catch(() => {
+      showToast("❌ Error al copiar");
+    });
+  }
+
+  function shareToWhatsApp(productId) {
+    const product = allData.find(p => p.id === productId);
+    if (!product) return;
+    
+    const message = `📱 *${product.marca} ${product.modelo}*\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
+    const encoded = encodeURIComponent(message);
+    window.open(`https://wa.me/?text=${encoded}`, "_blank");
+    if (navigator.vibrate) navigator.vibrate(50);
+  }
+
+  function openGooglePopup(productId) {
+    const product = allData.find(p => p.id === productId);
+    if (!product) return;
+    
+    const searchTerm = `LCD ${product.modelo} ${product.marca} pantalla`;
+    const encodedTerm = encodeURIComponent(searchTerm);
+    const googleUrl = `https://www.google.com/search?q=${encodedTerm}&tbm=isch`;
+    
+    const width = Math.min(450, screen.width - 40);
+    const height = Math.min(650, screen.height - 80);
+    const left = (screen.width - width) / 2;
+    const top = (screen.height - height) / 2;
+    
+    popupWindow = window.open(googleUrl, 'GoogleImagesPopup', 
+      `width=${width},height=${height},left=${left},top=${top},toolbar=yes,location=yes,scrollbars=yes,resizable=yes`);
+    if (popupWindow) popupWindow.focus();
+    if (navigator.vibrate) navigator.vibrate(50);
+  }
+
+  function updateResultsCount() {
+    if (resultsCount) {
+      const count = filteredData.length;
+      resultsCount.textContent = `${count} producto${count !== 1 ? 's' : ''}`;
+    }
+  }
+
+  function showTechModal() {
+    document.getElementById("techModal").style.display = "flex";
+    document.getElementById("techPassword").focus();
+  }
+
+  function closeModal(modalId) {
+    document.getElementById(modalId).style.display = "none";
+    const input = document.querySelector(`#${modalId} input`);
+    if (input) input.value = "";
+  }
+
+  function showToast(message) {
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) existingToast.remove();
+    
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+  }
+
+  function showSkeleton() {
+    if (container) {
+      container.innerHTML = `
+        <div class="cards-view">
+          ${Array(6).fill().map(() => `
+            <div class="product-card" style="height: 120px;">
+              <div style="background: linear-gradient(90deg, var(--border) 25%, transparent 50%, var(--border) 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 12px; height: 100%;"></div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+  }
+
+  function showError() {
+    if (container) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Error cargando datos</p>
+          <button onclick="location.reload()" style="margin-top: 16px; padding: 12px 24px; background: var(--xiaomi-orange); border: none; border-radius: 30px; color: white; font-weight: 600;">Reintentar</button>
+        </div>
+      `;
+    }
+  }
+
   function showCompareModal() {
-    const top4 = filteredData.slice(0,4);
-    let html = `<div class="modal" id="compareModal" style="display:flex"><div class="modal-content"><h3>📊 Comparar</h3>`;
-    top4.forEach(p => { html += `<div style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:12px;border-left:3px solid var(--orange)"><div style="font-size:11px;color:var(--orange)">${escapeHtml(p.marca)}</div><div style="font-weight:600">${escapeHtml(p.modelo)}</div><div style="font-size:20px;font-weight:800">${p.venta} Bs</div></div>`; });
-    html += `<button onclick="document.getElementById('compareModal').remove()" style="width:100%;padding:10px;background:var(--orange);border:none;border-radius:30px;color:#fff">Cerrar</button></div></div>`;
-    document.body.insertAdjacentHTML("beforeend", html);
+    const compareData = filteredData.slice(0, 4);
+    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+    compareData.forEach(p => {
+      html += `
+        <div style="background: var(--bg-secondary); padding: 14px; border-radius: 16px; border-left: 4px solid var(--xiaomi-orange);">
+          <div style="font-size: 12px; color: var(--xiaomi-orange); font-weight: 700;">${escapeHtml(p.marca)}</div>
+          <div style="font-size: 15px; font-weight: 600; margin: 4px 0;">${escapeHtml(p.modelo)}</div>
+          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">${p.tipo}</div>
+          <div style="font-size: 22px; font-weight: 800;">${p.venta.toLocaleString()} Bs</div>
+        </div>
+      `;
+    });
+    html += '</div><div class="modal-buttons" style="margin-top: 16px;"><button onclick="closeCompareModal()" style="flex:1; padding: 12px; background: var(--xiaomi-orange); border: none; border-radius: 30px; color: white; font-weight: 600;">Cerrar</button></div>';
+    
+    const modalHtml = `
+      <div id="compareModal" class="modal" style="display: flex;">
+        <div class="modal-content" style="max-width: 350px;">
+          <h3>📊 Comparar</h3>
+          ${html}
+        </div>
+      </div>
+    `;
+    
+    const existing = document.getElementById("compareModal");
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML("beforeend", modalHtml);
+  }
+
+  function closeCompareModal() {
+    const modal = document.getElementById("compareModal");
+    if (modal) modal.remove();
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 
   function setupEventListeners() {
-    document.getElementById("searchInput")?.addEventListener("input", () => applyFiltersAndSearch());
-    document.getElementById("searchInput")?.addEventListener("keydown", (e) => { if (e.key === "Enter") applyFiltersAndSearch(); });
-    document.getElementById("clearSearchBtn")?.addEventListener("click", () => { document.getElementById("searchInput").value = ""; applyFiltersAndSearch(); });
+    searchInput?.addEventListener("input", () => {
+      updateSuggestions();
+    });
+    
+    searchInput?.addEventListener("keydown", (e) => {
+      const items = suggestionsPanel.querySelectorAll('.suggestion-item');
+      
+      if (e.key === 'ArrowDown' && items.length > 0) {
+        e.preventDefault();
+        selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, items.length - 1);
+        items.forEach((item, i) => item.classList.toggle('active', i === selectedSuggestionIndex));
+      } else if (e.key === 'ArrowUp' && items.length > 0) {
+        e.preventDefault();
+        selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, 0);
+        items.forEach((item, i) => item.classList.toggle('active', i === selectedSuggestionIndex));
+      } else if (e.key === 'Enter') {
+        suggestionsPanel.classList.remove('active');
+        applyFiltersAndSearch();
+      } else if (e.key === 'Escape') {
+        suggestionsPanel.classList.remove('active');
+        selectedSuggestionIndex = -1;
+      }
+    });
+    
+    document.getElementById("clearSearchBtn")?.addEventListener("click", () => {
+      searchInput.value = "";
+      suggestionsPanel.classList.remove('active');
+      clearSearchBtn.style.display = 'none';
+      applyFiltersAndSearch();
+      searchInput.focus();
+    });
+    
     document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
-    document.getElementById("techModeBtn")?.addEventListener("click", () => document.getElementById("techModal").style.display = "flex");
-    document.getElementById("receiptBtn")?.addEventListener("click", () => window.open("http://xiaomi.scz.red/1/", "_blank"));
-    document.getElementById("shuffleBtn")?.addEventListener("click", shuffleResults);
-    document.getElementById("confirmTechBtn")?.addEventListener("click", () => { if (document.getElementById("techPassword").value === "123456") { techMode = true; closeModal("techModal"); showToast("🔧 Modo técnico activado"); render(); } else showToast("❌ Clave incorrecta"); });
-    document.querySelectorAll(".filter-chip").forEach(f => f.addEventListener("click", function() { document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active")); this.classList.add("active"); currentFilter = this.dataset.filter; applyFiltersAndSearch(); }));
-    document.querySelectorAll(".nav-item").forEach(n => n.addEventListener("click", function() { document.querySelectorAll(".nav-item").forEach(nav => nav.classList.remove("active")); this.classList.add("active"); currentTab = this.dataset.tab; render(); }));
+    document.getElementById("techModeBtn")?.addEventListener("click", showTechModal);
+    document.getElementById("shuffleBtn")?.addEventListener("click", () => shuffleResults());
+    
+    document.getElementById("confirmTechBtn")?.addEventListener("click", () => {
+      if (document.getElementById("techPassword").value === CONFIG.passwords.tech) {
+        techMode = true;
+        closeModal("techModal");
+        showToast("🔧 Modo técnico activado");
+        render();
+      } else {
+        showToast("❌ Clave incorrecta");
+        if (navigator.vibrate) navigator.vibrate(200);
+      }
+    });
+    
+    document.getElementById("receiptBtn")?.addEventListener("click", () => {
+      window.open("http://xiaomi.scz.red/1/", "_blank");
+    });
+    
+    document.querySelectorAll(".nav-item").forEach(item => {
+      item.addEventListener("click", () => {
+        currentTab = item.dataset.tab;
+        document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+        item.classList.add("active");
+        render();
+      });
+    });
+    
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".search-wrapper")) {
+        suggestionsPanel.classList.remove("active");
+      }
+    });
   }
 
   window.copyPriceToClipboard = copyPriceToClipboard;
   window.shareToWhatsApp = shareToWhatsApp;
   window.openGooglePopup = openGooglePopup;
   window.closeModal = closeModal;
-  window.searchSuggestion = searchSuggestion;
+  window.closeCompareModal = closeCompareModal;
 
-  loadTheme();
-  setupEventListeners();
-  loadAllData();
+  init();
 </script>
 </body>
 </html>
