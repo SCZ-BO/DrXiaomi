@@ -3,251 +3,412 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>DR XIAOMI · Diagnóstico Profesional + Códigos Secretos</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <title>DR XIAOMI · Diagnostic Pro · App Web Moderna</title>
+  <!-- Google Fonts Premium -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: 'Space Grotesk', sans-serif;
-      background: #05050A;
-      color: #E0E0FF;
+      font-family: 'Inter', sans-serif;
+      background: #0A0C12;
+      color: #EDF2F8;
       overflow-x: hidden;
     }
-    #particleCanvas {
+
+    /* Fondo premium con gradiente y patrón sutil */
+    .premium-bg {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 0;
-      pointer-events: none;
-      opacity: 0.3;
+      background: radial-gradient(circle at 25% 30%, #0F1219, #04060A);
+      z-index: -2;
     }
-    .cyber-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
+    .premium-bg::before {
+      content: '';
+      position: absolute;
       width: 100%;
       height: 100%;
-      background: radial-gradient(circle at 20% 30%, #0a0a1a, #020205);
-      z-index: -1;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" opacity="0.03"><path fill="none" stroke="%2300ffff" stroke-width="1" d="M0 400 L800 400 M400 0 L400 800 M200 200 L600 600 M200 600 L600 200"/><circle cx="400" cy="400" r="120" stroke="%2300ffff" fill="none" stroke-width="0.8"/></svg>');
+      background-repeat: repeat;
+      animation: floatBg 40s linear infinite;
     }
-    .glass-app {
-      max-width: 600px;
+    @keyframes floatBg {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(40px, 40px); }
+    }
+
+    /* Contenedor principal estilo app */
+    .app-container {
+      max-width: 550px;
       margin: 0 auto;
-      background: rgba(8, 12, 25, 0.92);
+      background: rgba(10, 14, 23, 0.85);
       backdrop-filter: blur(12px);
       min-height: 100vh;
       position: relative;
       z-index: 10;
-      border-left: 1px solid rgba(0, 255, 255, 0.2);
-      border-right: 1px solid rgba(0, 255, 255, 0.2);
-      padding-bottom: 2rem;
+      border-left: 1px solid rgba(0, 255, 200, 0.15);
+      border-right: 1px solid rgba(0, 255, 200, 0.15);
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
     }
-    .neon-header { padding: 2rem 1.5rem 1rem; text-align: center; }
-    .glitch-text {
-      font-size: 1.8rem;
+
+    /* Header con efecto neón */
+    .app-header {
+      padding: 2rem 1.5rem 1rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(0, 255, 200, 0.2);
+      margin-bottom: 0.5rem;
+    }
+    .logo {
+      font-size: 2rem;
       font-weight: 800;
-      background: linear-gradient(135deg, #fff, #0ff, #ff4d6d);
+      background: linear-gradient(135deg, #FFFFFF, #00FFCC, #FF4D6D);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      letter-spacing: -0.5px;
     }
+    .subtitle {
+      font-size: 0.7rem;
+      color: #8A9BB0;
+      letter-spacing: 1px;
+      margin-top: 0.3rem;
+    }
+
+    /* Secciones con animación */
+    .section {
+      animation: fadeInUp 0.5s ease-out forwards;
+      opacity: 0;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .section-title {
       font-size: 1rem;
-      font-weight: 700;
+      font-weight: 600;
       margin: 1.2rem 1.5rem 0.8rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      color: #0ff;
-      border-left: 3px solid #0ff;
+      color: #00FFCC;
+      letter-spacing: -0.3px;
+      border-left: 3px solid #00FFCC;
       padding-left: 0.8rem;
     }
-    .info-card {
-      background: rgba(15, 25, 45, 0.7);
-      backdrop-filter: blur(8px);
-      border-radius: 1.2rem;
-      padding: 1rem;
-      margin: 0 1.5rem 1rem;
-      border: 1px solid rgba(0, 255, 255, 0.2);
-      text-align: center;
+
+    /* Tarjetas glassmorphism */
+    .glass-card {
+      background: rgba(18, 25, 40, 0.7);
+      backdrop-filter: blur(12px);
+      border-radius: 1.5rem;
+      padding: 1.2rem;
+      margin: 0 1.2rem 1rem;
+      border: 1px solid rgba(0, 255, 200, 0.2);
+      transition: all 0.3s ease;
     }
-    .btn-imei {
-      background: linear-gradient(95deg, #0ff, #ff4d6d);
-      border: none;
-      border-radius: 3rem;
-      padding: 0.8rem 1.2rem;
-      font-weight: 800;
-      font-size: 0.9rem;
-      color: #05050A;
-      cursor: pointer;
+    .glass-card:hover {
+      border-color: rgba(0, 255, 200, 0.5);
+      box-shadow: 0 8px 25px rgba(0, 255, 200, 0.08);
+    }
+
+    /* Info rows */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid rgba(0, 255, 200, 0.08);
+      font-size: 0.85rem;
+    }
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    .info-label {
+      color: #8A9BB0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .info-value {
+      font-family: 'Space Grotesk', monospace;
+      font-weight: 600;
+      color: #00FFCC;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.2rem 0.6rem;
+      border-radius: 2rem;
+      font-size: 0.8rem;
+    }
+
+    /* Badges de gama */
+    .gama-badge {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      margin-top: 0.5rem;
-    }
-    .test-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.8rem;
-      margin: 0 1.5rem 1rem;
-    }
-    .test-card {
-      background: rgba(15, 25, 45, 0.7);
-      backdrop-filter: blur(8px);
-      border-radius: 1.2rem;
-      padding: 0.8rem;
-      text-align: center;
-      border: 1px solid rgba(0, 255, 255, 0.2);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .test-card:active { transform: scale(0.97); }
-    .test-card i { font-size: 1.5rem; color: #0ff; margin-bottom: 0.3rem; display: block; }
-    .test-card span { font-size: 0.7rem; font-weight: 600; display: block; }
-    .samsung-code {
-      background: rgba(0, 255, 255, 0.1);
-      border-radius: 1rem;
-      padding: 0.8rem;
-      margin: 1rem 1.5rem;
-      text-align: center;
-      font-family: monospace;
-      font-size: 0.9rem;
-      border-left: 3px solid #ff4d6d;
-    }
-    .btn-diagnostic {
-      background: linear-gradient(95deg, #0ff, #ff4d6d);
-      border: none;
+      padding: 0.4rem 1.2rem;
       border-radius: 3rem;
-      padding: 0.9rem;
-      font-weight: 800;
-      color: #05050A;
-      width: calc(100% - 3rem);
-      margin: 1rem 1.5rem;
-      cursor: pointer;
-    }
-    .cleaner-section {
-      background: linear-gradient(145deg, rgba(0, 255, 255, 0.08), rgba(255, 77, 109, 0.05));
-      border-radius: 1.5rem;
-      padding: 1rem;
-      margin: 0 1.5rem 1rem;
-      border: 1px solid rgba(0, 255, 255, 0.3);
-    }
-    .wave-animation {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 5px;
-      height: 60px;
-      margin: 0.5rem 0;
-    }
-    .wave-bar {
-      width: 8px;
-      height: 20px;
-      background: #0ff;
-      border-radius: 4px;
-      transition: height 0.05s ease;
-    }
-    .play-btn {
-      background: linear-gradient(95deg, #0ff, #ff4d6d);
-      border: none;
-      border-radius: 3rem;
-      padding: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 700;
-      color: #05050A;
+      margin-top: 0.3rem;
+    }
+    .gama-alta { background: #00FFCC20; color: #00FFCC; border: 1px solid #00FFCC; }
+    .gama-media { background: #FFAA4420; color: #FFAA44; border: 1px solid #FFAA44; }
+    .gama-baja { background: #FF4D6D20; color: #FF4D6D; border: 1px solid #FF4D6D; }
+
+    /* Botones premium */
+    .btn-premium {
+      background: linear-gradient(135deg, #00FFCC, #0099FF);
+      border: none;
+      border-radius: 3rem;
+      padding: 0.9rem 1.2rem;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #0A0C12;
       width: 100%;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      font-size: 0.8rem;
+      gap: 0.6rem;
+      transition: all 0.2s ease;
+      font-family: 'Inter', sans-serif;
     }
-    
-    /* SECCIÓN DE CÓDIGOS SECRETOS - ESTILO MODERNO */
-    .codes-section {
-      margin: 1.5rem;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 1.5rem;
-      overflow: hidden;
-      border: 1px solid rgba(0, 255, 255, 0.2);
+    .btn-premium:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 20px rgba(0, 255, 200, 0.3);
     }
-    .codes-header {
-      background: linear-gradient(135deg, #0ff1, #ff4d6d1a);
-      padding: 1rem;
+    .btn-premium:active {
+      transform: scale(0.98);
+    }
+    .btn-antutu {
+      background: linear-gradient(135deg, #FF4D6D, #FF8C42);
+      color: white;
+    }
+
+    /* Test grid */
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.8rem;
+      margin: 0 1.2rem 1rem;
+    }
+    .test-card {
+      background: rgba(18, 25, 40, 0.6);
+      backdrop-filter: blur(8px);
+      border-radius: 1.2rem;
+      padding: 0.9rem 0.5rem;
       text-align: center;
-      border-bottom: 1px solid #0ff3;
+      border: 1px solid rgba(0, 255, 200, 0.15);
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
-    .codes-header h3 {
-      color: #0ff;
-      font-size: 1rem;
+    .test-card:hover {
+      transform: translateY(-3px);
+      border-color: #00FFCC;
+      background: rgba(0, 255, 200, 0.1);
     }
-    .codes-header p {
-      font-size: 0.65rem;
-      opacity: 0.7;
+    .test-card i {
+      font-size: 1.5rem;
+      color: #00FFCC;
+      margin-bottom: 0.4rem;
+      display: block;
     }
+    .test-card span {
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+
+    /* Speed test stats */
+    .speed-stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 0.8rem 0;
+      padding: 0.6rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 1rem;
+      text-align: center;
+      font-size: 0.7rem;
+    }
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #00FFCC;
+      font-family: monospace;
+    }
+
+    /* Progress bar */
+    .progress-bar {
+      background: #1A2538;
+      border-radius: 1rem;
+      height: 6px;
+      margin: 0.5rem 0;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00FFCC, #0099FF);
+      border-radius: 1rem;
+      transition: width 0.3s ease;
+    }
+
+    /* Códigos grid */
     .codes-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 0.6rem;
-      padding: 1rem;
-      max-height: 400px;
+      padding: 0.8rem;
+      max-height: 260px;
       overflow-y: auto;
     }
     .code-item {
       background: rgba(10, 20, 35, 0.8);
       border-radius: 1rem;
-      padding: 0.6rem;
+      padding: 0.5rem 0.7rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border: 1px solid rgba(0, 255, 255, 0.2);
-      transition: all 0.2s;
-    }
-    .code-item:hover {
-      border-color: #0ff;
-      background: #0ff1;
-    }
-    .brand-name {
       font-size: 0.7rem;
-      font-weight: 600;
-      color: #0ff;
-    }
-    .code-value {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.7rem;
-      background: #00000055;
-      padding: 0.2rem 0.5rem;
-      border-radius: 0.5rem;
-      letter-spacing: 1px;
-      cursor: pointer;
       transition: 0.2s;
     }
-    .code-value:hover {
-      background: #0ff;
-      color: #000;
+    .code-item:hover {
+      background: rgba(0, 255, 200, 0.15);
     }
-    .copy-feedback {
-      font-size: 0.6rem;
-      margin-left: 0.3rem;
-      color: #0f6;
+    .code-value {
+      font-family: monospace;
+      background: #00000055;
+      padding: 0.2rem 0.5rem;
+      border-radius: 1rem;
+      cursor: pointer;
+      font-weight: 600;
     }
-    
-    .brand-strip {
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 1.2rem;
+      font-size: 0.65rem;
+      color: #6B7F8F;
+      border-top: 1px solid rgba(0, 255, 200, 0.1);
+      margin-top: 1rem;
+    }
+
+    /* Modal Antutu */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      margin: 1rem 1.5rem;
-      padding: 0.6rem;
-      background: rgba(0,0,0,0.4);
-      border-radius: 2rem;
     }
-    .brand-item { background: rgba(0,255,255,0.08); padding: 0.2rem 0.8rem; border-radius: 2rem; font-size: 0.65rem; }
-    .tech-footer { background: rgba(0,0,0,0.5); padding: 0.8rem; text-align: center; border-top: 1px solid rgba(0,255,255,0.2); margin-top: 1rem; font-size: 0.65rem; }
+    .antutu-modal {
+      width: 95%;
+      height: 90%;
+      background: #0F1219;
+      border-radius: 1.5rem;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #00FFCC;
+    }
+    .antutu-header {
+      background: #0A0F1A;
+      padding: 0.8rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #00FFCC;
+    }
+    .antutu-iframe {
+      width: 100%;
+      flex: 1;
+      border: none;
+      background: white;
+    }
+    .close-antutu {
+      background: #FF4D6D;
+      border: none;
+      border-radius: 2rem;
+      padding: 0.3rem 1rem;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* Mic modal */
+    .mic-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.97);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mic-card {
+      background: #0F1219;
+      border-radius: 2rem;
+      padding: 1.5rem;
+      text-align: center;
+      border: 2px solid #00FFCC;
+      max-width: 90%;
+      width: 380px;
+    }
+    .wave-canvas {
+      width: 100%;
+      height: 100px;
+      background: #000;
+      border-radius: 0.8rem;
+    }
+    .volume-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00FFCC, #00FF99);
+      transition: width 0.05s;
+    }
+    .float-wsp {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #25D366;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      transition: 0.2s;
+    }
+    .float-wsp:hover {
+      transform: scale(1.05);
+    }
     .toast {
       position: fixed;
       bottom: 90px;
@@ -255,9 +416,9 @@
       right: 20px;
       max-width: 400px;
       margin: 0 auto;
-      background: #0ff;
-      color: #05050A;
-      padding: 8px 16px;
+      background: #00FFCC;
+      color: #0A0C12;
+      padding: 10px 18px;
       border-radius: 3rem;
       font-weight: bold;
       text-align: center;
@@ -270,136 +431,94 @@
       70% { opacity: 1; }
       100% { opacity: 0; transform: translateY(-20px); visibility: hidden; }
     }
-    .float-wsp {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #25D366;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 100;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.95);
-      z-index: 2000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-content {
-      background: #0a0f1a;
-      border-radius: 1.5rem;
-      max-width: 90%;
-      width: 380px;
-      border: 2px solid #0ff;
-      padding: 1.2rem;
-      text-align: center;
-    }
-    .color-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin-top: 0.8rem; }
-    .color-btn { padding: 0.8rem; border-radius: 1rem; text-align: center; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
-    .dialer-code { font-size: 1.5rem; font-family: monospace; letter-spacing: 3px; color: #0ff; background: #000; padding: 0.4rem; border-radius: 1rem; margin: 0.5rem 0; }
-    .mic-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #000000ee;
-      z-index: 2000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .mic-card {
-      background: #0a0f1a;
-      border-radius: 2rem;
-      padding: 1.5rem;
-      text-align: center;
-      border: 2px solid #0ff;
-      max-width: 90%;
-      width: 400px;
-    }
-    .waveform-container { background: #050a10; border-radius: 1rem; padding: 1rem; margin: 1rem 0; height: 150px; display: flex; align-items: center; justify-content: center; }
-    canvas.wave-canvas { width: 100%; height: 100px; background: #000; border-radius: 0.5rem; }
-    .volume-meter { width: 100%; height: 6px; background: #1a2a3a; border-radius: 3px; margin: 0.5rem 0; overflow: hidden; }
-    .volume-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #0f6, #0ff); transition: width 0.05s; }
-    .touch-canvas { width: 100%; height: 300px; background: #0a0f1a; border-radius: 1rem; border: 1px solid #0ff; cursor: crosshair; }
   </style>
 </head>
 <body>
-<div class="cyber-bg"></div>
-<canvas id="particleCanvas"></canvas>
-<div class="glass-app">
-  <div class="neon-header">
-    <div class="glitch-text">DR XIAOMI</div>
-    <div style="font-size:0.65rem;">DIAGNÓSTICO PROFESIONAL · CÓDIGOS SECRETOS</div>
+<div class="premium-bg"></div>
+<div class="app-container">
+  <div class="app-header">
+    <div class="logo">DR XIAOMI</div>
+    <div class="subtitle">DIAGNÓSTICO PROFESIONAL · SANTA CRUZ</div>
   </div>
 
-  <div class="info-card">
-    <i class="fas fa-sim-card" style="font-size: 1.8rem; color: #0ff;"></i>
-    <h3 style="margin: 0.3rem 0; font-size:1rem;">IMEI</h3>
-    <button class="btn-imei" id="saberImeiBtn"><i class="fas fa-dialpad"></i> VER MI IMEI</button>
-  </div>
-
-  <div class="section-title"><i class="fas fa-volume-up"></i> PRUEBAS DE AUDIO</div>
-  <div class="test-grid">
-    <div class="test-card" id="speakerTopBtn"><i class="fas fa-volume-up"></i><span>Parlante Superior</span></div>
-    <div class="test-card" id="speakerBottomBtn"><i class="fas fa-music"></i><span>Parlante Inferior</span></div>
-    <div class="test-card" id="micTopBtn"><i class="fas fa-microphone"></i><span>Micrófono Superior</span></div>
-    <div class="test-card" id="micBottomBtn"><i class="fas fa-microphone-alt"></i><span>Micrófono Inferior</span></div>
-  </div>
-
-  <div class="section-title"><i class="fas fa-hand-pointer"></i> DIAGNÓSTICO</div>
-  <div class="test-grid">
-    <div class="test-card" id="touchTestBtn"><i class="fas fa-hand-pointer"></i><span>Prueba Táctil</span></div>
-    <div class="test-card" id="pixelTestBtn"><i class="fas fa-palette"></i><span>Prueba de Pixeles</span></div>
-    <div class="test-card" id="wifiTestBtn"><i class="fas fa-wifi"></i><span>Redes WiFi</span></div>
-    <div class="test-card" id="vibrationTestBtn"><i class="fas fa-mobile-alt"></i><span>Vibración</span></div>
-    <div class="test-card" id="accelTestBtn"><i class="fas fa-arrows-alt"></i><span>Acelerómetro</span></div>
-    <div class="test-card" id="gyroTestBtn"><i class="fas fa-sync-alt"></i><span>Giroscopio</span></div>
-    <div class="test-card" id="batteryTestBtn"><i class="fas fa-battery-full"></i><span>Batería</span></div>
-    <div class="test-card" id="cpuTestBtn"><i class="fas fa-microchip"></i><span>CPU / RAM</span></div>
-  </div>
-
-  <div class="section-title"><i class="fas fa-broom"></i> LIMPIEZA DE PARLANTES</div>
-  <div class="cleaner-section">
-    <div class="wave-animation" id="waveContainer">
-      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+  <!-- Hardware + Clasificación -->
+  <div class="section">
+    <div class="section-title"><i class="fas fa-microchip"></i> ESPECIFICACIONES REALES</div>
+    <div class="glass-card">
+      <div class="info-row"><span class="info-label"><i class="fas fa-tachometer-alt"></i> CPU (núcleos)</span><span class="info-value" id="cpuCores">---</span></div>
+      <div class="info-row"><span class="info-label"><i class="fas fa-memory"></i> RAM total</span><span class="info-value" id="ramTotal">---</span></div>
+      <div class="info-row"><span class="info-label"><i class="fas fa-globe"></i> Navegador</span><span class="info-value" id="browserInfo">---</span></div>
+      <div class="info-row"><span class="info-label"><i class="fas fa-desktop"></i> Plataforma</span><span class="info-value" id="platformInfo">---</span></div>
     </div>
-    <button class="play-btn" id="cleanSoundBtn"><i class="fas fa-play"></i> REPRODUCIR SONIDO DE LIMPIEZA</button>
-    <div class="frequency-note" style="font-size:0.6rem; text-align:center; margin-top:0.5rem;">150Hz → 300Hz · Coloca el teléfono boca abajo</div>
   </div>
 
-  <button class="btn-diagnostic" id="fullDiagnosticBtn"><i class="fas fa-stethoscope"></i> EJECUTAR DIAGNÓSTICO COMPLETO</button>
-
-  <!-- ===== SECCIÓN DE CÓDIGOS SECRETOS MODERNA ===== -->
-  <div class="codes-section">
-    <div class="codes-header">
-      <h3><i class="fas fa-key"></i> CÓDIGOS DE DIAGNÓSTICO POR MARCA</h3>
-      <p>Marca el código en tu teclado de llamadas · Toca para copiar</p>
+  <div class="section">
+    <div class="section-title"><i class="fas fa-chart-simple"></i> CLASIFICACIÓN DEL DISPOSITIVO</div>
+    <div class="glass-card" style="text-align: center;">
+      <div id="gamaBadge" class="gama-badge" style="display: inline-flex;">📱 Analizando...</div>
+      <p style="font-size: 0.7rem; margin-top: 0.6rem;" id="gamaDescripcion">Basado en núcleos de CPU y memoria RAM</p>
     </div>
-    <div class="codes-grid" id="codesGrid"></div>
   </div>
 
-  <div class="brand-strip">
-    <span class="brand-item">XIAOMI</span><span class="brand-item">SAMSUNG</span><span class="brand-item">HUAWEI</span>
-    <span class="brand-item">OPPO</span><span class="brand-item">MOTOROLA</span><span class="brand-item">REALME</span>
-    <span class="brand-item">TECNO</span><span class="brand-item">INFINIX</span><span class="brand-item">IPHONE</span>
+  <!-- Speed Test -->
+  <div class="section">
+    <div class="section-title"><i class="fas fa-globe"></i> VELOCIDAD DE INTERNET</div>
+    <div class="glass-card">
+      <div class="speed-stats">
+        <div><span class="stat-value" id="downloadSpeed">0.00</span><br>Mbps ↓</div>
+        <div><span class="stat-value" id="uploadSpeed">---</span><br>Mbps ↑</div>
+        <div><span class="stat-value" id="pingValue">---</span><br>Ping (ms)</div>
+        <div><span class="stat-value" id="ipValue">---</span><br>IP</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="speedProgress"></div></div>
+      <button class="btn-premium" id="startSpeedTestBtn"><i class="fas fa-tachometer-alt"></i> MEDIR VELOCIDAD</button>
+    </div>
   </div>
-  <div class="tech-footer">
+
+  <!-- Prueba Profesional AnTuTu -->
+  <div class="section">
+    <div class="section-title"><i class="fab fa-android"></i> PRUEBA PROFESIONAL</div>
+    <div class="glass-card">
+      <p style="font-size: 0.75rem; margin-bottom: 0.8rem; text-align: center; color: #8A9BB0;">
+        <i class="fas fa-info-circle"></i> AnTuTu es el estándar mundial para pruebas de rendimiento
+      </p>
+      <button class="btn-premium btn-antutu" id="openAntutuBtn">
+        <i class="fab fa-android"></i> ABRIR ANTUTU HTML5 TEST
+      </button>
+    </div>
+  </div>
+
+  <!-- Pruebas de Audio -->
+  <div class="section">
+    <div class="section-title"><i class="fas fa-volume-up"></i> PRUEBAS DE AUDIO</div>
+    <div class="test-grid">
+      <div class="test-card" id="speakerTopBtn"><i class="fas fa-volume-up"></i><span>Parlante Superior</span></div>
+      <div class="test-card" id="speakerBottomBtn"><i class="fas fa-music"></i><span>Parlante Inferior</span></div>
+      <div class="test-card" id="micTopBtn"><i class="fas fa-microphone"></i><span>Micrófono Superior</span></div>
+      <div class="test-card" id="micBottomBtn"><i class="fas fa-microphone-alt"></i><span>Micrófono Inferior</span></div>
+    </div>
+  </div>
+
+  <!-- Diagnóstico -->
+  <div class="section">
+    <div class="section-title"><i class="fas fa-hand-pointer"></i> DIAGNÓSTICO</div>
+    <div class="test-grid">
+      <div class="test-card" id="vibrationTestBtn"><i class="fas fa-mobile-alt"></i><span>Vibración</span></div>
+      <div class="test-card" id="batteryTestBtn"><i class="fas fa-battery-full"></i><span>Batería</span></div>
+      <div class="test-card" id="accelTestBtn"><i class="fas fa-arrows-alt"></i><span>Acelerómetro</span></div>
+      <div class="test-card" id="gyroTestBtn"><i class="fas fa-sync-alt"></i><span>Giroscopio</span></div>
+    </div>
+  </div>
+
+  <!-- Códigos Secretos -->
+  <div class="section">
+    <div class="section-title"><i class="fas fa-key"></i> CÓDIGOS DE DIAGNÓSTICO</div>
+    <div class="glass-card" style="padding: 0.5rem;">
+      <div class="codes-grid" id="codesGrid"></div>
+    </div>
+  </div>
+
+  <div class="footer">
     <p><i class="fas fa-map-marker-alt"></i> Centro Comercial Cañoto #K 1 · Santa Cruz</p>
     <p>📞 WhatsApp: 75589308 · Lun-Sab 9:00 a 19:30</p>
   </div>
@@ -407,374 +526,286 @@
 <div class="float-wsp" id="wspFloat"><i class="fab fa-whatsapp" style="font-size: 1.8rem; color:white;"></i></div>
 
 <script>
-  // === PARTÍCULAS ===
-  const canvas = document.getElementById('particleCanvas');
-  const ctx = canvas.getContext('2d');
-  let particles = [];
-  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
-  class Particle {
-    constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 2 + 0.5; this.speedX = (Math.random() - 0.5) * 0.5; this.speedY = (Math.random() - 0.5) * 0.5; this.color = `rgba(0, ${150 + Math.random() * 105}, 255, ${Math.random() * 0.5})`; }
-    update() { this.x += this.speedX; if (this.x < 0) this.x = canvas.width; if (this.x > canvas.width) this.x = 0; this.y += this.speedY; if (this.y < 0) this.y = canvas.height; if (this.y > canvas.height) this.y = 0; }
-    draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fillStyle = this.color; ctx.fill(); }
-  }
-  for (let i = 0; i < 80; i++) particles.push(new Particle());
-  function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
-  animate();
-
+  // Toast
   function showToast(msg, isSuccess = true) {
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.style.background = isSuccess ? '#0ff' : '#ff4d6d';
+    toast.style.background = isSuccess ? '#00FFCC' : '#FF4D6D';
+    toast.style.color = '#0A0C12';
     toast.innerText = msg;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 2000);
   }
 
-  // === CÓDIGOS SECRETOS (basado en la imagen) ===
-  const secretCodes = [
-    { brand: "SAMSUNG", code: "*#0*#" },
-    { brand: "SAMSUNG", code: "*#*#88*#*" },
-    { brand: "XIAOMI", code: "*#*#6484#*#" },
-    { brand: "HUAWEI", code: "*#*#2846579#*#" },
-    { brand: "VIVO", code: "*#*#225#*#" },
-    { brand: "OPPO", code: "*#899#" },
-    { brand: "MOTOROLA", code: "*#*#2486#*#" },
-    { brand: "HONOR", code: "*#*#2345#*#" },
-    { brand: "LENOVO", code: "*#*#4636#*#" },
-    { brand: "INFINIX", code: "*#*#49#*#" },
-    { brand: "INFINIX", code: "*#85#" },
-    { brand: "ONE PLUS", code: "*#*#2346579#*#" },
-    { brand: "TECNO", code: "*#*#49#*#" },
-    { brand: "TECNO", code: "*#85#" },
-    { brand: "ALCATEL", code: "*#*#2886#" },
-    { brand: "SONY", code: "*#*#737378423#*#" },
-    { brand: "TECHNO 5G", code: "*#*#85#*#" },
+  // ==================== HARDWARE ====================
+  const cpuCores = navigator.hardwareConcurrency || 'No detectable';
+  let ram = 'No detectable';
+  if (navigator.deviceMemory) ram = `${navigator.deviceMemory} GB`;
+  else if (performance.memory) ram = `${Math.round(performance.memory.jsHeapSizeLimit / (1024*1024*1024))} GB`;
+
+  document.getElementById('cpuCores').innerHTML = cpuCores === 'No detectable' ? 'No detectable' : `${cpuCores} núcleos`;
+  document.getElementById('ramTotal').innerHTML = ram;
+
+  const ua = navigator.userAgent;
+  let browser = 'Desconocido';
+  if (ua.includes('Chrome')) browser = 'Chrome';
+  else if (ua.includes('Firefox')) browser = 'Firefox';
+  else if (ua.includes('Safari')) browser = 'Safari';
+  else if (ua.includes('Edge')) browser = 'Edge';
+  document.getElementById('browserInfo').innerHTML = browser;
+  document.getElementById('platformInfo').innerHTML = navigator.platform || 'Desconocido';
+
+  // Clasificación por hardware real
+  const coresNum = typeof cpuCores === 'number' ? cpuCores : (cpuCores === 'No detectable' ? 0 : parseInt(cpuCores));
+  const ramNum = typeof ram === 'string' ? (parseFloat(ram) || 0) : 0;
+  let gama = '', desc = '', badgeClass = '';
+  if (coresNum >= 8 && ramNum >= 8) { gama = '🏆 GAMA ALTA PREMIUM'; desc = 'Procesador de 8+ núcleos y 8GB+ RAM. Rendimiento superior.'; badgeClass = 'gama-alta'; }
+  else if (coresNum >= 8 && ramNum >= 6) { gama = '✅ GAMA ALTA'; desc = 'Procesador de 8 núcleos y 6GB+ RAM. Excelente rendimiento.'; badgeClass = 'gama-alta'; }
+  else if (coresNum >= 6 && ramNum >= 4) { gama = '📱 GAMA MEDIA'; desc = 'Procesador de 6 núcleos y 4GB RAM. Rendimiento equilibrado.'; badgeClass = 'gama-media'; }
+  else if (coresNum >= 4 && ramNum >= 2) { gama = '⚠️ GAMA BAJA'; desc = 'Procesador de 4 núcleos o menos. Rendimiento básico.'; badgeClass = 'gama-baja'; }
+  else { gama = '❌ GAMA DE ENTRADA'; desc = 'Especificaciones limitadas. Rendimiento para tareas simples.'; badgeClass = 'gama-baja'; }
+  document.getElementById('gamaBadge').innerHTML = gama;
+  document.getElementById('gamaBadge').className = `gama-badge ${badgeClass}`;
+  document.getElementById('gamaDescripcion').innerHTML = desc;
+
+  // ==================== ANTUTU ====================
+  document.getElementById('openAntutuBtn').onclick = () => {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="antutu-modal">
+        <div class="antutu-header">
+          <h3 style="color:#00FFCC;"><i class="fab fa-android"></i> AnTuTu HTML5 Test</h3>
+          <button class="close-antutu">Cerrar</button>
+        </div>
+        <iframe class="antutu-iframe" src="https://www.antutu.com/html5/" title="AnTuTu" allow="fullscreen"></iframe>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('.close-antutu').onclick = () => modal.remove();
+    showToast('🔬 Abriendo AnTuTu HTML5 Test', true);
+  };
+
+  // ==================== SPEED TEST ====================
+  async function runSpeedTest() {
+    const btn = document.getElementById('startSpeedTestBtn');
+    const progressFill = document.getElementById('speedProgress');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MIDIENDO...';
+    progressFill.style.width = '0%';
+    
+    const pingStart = Date.now();
+    try { await fetch('https://www.google.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' }); } catch(e) {}
+    const ping = Date.now() - pingStart;
+    document.getElementById('pingValue').innerHTML = ping;
+    progressFill.style.width = '20%';
+    
+    const dlStart = Date.now();
+    let dlBytes = 0;
+    try {
+      const res = await fetch('https://speed.cloudflare.com/__down?bytes=3000000');
+      const reader = res.body.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        dlBytes += value.length;
+        const elapsed = (Date.now() - dlStart) / 1000;
+        const speed = (dlBytes * 8) / (elapsed * 1024 * 1024);
+        document.getElementById('downloadSpeed').innerHTML = speed.toFixed(2);
+        progressFill.style.width = `${20 + (elapsed / 2) * 60}%`;
+      }
+      const elapsed = (Date.now() - dlStart) / 1000;
+      const finalSpeed = (dlBytes * 8) / (elapsed * 1024 * 1024);
+      document.getElementById('downloadSpeed').innerHTML = finalSpeed.toFixed(2);
+    } catch(e) {}
+    
+    try {
+      const upStart = Date.now();
+      const payload = new Uint8Array(1 * 1024 * 1024);
+      await fetch('https://speed.cloudflare.com/__up', { method: 'POST', body: payload, mode: 'no-cors' });
+      const upElapsed = (Date.now() - upStart) / 1000;
+      const upSpeed = (payload.length * 8) / (upElapsed * 1024 * 1024);
+      document.getElementById('uploadSpeed').innerHTML = upSpeed.toFixed(2);
+    } catch(e) {}
+    
+    try {
+      const ipRes = await fetch('https://api.ipify.org?format=json');
+      const ipData = await ipRes.json();
+      document.getElementById('ipValue').innerHTML = ipData.ip;
+    } catch(e) {}
+    
+    progressFill.style.width = '100%';
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-tachometer-alt"></i> MEDIR VELOCIDAD';
+    showToast('✅ Speed test completado', true);
+    setTimeout(() => { progressFill.style.width = '0%'; }, 2000);
+  }
+  document.getElementById('startSpeedTestBtn').onclick = runSpeedTest;
+  fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{if(d.ip)document.getElementById('ipValue').innerHTML=d.ip;}).catch(()=>{});
+
+  // ==================== CÓDIGOS ====================
+  const codes = [
+    { brand: "SAMSUNG", code: "*#0*#" }, { brand: "XIAOMI", code: "*#*#6484#*#" },
+    { brand: "HUAWEI", code: "*#*#2846579#*#" }, { brand: "OPPO", code: "*#899#" },
+    { brand: "MOTOROLA", code: "*#*#2486#*#" }, { brand: "TECNO", code: "*#*#49#*#" },
     { brand: "IPHONE", code: "*3001#12345#*" }
   ];
-
-  const codesGrid = document.getElementById('codesGrid');
-  secretCodes.forEach(item => {
+  const grid = document.getElementById('codesGrid');
+  codes.forEach(c => {
     const div = document.createElement('div');
     div.className = 'code-item';
-    div.innerHTML = `
-      <span class="brand-name">${item.brand}</span>
-      <span class="code-value" data-code="${item.code}">${item.code}</span>
-    `;
-    codesGrid.appendChild(div);
+    div.innerHTML = `<span>${c.brand}</span><span class="code-value" data-code="${c.code}">${c.code}</span>`;
+    grid.appendChild(div);
   });
-
-  // Función para copiar código al portapapeles
   document.querySelectorAll('.code-value').forEach(el => {
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const code = el.getAttribute('data-code');
-      navigator.clipboard.writeText(code);
-      const originalText = el.innerHTML;
-      el.innerHTML = `${code} <span class="copy-feedback">✓ copiado!</span>`;
-      setTimeout(() => {
-        el.innerHTML = originalText;
-      }, 1500);
-      showToast(`📋 Código ${code} copiado · Pégalo en el marcador`, true);
+    el.addEventListener('click', () => {
+      navigator.clipboard.writeText(el.dataset.code);
+      showToast(`📋 ${el.dataset.code} copiado`, true);
     });
   });
 
-  // === IMEI ===
-  document.getElementById('saberImeiBtn').onclick = () => {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `<div class="modal-content"><i class="fas fa-sim-card" style="font-size:2.5rem; color:#0ff;"></i><h3>Ver IMEI Real</h3><div class="dialer-code">*#06#</div><button id="copyImeiCode" style="background:#0ff; border:none; border-radius:2rem; padding:0.4rem 1rem; margin:0.5rem;">📋 Copiar</button><button class="close-modal" style="background:#ff4d6d; border:none; border-radius:2rem; padding:0.4rem 1rem;">Cerrar</button></div>`;
-    document.body.appendChild(modal);
-    modal.querySelector('#copyImeiCode').onclick = () => { navigator.clipboard.writeText('*#06#'); showToast('📋 Código *#06# copiado', true); };
-    modal.querySelector('.close-modal').onclick = () => modal.remove();
-  };
-
-  // === PRUEBAS DE PARLANTES ===
+  // ==================== PRUEBAS DE AUDIO ====================
   let audioCtx = null;
-  function playTone(frequency, duration) {
+  function playTone(freq, dur) {
     try {
       if (audioCtx) audioCtx.close();
       audioCtx = new AudioContext();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.type = 'sine';
-      osc.frequency.value = frequency;
-      gain.gain.value = 0.35;
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.frequency.value = freq; gain.gain.value = 0.3;
       osc.start();
-      gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-      setTimeout(() => osc.stop(), duration * 1000);
-      return true;
-    } catch(e) { return false; }
+      gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + dur);
+      setTimeout(() => osc.stop(), dur * 1000);
+      showToast(`🔊 Sonido ${freq}Hz · ¿Lo escuchas?`, true);
+    } catch(e) { showToast('❌ Error', false); }
   }
+  document.getElementById('speakerTopBtn').onclick = () => playTone(1800, 1.5);
+  document.getElementById('speakerBottomBtn').onclick = () => playTone(400, 1.8);
 
-  document.getElementById('speakerTopBtn').onclick = () => {
-    playTone(1800, 1.5);
-    showToast('🔊 PARLANTE SUPERIOR · Sonido agudo (1800Hz) · ¿Lo escuchas?', true);
-  };
-  document.getElementById('speakerBottomBtn').onclick = () => {
-    playTone(400, 1.8);
-    showToast('🔊 PARLANTE INFERIOR · Sonido grave (400Hz) · ¿Lo escuchas?', true);
-  };
-
-  // === PRUEBAS DE MICRÓFONO ===
-  let mediaStream = null;
-  let audioContext = null;
-  let sourceNode = null;
-  let analyserNode = null;
-  let animationId = null;
-  let currentMicModal = null;
-
-  function stopMicrophoneTest() {
-    if (animationId) cancelAnimationFrame(animationId);
-    if (sourceNode) sourceNode.disconnect();
-    if (analyserNode) analyserNode.disconnect();
-    if (audioContext) audioContext.close();
-    if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
-    if (currentMicModal) currentMicModal.remove();
-    audioContext = null;
-    mediaStream = null;
+  // ==================== MICRÓFONO ====================
+  let micStream = null, micCtx = null, micAnalyser = null, micAnimation = null, micModal = null;
+  function stopMic() {
+    if (micAnimation) cancelAnimationFrame(micAnimation);
+    if (micAnalyser) micAnalyser.disconnect();
+    if (micCtx) micCtx.close();
+    if (micStream) micStream.getTracks().forEach(t => t.stop());
+    if (micModal) micModal.remove();
   }
-
-  function openMicTest(micName, micPosition) {
-    stopMicrophoneTest();
+  function openMicTest(name, pos) {
+    stopMic();
     const modal = document.createElement('div');
     modal.className = 'mic-modal';
     modal.innerHTML = `
       <div class="mic-card">
-        <h2><i class="fas fa-microphone"></i> Prueba de ${micName}</h2>
-        <p style="font-size:0.7rem; margin:0.5rem 0;">🎤 Habla cerca del ${micPosition} del teléfono</p>
-        <div class="waveform-container">
-          <canvas id="waveCanvas" class="wave-canvas" width="400" height="80"></canvas>
-        </div>
-        <div class="volume-meter"><div class="volume-fill" id="volumeFill"></div></div>
-        <div class="mic-status" id="micStatus"><i class="fas fa-circle" style="color:#ff4d6d;"></i> Esperando permiso...</div>
-        <button id="closeMicTest" style="margin-top:1rem; background:#ff4d6d; border:none; border-radius:2rem; padding:0.5rem 1.5rem; color:white;">CERRAR</button>
+        <h2><i class="fas fa-microphone"></i> ${name}</h2>
+        <p style="font-size:0.7rem;">🎤 Habla cerca del ${pos}</p>
+        <canvas id="waveCanvas" width="400" height="80" class="wave-canvas"></canvas>
+        <div style="height:4px; background:#1A2538; border-radius:2px; margin:0.8rem 0;"><div id="volFill" style="height:100%; width:0%; background:linear-gradient(90deg,#00FFCC,#00FF99); border-radius:2px;"></div></div>
+        <div id="micStatus" style="font-size:0.7rem;"><i class="fas fa-circle" style="color:#FF4D6D;"></i> Esperando permiso...</div>
+        <button id="closeMic" style="margin-top:1rem; background:#FF4D6D; border:none; border-radius:2rem; padding:0.5rem 1rem; color:white; cursor:pointer;">CERRAR</button>
       </div>
     `;
     document.body.appendChild(modal);
-    currentMicModal = modal;
-    const waveCanvas = document.getElementById('waveCanvas');
-    const ctxWave = waveCanvas.getContext('2d');
-    const volumeFill = document.getElementById('volumeFill');
-    const micStatus = document.getElementById('micStatus');
+    micModal = modal;
+    const waveCanvas = modal.querySelector('#waveCanvas');
+    const wctx = waveCanvas.getContext('2d');
+    const volFill = modal.querySelector('#volFill');
+    const statusDiv = modal.querySelector('#micStatus');
     waveCanvas.width = waveCanvas.clientWidth;
     waveCanvas.height = waveCanvas.clientHeight;
-    
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
-        mediaStream = stream;
-        micStatus.innerHTML = '<i class="fas fa-circle" style="color:#0f6;"></i> ✅ Micrófono activo · Habla ahora';
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        analyserNode = audioContext.createAnalyser();
-        analyserNode.fftSize = 256;
-        sourceNode = audioContext.createMediaStreamSource(stream);
-        sourceNode.connect(analyserNode);
-        const bufferLength = analyserNode.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        
-        function drawWaveform() {
-          if (!analyserNode || !waveCanvas.isConnected) return;
-          analyserNode.getByteTimeDomainData(dataArray);
+        micStream = stream;
+        statusDiv.innerHTML = '<i class="fas fa-circle" style="color:#00FFCC;"></i> ✅ Micrófono activo';
+        micCtx = new AudioContext();
+        micAnalyser = micCtx.createAnalyser();
+        micAnalyser.fftSize = 256;
+        const src = micCtx.createMediaStreamSource(stream);
+        src.connect(micAnalyser);
+        const bufLen = micAnalyser.frequencyBinCount;
+        const data = new Uint8Array(bufLen);
+        function draw() {
+          if (!micAnalyser || !waveCanvas.isConnected) return;
+          micAnalyser.getByteTimeDomainData(data);
           let sum = 0;
-          for (let i = 0; i < bufferLength; i++) {
-            const v = (dataArray[i] - 128) / 128;
-            sum += v * v;
-          }
-          const rms = Math.sqrt(sum / bufferLength);
-          const volumePercent = Math.min(100, rms * 200);
-          volumeFill.style.width = `${volumePercent}%`;
-          ctxWave.fillStyle = '#050a10';
-          ctxWave.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
-          ctxWave.beginPath();
-          ctxWave.strokeStyle = '#0ff';
-          ctxWave.lineWidth = 2;
-          const sliceWidth = waveCanvas.width / bufferLength;
+          for (let i = 0; i < bufLen; i++) { const v = (data[i] - 128) / 128; sum += v * v; }
+          const vol = Math.min(100, Math.sqrt(sum / bufLen) * 200);
+          volFill.style.width = `${vol}%`;
+          wctx.fillStyle = '#000';
+          wctx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
+          wctx.beginPath();
+          wctx.strokeStyle = '#00FFCC';
+          wctx.lineWidth = 2;
+          const sw = waveCanvas.width / bufLen;
           let x = 0;
-          for (let i = 0; i < bufferLength; i++) {
-            const v = dataArray[i] / 128;
+          for (let i = 0; i < bufLen; i++) {
+            const v = data[i] / 128;
             const y = (v * waveCanvas.height / 2);
-            if (i === 0) ctxWave.moveTo(x, y);
-            else ctxWave.lineTo(x, y);
-            x += sliceWidth;
+            if (i === 0) wctx.moveTo(x, y);
+            else wctx.lineTo(x, y);
+            x += sw;
           }
-          ctxWave.stroke();
-          animationId = requestAnimationFrame(drawWaveform);
+          wctx.stroke();
+          micAnimation = requestAnimationFrame(draw);
         }
-        audioContext.resume().then(() => drawWaveform());
+        micCtx.resume().then(draw);
       })
       .catch(() => {
-        micStatus.innerHTML = '<i class="fas fa-circle" style="color:#ff4d6d;"></i> ❌ Permiso denegado o sin micrófono';
-        showToast('❌ Necesitas permitir el acceso al micrófono', false);
+        statusDiv.innerHTML = '<i class="fas fa-circle" style="color:#FF4D6D;"></i> ❌ Permiso denegado';
+        showToast('❌ Permiso de micrófono necesario', false);
       });
-    modal.querySelector('#closeMicTest').onclick = () => { stopMicrophoneTest(); modal.remove(); };
+    modal.querySelector('#closeMic').onclick = () => { stopMic(); modal.remove(); };
   }
-
   document.getElementById('micTopBtn').onclick = () => openMicTest('Micrófono Superior', 'parte superior');
   document.getElementById('micBottomBtn').onclick = () => openMicTest('Micrófono Inferior', 'parte inferior');
 
-  // === PRUEBA TÁCTIL ===
-  function openTouchTest() {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-      <div class="modal-content" style="width:90%; max-width:450px;">
-        <h3><i class="fas fa-hand-pointer"></i> Prueba Táctil</h3>
-        <p style="font-size:0.7rem;">Arrastra el dedo por el recuadro</p>
-        <canvas id="touchCanvas" class="touch-canvas" width="400" height="300"></canvas>
-        <button id="clearTouchBtn" style="background:#ff4d6d; border:none; border-radius:1rem; padding:0.4rem 1rem; margin-top:0.5rem;">🗑️ Limpiar</button>
-        <button class="close-modal" style="background:#0ff; border:none; border-radius:1rem; padding:0.4rem 1rem; margin-top:0.5rem;">Cerrar</button>
-      </div>
-    `;
-    document.body.appendChild(modal);
-    const touchCanvas = modal.querySelector('#touchCanvas');
-    const ctxTouch = touchCanvas.getContext('2d');
-    let drawing = false;
-    touchCanvas.width = touchCanvas.clientWidth;
-    touchCanvas.height = touchCanvas.clientHeight;
-    ctxTouch.strokeStyle = '#0ff';
-    ctxTouch.lineWidth = 3;
-    function getCoords(e) {
-      const rect = touchCanvas.getBoundingClientRect();
-      const scaleX = touchCanvas.width / rect.width;
-      const scaleY = touchCanvas.height / rect.height;
-      let cx, cy;
-      if (e.touches) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
-      else { cx = e.clientX; cy = e.clientY; }
-      return { x: (cx - rect.left) * scaleX, y: (cy - rect.top) * scaleY };
-    }
-    function start(e) { e.preventDefault(); drawing = true; const { x, y } = getCoords(e); ctxTouch.beginPath(); ctxTouch.moveTo(x, y); ctxTouch.lineTo(x, y); ctxTouch.stroke(); }
-    function draw(e) { e.preventDefault(); if (!drawing) return; const { x, y } = getCoords(e); ctxTouch.lineTo(x, y); ctxTouch.stroke(); ctxTouch.beginPath(); ctxTouch.moveTo(x, y); }
-    function end() { drawing = false; }
-    touchCanvas.addEventListener('mousedown', start); touchCanvas.addEventListener('mousemove', draw); touchCanvas.addEventListener('mouseup', end);
-    touchCanvas.addEventListener('touchstart', start); touchCanvas.addEventListener('touchmove', draw); touchCanvas.addEventListener('touchend', end);
-    modal.querySelector('#clearTouchBtn').onclick = () => ctxTouch.clearRect(0, 0, touchCanvas.width, touchCanvas.height);
-    modal.querySelector('.close-modal').onclick = () => modal.remove();
-  }
-
-  // === OTRAS PRUEBAS ===
-  function openPixelTest() {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `<div class="modal-content"><h3><i class="fas fa-palette"></i> Prueba de Pixeles</h3><div class="color-grid"><div class="color-btn" style="background:#ff0000;">ROJO</div><div class="color-btn" style="background:#00ff00;">VERDE</div><div class="color-btn" style="background:#0000ff;">AZUL</div><div class="color-btn" style="background:#ffffff;">BLANCO</div><div class="color-btn" style="background:#000000;">NEGRO</div></div><button id="exitColorBtn" style="margin-top:1rem; background:#ff4d6d; border:none; border-radius:1rem; padding:0.5rem;">Salir</button></div>`;
-    document.body.appendChild(modal);
-    const originalBg = document.body.style.background;
-    modal.querySelectorAll('.color-btn').forEach(btn => { btn.onclick = () => { document.body.style.background = btn.style.background; }; });
-    modal.querySelector('#exitColorBtn').onclick = () => { document.body.style.background = originalBg; modal.remove(); };
-  }
-
-  function openWifiTest() {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `<div class="modal-content"><h3><i class="fas fa-wifi"></i> Redes WiFi</h3><div id="wifiList"><div style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Escaneando...</div></div><button class="close-modal" style="margin-top:1rem; background:#ff4d6d; border:none; border-radius:1rem; padding:0.5rem;">Cerrar</button></div>`;
-    document.body.appendChild(modal);
-    setTimeout(() => {
-      const redes = ['MIWIFI_2.4G', 'CLARO_XXXX', 'TIGO_1234', 'FIBERTEL_5G', 'ENTEL_Hogar'];
-      modal.querySelector('#wifiList').innerHTML = redes.map(ssid => `<div style="background:#0ff1; padding:0.5rem; margin:0.3rem 0; border-radius:0.5rem;"><i class="fas fa-wifi"></i> ${ssid} <span style="float:right;">📶 ${Math.floor(40 + Math.random() * 50)}%</span></div>`).join('');
-    }, 800);
-    modal.querySelector('.close-modal').onclick = () => modal.remove();
-  }
-
-  function testVibration() { if (navigator.vibrate) { navigator.vibrate(500); showToast('📳 Vibración activada', true); } else showToast('❌ No soportado', false); }
-  function testAccelerometer() {
-    if (window.DeviceMotionEvent) {
-      const handler = () => { showToast('📊 Acelerómetro OK', true); window.removeEventListener('devicemotion', handler); };
-      window.addEventListener('devicemotion', handler);
-      setTimeout(() => window.removeEventListener('devicemotion', handler), 5000);
-      showToast('🎯 Mueve el teléfono', true);
-    } else showToast('❌ No disponible', false);
-  }
-  function testGyroscope() {
-    if (window.DeviceOrientationEvent) {
-      const handler = () => { showToast('🔄 Giroscopio OK', true); window.removeEventListener('deviceorientation', handler); };
-      window.addEventListener('deviceorientation', handler);
-      setTimeout(() => window.removeEventListener('deviceorientation', handler), 5000);
-      showToast('🔄 Gira el teléfono', true);
-    } else showToast('❌ No disponible', false);
-  }
-  async function testBattery() {
+  // ==================== OTRAS PRUEBAS ====================
+  document.getElementById('vibrationTestBtn').onclick = () => {
+    if (navigator.vibrate) { navigator.vibrate(500); showToast('📳 Vibración activada', true); }
+    else showToast('❌ No soportado', false);
+  };
+  document.getElementById('batteryTestBtn').onclick = async () => {
     if ('getBattery' in navigator) {
       const b = await navigator.getBattery();
       showToast(`🔋 ${Math.round(b.level*100)}% · ${b.charging ? 'Cargando' : 'Descargando'}`, true);
     } else showToast('❌ No accesible', false);
-  }
-  function testCPU() { showToast(`🧠 CPU: ${navigator.hardwareConcurrency || '?'} núcleos · RAM: ${navigator.deviceMemory || '?'}GB`, true); }
-
-  // === LIMPIEZA DE PARLANTES ===
-  let cleaningActive = false;
-  let cleaningOscillator = null;
-  let cleaningAudioCtx = null;
-  let waveInterval = null;
-  const waveBars = document.querySelectorAll('.wave-bar');
-
-  function animateWaves(active) {
-    if (waveInterval) clearInterval(waveInterval);
-    if (active) {
-      waveInterval = setInterval(() => waveBars.forEach(bar => bar.style.height = `${15 + Math.random() * 45}px`), 70);
-    } else waveBars.forEach(bar => bar.style.height = '20px');
-  }
-
-  document.getElementById('cleanSoundBtn').onclick = () => {
-    if (cleaningActive) {
-      if (cleaningOscillator) try { cleaningOscillator.stop(); } catch(e) {}
-      if (cleaningAudioCtx) cleaningAudioCtx.close();
-      cleaningActive = false;
-      animateWaves(false);
-      document.getElementById('cleanSoundBtn').innerHTML = '<i class="fas fa-play"></i> REPRODUCIR SONIDO DE LIMPIEZA';
-      showToast('Limpieza detenida', true);
-    } else {
-      try {
-        if (cleaningAudioCtx) cleaningAudioCtx.close();
-        cleaningAudioCtx = new AudioContext();
-        cleaningOscillator = cleaningAudioCtx.createOscillator();
-        const gain = cleaningAudioCtx.createGain();
-        cleaningOscillator.connect(gain);
-        gain.connect(cleaningAudioCtx.destination);
-        cleaningOscillator.type = 'sine';
-        cleaningOscillator.frequency.setValueAtTime(140, cleaningAudioCtx.currentTime);
-        cleaningOscillator.frequency.exponentialRampToValueAtTime(320, cleaningAudioCtx.currentTime + 7);
-        gain.gain.setValueAtTime(0.3, cleaningAudioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.00001, cleaningAudioCtx.currentTime + 8);
-        cleaningOscillator.start();
-        cleaningActive = true;
-        animateWaves(true);
-        document.getElementById('cleanSoundBtn').innerHTML = '<i class="fas fa-stop"></i> DETENER';
-        showToast('🔊 Limpieza activa · Coloca el teléfono boca abajo', true);
-        setTimeout(() => {
-          if (cleaningActive) {
-            cleaningActive = false;
-            animateWaves(false);
-            document.getElementById('cleanSoundBtn').innerHTML = '<i class="fas fa-play"></i> REPRODUCIR SONIDO DE LIMPIEZA';
-            showToast('✅ Ciclo de limpieza completado', true);
-          }
-        }, 8000);
-      } catch(e) { showToast('⚠️ Error de audio', false); }
-    }
   };
-
-  // === EVENTOS ===
-  document.getElementById('touchTestBtn').onclick = openTouchTest;
-  document.getElementById('pixelTestBtn').onclick = openPixelTest;
-  document.getElementById('wifiTestBtn').onclick = openWifiTest;
-  document.getElementById('vibrationTestBtn').onclick = testVibration;
-  document.getElementById('accelTestBtn').onclick = testAccelerometer;
-  document.getElementById('gyroTestBtn').onclick = testGyroscope;
-  document.getElementById('batteryTestBtn').onclick = testBattery;
-  document.getElementById('cpuTestBtn').onclick = testCPU;
-  document.getElementById('fullDiagnosticBtn').onclick = async () => {
-    showToast('🔬 Diagnóstico completo...', true);
-    playTone(1000, 1); await new Promise(r => setTimeout(r, 1500));
-    testVibration(); await new Promise(r => setTimeout(r, 1000));
-    testAccelerometer(); await new Promise(r => setTimeout(r, 3000));
-    testGyroscope(); await new Promise(r => setTimeout(r, 3000));
-    await testBattery(); testCPU();
-    showToast('✅ Diagnóstico completado', true);
+  document.getElementById('accelTestBtn').onclick = () => {
+    if (window.DeviceMotionEvent) {
+      showToast('🎯 Mueve el teléfono para probar', true);
+      const handler = (e) => {
+        const acc = e.acceleration;
+        if (acc && (acc.x !== null)) {
+          showToast(`📊 Acelerómetro detectado`, true);
+          window.removeEventListener('devicemotion', handler);
+        }
+      };
+      window.addEventListener('devicemotion', handler);
+      setTimeout(() => window.removeEventListener('devicemotion', handler), 5000);
+    } else showToast('❌ No disponible', false);
+  };
+  document.getElementById('gyroTestBtn').onclick = () => {
+    if (window.DeviceOrientationEvent) {
+      showToast('🔄 Gira el teléfono para probar', true);
+      const handler = (e) => {
+        if (e.beta !== null) {
+          showToast(`🔄 Giroscopio detectado`, true);
+          window.removeEventListener('deviceorientation', handler);
+        }
+      };
+      window.addEventListener('deviceorientation', handler);
+      setTimeout(() => window.removeEventListener('deviceorientation', handler), 5000);
+    } else showToast('❌ No disponible', false);
   };
 
   const whatsapp = "59175589308";
-  document.getElementById('wspFloat').onclick = () => window.open(`https://wa.me/${whatsapp}?text=Hola%20DR%20XIAOMI%2C%20necesito%20ayuda%20con%20mi%20teléfono`, '_blank');
+  document.getElementById('wspFloat').onclick = () => window.open(`https://wa.me/${whatsapp}?text=Hola%20DR%20XIAOMI%2C%20necesito%20ayuda`, '_blank');
+  
+  // Animación de entrada para secciones
+  document.querySelectorAll('.section').forEach((el, i) => {
+    el.style.animationDelay = `${i * 0.05}s`;
+  });
 </script>
 </body>
 </html>
