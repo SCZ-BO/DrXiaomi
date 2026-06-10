@@ -307,45 +307,44 @@
       margin-top: 1rem;
     }
 
-    /* Modal Antutu */
+    /* Modal overlay */
     .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.95);
+      background: rgba(0, 0, 0, 0.96);
       backdrop-filter: blur(8px);
       z-index: 2000;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .antutu-modal {
-      width: 95%;
-      height: 90%;
+    .modal-content {
+      max-width: 90%;
+      width: 500px;
       background: #0F1219;
       border-radius: 1.5rem;
+      border: 1px solid #00FFCC;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      border: 1px solid #00FFCC;
     }
-    .antutu-header {
+    .modal-header {
       background: #0A0F1A;
-      padding: 0.8rem 1rem;
+      padding: 1rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid #00FFCC;
     }
-    .antutu-iframe {
-      width: 100%;
-      flex: 1;
-      border: none;
-      background: white;
+    .modal-body {
+      padding: 1rem;
+      max-height: 70vh;
+      overflow-y: auto;
     }
-    .close-antutu {
+    .close-modal {
       background: #FF4D6D;
       border: none;
       border-radius: 2rem;
@@ -355,36 +354,93 @@
       font-weight: 600;
     }
 
-    /* Mic modal */
-    .mic-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
+    /* Limpiador de parlantes interno */
+    .cleaner-card {
+      background: rgba(18, 25, 40, 0.9);
+      border-radius: 1.2rem;
+      padding: 1rem;
+    }
+    .warning-box {
+      background: rgba(255, 77, 109, 0.15);
+      border-left: 4px solid #FF4D6D;
+      padding: 0.8rem;
+      border-radius: 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.75rem;
+    }
+    .mode-selector {
+      display: flex;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .mode-btn {
+      flex: 1;
+      background: rgba(0, 255, 200, 0.1);
+      border: 1px solid #00FFCC;
+      border-radius: 3rem;
+      padding: 0.6rem;
+      font-weight: 600;
+      color: #00FFCC;
+      cursor: pointer;
+      text-align: center;
+      transition: 0.2s;
+    }
+    .mode-btn.active {
+      background: #00FFCC;
+      color: #0A0C12;
+    }
+    .slider {
       width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.97);
-      backdrop-filter: blur(8px);
-      z-index: 2000;
+      height: 4px;
+      background: #1A2538;
+      border-radius: 2px;
+      -webkit-appearance: none;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #00FFCC;
+      cursor: pointer;
+    }
+    .waveform-select {
+      width: 100%;
+      padding: 0.6rem;
+      background: #1A2538;
+      border: 1px solid #00FFCC40;
+      border-radius: 1rem;
+      color: white;
+      font-family: monospace;
+    }
+    .btn {
+      background: linear-gradient(135deg, #00FFCC, #0099FF);
+      border: none;
+      border-radius: 3rem;
+      padding: 0.8rem;
+      font-weight: 700;
+      color: #0A0C12;
+      width: 100%;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      transition: 0.2s;
     }
-    .mic-card {
-      background: #0F1219;
-      border-radius: 2rem;
-      padding: 1.5rem;
-      text-align: center;
-      border: 2px solid #00FFCC;
-      max-width: 90%;
-      width: 380px;
+    .btn-stop {
+      background: linear-gradient(135deg, #FF4D6D, #FF8C42);
+      color: white;
     }
-    .wave-canvas {
-      width: 100%;
-      height: 100px;
-      background: #000;
-      border-radius: 0.8rem;
+    .meter-bar {
+      background: #1A2538;
+      border-radius: 1rem;
+      height: 8px;
+      margin: 0.8rem 0;
+      overflow: hidden;
     }
-    .volume-fill {
+    .meter-fill {
       height: 100%;
       width: 0%;
       background: linear-gradient(90deg, #00FFCC, #00FF99);
@@ -475,6 +531,19 @@
     </div>
   </div>
 
+  <!-- LIMPIEZA DE PARLANTES (POPUP CON LIMPIADOR INTEGRADO) -->
+  <div class="section">
+    <div class="section-title"><i class="fas fa-broom"></i> LIMPIEZA DE PARLANTES</div>
+    <div class="glass-card">
+      <p style="font-size: 0.75rem; margin-bottom: 0.8rem; text-align: center; color: #8A9BB0;">
+        <i class="fas fa-info-circle"></i> Herramienta profesional para expulsar agua, polvo y suciedad del altavoz
+      </p>
+      <button class="btn-premium" id="openSpeakerCleanerBtn">
+        <i class="fas fa-volume-up"></i> ABRIR LIMPIADOR DE PARLANTES
+      </button>
+    </div>
+  </div>
+
   <!-- Prueba Profesional AnTuTu -->
   <div class="section">
     <div class="section-title"><i class="fab fa-android"></i> PRUEBA PROFESIONAL</div>
@@ -537,6 +606,224 @@
     setTimeout(() => toast.remove(), 2000);
   }
 
+  // ==================== LIMPIADOR DE PARLANTES INTEGRADO ====================
+  function openSpeakerCleaner() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 style="color:#00FFCC;"><i class="fas fa-broom"></i> Limpiador de Parlantes</h3>
+          <button class="close-modal">Cerrar</button>
+        </div>
+        <div class="modal-body">
+          <div class="cleaner-card">
+            <div class="warning-box">
+              <i class="fas fa-exclamation-triangle"></i> <strong>Instrucciones:</strong><br>
+              1. Sube el VOLUMEN al MÁXIMO<br>
+              2. Coloca el teléfono BOCA ABAJO sobre una superficie plana<br>
+              3. Selecciona modo manual o automático<br>
+              4. El sonido hará vibrar la membrana para expulsar partículas
+            </div>
+
+            <div class="mode-selector">
+              <div class="mode-btn active" data-mode="manual">🔧 Modo Manual</div>
+              <div class="mode-btn" data-mode="auto">🎵 Modo Automático</div>
+            </div>
+
+            <div id="manualPanel">
+              <div class="control-group">
+                <label>🎵 Frecuencia (Hz): <span id="freqValue">100</span> Hz</label>
+                <input type="range" id="freqSlider" class="slider" min="20" max="200" value="100" step="1">
+              </div>
+              <div class="control-group">
+                <label>📊 Forma de onda:</label>
+                <select id="waveformSelect" class="waveform-select">
+                  <option value="sine">Sinusoidal (Suave)</option>
+                  <option value="square">Cuadrada (Intensa)</option>
+                  <option value="triangle">Triangular (Media)</option>
+                </select>
+              </div>
+              <button id="startManualBtn" class="btn"><i class="fas fa-play"></i> Iniciar Limpieza Manual</button>
+            </div>
+
+            <div id="autoPanel" style="display: none;">
+              <div class="control-group">
+                <label>🎵 Sonidos de limpieza predefinidos</label>
+                <p style="font-size: 0.7rem; margin-bottom: 0.5rem;">Reproducirá una secuencia de frecuencias optimizadas para expulsar polvo y agua.</p>
+              </div>
+              <button id="startAutoBtn" class="btn"><i class="fas fa-play"></i> Iniciar Limpieza Automática</button>
+            </div>
+
+            <div class="meter-bar">
+              <div class="meter-fill" id="meterFill"></div>
+            </div>
+            <div class="status-text" id="statusText" style="font-size:0.7rem; text-align:center; margin-top:0.5rem;">Listo · Presiona iniciar</div>
+
+            <button id="stopCleanerBtn" class="btn btn-stop"><i class="fas fa-stop"></i> Detener Sonido</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Inicializar limpiador dentro del modal
+    let audioCtx = null;
+    let oscillator = null;
+    let gainNode = null;
+    let isPlaying = false;
+    let autoInterval = null;
+    let meterInterval = null;
+    let currentAutoIndex = 0;
+
+    const autoFrequencies = [30, 50, 70, 90, 110, 130, 150, 170, 190, 210, 230, 250, 270, 290, 310, 330, 350, 370, 390, 410, 430, 450, 470, 490, 510, 530, 550, 570, 590, 610, 630, 650, 670, 690, 710, 730, 750, 770, 790, 810, 830, 850, 870, 890, 910, 930, 950, 970, 990, 1010, 1030, 1050, 1070, 1090, 1110, 1130, 1150, 1170, 1190, 1210, 1230, 1250, 1270, 1290, 1310, 1330, 1350, 1370, 1390, 1410, 1430, 1450, 1470, 1490, 1510, 1530, 1550, 1570, 1590, 1610, 1630, 1650, 1670, 1690, 1710, 1730, 1750, 1770, 1790, 1810, 1830, 1850, 1870, 1890, 1910, 1930, 1950, 1970, 1990, 2000];
+
+    const manualPanelDiv = modal.querySelector('#manualPanel');
+    const autoPanelDiv = modal.querySelector('#autoPanel');
+    const modeBtns = modal.querySelectorAll('.mode-btn');
+    const freqSliderElem = modal.querySelector('#freqSlider');
+    const freqValueSpan = modal.querySelector('#freqValue');
+    const waveformSelectElem = modal.querySelector('#waveformSelect');
+    const startManualBtnElem = modal.querySelector('#startManualBtn');
+    const startAutoBtnElem = modal.querySelector('#startAutoBtn');
+    const stopCleanerBtnElem = modal.querySelector('#stopCleanerBtn');
+    const meterFillElem = modal.querySelector('#meterFill');
+    const statusTextElem = modal.querySelector('#statusText');
+
+    if (freqSliderElem) {
+      freqSliderElem.addEventListener('input', () => {
+        freqValueSpan.textContent = freqSliderElem.value;
+      });
+    }
+
+    function stopSound() {
+      if (autoInterval) clearInterval(autoInterval);
+      if (meterInterval) clearInterval(meterInterval);
+      if (oscillator) {
+        try { oscillator.stop(); } catch(e) {}
+        oscillator = null;
+      }
+      if (audioCtx) {
+        audioCtx.close().catch(e => {});
+        audioCtx = null;
+      }
+      isPlaying = false;
+      if (meterFillElem) meterFillElem.style.width = '0%';
+      if (statusTextElem) statusTextElem.textContent = 'Detenido';
+    }
+
+    function startTone(frequency, waveform, duration = null) {
+      try {
+        if (oscillator) try { oscillator.stop(); } catch(e) {}
+        if (audioCtx) audioCtx.close().catch(e => {});
+        
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        oscillator = audioCtx.createOscillator();
+        gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.type = waveform;
+        oscillator.frequency.value = frequency;
+        gainNode.gain.value = 0.4;
+        oscillator.start();
+        isPlaying = true;
+        
+        if (meterInterval) clearInterval(meterInterval);
+        meterInterval = setInterval(() => {
+          if (!isPlaying) {
+            if (meterFillElem) meterFillElem.style.width = '0%';
+            return;
+          }
+          let intensity = 0;
+          if (frequency < 50) intensity = 0.7 + Math.random() * 0.3;
+          else if (frequency < 200) intensity = 0.5 + Math.random() * 0.4;
+          else intensity = 0.3 + Math.random() * 0.5;
+          if (meterFillElem) meterFillElem.style.width = `${Math.min(100, intensity * 100)}%`;
+        }, 100);
+        
+        if (statusTextElem) statusTextElem.textContent = `🔊 Limpiando con ${frequency} Hz`;
+        
+        if (duration) {
+          setTimeout(() => { if (isPlaying) stopSound(); }, duration * 1000);
+        }
+      } catch(error) {
+        if (statusTextElem) statusTextElem.textContent = '❌ Error al generar sonido';
+      }
+    }
+
+    function startAutoCleaning() {
+      if (autoInterval) clearInterval(autoInterval);
+      currentAutoIndex = 0;
+      if (statusTextElem) statusTextElem.textContent = '🎵 Modo Automático activo';
+      
+      function playNextFrequency() {
+        if (currentAutoIndex >= autoFrequencies.length) {
+          if (statusTextElem) statusTextElem.textContent = '✅ Ciclo completado';
+          stopSound();
+          return;
+        }
+        startTone(autoFrequencies[currentAutoIndex], 'square', 0.5);
+        currentAutoIndex++;
+      }
+      
+      playNextFrequency();
+      autoInterval = setInterval(playNextFrequency, 600);
+    }
+
+    // Modo manual
+    if (startManualBtnElem) {
+      startManualBtnElem.addEventListener('click', () => {
+        if (autoInterval) clearInterval(autoInterval);
+        const freq = parseInt(freqSliderElem.value);
+        const waveform = waveformSelectElem.value;
+        startTone(freq, waveform);
+      });
+    }
+
+    // Modo automático
+    if (startAutoBtnElem) {
+      startAutoBtnElem.addEventListener('click', () => {
+        stopSound();
+        startAutoCleaning();
+      });
+    }
+
+    // Botón detener
+    if (stopCleanerBtnElem) {
+      stopCleanerBtnElem.addEventListener('click', () => {
+        stopSound();
+        if (statusTextElem) statusTextElem.textContent = 'Limpieza detenida';
+      });
+    }
+
+    // Cambiar modo
+    modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const mode = btn.getAttribute('data-mode');
+        if (mode === 'manual') {
+          manualPanelDiv.style.display = 'block';
+          autoPanelDiv.style.display = 'none';
+          stopSound();
+        } else {
+          manualPanelDiv.style.display = 'none';
+          autoPanelDiv.style.display = 'block';
+          stopSound();
+        }
+      });
+    });
+
+    // Cerrar modal
+    const closeBtn = modal.querySelector('.close-modal');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        stopSound();
+        modal.remove();
+      });
+    }
+  }
+
   // ==================== HARDWARE ====================
   const cpuCores = navigator.hardwareConcurrency || 'No detectable';
   let ram = 'No detectable';
@@ -573,16 +860,16 @@
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.innerHTML = `
-      <div class="antutu-modal">
-        <div class="antutu-header">
+      <div class="modal-content">
+        <div class="modal-header">
           <h3 style="color:#00FFCC;"><i class="fab fa-android"></i> AnTuTu HTML5 Test</h3>
-          <button class="close-antutu">Cerrar</button>
+          <button class="close-modal">Cerrar</button>
         </div>
-        <iframe class="antutu-iframe" src="https://www.antutu.com/html5/" title="AnTuTu" allow="fullscreen"></iframe>
+        <iframe src="https://www.antutu.com/html5/" style="width:100%; height:500px; border:none; background:white;"></iframe>
       </div>
     `;
     document.body.appendChild(modal);
-    modal.querySelector('.close-antutu').onclick = () => modal.remove();
+    modal.querySelector('.close-modal').onclick = () => modal.remove();
     showToast('🔬 Abriendo AnTuTu HTML5 Test', true);
   };
 
@@ -695,15 +982,19 @@
   function openMicTest(name, pos) {
     stopMic();
     const modal = document.createElement('div');
-    modal.className = 'mic-modal';
+    modal.className = 'modal-overlay';
     modal.innerHTML = `
-      <div class="mic-card">
-        <h2><i class="fas fa-microphone"></i> ${name}</h2>
-        <p style="font-size:0.7rem;">🎤 Habla cerca del ${pos}</p>
-        <canvas id="waveCanvas" width="400" height="80" class="wave-canvas"></canvas>
-        <div style="height:4px; background:#1A2538; border-radius:2px; margin:0.8rem 0;"><div id="volFill" style="height:100%; width:0%; background:linear-gradient(90deg,#00FFCC,#00FF99); border-radius:2px;"></div></div>
-        <div id="micStatus" style="font-size:0.7rem;"><i class="fas fa-circle" style="color:#FF4D6D;"></i> Esperando permiso...</div>
-        <button id="closeMic" style="margin-top:1rem; background:#FF4D6D; border:none; border-radius:2rem; padding:0.5rem 1rem; color:white; cursor:pointer;">CERRAR</button>
+      <div class="modal-content" style="max-width:380px;">
+        <div class="modal-header">
+          <h3 style="color:#00FFCC;"><i class="fas fa-microphone"></i> ${name}</h3>
+          <button class="close-modal">Cerrar</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:0.7rem; margin-bottom:0.5rem;">🎤 Habla cerca del ${pos}</p>
+          <canvas id="waveCanvas" width="400" height="80" style="width:100%; height:80px; background:#000; border-radius:0.8rem;"></canvas>
+          <div style="height:4px; background:#1A2538; border-radius:2px; margin:0.8rem 0;"><div id="volFill" style="height:100%; width:0%; background:linear-gradient(90deg,#00FFCC,#00FF99); border-radius:2px;"></div></div>
+          <div id="micStatus" style="font-size:0.7rem;"><i class="fas fa-circle" style="color:#FF4D6D;"></i> Esperando permiso...</div>
+        </div>
       </div>
     `;
     document.body.appendChild(modal);
@@ -717,7 +1008,7 @@
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
         micStream = stream;
-        statusDiv.innerHTML = '<i class="fas fa-circle" style="color:#00FFCC;"></i> ✅ Micrófono activo';
+        statusDiv.innerHTML = '<i class="fas fa-circle" style="color:#00FFCC;"></i> ✅ Micrófono activo · Habla ahora';
         micCtx = new AudioContext();
         micAnalyser = micCtx.createAnalyser();
         micAnalyser.fftSize = 256;
@@ -726,7 +1017,7 @@
         const bufLen = micAnalyser.frequencyBinCount;
         const data = new Uint8Array(bufLen);
         function draw() {
-          if (!micAnalyser || !waveCanvas.isConnected) return;
+          if (!micAnalyser) return;
           micAnalyser.getByteTimeDomainData(data);
           let sum = 0;
           for (let i = 0; i < bufLen; i++) { const v = (data[i] - 128) / 128; sum += v * v; }
@@ -755,7 +1046,7 @@
         statusDiv.innerHTML = '<i class="fas fa-circle" style="color:#FF4D6D;"></i> ❌ Permiso denegado';
         showToast('❌ Permiso de micrófono necesario', false);
       });
-    modal.querySelector('#closeMic').onclick = () => { stopMic(); modal.remove(); };
+    modal.querySelector('.close-modal').onclick = () => { stopMic(); modal.remove(); };
   }
   document.getElementById('micTopBtn').onclick = () => openMicTest('Micrófono Superior', 'parte superior');
   document.getElementById('micBottomBtn').onclick = () => openMicTest('Micrófono Inferior', 'parte inferior');
@@ -798,6 +1089,9 @@
       setTimeout(() => window.removeEventListener('deviceorientation', handler), 5000);
     } else showToast('❌ No disponible', false);
   };
+
+  // Abrir limpiador de parlantes
+  document.getElementById('openSpeakerCleanerBtn').onclick = openSpeakerCleaner;
 
   const whatsapp = "59175589308";
   document.getElementById('wspFloat').onclick = () => window.open(`https://wa.me/${whatsapp}?text=Hola%20DR%20XIAOMI%2C%20necesito%20ayuda`, '_blank');
