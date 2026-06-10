@@ -2,1306 +2,829 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#FF6900">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="Catálogo de pantallas y repuestos - Precios actualizados">
-  <title>DR. XIAOMI | Pantallas y Repuestos</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>DR XIAOMI · Prueba Táctil Profesional | Drag Test + Grid</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    :root {
-      --xiaomi-orange: #FF6900;
-      --xiaomi-orange-dark: #E55A00;
-      --xiaomi-orange-soft: #FF8A3C;
-      --xiaomi-orange-glow: rgba(255, 105, 0, 0.15);
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
-      --transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1);
-    }
-
-    [data-theme="light"] {
-      --bg-primary: #F5F5F7;
-      --bg-secondary: #FFFFFF;
-      --bg-card: #FFFFFF;
-      --text-primary: #1D1D1F;
-      --text-secondary: #6E6E73;
-      --text-tertiary: #8E8E93;
-      --border: #E5E5EA;
-      --card-border: #F0F0F3;
-      --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-      --separator: #FF6900;
-      --suggestion-bg: #FFFFFF;
-      --suggestion-hover: #F5F5F7;
-    }
-
-    [data-theme="dark"] {
-      --bg-primary: #0A0A0C;
-      --bg-secondary: #1C1C1E;
-      --bg-card: #1C1C1E;
-      --text-primary: #F5F5F7;
-      --text-secondary: #A1A1A6;
-      --text-tertiary: #6E6E73;
-      --border: #2C2C2E;
-      --card-border: #2C2C2E;
-      --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      --separator: #FF6900;
-      --suggestion-bg: #1C1C1E;
-      --suggestion-hover: #2C2C2E;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      min-height: 100vh;
+      font-family: 'Space Grotesk', sans-serif;
+      background: #05050A;
+      color: #E0E0FF;
       overflow-x: hidden;
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      transition: background 0.35s ease;
-      -webkit-font-smoothing: antialiased;
     }
-
-    .app {
-      max-width: 100%;
-      height: 100%;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      background: var(--bg-primary);
-    }
-
-    .header {
-      background: var(--bg-primary);
-      border-bottom: 1px solid transparent;
-      padding: 14px 18px 12px;
-      flex-shrink: 0;
-      position: relative;
-      z-index: 50;
-    }
-
-    .header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .logo-icon {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--xiaomi-orange), var(--xiaomi-orange-dark));
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      font-weight: 700;
-      color: white;
-      box-shadow: 0 2px 8px var(--xiaomi-orange-glow);
-    }
-
-    .logo h1 {
-      font-size: 19px;
-      font-weight: 700;
-      letter-spacing: -0.4px;
-      color: var(--text-primary);
-    }
-
-    .logo span {
-      font-weight: 500;
-      color: var(--text-secondary);
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 4px;
-    }
-
-    .icon-btn {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 30px;
-      padding: 8px 10px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      font-size: 15px;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-    }
-
-    .icon-btn:active {
-      transform: scale(0.92);
-      color: var(--xiaomi-orange);
-      border-color: var(--xiaomi-orange);
-    }
-
-    .search-wrapper {
-      position: relative;
-    }
-
-    .search-container {
-      position: relative;
-    }
-
-    .search-input {
-      width: 100%;
-      padding: 13px 86px 13px 18px;
-      background: var(--bg-secondary);
-      border: 2px solid var(--border);
-      border-radius: 30px;
-      color: var(--text-primary);
-      font-size: 15px;
-      font-weight: 500;
-      transition: var(--transition);
-      box-shadow: var(--shadow-sm);
-      letter-spacing: -0.2px;
-    }
-
-    .search-input:focus {
-      outline: none;
-      border-color: var(--xiaomi-orange);
-      box-shadow: 0 0 0 4px var(--xiaomi-orange-glow);
-    }
-
-    .search-input::placeholder {
-      color: var(--text-tertiary);
-      font-weight: 400;
-    }
-
-    .search-actions {
-      position: absolute;
-      right: 6px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      gap: 2px;
-    }
-
-    .search-actions button {
-      background: var(--bg-primary);
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      font-size: 14px;
-      padding: 6px 10px;
-      border-radius: 20px;
-      transition: var(--transition);
-    }
-
-    .suggestions-panel {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      margin-top: 8px;
-      background: var(--suggestion-bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-      max-height: 280px;
-      overflow-y: auto;
-      display: none;
-      z-index: 60;
-    }
-
-    .suggestions-panel.active {
-      display: block;
-    }
-
-    .suggestion-header {
-      padding: 10px 18px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-tertiary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .suggestion-item {
-      padding: 12px 18px;
-      cursor: pointer;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: var(--transition);
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-primary);
-    }
-
-    .suggestion-item:last-child {
-      border-bottom: none;
-    }
-
-    .suggestion-item:active,
-    .suggestion-item.active {
-      background: var(--suggestion-hover);
-      color: var(--xiaomi-orange);
-    }
-
-    .suggestion-item i {
-      color: var(--text-tertiary);
-      font-size: 12px;
-      width: 16px;
-    }
-
-    .suggestion-highlight {
-      color: var(--xiaomi-orange);
-      font-weight: 700;
-    }
-
-    .quick-filters {
-      padding: 12px 18px;
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      background: var(--bg-primary);
-      border-bottom: 1px solid var(--border);
-    }
-    .quick-filters::-webkit-scrollbar { display: none; }
-
-    .filter-chip {
-      padding: 8px 20px;
-      border-radius: 30px;
-      font-size: 13px;
-      font-weight: 600;
-      background: var(--bg-secondary);
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: var(--transition);
-    }
-
-    .filter-chip.active {
-      background: var(--xiaomi-orange);
-      color: white;
-      border-color: var(--xiaomi-orange);
-    }
-
-    .main-content {
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .cards-view {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      padding: 18px;
-      padding-bottom: 80px;
-    }
-
-    .product-card {
-      background: var(--bg-card);
-      border-radius: 24px;
-      padding: 18px 20px;
-      border: 1px solid var(--card-border);
-      transition: var(--transition);
-      position: relative;
-      box-shadow: var(--card-shadow);
-      overflow: hidden;
-    }
-
-    .product-card::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 14px;
-      bottom: 14px;
-      width: 4px;
-      background: linear-gradient(180deg, var(--xiaomi-orange), var(--xiaomi-orange-soft));
-      border-radius: 4px;
-    }
-
-    .product-card:active {
-      transform: scale(0.985);
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 14px;
-      padding-left: 10px;
-    }
-
-    .card-brand {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--xiaomi-orange);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-
-    .card-model {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: -0.4px;
-    }
-
-    .card-specs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 14px 0;
-      padding-left: 10px;
-    }
-
-    .card-type {
-      padding: 6px 14px;
-      border-radius: 30px;
-      font-size: 11px;
-      font-weight: 600;
-      background: var(--bg-primary);
-      color: var(--text-secondary);
-    }
-
-    .card-type.oled {
-      background: rgba(255, 105, 0, 0.12);
-      color: var(--xiaomi-orange-dark);
-    }
-
-    .supplier-badge, .price-badge {
-      padding: 6px 14px;
-      border-radius: 30px;
-      font-size: 11px;
-      font-weight: 500;
-      background: var(--bg-primary);
-      color: var(--text-secondary);
-    }
-
-    .card-price-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-      padding-left: 10px;
-    }
-
-    .card-price {
-      font-size: 28px;
-      font-weight: 800;
-      color: var(--text-primary);
-      cursor: pointer;
-      transition: var(--transition);
-      letter-spacing: -0.8px;
-      padding: 4px 12px;
-      border-radius: 14px;
-    }
-
-    .card-price:active {
-      color: var(--xiaomi-orange);
-      background: var(--xiaomi-orange-glow);
-    }
-
-    .card-actions-group {
-      display: flex;
-      gap: 10px;
-    }
-
-    .image-btn, .whatsapp-btn {
-      border: none;
-      padding: 9px 18px;
-      border-radius: 40px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .image-btn:active, .whatsapp-btn:active {
-      transform: scale(0.93);
-    }
-
-    .image-btn {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-    }
-
-    .whatsapp-btn {
-      background: #25D366;
-      color: white;
-    }
-
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--bg-primary);
-      border-top: 1px solid var(--border);
-      display: flex;
-      padding: 8px 24px 16px;
-      gap: 12px;
-      z-index: 100;
-    }
-
-    .nav-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 8px 10px;
-      border: none;
-      background: transparent;
-      color: var(--text-tertiary);
-      border-radius: 16px;
-      cursor: pointer;
-      font-size: 10px;
-      font-weight: 600;
-      transition: var(--transition);
-    }
-
-    .nav-item.active {
-      color: var(--xiaomi-orange);
-      background: var(--xiaomi-orange-glow);
-    }
-
-    .nav-item i {
-      font-size: 20px;
-    }
-
-    .modal {
-      display: none;
+    #particleCanvas {
       position: fixed;
       top: 0;
       left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.8);
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.3;
+    }
+    .cyber-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 20% 30%, #0a0a1a, #020205);
+      z-index: -1;
+    }
+    .glass-app {
+      max-width: 600px;
+      margin: 0 auto;
+      background: rgba(8, 12, 25, 0.92);
       backdrop-filter: blur(12px);
-      z-index: 200;
+      min-height: 100vh;
+      position: relative;
+      z-index: 10;
+      border-left: 1px solid rgba(0, 255, 255, 0.2);
+      border-right: 1px solid rgba(0, 255, 255, 0.2);
+      padding-bottom: 2rem;
+    }
+    .neon-header { padding: 2rem 1.5rem 1rem; text-align: center; }
+    .glitch-text {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, #0ff, #ff4d6d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 1.2rem 1.5rem 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #0ff;
+      border-left: 3px solid #0ff;
+      padding-left: 0.8rem;
+    }
+    .info-card {
+      background: rgba(15, 25, 45, 0.7);
+      backdrop-filter: blur(8px);
+      border-radius: 1.2rem;
+      padding: 1rem;
+      margin: 0 1.5rem 1rem;
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      text-align: center;
+    }
+    .btn-imei {
+      background: linear-gradient(95deg, #0ff, #ff4d6d);
+      border: none;
+      border-radius: 3rem;
+      padding: 0.8rem 1.2rem;
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: #05050A;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.8rem;
+      margin: 0 1.5rem 1rem;
+    }
+    .test-card {
+      background: rgba(15, 25, 45, 0.7);
+      backdrop-filter: blur(8px);
+      border-radius: 1.2rem;
+      padding: 0.8rem;
+      text-align: center;
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .test-card:active { transform: scale(0.97); }
+    .test-card i { font-size: 1.5rem; color: #0ff; margin-bottom: 0.3rem; display: block; }
+    .test-card span { font-size: 0.7rem; font-weight: 600; display: block; }
+    .samsung-code {
+      background: rgba(0, 255, 255, 0.1);
+      border-radius: 1rem;
+      padding: 0.8rem;
+      margin: 1rem 1.5rem;
+      text-align: center;
+      font-family: monospace;
+      font-size: 0.9rem;
+      border-left: 3px solid #ff4d6d;
+    }
+    .btn-diagnostic {
+      background: linear-gradient(95deg, #0ff, #ff4d6d);
+      border: none;
+      border-radius: 3rem;
+      padding: 0.9rem;
+      font-weight: 800;
+      color: #05050A;
+      width: calc(100% - 3rem);
+      margin: 1rem 1.5rem;
+      cursor: pointer;
+    }
+    .cleaner-section {
+      background: linear-gradient(145deg, rgba(0, 255, 255, 0.08), rgba(255, 77, 109, 0.05));
+      border-radius: 1.5rem;
+      padding: 1rem;
+      margin: 0 1.5rem 1rem;
+      border: 1px solid rgba(0, 255, 255, 0.3);
+    }
+    .wave-animation {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      height: 60px;
+      margin: 0.5rem 0;
+    }
+    .wave-bar {
+      width: 8px;
+      height: 20px;
+      background: #0ff;
+      border-radius: 4px;
+      transition: height 0.05s ease;
+    }
+    .play-btn {
+      background: linear-gradient(95deg, #0ff, #ff4d6d);
+      border: none;
+      border-radius: 3rem;
+      padding: 0.8rem;
+      font-weight: 700;
+      color: #05050A;
+      width: 100%;
+      cursor: pointer;
+      display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      gap: 0.5rem;
+      font-size: 0.8rem;
     }
-
-    .modal-content {
-      background: var(--bg-card);
-      border-radius: 24px;
-      padding: 28px;
-      max-width: 320px;
-      width: 100%;
-      border: 1px solid var(--border);
-    }
-
-    .modal-content h3 {
-      margin-bottom: 20px;
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .modal-content input {
-      width: 100%;
-      padding: 14px 18px;
-      background: var(--bg-secondary);
-      border: 2px solid var(--border);
-      border-radius: 18px;
-      color: var(--text-primary);
-      font-size: 16px;
-      margin-bottom: 20px;
-    }
-
-    .modal-content input:focus {
-      outline: none;
-      border-color: var(--xiaomi-orange);
-    }
-
-    .modal-buttons {
+    .brand-strip {
       display: flex;
-      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1rem 1.5rem;
+      padding: 0.6rem;
+      background: rgba(0,0,0,0.4);
+      border-radius: 2rem;
     }
-
-    .modal-buttons button {
-      flex: 1;
-      padding: 14px;
-      border: none;
-      border-radius: 18px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 15px;
-    }
-
-    .modal-buttons button:first-child {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-    }
-
-    .modal-buttons button:last-child {
-      background: var(--xiaomi-orange);
-      color: white;
-    }
-
+    .brand-item { background: rgba(0,255,255,0.08); padding: 0.2rem 0.8rem; border-radius: 2rem; font-size: 0.65rem; }
+    .tech-footer { background: rgba(0,0,0,0.5); padding: 0.8rem; text-align: center; border-top: 1px solid rgba(0,255,255,0.2); margin-top: 1rem; font-size: 0.65rem; }
     .toast {
       position: fixed;
       bottom: 90px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--bg-card);
-      padding: 10px 20px;
-      border-radius: 40px;
-      color: var(--text-primary);
-      font-size: 13px;
-      font-weight: 600;
-      z-index: 150;
-      animation: fadeInUp 0.3s ease;
-      border: 1px solid var(--border);
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateX(-50%) translateY(12px); }
-      to { opacity: 1; transform: translateX(-50%) translateY(0); }
-    }
-
-    .results-count {
-      padding: 16px 20px 4px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-tertiary);
-    }
-
-    .empty-state {
+      left: 20px;
+      right: 20px;
+      max-width: 400px;
+      margin: 0 auto;
+      background: #0ff;
+      color: #05050A;
+      padding: 8px 16px;
+      border-radius: 3rem;
+      font-weight: bold;
       text-align: center;
-      padding: 40px 20px;
-      color: var(--text-tertiary);
+      z-index: 1000;
+      animation: fadeOut 2s ease forwards;
+      font-size: 0.8rem;
     }
-
-    .empty-state i {
-      font-size: 48px;
-      opacity: 0.2;
-      margin-bottom: 16px;
+    @keyframes fadeOut {
+      0% { opacity: 1; transform: translateY(0); }
+      70% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-20px); visibility: hidden; }
     }
-
-    .main-content::-webkit-scrollbar { width: 3px; }
-    .main-content::-webkit-scrollbar-track { background: transparent; }
-    .main-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .float-wsp {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #25D366;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background: #0a0f1a;
+      border-radius: 1.5rem;
+      max-width: 90%;
+      width: 380px;
+      border: 2px solid #0ff;
+      padding: 1.2rem;
+      text-align: center;
+    }
+    .color-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin-top: 0.8rem; }
+    .color-btn { padding: 0.8rem; border-radius: 1rem; text-align: center; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+    .dialer-code { font-size: 1.5rem; font-family: monospace; letter-spacing: 3px; color: #0ff; background: #000; padding: 0.4rem; border-radius: 1rem; margin: 0.5rem 0; }
+    
+    /* Estilos para el modal de prueba táctil */
+    .touch-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000000;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .mode-selector {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .mode-btn {
+      background: #1a2a3a;
+      border: 1px solid #0ff;
+      border-radius: 2rem;
+      padding: 0.5rem 1.2rem;
+      color: #0ff;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .mode-btn.active {
+      background: #0ff;
+      color: #000;
+    }
+    .drag-canvas {
+      width: 100%;
+      max-width: 450px;
+      height: 65vh;
+      background: #0a0f1a;
+      border-radius: 1.5rem;
+      border: 2px solid #0ff;
+      touch-action: none;
+      cursor: crosshair;
+    }
+    .drag-stats {
+      margin-top: 0.8rem;
+      font-size: 0.7rem;
+      text-align: center;
+    }
+    .color-options {
+      display: flex;
+      gap: 0.8rem;
+      margin: 0.8rem 0;
+    }
+    .color-dot {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #fff;
+    }
   </style>
 </head>
 <body>
-<div class="app">
-  <header class="header">
-    <div class="header-top">
-      <div class="logo">
-        <div class="logo-icon">MI</div>
-        <h1>DR XIAOMI <span>Catálogo</span></h1>
-      </div>
-      <div class="header-actions">
-        <button class="icon-btn" id="themeToggle" title="Tema">
-          <i class="fas fa-moon"></i>
-        </button>
-        <button class="icon-btn" id="techModeBtn" title="Modo Técnico">
-          <i class="fas fa-microchip"></i>
-        </button>
-        <button class="icon-btn" id="receiptBtn" title="Recibo">
-          <i class="fas fa-receipt"></i>
-        </button>
-        <button class="icon-btn" id="shuffleBtn" title="Mezclar">
-          <i class="fas fa-random"></i>
-        </button>
-      </div>
-    </div>
-    
-    <div class="search-wrapper">
-      <div class="search-container">
-        <input type="text" id="searchInput" class="search-input" placeholder="Buscar modelo exacto... Ej: Redmi Note 10 Pro" autocomplete="off">
-        <div class="search-actions">
-          <button id="clearSearchBtn" style="display: none;"><i class="fas fa-times"></i></button>
-        </div>
-      </div>
-      <div class="suggestions-panel" id="suggestionsPanel"></div>
-    </div>
-  </header>
-
-  <div class="quick-filters" id="quickFilters">
-    <button class="filter-chip active" data-filter="all">📱 Todos</button>
-    <button class="filter-chip" data-filter="OLED">✨ OLED</button>
-    <button class="filter-chip" data-filter="LCD">📟 LCD</button>
+<div class="cyber-bg"></div>
+<canvas id="particleCanvas"></canvas>
+<div class="glass-app">
+  <div class="neon-header">
+    <div class="glitch-text">DR XIAOMI</div>
+    <div style="font-size:0.65rem;">PRUEBA TÁCTIL · DRAG TEST + GRID</div>
   </div>
 
-  <div class="main-content">
-    <div id="resultsCount" class="results-count"></div>
-    <div id="resultsContainer"></div>
+  <div class="info-card">
+    <i class="fas fa-sim-card" style="font-size: 1.8rem; color: #0ff;"></i>
+    <h3 style="margin: 0.3rem 0; font-size:1rem;">¿Necesitas tu IMEI?</h3>
+    <button class="btn-imei" id="saberImeiBtn"><i class="fas fa-dialpad"></i> VER MI IMEI</button>
   </div>
 
-  <nav class="bottom-nav">
-    <button class="nav-item active" data-tab="home"><i class="fas fa-home"></i><span>Inicio</span></button>
-    <button class="nav-item" data-tab="compare"><i class="fas fa-chart-line"></i><span>Comparar</span></button>
-  </nav>
-</div>
+  <div class="samsung-code">
+    <i class="fas fa-code"></i> CÓDIGO SAMSUNG: <strong style="color:#0ff;">*#0*#</strong>
+  </div>
 
-<div id="techModal" class="modal">
-  <div class="modal-content">
-    <h3>🔐 Acceso Técnico</h3>
-    <input type="password" id="techPassword" placeholder="Clave de acceso" autocomplete="off">
-    <div class="modal-buttons">
-      <button onclick="closeModal('techModal')">Cancelar</button>
-      <button id="confirmTechBtn">Acceder</button>
+  <div class="section-title"><i class="fas fa-broom"></i> LIMPIEZA DE PARLANTES</div>
+  <div class="cleaner-section">
+    <div class="wave-animation" id="waveContainer">
+      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
     </div>
+    <button class="play-btn" id="cleanSoundBtn"><i class="fas fa-play"></i> REPRODUCIR SONIDO</button>
+    <div class="frequency-note" style="font-size:0.6rem; text-align:center; margin-top:0.5rem;">150Hz → 300Hz · Limpieza acústica</div>
+  </div>
+
+  <div class="section-title"><i class="fas fa-microchip"></i> DIAGNÓSTICO</div>
+  <div class="test-grid">
+    <div class="test-card" id="touchTestBtn"><i class="fas fa-hand-pointer"></i><span>Prueba Táctil</span></div>
+    <div class="test-card" id="pixelTestBtn"><i class="fas fa-palette"></i><span>Prueba de Pixeles</span></div>
+    <div class="test-card" id="wifiTestBtn"><i class="fas fa-wifi"></i><span>Redes WiFi</span></div>
+    <div class="test-card" id="speakerTestBtn"><i class="fas fa-volume-up"></i><span>Parlante</span></div>
+    <div class="test-card" id="micTestBtn"><i class="fas fa-microphone"></i><span>Micrófono</span></div>
+    <div class="test-card" id="vibrationTestBtn"><i class="fas fa-mobile-alt"></i><span>Vibración</span></div>
+    <div class="test-card" id="accelTestBtn"><i class="fas fa-arrows-alt"></i><span>Acelerómetro</span></div>
+    <div class="test-card" id="gyroTestBtn"><i class="fas fa-sync-alt"></i><span>Giroscopio</span></div>
+    <div class="test-card" id="batteryTestBtn"><i class="fas fa-battery-full"></i><span>Batería</span></div>
+    <div class="test-card" id="cpuTestBtn"><i class="fas fa-microchip"></i><span>CPU / RAM</span></div>
+  </div>
+
+  <button class="btn-diagnostic" id="fullDiagnosticBtn"><i class="fas fa-stethoscope"></i> EJECUTAR DIAGNÓSTICO COMPLETO</button>
+
+  <div class="brand-strip">
+    <span class="brand-item">XIAOMI</span><span class="brand-item">SAMSUNG</span><span class="brand-item">TECNO</span>
+    <span class="brand-item">REALME</span><span class="brand-item">HUAWEI</span><span class="brand-item">IPHONE</span>
+  </div>
+  <div class="tech-footer">
+    <p><i class="fas fa-map-marker-alt"></i> Centro Comercial Cañoto #K 1 · Santa Cruz</p>
+    <p>📞 WhatsApp: 75589308 · Lun-Sab 9:00 a 19:30</p>
   </div>
 </div>
+<div class="float-wsp" id="wspFloat"><i class="fab fa-whatsapp" style="font-size: 1.8rem; color:white;"></i></div>
 
 <script>
-  // ============================================================
-  // MOTOR DE BÚSQUEDA PRECISA
-  // ============================================================
-  
-  function normalizeText(str) {
-    return str
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9\s]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
+  // === PARTÍCULAS ===
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+  class Particle {
+    constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 2 + 0.5; this.speedX = (Math.random() - 0.5) * 0.5; this.speedY = (Math.random() - 0.5) * 0.5; this.color = `rgba(0, ${150 + Math.random() * 105}, 255, ${Math.random() * 0.5})`; }
+    update() { this.x += this.speedX; if (this.x < 0) this.x = canvas.width; if (this.x > canvas.width) this.x = 0; this.y += this.speedY; if (this.y < 0) this.y = canvas.height; if (this.y > canvas.height) this.y = 0; }
+    draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fillStyle = this.color; ctx.fill(); }
   }
+  for (let i = 0; i < 80; i++) particles.push(new Particle());
+  function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+  animate();
 
-  function getTokens(str) {
-    return normalizeText(str).split(" ").filter(t => t.length > 0);
-  }
-
-  function performPreciseSearch(data, searchTerm) {
-    if (!searchTerm.trim()) return data;
-    
-    const searchTokens = getTokens(searchTerm);
-    
-    return data.filter(item => {
-      const modeloNormalized = normalizeText(item.modelo);
-      const marcaNormalized = normalizeText(item.marca);
-      const combinedText = modeloNormalized + " " + marcaNormalized;
-      
-      return searchTokens.every(token => {
-        return combinedText.includes(token);
-      });
-    });
-  }
-
-  function generateSuggestions(searchTerm) {
-    if (!searchTerm.trim() || searchTerm.trim().length < 2) return [];
-    
-    const searchTokens = getTokens(searchTerm);
-    const suggestionsMap = new Map();
-    
-    allData.forEach(product => {
-      const modeloNormalized = normalizeText(product.modelo);
-      const marcaNormalized = normalizeText(product.marca);
-      const combinedText = modeloNormalized + " " + marcaNormalized;
-      
-      const allTokensMatch = searchTokens.every(token => combinedText.includes(token));
-      
-      if (allTokensMatch) {
-        const key = `${product.marca}|${product.modelo}`;
-        if (!suggestionsMap.has(key)) {
-          suggestionsMap.set(key, {
-            marca: product.marca,
-            modelo: product.modelo,
-            tipo: product.tipo,
-            venta: product.venta
-          });
-        }
-      }
-    });
-    
-    return Array.from(suggestionsMap.values())
-      .sort((a, b) => a.venta - b.venta)
-      .slice(0, 8);
-  }
-
-  function highlightMatch(text, searchTerm) {
-    if (!searchTerm.trim()) return escapeHtml(text);
-    
-    const tokens = getTokens(searchTerm);
-    let result = escapeHtml(text);
-    
-    tokens.forEach(token => {
-      if (token.length < 1) return;
-      const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`(${escapedToken})`, 'gi');
-      result = result.replace(regex, '<span class="suggestion-highlight">$1</span>');
-    });
-    
-    return result;
-  }
-
-  // ============================================================
-  // CONFIGURACIÓN
-  // ============================================================
-  const CONFIG = {
-    dataSources: [
-      { name: "J&A", url: "https://xiaomi.scz.red/precio/data/ja2.csv" },
-      { name: "CentralCell", url: "https://xiaomi.scz.red/precio/data/centralcel.csv" },
-      { name: "Osmobil", url: "https://xiaomi.scz.red/precio/data/osmobil.csv" },
-      { name: "CFH LP", url: "https://xiaomi.scz.red/precio/data/CFH.csv" },
-      { name: "BITE", url: "https://xiaomi.scz.red/precio/data/boe.csv" },
-      { name: "MR PANTALLA", url: "https://xiaomi.scz.red/precio/data/mrpantalla.csv" }
-    ],
-    passwords: { tech: "123456" }
-  };
-
-  let allData = [];
-  let filteredData = [];
-  let techMode = false;
-  let currentTab = "home";
-  let currentFilter = "all";
-  let popupWindow = null;
-  let currentTheme = "light";
-  let selectedSuggestionIndex = -1;
-
-  const container = document.getElementById("resultsContainer");
-  const searchInput = document.getElementById("searchInput");
-  const resultsCount = document.getElementById("resultsCount");
-  const suggestionsPanel = document.getElementById("suggestionsPanel");
-  const clearSearchBtn = document.getElementById("clearSearchBtn");
-
-  function applyFiltersAndSearch() {
-    let data = [...allData];
-    
-    if (currentFilter !== "all") {
-      data = data.filter(item => item.tipo === currentFilter);
-    }
-    
-    const searchTerm = searchInput.value.trim();
-    if (searchTerm) {
-      data = performPreciseSearch(data, searchTerm);
-      clearSearchBtn.style.display = 'block';
-    } else {
-      clearSearchBtn.style.display = 'none';
-    }
-    
-    data.sort((a, b) => a.venta - b.venta);
-    
-    filteredData = data;
-    updateResultsCount();
-    render();
-  }
-
-  function updateSuggestions() {
-    const searchTerm = searchInput.value.trim();
-    selectedSuggestionIndex = -1;
-    
-    if (!searchTerm || searchTerm.length < 2) {
-      suggestionsPanel.classList.remove('active');
-      return;
-    }
-    
-    const suggestions = generateSuggestions(searchTerm);
-    
-    if (suggestions.length === 0) {
-      suggestionsPanel.classList.remove('active');
-      return;
-    }
-    
-    suggestionsPanel.innerHTML = `
-      <div class="suggestion-header">💡 COINCIDENCIAS (${suggestions.length})</div>
-      ${suggestions.map((s, index) => `
-        <div class="suggestion-item" data-index="${index}" data-modelo="${escapeHtml(s.modelo)}">
-          <i class="fas fa-mobile-alt"></i>
-          <div style="flex: 1;">
-            <div>${highlightMatch(s.modelo, searchTerm)}</div>
-            <div style="font-size: 11px; color: var(--text-tertiary);">${escapeHtml(s.marca)} · ${s.venta.toLocaleString()} Bs</div>
-          </div>
-          <span style="font-size: 10px; color: var(--text-tertiary); background: var(--bg-primary); padding: 2px 8px; border-radius: 10px;">${s.tipo}</span>
-        </div>
-      `).join('')}
-    `;
-    
-    suggestionsPanel.querySelectorAll('.suggestion-item').forEach(item => {
-      item.addEventListener('click', function() {
-        searchInput.value = this.dataset.modelo;
-        suggestionsPanel.classList.remove('active');
-        applyFiltersAndSearch();
-        if (navigator.vibrate) navigator.vibrate(30);
-      });
-    });
-    
-    suggestionsPanel.classList.add('active');
-  }
-
-  function shuffleArray(array) {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }
-
-  async function init() {
-    showSkeleton();
-    await loadData();
-    setupEventListeners();
-    setupQuickFilters();
-    filteredData = [...allData].sort((a, b) => a.venta - b.venta);
-    updateResultsCount();
-    render();
-    loadTheme();
-  }
-
-  function loadTheme() {
-    const saved = localStorage.getItem("theme");
-    if (saved === "dark") {
-      currentTheme = "dark";
-      document.documentElement.setAttribute("data-theme", "dark");
-      document.querySelector("#themeToggle i").className = "fas fa-sun";
-    } else {
-      currentTheme = "light";
-      document.documentElement.setAttribute("data-theme", "light");
-      document.querySelector("#themeToggle i").className = "fas fa-moon";
-    }
-  }
-
-  function toggleTheme() {
-    if (currentTheme === "light") {
-      currentTheme = "dark";
-      document.documentElement.setAttribute("data-theme", "dark");
-      document.querySelector("#themeToggle i").className = "fas fa-sun";
-    } else {
-      currentTheme = "light";
-      document.documentElement.setAttribute("data-theme", "light");
-      document.querySelector("#themeToggle i").className = "fas fa-moon";
-    }
-    localStorage.setItem("theme", currentTheme);
-    render();
-  }
-
-  function shuffleResults() {
-    if (allData.length > 0) {
-      filteredData = shuffleArray(allData);
-      updateResultsCount();
-      render();
-      showToast("🔄 Productos mezclados");
-    }
-  }
-
-  function setupQuickFilters() {
-    document.querySelectorAll(".filter-chip").forEach(filter => {
-      filter.addEventListener("click", () => {
-        document.querySelectorAll(".filter-chip").forEach(f => f.classList.remove("active"));
-        filter.classList.add("active");
-        currentFilter = filter.dataset.filter;
-        applyFiltersAndSearch();
-      });
-    });
-  }
-
-  async function loadData() {
-    try {
-      allData = [];
-      for (const source of CONFIG.dataSources) {
-        try {
-          const data = await fetchCSV(source.url, source.name);
-          allData.push(...data);
-        } catch (error) {
-          console.error(`Error cargando ${source.name}:`, error);
-        }
-      }
-      filteredData = [...allData].sort((a, b) => a.venta - b.venta);
-      updateResultsCount();
-      render();
-    } catch (error) {
-      showError();
-    }
-  }
-
-  async function fetchCSV(url, providerName) {
-    const response = await fetch(url);
-    const text = await response.text();
-    return parseCSV(text, providerName);
-  }
-
-  function parseCSV(text, providerName) {
-    const lines = text.split("\n").filter(line => line.trim() !== "");
-    if (lines.length < 2) return [];
-    
-    const data = [];
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i];
-      if (!line.trim()) continue;
-      
-      const columns = parseCSVLine(line);
-      
-      if (columns.length >= 6) {
-        const marca = cleanText(columns[0]);
-        const modelo = cleanText(columns[1]);
-        const tipo = cleanText(columns[2]).toUpperCase();
-        const proveedor = cleanText(columns[3]) || providerName;
-        const precio_compra = parsePrice(columns[4]);
-        const precio_venta = parsePrice(columns[5]);
-        
-        if (modelo && modelo !== "Modelo" && modelo !== "") {
-          data.push({
-            id: crypto.randomUUID(),
-            marca: marca || "N/A",
-            modelo: modelo,
-            tipo: tipo === "OLED" ? "OLED" : "LCD",
-            proveedor: proveedor,
-            compra: precio_compra,
-            venta: precio_venta
-          });
-        }
-      } else if (columns.length >= 5) {
-        const marca = cleanText(columns[0]);
-        const modelo = cleanText(columns[1]);
-        const tipo = cleanText(columns[2]).toUpperCase();
-        const precio_compra = parsePrice(columns[3]);
-        const precio_venta = parsePrice(columns[4]);
-        
-        if (modelo && modelo !== "Modelo" && modelo !== "") {
-          data.push({
-            id: crypto.randomUUID(),
-            marca: marca || "N/A",
-            modelo: modelo,
-            tipo: tipo === "OLED" ? "OLED" : "LCD",
-            proveedor: providerName,
-            compra: precio_compra,
-            venta: precio_venta
-          });
-        }
-      }
-    }
-    return data;
-  }
-
-  function parseCSVLine(line) {
-    const result = [];
-    let current = "";
-    let inQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === "," && !inQuotes) {
-        result.push(current.trim());
-        current = "";
-      } else {
-        current += char;
-      }
-    }
-    result.push(current.trim());
-    return result.map(field => field.replace(/^"|"$/g, ""));
-  }
-
-  function cleanText(text) {
-    if (!text) return "";
-    return text.trim().replace(/^"|"$/g, "");
-  }
-
-  function parsePrice(priceStr) {
-    if (!priceStr || priceStr.trim() === "") return 0;
-    let str = priceStr.toString().trim();
-    str = str.replace(/[^\d.,-]/g, "");
-    const num = parseFloat(str.replace(/,/g, "."));
-    if (isNaN(num)) return 0;
-    return Math.round(num);
-  }
-
-  function render() {
-    if (!container) return;
-    
-    if (currentTab === "compare") {
-      showCompareModal();
-      return;
-    }
-    
-    container.innerHTML = renderCards(filteredData);
-  }
-
-  function renderCards(data) {
-    if (data.length === 0) {
-      const searchTerm = searchInput.value.trim();
-      return `
-        <div class="empty-state">
-          <i class="fas fa-search"></i>
-          <p style="font-weight: 600; margin-bottom: 8px;">Sin resultados</p>
-          ${searchTerm ? `<p style="font-size: 13px;">No se encontró "${escapeHtml(searchTerm)}"</p>` : ''}
-          <p style="font-size: 11px; margin-top: 12px; color: var(--text-tertiary);">💡 Escribe el nombre exacto del modelo</p>
-        </div>
-      `;
-    }
-    
-    return `
-      <div class="cards-view">
-        ${data.map((item) => `
-          <div class="product-card">
-            <div class="card-header">
-              <div>
-                <div class="card-brand">${escapeHtml(item.marca)}</div>
-                <div class="card-model">${escapeHtml(item.modelo)}</div>
-              </div>
-            </div>
-            <div class="card-specs">
-              <span class="card-type ${item.tipo === 'OLED' ? 'oled' : ''}">${item.tipo}</span>
-              ${techMode ? `<span class="supplier-badge">🏷️ ${escapeHtml(item.proveedor)}</span>` : ''}
-              ${techMode ? `<span class="price-badge">Compra: ${item.compra.toLocaleString()} Bs</span>` : ''}
-            </div>
-            <div class="card-price-row">
-              <span class="card-price" onclick="copyPriceToClipboard('${item.id}')">${item.venta.toLocaleString()} Bs</span>
-              <div class="card-actions-group">
-                <button class="image-btn" onclick="openGooglePopup('${item.id}')"><i class="fab fa-google"></i> LCD</button>
-                <button class="whatsapp-btn" onclick="shareToWhatsApp('${item.id}')"><i class="fab fa-whatsapp"></i></button>
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  }
-
-  function copyPriceToClipboard(productId) {
-    const product = allData.find(p => p.id === productId);
-    if (!product) return;
-    
-    const message = `📱 ${product.marca} ${product.modelo}\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
-    
-    navigator.clipboard.writeText(message).then(() => {
-      showToast("✅ Precio copiado");
-      if (navigator.vibrate) navigator.vibrate(50);
-    }).catch(() => {
-      showToast("❌ Error al copiar");
-    });
-  }
-
-  function shareToWhatsApp(productId) {
-    const product = allData.find(p => p.id === productId);
-    if (!product) return;
-    
-    const message = `📱 *${product.marca} ${product.modelo}*\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/?text=${encoded}`, "_blank");
-    if (navigator.vibrate) navigator.vibrate(50);
-  }
-
-  function openGooglePopup(productId) {
-    const product = allData.find(p => p.id === productId);
-    if (!product) return;
-    
-    const searchTerm = `LCD ${product.modelo} ${product.marca} pantalla`;
-    const encodedTerm = encodeURIComponent(searchTerm);
-    const googleUrl = `https://www.google.com/search?q=${encodedTerm}&tbm=isch`;
-    
-    const width = Math.min(450, screen.width - 40);
-    const height = Math.min(650, screen.height - 80);
-    const left = (screen.width - width) / 2;
-    const top = (screen.height - height) / 2;
-    
-    popupWindow = window.open(googleUrl, 'GoogleImagesPopup', 
-      `width=${width},height=${height},left=${left},top=${top},toolbar=yes,location=yes,scrollbars=yes,resizable=yes`);
-    if (popupWindow) popupWindow.focus();
-    if (navigator.vibrate) navigator.vibrate(50);
-  }
-
-  function updateResultsCount() {
-    if (resultsCount) {
-      const count = filteredData.length;
-      resultsCount.textContent = `${count} producto${count !== 1 ? 's' : ''}`;
-    }
-  }
-
-  function showTechModal() {
-    document.getElementById("techModal").style.display = "flex";
-    document.getElementById("techPassword").focus();
-  }
-
-  function closeModal(modalId) {
-    document.getElementById(modalId).style.display = "none";
-    const input = document.querySelector(`#${modalId} input`);
-    if (input) input.value = "";
-  }
-
-  function showToast(message) {
-    const existingToast = document.querySelector('.toast');
-    if (existingToast) existingToast.remove();
-    
-    const toast = document.createElement("div");
-    toast.className = "toast";
-    toast.textContent = message;
+  function showToast(msg, isSuccess = true) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.style.background = isSuccess ? '#0ff' : '#ff4d6d';
+    toast.innerText = msg;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 2000);
   }
 
-  function showSkeleton() {
-    if (container) {
-      container.innerHTML = `
-        <div class="cards-view">
-          ${Array(6).fill().map(() => `
-            <div class="product-card" style="height: 120px;">
-              <div style="background: linear-gradient(90deg, var(--border) 25%, transparent 50%, var(--border) 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 12px; height: 100%;"></div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    }
-  }
+  // === IMEI ===
+  document.getElementById('saberImeiBtn').onclick = () => {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `<div class="modal-content"><i class="fas fa-sim-card" style="font-size:2.5rem; color:#0ff;"></i><h3>Ver IMEI Real</h3><div class="dialer-code">*#06#</div><button id="copyImeiCode" style="background:#0ff; border:none; border-radius:2rem; padding:0.4rem 1rem; margin:0.5rem;">📋 Copiar</button><button class="close-modal" style="background:#ff4d6d; border:none; border-radius:2rem; padding:0.4rem 1rem;">Cerrar</button></div>`;
+    document.body.appendChild(modal);
+    modal.querySelector('#copyImeiCode').onclick = () => { navigator.clipboard.writeText('*#06#'); showToast('📋 Código copiado', true); };
+    modal.querySelector('.close-modal').onclick = () => modal.remove();
+  };
 
-  function showError() {
-    if (container) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <i class="fas fa-exclamation-triangle"></i>
-          <p>Error cargando datos</p>
-          <button onclick="location.reload()" style="margin-top: 16px; padding: 12px 24px; background: var(--xiaomi-orange); border: none; border-radius: 30px; color: white; font-weight: 600;">Reintentar</button>
-        </div>
-      `;
-    }
-  }
-
-  function showCompareModal() {
-    const compareData = filteredData.slice(0, 4);
-    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
-    compareData.forEach(p => {
-      html += `
-        <div style="background: var(--bg-secondary); padding: 14px; border-radius: 16px; border-left: 4px solid var(--xiaomi-orange);">
-          <div style="font-size: 12px; color: var(--xiaomi-orange); font-weight: 700;">${escapeHtml(p.marca)}</div>
-          <div style="font-size: 15px; font-weight: 600; margin: 4px 0;">${escapeHtml(p.modelo)}</div>
-          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">${p.tipo}</div>
-          <div style="font-size: 22px; font-weight: 800;">${p.venta.toLocaleString()} Bs</div>
-        </div>
-      `;
-    });
-    html += '</div><div class="modal-buttons" style="margin-top: 16px;"><button onclick="closeCompareModal()" style="flex:1; padding: 12px; background: var(--xiaomi-orange); border: none; border-radius: 30px; color: white; font-weight: 600;">Cerrar</button></div>';
-    
-    const modalHtml = `
-      <div id="compareModal" class="modal" style="display: flex;">
-        <div class="modal-content" style="max-width: 350px;">
-          <h3>📊 Comparar</h3>
-          ${html}
-        </div>
+  // === PRUEBA TÁCTIL CON DOS MODOS ===
+  let currentMode = 'drag'; // 'drag' o 'grid'
+  let touchModal = null;
+  let currentColor = '#0ff';
+  
+  // MODO 1: BARRIDO CONTINUO (DRAG TEST) - Arrastrar sin soltar
+  function openDragTest() {
+    touchModal = document.createElement('div');
+    touchModal.className = 'touch-modal';
+    touchModal.innerHTML = `
+      <div style="position:absolute; top:15px; right:15px;">
+        <button id="closeTouchBtn" style="background:#ff4d6d; border:none; border-radius:2rem; padding:0.4rem 1rem; color:white;">✖ CERRAR</button>
       </div>
+      <div class="mode-selector">
+        <button class="mode-btn ${currentMode === 'drag' ? 'active' : ''}" data-mode="drag">✍️ MODO BARRIDO</button>
+        <button class="mode-btn ${currentMode === 'grid' ? 'active' : ''}" data-mode="grid">🔢 MODO CUADRÍCULA</button>
+      </div>
+      <h2 style="color:#0ff; margin-bottom:0.5rem;"><i class="fas fa-hand-pointer"></i> Prueba de Barrido Continuo</h2>
+      <p style="font-size:0.7rem; margin-bottom:0.5rem;">👇 Arrastra el dedo SIN SOLTAR por toda la pantalla</p>
+      <div class="color-options">
+        <div class="color-dot" style="background:#0ff;" data-color="#0ff"></div>
+        <div class="color-dot" style="background:#ff4d6d;" data-color="#ff4d6d"></div>
+        <div class="color-dot" style="background:#0f6;" data-color="#0f6"></div>
+        <div class="color-dot" style="background:#ff0;" data-color="#ff0"></div>
+      </div>
+      <canvas id="dragCanvas" class="drag-canvas" width="450" height="600"></canvas>
+      <div class="drag-stats">
+        <span>📏 Puntos trazados: <span id="pointCount">0</span></span>
+        <span style="margin-left:1rem;">🖌️ Línea continua</span>
+      </div>
+      <button id="clearDragBtn" style="margin-top:0.8rem; background:#ff4d6d; border:none; border-radius:2rem; padding:0.4rem 1.5rem; color:white;">🗑️ LIMPIAR PANTALLA</button>
     `;
+    document.body.appendChild(touchModal);
     
-    const existing = document.getElementById("compareModal");
-    if (existing) existing.remove();
-    document.body.insertAdjacentHTML("beforeend", modalHtml);
-  }
-
-  function closeCompareModal() {
-    const modal = document.getElementById("compareModal");
-    if (modal) modal.remove();
-  }
-
-  function escapeHtml(str) {
-    if (!str) return "";
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
-
-  function setupEventListeners() {
-    searchInput?.addEventListener("input", () => {
-      updateSuggestions();
-    });
+    const dragCanvas = document.getElementById('dragCanvas');
+    const ctxDrag = dragCanvas.getContext('2d');
+    let drawing = false;
+    let pointCount = 0;
     
-    searchInput?.addEventListener("keydown", (e) => {
-      const items = suggestionsPanel.querySelectorAll('.suggestion-item');
-      
-      if (e.key === 'ArrowDown' && items.length > 0) {
-        e.preventDefault();
-        selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, items.length - 1);
-        items.forEach((item, i) => item.classList.toggle('active', i === selectedSuggestionIndex));
-      } else if (e.key === 'ArrowUp' && items.length > 0) {
-        e.preventDefault();
-        selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, 0);
-        items.forEach((item, i) => item.classList.toggle('active', i === selectedSuggestionIndex));
-      } else if (e.key === 'Enter') {
-        suggestionsPanel.classList.remove('active');
-        applyFiltersAndSearch();
-      } else if (e.key === 'Escape') {
-        suggestionsPanel.classList.remove('active');
-        selectedSuggestionIndex = -1;
-      }
-    });
+    // Ajustar tamaño del canvas
+    const resizeDragCanvas = () => {
+      const container = dragCanvas.parentElement;
+      const maxWidth = Math.min(container.clientWidth - 20, 450);
+      dragCanvas.style.width = `${maxWidth}px`;
+      dragCanvas.style.height = `${maxWidth * 1.3}px`;
+      dragCanvas.width = maxWidth;
+      dragCanvas.height = maxWidth * 1.3;
+      ctxDrag.fillStyle = '#0a0f1a';
+      ctxDrag.fillRect(0, 0, dragCanvas.width, dragCanvas.height);
+      ctxDrag.strokeStyle = currentColor;
+      ctxDrag.lineWidth = 4;
+      ctxDrag.lineCap = 'round';
+      ctxDrag.lineJoin = 'round';
+    };
+    resizeDragCanvas();
+    window.addEventListener('resize', resizeDragCanvas);
     
-    document.getElementById("clearSearchBtn")?.addEventListener("click", () => {
-      searchInput.value = "";
-      suggestionsPanel.classList.remove('active');
-      clearSearchBtn.style.display = 'none';
-      applyFiltersAndSearch();
-      searchInput.focus();
-    });
-    
-    document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
-    document.getElementById("techModeBtn")?.addEventListener("click", showTechModal);
-    document.getElementById("shuffleBtn")?.addEventListener("click", () => shuffleResults());
-    
-    document.getElementById("confirmTechBtn")?.addEventListener("click", () => {
-      if (document.getElementById("techPassword").value === CONFIG.passwords.tech) {
-        techMode = true;
-        closeModal("techModal");
-        showToast("🔧 Modo técnico activado");
-        render();
+    function getCoords(e) {
+      const rect = dragCanvas.getBoundingClientRect();
+      const scaleX = dragCanvas.width / rect.width;
+      const scaleY = dragCanvas.height / rect.height;
+      let clientX, clientY;
+      if (e.touches) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
       } else {
-        showToast("❌ Clave incorrecta");
-        if (navigator.vibrate) navigator.vibrate(200);
+        clientX = e.clientX;
+        clientY = e.clientY;
       }
-    });
+      let x = (clientX - rect.left) * scaleX;
+      let y = (clientY - rect.top) * scaleY;
+      x = Math.max(0, Math.min(dragCanvas.width, x));
+      y = Math.max(0, Math.min(dragCanvas.height, y));
+      return { x, y };
+    }
     
-    document.getElementById("receiptBtn")?.addEventListener("click", () => {
-      window.open("http://xiaomi.scz.red/1/", "_blank");
-    });
+    function startDraw(e) {
+      e.preventDefault();
+      drawing = true;
+      const { x, y } = getCoords(e);
+      ctxDrag.beginPath();
+      ctxDrag.moveTo(x, y);
+      ctxDrag.lineTo(x, y);
+      ctxDrag.stroke();
+      pointCount++;
+      document.getElementById('pointCount').innerHTML = pointCount;
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
     
-    document.querySelectorAll(".nav-item").forEach(item => {
-      item.addEventListener("click", () => {
-        currentTab = item.dataset.tab;
-        document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
-        item.classList.add("active");
-        render();
+    function draw(e) {
+      e.preventDefault();
+      if (!drawing) return;
+      const { x, y } = getCoords(e);
+      ctxDrag.lineTo(x, y);
+      ctxDrag.stroke();
+      ctxDrag.beginPath();
+      ctxDrag.moveTo(x, y);
+      pointCount++;
+      document.getElementById('pointCount').innerHTML = pointCount;
+    }
+    
+    function endDraw() {
+      drawing = false;
+      ctxDrag.beginPath();
+    }
+    
+    dragCanvas.addEventListener('mousedown', startDraw);
+    dragCanvas.addEventListener('mousemove', draw);
+    dragCanvas.addEventListener('mouseup', endDraw);
+    dragCanvas.addEventListener('touchstart', startDraw);
+    dragCanvas.addEventListener('touchmove', draw);
+    dragCanvas.addEventListener('touchend', endDraw);
+    
+    // Cambiar color
+    document.querySelectorAll('.color-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        currentColor = dot.dataset.color;
+        ctxDrag.strokeStyle = currentColor;
       });
     });
     
-    document.addEventListener("click", (e) => {
-      if (!e.target.closest(".search-wrapper")) {
-        suggestionsPanel.classList.remove("active");
-      }
+    document.getElementById('clearDragBtn').onclick = () => {
+      ctxDrag.fillStyle = '#0a0f1a';
+      ctxDrag.fillRect(0, 0, dragCanvas.width, dragCanvas.height);
+      ctxDrag.strokeStyle = currentColor;
+      pointCount = 0;
+      document.getElementById('pointCount').innerHTML = '0';
+      showToast('Pantalla limpiada', true);
+    };
+    
+    // Manejar cambio de modo
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.mode;
+        if (mode === 'grid') {
+          touchModal.remove();
+          openGridTest();
+        }
+      });
     });
+    
+    document.getElementById('closeTouchBtn').onclick = () => touchModal.remove();
+  }
+  
+  // MODO 2: CUADRÍCULA (Toque por puntos en orden)
+  function openGridTest() {
+    touchModal = document.createElement('div');
+    touchModal.className = 'touch-modal';
+    let currentLevel = 1;
+    let currentSequence = [];
+    let currentIndex = 0;
+    let hits = 0;
+    let errors = 0;
+    let cells = [];
+    
+    const levelConfigs = {
+      1: { name: "NIVEL 1 · 3x3", gridSize: 3, generateSequence: (s) => Array.from({ length: s * s }, (_, i) => i) },
+      2: { name: "NIVEL 2 · Patrón Zigzag", gridSize: 3, generateSequence: (s) => {
+        const seq = [];
+        for (let row = 0; row < s; row++) {
+          if (row % 2 === 0) for (let col = 0; col < s; col++) seq.push(row * s + col);
+          else for (let col = s - 1; col >= 0; col--) seq.push(row * s + col);
+        }
+        return seq;
+      }},
+      3: { name: "NIVEL 3 · 4x4", gridSize: 4, generateSequence: (s) => Array.from({ length: s * s }, (_, i) => i) }
+    };
+    
+    function renderGrid(level) {
+      const config = levelConfigs[level];
+      const size = config.gridSize;
+      currentSequence = config.generateSequence(size);
+      currentIndex = 0;
+      hits = 0;
+      errors = 0;
+      
+      touchModal.innerHTML = `
+        <div style="position:absolute; top:15px; right:15px;">
+          <button id="closeTouchBtn" style="background:#ff4d6d; border:none; border-radius:2rem; padding:0.4rem 1rem; color:white;">✖ CERRAR</button>
+        </div>
+        <div class="mode-selector">
+          <button class="mode-btn" data-mode="drag">✍️ MODO BARRIDO</button>
+          <button class="mode-btn active" data-mode="grid">🔢 MODO CUADRÍCULA</button>
+        </div>
+        <div class="level-selector" style="display:flex; gap:0.8rem; margin-bottom:0.8rem;">
+          <button class="level-btn ${level === 1 ? 'active' : ''}" data-level="1">Nivel 1 (3x3)</button>
+          <button class="level-btn ${level === 2 ? 'active' : ''}" data-level="2">Nivel 2 (Patrón)</button>
+          <button class="level-btn ${level === 3 ? 'active' : ''}" data-level="3">Nivel 3 (4x4)</button>
+        </div>
+        <div class="touch-grid" style="display:grid; gap:12px; background:#0a0f1a; padding:20px; border-radius:1.5rem; border:2px solid #0ff; grid-template-columns:repeat(${size}, 1fr); width:${size === 3 ? '280px' : '340px'};" id="touchGrid"></div>
+        <div class="touch-stats" style="display:flex; gap:1.5rem; margin:0.8rem 0; font-size:0.7rem;">
+          <div>✅ Aciertos: <span id="hitCount">0</span></div>
+          <div>❌ Errores: <span id="errorCount">0</span></div>
+          <div>📊 Precisión: <span id="accuracy">0</span>%</div>
+        </div>
+        <div id="nextHint" style="font-size:0.7rem;">👉 Siguiente: ${currentSequence[0] + 1}</div>
+        <button id="resetGridBtn" style="margin-top:0.8rem; background:#ff4d6d; border:none; border-radius:2rem; padding:0.4rem 1.5rem; color:white;">🔄 REINICIAR NIVEL</button>
+      `;
+      
+      const gridContainer = touchModal.querySelector('#touchGrid');
+      gridContainer.innerHTML = '';
+      cells = [];
+      const total = size * size;
+      for (let i = 0; i < total; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'touch-cell';
+        cell.style.cssText = 'aspect-ratio:1; background:#1a2a3a; border-radius:1rem; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#0ff; cursor:pointer; border:1px solid #0ff3;';
+        if (i === currentSequence[currentIndex]) cell.style.background = '#0ff';
+        cell.textContent = i + 1;
+        cell.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const clickedIndex = i;
+          const expectedIndex = currentSequence[currentIndex];
+          if (clickedIndex === expectedIndex) {
+            hits++;
+            cell.style.background = '#0f6';
+            cell.style.color = '#000';
+            if (navigator.vibrate) navigator.vibrate(30);
+            currentIndex++;
+            updateStats();
+            if (currentIndex >= currentSequence.length) {
+              showToast(`🎉 ¡Nivel completado! Precisión: ${Math.round((hits/(hits+errors))*100)}%`, true);
+              setTimeout(() => renderGrid(level), 1000);
+            } else {
+              updateHighlight();
+            }
+          } else {
+            errors++;
+            cell.style.background = '#ff4d6d';
+            if (navigator.vibrate) navigator.vibrate(100);
+            setTimeout(() => { cell.style.background = '#1a2a3a'; }, 200);
+            updateStats();
+          }
+        });
+        gridContainer.appendChild(cell);
+        cells.push(cell);
+      }
+      
+      function updateHighlight() {
+        cells.forEach(cell => cell.style.background = '#1a2a3a');
+        if (currentIndex < currentSequence.length) {
+          const nextIdx = currentSequence[currentIndex];
+          cells[nextIdx].style.background = '#0ff';
+          touchModal.querySelector('#nextHint').innerHTML = `👉 Siguiente: ${nextIdx + 1}`;
+        }
+      }
+      
+      function updateStats() {
+        const totalClicks = hits + errors;
+        const accuracy = totalClicks > 0 ? Math.round((hits / totalClicks) * 100) : 0;
+        touchModal.querySelector('#hitCount').innerHTML = hits;
+        touchModal.querySelector('#errorCount').innerHTML = errors;
+        touchModal.querySelector('#accuracy').innerHTML = accuracy;
+      }
+      
+      touchModal.querySelector('#resetGridBtn').onclick = () => renderGrid(level);
+      
+      document.querySelectorAll('.level-btn').forEach(btn => {
+        btn.onclick = () => { renderGrid(parseInt(btn.dataset.level)); };
+      });
+    }
+    
+    renderGrid(1);
+    document.body.appendChild(touchModal);
+    
+    // Cambiar a modo barrido
+    setTimeout(() => {
+      const modeBtns = touchModal.querySelectorAll('.mode-btn');
+      modeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mode = btn.dataset.mode;
+          if (mode === 'drag') {
+            touchModal.remove();
+            openDragTest();
+          }
+        });
+      });
+      const closeBtn = touchModal.querySelector('#closeTouchBtn');
+      if (closeBtn) closeBtn.onclick = () => touchModal.remove();
+    }, 100);
+  }
+  
+  // === PRUEBA DE PIXELES ===
+  function openPixelTest() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `<div class="modal-content"><h3><i class="fas fa-palette"></i> Prueba de Pixeles</h3><div class="color-grid"><div class="color-btn" style="background:#ff0000;">ROJO</div><div class="color-btn" style="background:#00ff00;">VERDE</div><div class="color-btn" style="background:#0000ff;">AZUL</div><div class="color-btn" style="background:#ffffff;">BLANCO</div><div class="color-btn" style="background:#000000;">NEGRO</div></div><button id="exitColorBtn" style="margin-top:1rem; background:#ff4d6d; border:none; border-radius:1rem; padding:0.5rem;">Salir</button></div>`;
+    document.body.appendChild(modal);
+    const originalBg = document.body.style.background;
+    modal.querySelectorAll('.color-btn').forEach(btn => { btn.onclick = () => { document.body.style.background = btn.style.background; }; });
+    modal.querySelector('#exitColorBtn').onclick = () => { document.body.style.background = originalBg; modal.remove(); };
   }
 
-  window.copyPriceToClipboard = copyPriceToClipboard;
-  window.shareToWhatsApp = shareToWhatsApp;
-  window.openGooglePopup = openGooglePopup;
-  window.closeModal = closeModal;
-  window.closeCompareModal = closeCompareModal;
+  // === REDES WIFI ===
+  function openWifiTest() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `<div class="modal-content"><h3><i class="fas fa-wifi"></i> Redes WiFi</h3><div id="wifiList"><div style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Escaneando...</div></div><button class="close-modal" style="margin-top:1rem; background:#ff4d6d; border:none; border-radius:1rem; padding:0.5rem;">Cerrar</button></div>`;
+    document.body.appendChild(modal);
+    setTimeout(() => {
+      const redes = ['MIWIFI_2.4G', 'CLARO_XXXX', 'TIGO_1234', 'FIBERTEL_5G', 'ENTEL_Hogar'];
+      modal.querySelector('#wifiList').innerHTML = redes.map(ssid => `<div style="background:#0ff1; padding:0.5rem; margin:0.3rem 0; border-radius:0.5rem;"><i class="fas fa-wifi"></i> ${ssid} <span style="float:right;">📶 ${Math.floor(40 + Math.random() * 50)}%</span></div>`).join('');
+    }, 800);
+    modal.querySelector('.close-modal').onclick = () => modal.remove();
+  }
 
-  init();
+  // === AUDIO Y SENSORES ===
+  let audioCtx = null;
+  let cleaningActive = false;
+  let cleaningOscillator = null;
+  let cleaningAudioCtx = null;
+  let waveInterval = null;
+  const waveBars = document.querySelectorAll('.wave-bar');
+
+  function animateWaves(active) {
+    if (waveInterval) clearInterval(waveInterval);
+    if (active) {
+      waveInterval = setInterval(() => waveBars.forEach(bar => bar.style.height = `${15 + Math.random() * 45}px`), 70);
+    } else waveBars.forEach(bar => bar.style.height = '20px');
+  }
+
+  document.getElementById('cleanSoundBtn').onclick = () => {
+    if (cleaningActive) {
+      if (cleaningOscillator) try { cleaningOscillator.stop(); } catch(e) {}
+      if (cleaningAudioCtx) cleaningAudioCtx.close();
+      cleaningActive = false;
+      animateWaves(false);
+      document.getElementById('cleanSoundBtn').innerHTML = '<i class="fas fa-play"></i> REPRODUCIR SONIDO';
+    } else {
+      try {
+        if (cleaningAudioCtx) cleaningAudioCtx.close();
+        cleaningAudioCtx = new AudioContext();
+        cleaningOscillator = cleaningAudioCtx.createOscillator();
+        const gain = cleaningAudioCtx.createGain();
+        cleaningOscillator.connect(gain);
+        gain.connect(cleaningAudioCtx.destination);
+        cleaningOscillator.type = 'sine';
+        cleaningOscillator.frequency.setValueAtTime(140, cleaningAudioCtx.currentTime);
+        cleaningOscillator.frequency.exponentialRampToValueAtTime(320, cleaningAudioCtx.currentTime + 7);
+        gain.gain.setValueAtTime(0.3, cleaningAudioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.00001, cleaningAudioCtx.currentTime + 8);
+        cleaningOscillator.start();
+        cleaningActive = true;
+        animateWaves(true);
+        document.getElementById('cleanSoundBtn').innerHTML = '<i class="fas fa-stop"></i> DETENER';
+        setTimeout(() => {
+          if (cleaningActive) {
+            cleaningActive = false;
+            animateWaves(false);
+            document.getElementById('cleanSoundBtn').innerHTML = '<i class="fas fa-play"></i> REPRODUCIR SONIDO';
+          }
+        }, 8000);
+      } catch(e) { showToast('⚠️ Error de audio', false); }
+    }
+  };
+
+  function playSpeaker() {
+    try {
+      if (audioCtx) audioCtx.close();
+      audioCtx = new AudioContext();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.frequency.value = 1000; gain.gain.value = 0.3;
+      osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 1.5);
+      setTimeout(() => osc.stop(), 1500);
+      showToast('🔊 Sonido reproducido', true);
+    } catch(e) { showToast('❌ Error', false); }
+  }
+  function testMicrophone() {
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      let chunks = [];
+      const recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = () => {
+        const audio = new Audio(URL.createObjectURL(new Blob(chunks)));
+        audio.play();
+        stream.getTracks().forEach(t => t.stop());
+        showToast('🎙️ Reproduciendo', true);
+      };
+      recorder.start(); setTimeout(() => recorder.stop(), 3000);
+      showToast('🎤 Grabando...', true);
+    }).catch(() => showToast('❌ Permiso denegado', false));
+  }
+  function testVibration() { if (navigator.vibrate) { navigator.vibrate(500); showToast('📳 Vibración OK', true); } else showToast('❌ No soportado', false); }
+  function testAccelerometer() {
+    if (window.DeviceMotionEvent) {
+      const handler = () => { showToast('📊 Acelerómetro OK', true); window.removeEventListener('devicemotion', handler); };
+      window.addEventListener('devicemotion', handler);
+      setTimeout(() => window.removeEventListener('devicemotion', handler), 5000);
+      showToast('🎯 Mueve el teléfono', true);
+    } else showToast('❌ No disponible', false);
+  }
+  function testGyroscope() {
+    if (window.DeviceOrientationEvent) {
+      const handler = () => { showToast('🔄 Giroscopio OK', true); window.removeEventListener('deviceorientation', handler); };
+      window.addEventListener('deviceorientation', handler);
+      setTimeout(() => window.removeEventListener('deviceorientation', handler), 5000);
+      showToast('🔄 Gira el teléfono', true);
+    } else showToast('❌ No disponible', false);
+  }
+  async function testBattery() {
+    if ('getBattery' in navigator) {
+      const b = await navigator.getBattery();
+      showToast(`🔋 ${Math.round(b.level*100)}% · ${b.charging ? 'Cargando' : 'Descargando'}`, true);
+    } else showToast('❌ No accesible', false);
+  }
+  function testCPU() { showToast(`🧠 CPU: ${navigator.hardwareConcurrency || '?'} núcleos · RAM: ${navigator.deviceMemory || '?'}GB`, true); }
+
+  document.getElementById('touchTestBtn').onclick = () => openDragTest();
+  document.getElementById('pixelTestBtn').onclick = openPixelTest;
+  document.getElementById('wifiTestBtn').onclick = openWifiTest;
+  document.getElementById('speakerTestBtn').onclick = playSpeaker;
+  document.getElementById('micTestBtn').onclick = testMicrophone;
+  document.getElementById('vibrationTestBtn').onclick = testVibration;
+  document.getElementById('accelTestBtn').onclick = testAccelerometer;
+  document.getElementById('gyroTestBtn').onclick = testGyroscope;
+  document.getElementById('batteryTestBtn').onclick = testBattery;
+  document.getElementById('cpuTestBtn').onclick = testCPU;
+  document.getElementById('fullDiagnosticBtn').onclick = async () => {
+    showToast('🔬 Diagnóstico completo...', true);
+    playSpeaker(); await new Promise(r => setTimeout(r, 1500));
+    testMicrophone(); await new Promise(r => setTimeout(r, 3500));
+    testVibration(); await new Promise(r => setTimeout(r, 1000));
+    testAccelerometer(); await new Promise(r => setTimeout(r, 3000));
+    testGyroscope(); await new Promise(r => setTimeout(r, 3000));
+    await testBattery(); testCPU();
+    showToast('✅ Diagnóstico completado', true);
+  };
+
+  const whatsapp = "59175589308";
+  document.getElementById('wspFloat').onclick = () => window.open(`https://wa.me/${whatsapp}?text=Hola%20DR%20XIAOMI%2C%20necesito%20ayuda`, '_blank');
 </script>
 </body>
 </html>
