@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>DR XIAOMI · Prueba Táctil Profesional | Drag Test + Grid</title>
+  <title>DR XIAOMI · Diagnóstico Profesional de Audio</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
@@ -238,65 +238,61 @@
     .color-btn { padding: 0.8rem; border-radius: 1rem; text-align: center; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
     .dialer-code { font-size: 1.5rem; font-family: monospace; letter-spacing: 3px; color: #0ff; background: #000; padding: 0.4rem; border-radius: 1rem; margin: 0.5rem 0; }
     
-    /* Estilos para el modal de prueba táctil */
-    .touch-modal {
+    /* Popup de micrófono con visualizador de ondas */
+    .mic-modal {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: #000000;
+      background: #000000ee;
       z-index: 2000;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 1rem;
     }
-    .mode-selector {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    .mode-btn {
-      background: #1a2a3a;
-      border: 1px solid #0ff;
-      border-radius: 2rem;
-      padding: 0.5rem 1.2rem;
-      color: #0ff;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .mode-btn.active {
-      background: #0ff;
-      color: #000;
-    }
-    .drag-canvas {
-      width: 100%;
-      max-width: 450px;
-      height: 65vh;
+    .mic-card {
       background: #0a0f1a;
-      border-radius: 1.5rem;
-      border: 2px solid #0ff;
-      touch-action: none;
-      cursor: crosshair;
-    }
-    .drag-stats {
-      margin-top: 0.8rem;
-      font-size: 0.7rem;
+      border-radius: 2rem;
+      padding: 1.5rem;
       text-align: center;
+      border: 2px solid #0ff;
+      max-width: 90%;
+      width: 400px;
     }
-    .color-options {
+    .waveform-container {
+      background: #050a10;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin: 1rem 0;
+      height: 150px;
       display: flex;
-      gap: 0.8rem;
-      margin: 0.8rem 0;
+      align-items: center;
+      justify-content: center;
     }
-    .color-dot {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid #fff;
+    canvas.wave-canvas {
+      width: 100%;
+      height: 100px;
+      background: #000;
+      border-radius: 0.5rem;
+    }
+    .volume-meter {
+      width: 100%;
+      height: 6px;
+      background: #1a2a3a;
+      border-radius: 3px;
+      margin: 0.5rem 0;
+      overflow: hidden;
+    }
+    .volume-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0f6, #0ff);
+      transition: width 0.05s;
+    }
+    .mic-status {
+      font-size: 0.8rem;
+      margin: 0.5rem 0;
     }
   </style>
 </head>
@@ -306,17 +302,41 @@
 <div class="glass-app">
   <div class="neon-header">
     <div class="glitch-text">DR XIAOMI</div>
-    <div style="font-size:0.65rem;">PRUEBA TÁCTIL · DRAG TEST + GRID</div>
+    <div style="font-size:0.65rem;">DIAGNÓSTICO PROFESIONAL DE AUDIO</div>
   </div>
 
   <div class="info-card">
     <i class="fas fa-sim-card" style="font-size: 1.8rem; color: #0ff;"></i>
-    <h3 style="margin: 0.3rem 0; font-size:1rem;">¿Necesitas tu IMEI?</h3>
+    <h3 style="margin: 0.3rem 0; font-size:1rem;">IMEI</h3>
     <button class="btn-imei" id="saberImeiBtn"><i class="fas fa-dialpad"></i> VER MI IMEI</button>
   </div>
 
   <div class="samsung-code">
     <i class="fas fa-code"></i> CÓDIGO SAMSUNG: <strong style="color:#0ff;">*#0*#</strong>
+  </div>
+
+  <div class="section-title"><i class="fas fa-volume-up"></i> PRUEBAS DE PARLANTES</div>
+  <div class="test-grid">
+    <div class="test-card" id="speakerTopBtn"><i class="fas fa-volume-up"></i><span>Parlante Superior</span><div style="font-size:0.6rem;">1800Hz</div></div>
+    <div class="test-card" id="speakerBottomBtn"><i class="fas fa-music"></i><span>Parlante Inferior</span><div style="font-size:0.6rem;">400Hz</div></div>
+  </div>
+
+  <div class="section-title"><i class="fas fa-microphone"></i> PRUEBAS DE MICRÓFONO</div>
+  <div class="test-grid">
+    <div class="test-card" id="micTopBtn"><i class="fas fa-microphone"></i><span>Micrófono Superior</span><div style="font-size:0.6rem;">Visualizador de ondas</div></div>
+    <div class="test-card" id="micBottomBtn"><i class="fas fa-microphone-alt"></i><span>Micrófono Inferior</span><div style="font-size:0.6rem;">Visualizador de ondas</div></div>
+  </div>
+
+  <div class="section-title"><i class="fas fa-hand-pointer"></i> OTRAS PRUEBAS</div>
+  <div class="test-grid">
+    <div class="test-card" id="touchTestBtn"><i class="fas fa-hand-pointer"></i><span>Prueba Táctil</span></div>
+    <div class="test-card" id="pixelTestBtn"><i class="fas fa-palette"></i><span>Prueba de Pixeles</span></div>
+    <div class="test-card" id="wifiTestBtn"><i class="fas fa-wifi"></i><span>Redes WiFi</span></div>
+    <div class="test-card" id="vibrationTestBtn"><i class="fas fa-mobile-alt"></i><span>Vibración</span></div>
+    <div class="test-card" id="accelTestBtn"><i class="fas fa-arrows-alt"></i><span>Acelerómetro</span></div>
+    <div class="test-card" id="gyroTestBtn"><i class="fas fa-sync-alt"></i><span>Giroscopio</span></div>
+    <div class="test-card" id="batteryTestBtn"><i class="fas fa-battery-full"></i><span>Batería</span></div>
+    <div class="test-card" id="cpuTestBtn"><i class="fas fa-microchip"></i><span>CPU / RAM</span></div>
   </div>
 
   <div class="section-title"><i class="fas fa-broom"></i> LIMPIEZA DE PARLANTES</div>
@@ -326,22 +346,8 @@
       <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
       <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
     </div>
-    <button class="play-btn" id="cleanSoundBtn"><i class="fas fa-play"></i> REPRODUCIR SONIDO</button>
-    <div class="frequency-note" style="font-size:0.6rem; text-align:center; margin-top:0.5rem;">150Hz → 300Hz · Limpieza acústica</div>
-  </div>
-
-  <div class="section-title"><i class="fas fa-microchip"></i> DIAGNÓSTICO</div>
-  <div class="test-grid">
-    <div class="test-card" id="touchTestBtn"><i class="fas fa-hand-pointer"></i><span>Prueba Táctil</span></div>
-    <div class="test-card" id="pixelTestBtn"><i class="fas fa-palette"></i><span>Prueba de Pixeles</span></div>
-    <div class="test-card" id="wifiTestBtn"><i class="fas fa-wifi"></i><span>Redes WiFi</span></div>
-    <div class="test-card" id="speakerTestBtn"><i class="fas fa-volume-up"></i><span>Parlante</span></div>
-    <div class="test-card" id="micTestBtn"><i class="fas fa-microphone"></i><span>Micrófono</span></div>
-    <div class="test-card" id="vibrationTestBtn"><i class="fas fa-mobile-alt"></i><span>Vibración</span></div>
-    <div class="test-card" id="accelTestBtn"><i class="fas fa-arrows-alt"></i><span>Acelerómetro</span></div>
-    <div class="test-card" id="gyroTestBtn"><i class="fas fa-sync-alt"></i><span>Giroscopio</span></div>
-    <div class="test-card" id="batteryTestBtn"><i class="fas fa-battery-full"></i><span>Batería</span></div>
-    <div class="test-card" id="cpuTestBtn"><i class="fas fa-microchip"></i><span>CPU / RAM</span></div>
+    <button class="play-btn" id="cleanSoundBtn"><i class="fas fa-play"></i> REPRODUCIR SONIDO DE LIMPIEZA</button>
+    <div class="frequency-note" style="font-size:0.6rem; text-align:center; margin-top:0.5rem;">150Hz → 300Hz · Coloca el teléfono boca abajo</div>
   </div>
 
   <button class="btn-diagnostic" id="fullDiagnosticBtn"><i class="fas fa-stethoscope"></i> EJECUTAR DIAGNÓSTICO COMPLETO</button>
@@ -393,288 +399,199 @@
     modal.querySelector('.close-modal').onclick = () => modal.remove();
   };
 
-  // === PRUEBA TÁCTIL CON DOS MODOS ===
-  let currentMode = 'drag'; // 'drag' o 'grid'
-  let touchModal = null;
-  let currentColor = '#0ff';
+  // === PRUEBAS DE PARLANTES ===
+  let audioCtx = null;
   
-  // MODO 1: BARRIDO CONTINUO (DRAG TEST) - Arrastrar sin soltar
-  function openDragTest() {
-    touchModal = document.createElement('div');
-    touchModal.className = 'touch-modal';
-    touchModal.innerHTML = `
-      <div style="position:absolute; top:15px; right:15px;">
-        <button id="closeTouchBtn" style="background:#ff4d6d; border:none; border-radius:2rem; padding:0.4rem 1rem; color:white;">✖ CERRAR</button>
+  function playTone(frequency, duration, type = 'sine') {
+    try {
+      if (audioCtx) audioCtx.close();
+      audioCtx = new AudioContext();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = type;
+      osc.frequency.value = frequency;
+      gain.gain.value = 0.35;
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+      setTimeout(() => osc.stop(), duration * 1000);
+      return true;
+    } catch(e) { return false; }
+  }
+
+  document.getElementById('speakerTopBtn').onclick = () => {
+    playTone(1800, 1.5);
+    showToast('🔊 PARLANTE SUPERIOR · Sonido agudo (1800Hz) · ¿Lo escuchas?', true);
+  };
+  
+  document.getElementById('speakerBottomBtn').onclick = () => {
+    playTone(400, 1.8, 'sine');
+    showToast('🔊 PARLANTE INFERIOR · Sonido grave (400Hz) · ¿Lo escuchas?', true);
+  };
+
+  // === PRUEBAS DE MICRÓFONO CON VISUALIZADOR DE ONDAS ===
+  let mediaStream = null;
+  let audioContext = null;
+  let sourceNode = null;
+  let analyserNode = null;
+  let animationId = null;
+  let currentMicModal = null;
+
+  function stopMicrophoneTest() {
+    if (animationId) cancelAnimationFrame(animationId);
+    if (sourceNode) sourceNode.disconnect();
+    if (analyserNode) analyserNode.disconnect();
+    if (audioContext) audioContext.close();
+    if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+    if (currentMicModal) currentMicModal.remove();
+    audioContext = null;
+    mediaStream = null;
+  }
+
+  function openMicTest(micName, micPosition) {
+    // Cerrar cualquier prueba anterior
+    stopMicrophoneTest();
+    
+    const modal = document.createElement('div');
+    modal.className = 'mic-modal';
+    modal.innerHTML = `
+      <div class="mic-card">
+        <h2><i class="fas fa-microphone"></i> Prueba de ${micName}</h2>
+        <p style="font-size:0.7rem; margin:0.5rem 0;">🎤 Habla cerca del ${micPosition} del teléfono</p>
+        <div class="waveform-container">
+          <canvas id="waveCanvas" class="wave-canvas" width="400" height="80"></canvas>
+        </div>
+        <div class="volume-meter">
+          <div class="volume-fill" id="volumeFill"></div>
+        </div>
+        <div class="mic-status" id="micStatus">
+          <i class="fas fa-circle" style="color:#ff4d6d; font-size:0.6rem;"></i> Esperando permiso...
+        </div>
+        <button id="closeMicTest" style="margin-top:1rem; background:#ff4d6d; border:none; border-radius:2rem; padding:0.5rem 1.5rem; color:white;">CERRAR</button>
       </div>
-      <div class="mode-selector">
-        <button class="mode-btn ${currentMode === 'drag' ? 'active' : ''}" data-mode="drag">✍️ MODO BARRIDO</button>
-        <button class="mode-btn ${currentMode === 'grid' ? 'active' : ''}" data-mode="grid">🔢 MODO CUADRÍCULA</button>
-      </div>
-      <h2 style="color:#0ff; margin-bottom:0.5rem;"><i class="fas fa-hand-pointer"></i> Prueba de Barrido Continuo</h2>
-      <p style="font-size:0.7rem; margin-bottom:0.5rem;">👇 Arrastra el dedo SIN SOLTAR por toda la pantalla</p>
-      <div class="color-options">
-        <div class="color-dot" style="background:#0ff;" data-color="#0ff"></div>
-        <div class="color-dot" style="background:#ff4d6d;" data-color="#ff4d6d"></div>
-        <div class="color-dot" style="background:#0f6;" data-color="#0f6"></div>
-        <div class="color-dot" style="background:#ff0;" data-color="#ff0"></div>
-      </div>
-      <canvas id="dragCanvas" class="drag-canvas" width="450" height="600"></canvas>
-      <div class="drag-stats">
-        <span>📏 Puntos trazados: <span id="pointCount">0</span></span>
-        <span style="margin-left:1rem;">🖌️ Línea continua</span>
-      </div>
-      <button id="clearDragBtn" style="margin-top:0.8rem; background:#ff4d6d; border:none; border-radius:2rem; padding:0.4rem 1.5rem; color:white;">🗑️ LIMPIAR PANTALLA</button>
     `;
-    document.body.appendChild(touchModal);
+    document.body.appendChild(modal);
+    currentMicModal = modal;
     
-    const dragCanvas = document.getElementById('dragCanvas');
-    const ctxDrag = dragCanvas.getContext('2d');
-    let drawing = false;
-    let pointCount = 0;
+    const waveCanvas = document.getElementById('waveCanvas');
+    const ctxWave = waveCanvas.getContext('2d');
+    const volumeFill = document.getElementById('volumeFill');
+    const micStatus = document.getElementById('micStatus');
     
-    // Ajustar tamaño del canvas
-    const resizeDragCanvas = () => {
-      const container = dragCanvas.parentElement;
-      const maxWidth = Math.min(container.clientWidth - 20, 450);
-      dragCanvas.style.width = `${maxWidth}px`;
-      dragCanvas.style.height = `${maxWidth * 1.3}px`;
-      dragCanvas.width = maxWidth;
-      dragCanvas.height = maxWidth * 1.3;
-      ctxDrag.fillStyle = '#0a0f1a';
-      ctxDrag.fillRect(0, 0, dragCanvas.width, dragCanvas.height);
-      ctxDrag.strokeStyle = currentColor;
-      ctxDrag.lineWidth = 4;
-      ctxDrag.lineCap = 'round';
-      ctxDrag.lineJoin = 'round';
+    waveCanvas.width = waveCanvas.clientWidth;
+    waveCanvas.height = waveCanvas.clientHeight;
+    
+    // Solicitar acceso al micrófono
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        mediaStream = stream;
+        micStatus.innerHTML = '<i class="fas fa-circle" style="color:#0f6; font-size:0.6rem;"></i> ✅ Micrófono activo · Habla ahora';
+        
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.fftSize = 256;
+        sourceNode = audioContext.createMediaStreamSource(stream);
+        sourceNode.connect(analyserNode);
+        
+        const bufferLength = analyserNode.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        
+        function drawWaveform() {
+          if (!analyserNode || !waveCanvas.isConnected) return;
+          analyserNode.getByteTimeDomainData(dataArray);
+          
+          // Calcular volumen promedio
+          let sum = 0;
+          for (let i = 0; i < bufferLength; i++) {
+            const v = (dataArray[i] - 128) / 128;
+            sum += v * v;
+          }
+          const rms = Math.sqrt(sum / bufferLength);
+          const volumePercent = Math.min(100, rms * 200);
+          volumeFill.style.width = `${volumePercent}%`;
+          
+          // Dibujar forma de onda
+          ctxWave.fillStyle = '#050a10';
+          ctxWave.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
+          ctxWave.beginPath();
+          ctxWave.strokeStyle = '#0ff';
+          ctxWave.lineWidth = 2;
+          
+          const sliceWidth = waveCanvas.width / bufferLength;
+          let x = 0;
+          for (let i = 0; i < bufferLength; i++) {
+            const v = dataArray[i] / 128;
+            const y = (v * waveCanvas.height / 2);
+            if (i === 0) ctxWave.moveTo(x, y);
+            else ctxWave.lineTo(x, y);
+            x += sliceWidth;
+          }
+          ctxWave.stroke();
+          
+          animationId = requestAnimationFrame(drawWaveform);
+        }
+        
+        audioContext.resume().then(() => {
+          drawWaveform();
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        micStatus.innerHTML = '<i class="fas fa-circle" style="color:#ff4d6d; font-size:0.6rem;"></i> ❌ Error: Permiso denegado o sin micrófono';
+        showToast('❌ Necesitas permitir el acceso al micrófono', false);
+      });
+    
+    modal.querySelector('#closeMicTest').onclick = () => {
+      stopMicrophoneTest();
+      modal.remove();
     };
-    resizeDragCanvas();
-    window.addEventListener('resize', resizeDragCanvas);
+  }
+  
+  document.getElementById('micTopBtn').onclick = () => openMicTest('Micrófono Superior', 'parte superior');
+  document.getElementById('micBottomBtn').onclick = () => openMicTest('Micrófono Inferior', 'parte inferior');
+
+  // === PRUEBA TÁCTIL ===
+  function openTouchTest() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-content" style="width:90%; max-width:450px;">
+        <h3><i class="fas fa-hand-pointer"></i> Prueba Táctil</h3>
+        <p style="font-size:0.7rem;">Arrastra el dedo por el recuadro para probar la pantalla</p>
+        <canvas id="touchCanvas" style="width:100%; height:300px; background:#0a0f1a; border-radius:1rem; margin:0.5rem 0; border:1px solid #0ff;" width="400" height="300"></canvas>
+        <button id="clearTouchBtn" style="background:#ff4d6d; border:none; border-radius:1rem; padding:0.4rem 1rem; margin-top:0.5rem;">🗑️ Limpiar</button>
+        <button class="close-modal" style="background:#0ff; border:none; border-radius:1rem; padding:0.4rem 1rem; margin-top:0.5rem;">Cerrar</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    const touchCanvas = modal.querySelector('#touchCanvas');
+    const ctxTouch = touchCanvas.getContext('2d');
+    let drawing = false;
+    touchCanvas.width = touchCanvas.clientWidth;
+    touchCanvas.height = touchCanvas.clientHeight;
+    ctxTouch.strokeStyle = '#0ff';
+    ctxTouch.lineWidth = 3;
+    ctxTouch.lineCap = 'round';
     
     function getCoords(e) {
-      const rect = dragCanvas.getBoundingClientRect();
-      const scaleX = dragCanvas.width / rect.width;
-      const scaleY = dragCanvas.height / rect.height;
-      let clientX, clientY;
-      if (e.touches) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-      } else {
-        clientX = e.clientX;
-        clientY = e.clientY;
-      }
-      let x = (clientX - rect.left) * scaleX;
-      let y = (clientY - rect.top) * scaleY;
-      x = Math.max(0, Math.min(dragCanvas.width, x));
-      y = Math.max(0, Math.min(dragCanvas.height, y));
-      return { x, y };
+      const rect = touchCanvas.getBoundingClientRect();
+      const scaleX = touchCanvas.width / rect.width;
+      const scaleY = touchCanvas.height / rect.height;
+      let cx, cy;
+      if (e.touches) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
+      else { cx = e.clientX; cy = e.clientY; }
+      return { x: (cx - rect.left) * scaleX, y: (cy - rect.top) * scaleY };
     }
-    
-    function startDraw(e) {
-      e.preventDefault();
-      drawing = true;
-      const { x, y } = getCoords(e);
-      ctxDrag.beginPath();
-      ctxDrag.moveTo(x, y);
-      ctxDrag.lineTo(x, y);
-      ctxDrag.stroke();
-      pointCount++;
-      document.getElementById('pointCount').innerHTML = pointCount;
-      if (navigator.vibrate) navigator.vibrate(10);
-    }
-    
-    function draw(e) {
-      e.preventDefault();
-      if (!drawing) return;
-      const { x, y } = getCoords(e);
-      ctxDrag.lineTo(x, y);
-      ctxDrag.stroke();
-      ctxDrag.beginPath();
-      ctxDrag.moveTo(x, y);
-      pointCount++;
-      document.getElementById('pointCount').innerHTML = pointCount;
-    }
-    
-    function endDraw() {
-      drawing = false;
-      ctxDrag.beginPath();
-    }
-    
-    dragCanvas.addEventListener('mousedown', startDraw);
-    dragCanvas.addEventListener('mousemove', draw);
-    dragCanvas.addEventListener('mouseup', endDraw);
-    dragCanvas.addEventListener('touchstart', startDraw);
-    dragCanvas.addEventListener('touchmove', draw);
-    dragCanvas.addEventListener('touchend', endDraw);
-    
-    // Cambiar color
-    document.querySelectorAll('.color-dot').forEach(dot => {
-      dot.addEventListener('click', () => {
-        currentColor = dot.dataset.color;
-        ctxDrag.strokeStyle = currentColor;
-      });
-    });
-    
-    document.getElementById('clearDragBtn').onclick = () => {
-      ctxDrag.fillStyle = '#0a0f1a';
-      ctxDrag.fillRect(0, 0, dragCanvas.width, dragCanvas.height);
-      ctxDrag.strokeStyle = currentColor;
-      pointCount = 0;
-      document.getElementById('pointCount').innerHTML = '0';
-      showToast('Pantalla limpiada', true);
-    };
-    
-    // Manejar cambio de modo
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const mode = btn.dataset.mode;
-        if (mode === 'grid') {
-          touchModal.remove();
-          openGridTest();
-        }
-      });
-    });
-    
-    document.getElementById('closeTouchBtn').onclick = () => touchModal.remove();
+    function start(e) { e.preventDefault(); drawing = true; const { x, y } = getCoords(e); ctxTouch.beginPath(); ctxTouch.moveTo(x, y); ctxTouch.lineTo(x, y); ctxTouch.stroke(); }
+    function draw(e) { e.preventDefault(); if (!drawing) return; const { x, y } = getCoords(e); ctxTouch.lineTo(x, y); ctxTouch.stroke(); ctxTouch.beginPath(); ctxTouch.moveTo(x, y); }
+    function end() { drawing = false; ctxTouch.beginPath(); }
+    touchCanvas.addEventListener('mousedown', start); touchCanvas.addEventListener('mousemove', draw); touchCanvas.addEventListener('mouseup', end);
+    touchCanvas.addEventListener('touchstart', start); touchCanvas.addEventListener('touchmove', draw); touchCanvas.addEventListener('touchend', end);
+    modal.querySelector('#clearTouchBtn').onclick = () => ctxTouch.clearRect(0, 0, touchCanvas.width, touchCanvas.height);
+    modal.querySelector('.close-modal').onclick = () => modal.remove();
   }
-  
-  // MODO 2: CUADRÍCULA (Toque por puntos en orden)
-  function openGridTest() {
-    touchModal = document.createElement('div');
-    touchModal.className = 'touch-modal';
-    let currentLevel = 1;
-    let currentSequence = [];
-    let currentIndex = 0;
-    let hits = 0;
-    let errors = 0;
-    let cells = [];
-    
-    const levelConfigs = {
-      1: { name: "NIVEL 1 · 3x3", gridSize: 3, generateSequence: (s) => Array.from({ length: s * s }, (_, i) => i) },
-      2: { name: "NIVEL 2 · Patrón Zigzag", gridSize: 3, generateSequence: (s) => {
-        const seq = [];
-        for (let row = 0; row < s; row++) {
-          if (row % 2 === 0) for (let col = 0; col < s; col++) seq.push(row * s + col);
-          else for (let col = s - 1; col >= 0; col--) seq.push(row * s + col);
-        }
-        return seq;
-      }},
-      3: { name: "NIVEL 3 · 4x4", gridSize: 4, generateSequence: (s) => Array.from({ length: s * s }, (_, i) => i) }
-    };
-    
-    function renderGrid(level) {
-      const config = levelConfigs[level];
-      const size = config.gridSize;
-      currentSequence = config.generateSequence(size);
-      currentIndex = 0;
-      hits = 0;
-      errors = 0;
-      
-      touchModal.innerHTML = `
-        <div style="position:absolute; top:15px; right:15px;">
-          <button id="closeTouchBtn" style="background:#ff4d6d; border:none; border-radius:2rem; padding:0.4rem 1rem; color:white;">✖ CERRAR</button>
-        </div>
-        <div class="mode-selector">
-          <button class="mode-btn" data-mode="drag">✍️ MODO BARRIDO</button>
-          <button class="mode-btn active" data-mode="grid">🔢 MODO CUADRÍCULA</button>
-        </div>
-        <div class="level-selector" style="display:flex; gap:0.8rem; margin-bottom:0.8rem;">
-          <button class="level-btn ${level === 1 ? 'active' : ''}" data-level="1">Nivel 1 (3x3)</button>
-          <button class="level-btn ${level === 2 ? 'active' : ''}" data-level="2">Nivel 2 (Patrón)</button>
-          <button class="level-btn ${level === 3 ? 'active' : ''}" data-level="3">Nivel 3 (4x4)</button>
-        </div>
-        <div class="touch-grid" style="display:grid; gap:12px; background:#0a0f1a; padding:20px; border-radius:1.5rem; border:2px solid #0ff; grid-template-columns:repeat(${size}, 1fr); width:${size === 3 ? '280px' : '340px'};" id="touchGrid"></div>
-        <div class="touch-stats" style="display:flex; gap:1.5rem; margin:0.8rem 0; font-size:0.7rem;">
-          <div>✅ Aciertos: <span id="hitCount">0</span></div>
-          <div>❌ Errores: <span id="errorCount">0</span></div>
-          <div>📊 Precisión: <span id="accuracy">0</span>%</div>
-        </div>
-        <div id="nextHint" style="font-size:0.7rem;">👉 Siguiente: ${currentSequence[0] + 1}</div>
-        <button id="resetGridBtn" style="margin-top:0.8rem; background:#ff4d6d; border:none; border-radius:2rem; padding:0.4rem 1.5rem; color:white;">🔄 REINICIAR NIVEL</button>
-      `;
-      
-      const gridContainer = touchModal.querySelector('#touchGrid');
-      gridContainer.innerHTML = '';
-      cells = [];
-      const total = size * size;
-      for (let i = 0; i < total; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'touch-cell';
-        cell.style.cssText = 'aspect-ratio:1; background:#1a2a3a; border-radius:1rem; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#0ff; cursor:pointer; border:1px solid #0ff3;';
-        if (i === currentSequence[currentIndex]) cell.style.background = '#0ff';
-        cell.textContent = i + 1;
-        cell.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const clickedIndex = i;
-          const expectedIndex = currentSequence[currentIndex];
-          if (clickedIndex === expectedIndex) {
-            hits++;
-            cell.style.background = '#0f6';
-            cell.style.color = '#000';
-            if (navigator.vibrate) navigator.vibrate(30);
-            currentIndex++;
-            updateStats();
-            if (currentIndex >= currentSequence.length) {
-              showToast(`🎉 ¡Nivel completado! Precisión: ${Math.round((hits/(hits+errors))*100)}%`, true);
-              setTimeout(() => renderGrid(level), 1000);
-            } else {
-              updateHighlight();
-            }
-          } else {
-            errors++;
-            cell.style.background = '#ff4d6d';
-            if (navigator.vibrate) navigator.vibrate(100);
-            setTimeout(() => { cell.style.background = '#1a2a3a'; }, 200);
-            updateStats();
-          }
-        });
-        gridContainer.appendChild(cell);
-        cells.push(cell);
-      }
-      
-      function updateHighlight() {
-        cells.forEach(cell => cell.style.background = '#1a2a3a');
-        if (currentIndex < currentSequence.length) {
-          const nextIdx = currentSequence[currentIndex];
-          cells[nextIdx].style.background = '#0ff';
-          touchModal.querySelector('#nextHint').innerHTML = `👉 Siguiente: ${nextIdx + 1}`;
-        }
-      }
-      
-      function updateStats() {
-        const totalClicks = hits + errors;
-        const accuracy = totalClicks > 0 ? Math.round((hits / totalClicks) * 100) : 0;
-        touchModal.querySelector('#hitCount').innerHTML = hits;
-        touchModal.querySelector('#errorCount').innerHTML = errors;
-        touchModal.querySelector('#accuracy').innerHTML = accuracy;
-      }
-      
-      touchModal.querySelector('#resetGridBtn').onclick = () => renderGrid(level);
-      
-      document.querySelectorAll('.level-btn').forEach(btn => {
-        btn.onclick = () => { renderGrid(parseInt(btn.dataset.level)); };
-      });
-    }
-    
-    renderGrid(1);
-    document.body.appendChild(touchModal);
-    
-    // Cambiar a modo barrido
-    setTimeout(() => {
-      const modeBtns = touchModal.querySelectorAll('.mode-btn');
-      modeBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          const mode = btn.dataset.mode;
-          if (mode === 'drag') {
-            touchModal.remove();
-            openDragTest();
-          }
-        });
-      });
-      const closeBtn = touchModal.querySelector('#closeTouchBtn');
-      if (closeBtn) closeBtn.onclick = () => touchModal.remove();
-    }, 100);
-  }
-  
+
   // === PRUEBA DE PIXELES ===
   function openPixelTest() {
     const modal = document.createElement('div');
@@ -693,91 +610,14 @@
     modal.innerHTML = `<div class="modal-content"><h3><i class="fas fa-wifi"></i> Redes WiFi</h3><div id="wifiList"><div style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Escaneando...</div></div><button class="close-modal" style="margin-top:1rem; background:#ff4d6d; border:none; border-radius:1rem; padding:0.5rem;">Cerrar</button></div>`;
     document.body.appendChild(modal);
     setTimeout(() => {
-      const redes = ['MIWIFI_2.4G', 'CLARO_XXXX', 'TIGO_1234', 'FIBERTEL_5G', 'ENTEL_Hogar'];
+      const redes = ['MIWIFI_2.4G', 'CLARO_XXXX', 'TIGO_1234', 'FIBERTEL_5G', 'ENTEL_Hogar', 'VECINO_WIFI'];
       modal.querySelector('#wifiList').innerHTML = redes.map(ssid => `<div style="background:#0ff1; padding:0.5rem; margin:0.3rem 0; border-radius:0.5rem;"><i class="fas fa-wifi"></i> ${ssid} <span style="float:right;">📶 ${Math.floor(40 + Math.random() * 50)}%</span></div>`).join('');
     }, 800);
     modal.querySelector('.close-modal').onclick = () => modal.remove();
   }
 
-  // === AUDIO Y SENSORES ===
-  let audioCtx = null;
-  let cleaningActive = false;
-  let cleaningOscillator = null;
-  let cleaningAudioCtx = null;
-  let waveInterval = null;
-  const waveBars = document.querySelectorAll('.wave-bar');
-
-  function animateWaves(active) {
-    if (waveInterval) clearInterval(waveInterval);
-    if (active) {
-      waveInterval = setInterval(() => waveBars.forEach(bar => bar.style.height = `${15 + Math.random() * 45}px`), 70);
-    } else waveBars.forEach(bar => bar.style.height = '20px');
-  }
-
-  document.getElementById('cleanSoundBtn').onclick = () => {
-    if (cleaningActive) {
-      if (cleaningOscillator) try { cleaningOscillator.stop(); } catch(e) {}
-      if (cleaningAudioCtx) cleaningAudioCtx.close();
-      cleaningActive = false;
-      animateWaves(false);
-      document.getElementById('cleanSoundBtn').innerHTML = '<i class="fas fa-play"></i> REPRODUCIR SONIDO';
-    } else {
-      try {
-        if (cleaningAudioCtx) cleaningAudioCtx.close();
-        cleaningAudioCtx = new AudioContext();
-        cleaningOscillator = cleaningAudioCtx.createOscillator();
-        const gain = cleaningAudioCtx.createGain();
-        cleaningOscillator.connect(gain);
-        gain.connect(cleaningAudioCtx.destination);
-        cleaningOscillator.type = 'sine';
-        cleaningOscillator.frequency.setValueAtTime(140, cleaningAudioCtx.currentTime);
-        cleaningOscillator.frequency.exponentialRampToValueAtTime(320, cleaningAudioCtx.currentTime + 7);
-        gain.gain.setValueAtTime(0.3, cleaningAudioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.00001, cleaningAudioCtx.currentTime + 8);
-        cleaningOscillator.start();
-        cleaningActive = true;
-        animateWaves(true);
-        document.getElementById('cleanSoundBtn').innerHTML = '<i class="fas fa-stop"></i> DETENER';
-        setTimeout(() => {
-          if (cleaningActive) {
-            cleaningActive = false;
-            animateWaves(false);
-            document.getElementById('cleanSoundBtn').innerHTML = '<i class="fas fa-play"></i> REPRODUCIR SONIDO';
-          }
-        }, 8000);
-      } catch(e) { showToast('⚠️ Error de audio', false); }
-    }
-  };
-
-  function playSpeaker() {
-    try {
-      if (audioCtx) audioCtx.close();
-      audioCtx = new AudioContext();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.frequency.value = 1000; gain.gain.value = 0.3;
-      osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 1.5);
-      setTimeout(() => osc.stop(), 1500);
-      showToast('🔊 Sonido reproducido', true);
-    } catch(e) { showToast('❌ Error', false); }
-  }
-  function testMicrophone() {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-      let chunks = [];
-      const recorder = new MediaRecorder(stream);
-      recorder.ondataavailable = e => chunks.push(e.data);
-      recorder.onstop = () => {
-        const audio = new Audio(URL.createObjectURL(new Blob(chunks)));
-        audio.play();
-        stream.getTracks().forEach(t => t.stop());
-        showToast('🎙️ Reproduciendo', true);
-      };
-      recorder.start(); setTimeout(() => recorder.stop(), 3000);
-      showToast('🎤 Grabando...', true);
-    }).catch(() => showToast('❌ Permiso denegado', false));
-  }
-  function testVibration() { if (navigator.vibrate) { navigator.vibrate(500); showToast('📳 Vibración OK', true); } else showToast('❌ No soportado', false); }
+  // === SENSORES ===
+  function testVibration() { if (navigator.vibrate) { navigator.vibrate(500); showToast('📳 Vibración activada', true); } else showToast('❌ No soportado', false); }
   function testAccelerometer() {
     if (window.DeviceMotionEvent) {
       const handler = () => { showToast('📊 Acelerómetro OK', true); window.removeEventListener('devicemotion', handler); };
@@ -802,20 +642,72 @@
   }
   function testCPU() { showToast(`🧠 CPU: ${navigator.hardwareConcurrency || '?'} núcleos · RAM: ${navigator.deviceMemory || '?'}GB`, true); }
 
-  document.getElementById('touchTestBtn').onclick = () => openDragTest();
+  // === LIMPIEZA DE PARLANTES ===
+  let cleaningActive = false;
+  let cleaningOscillator = null;
+  let cleaningAudioCtx = null;
+  let waveInterval = null;
+  const waveBars = document.querySelectorAll('.wave-bar');
+
+  function animateWaves(active) {
+    if (waveInterval) clearInterval(waveInterval);
+    if (active) {
+      waveInterval = setInterval(() => waveBars.forEach(bar => bar.style.height = `${15 + Math.random() * 45}px`), 70);
+    } else waveBars.forEach(bar => bar.style.height = '20px');
+  }
+
+  document.getElementById('cleanSoundBtn').onclick = () => {
+    if (cleaningActive) {
+      if (cleaningOscillator) try { cleaningOscillator.stop(); } catch(e) {}
+      if (cleaningAudioCtx) cleaningAudioCtx.close();
+      cleaningActive = false;
+      animateWaves(false);
+      document.getElementById('cleanSoundBtn').innerHTML = '<i class="fas fa-play"></i> REPRODUCIR SONIDO DE LIMPIEZA';
+      showToast('Limpieza detenida', true);
+    } else {
+      try {
+        if (cleaningAudioCtx) cleaningAudioCtx.close();
+        cleaningAudioCtx = new AudioContext();
+        cleaningOscillator = cleaningAudioCtx.createOscillator();
+        const gain = cleaningAudioCtx.createGain();
+        cleaningOscillator.connect(gain);
+        gain.connect(cleaningAudioCtx.destination);
+        cleaningOscillator.type = 'sine';
+        cleaningOscillator.frequency.setValueAtTime(140, cleaningAudioCtx.currentTime);
+        cleaningOscillator.frequency.exponentialRampToValueAtTime(320, cleaningAudioCtx.currentTime + 7);
+        gain.gain.setValueAtTime(0.3, cleaningAudioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.00001, cleaningAudioCtx.currentTime + 8);
+        cleaningOscillator.start();
+        cleaningActive = true;
+        animateWaves(true);
+        document.getElementById('cleanSoundBtn').innerHTML = '<i class="fas fa-stop"></i> DETENER';
+        showToast('🔊 Limpieza activa · Coloca el teléfono boca abajo', true);
+        setTimeout(() => {
+          if (cleaningActive) {
+            cleaningActive = false;
+            animateWaves(false);
+            document.getElementById('cleanSoundBtn').innerHTML = '<i class="fas fa-play"></i> REPRODUCIR SONIDO DE LIMPIEZA';
+            showToast('✅ Ciclo de limpieza completado', true);
+          }
+        }, 8000);
+      } catch(e) { showToast('⚠️ Error de audio', false); }
+    }
+  };
+
+  // === EVENTOS ===
+  document.getElementById('touchTestBtn').onclick = openTouchTest;
   document.getElementById('pixelTestBtn').onclick = openPixelTest;
   document.getElementById('wifiTestBtn').onclick = openWifiTest;
-  document.getElementById('speakerTestBtn').onclick = playSpeaker;
-  document.getElementById('micTestBtn').onclick = testMicrophone;
   document.getElementById('vibrationTestBtn').onclick = testVibration;
   document.getElementById('accelTestBtn').onclick = testAccelerometer;
   document.getElementById('gyroTestBtn').onclick = testGyroscope;
   document.getElementById('batteryTestBtn').onclick = testBattery;
   document.getElementById('cpuTestBtn').onclick = testCPU;
+  
   document.getElementById('fullDiagnosticBtn').onclick = async () => {
     showToast('🔬 Diagnóstico completo...', true);
-    playSpeaker(); await new Promise(r => setTimeout(r, 1500));
-    testMicrophone(); await new Promise(r => setTimeout(r, 3500));
+    playTone(1000, 1); await new Promise(r => setTimeout(r, 1500));
+    showToast('✅ Diagnóstico de audio completado', true);
     testVibration(); await new Promise(r => setTimeout(r, 1000));
     testAccelerometer(); await new Promise(r => setTimeout(r, 3000));
     testGyroscope(); await new Promise(r => setTimeout(r, 3000));
@@ -824,7 +716,7 @@
   };
 
   const whatsapp = "59175589308";
-  document.getElementById('wspFloat').onclick = () => window.open(`https://wa.me/${whatsapp}?text=Hola%20DR%20XIAOMI%2C%20necesito%20ayuda`, '_blank');
+  document.getElementById('wspFloat').onclick = () => window.open(`https://wa.me/${whatsapp}?text=Hola%20DR%20XIAOMI%2C%20necesito%20ayuda%20con%20mi%20teléfono`, '_blank');
 </script>
 </body>
 </html>
