@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#FF6900">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="Catálogo de pantallas y repuestos - Precios actualizados">
+  <meta name="description" content="Catálogo de pantallas y repuestos - Búsqueda avanzada">
   <title>DR. XIAOMI | Pantallas y Repuestos</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -200,6 +200,7 @@
       transform: translateY(-50%);
       display: flex;
       gap: 2px;
+      align-items: center;
     }
 
     .search-actions button {
@@ -211,6 +212,23 @@
       padding: 6px 10px;
       border-radius: 20px;
       transition: var(--transition);
+    }
+    
+    /* Loader circular en el buscador */
+    .search-loader {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border);
+      border-top: 2px solid var(--xiaomi-orange);
+      border-radius: 50%;
+      animation: spinLoader 0.6s linear infinite;
+      margin-right: 6px;
+      display: inline-block;
+    }
+    
+    @keyframes spinLoader {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .suggestions-panel {
@@ -626,25 +644,18 @@
         <h1>DR XIAOMI <span>Catálogo</span></h1>
       </div>
       <div class="header-actions">
-        <button class="icon-btn" id="themeToggle" title="Tema">
-          <i class="fas fa-moon"></i>
-        </button>
-        <button class="icon-btn" id="techModeBtn" title="Modo Técnico">
-          <i class="fas fa-microchip"></i>
-        </button>
-        <button class="icon-btn" id="receiptBtn" title="Recibo">
-          <i class="fas fa-receipt"></i>
-        </button>
-        <button class="icon-btn" id="shuffleBtn" title="Mezclar">
-          <i class="fas fa-random"></i>
-        </button>
+        <button class="icon-btn" id="themeToggle" title="Tema"><i class="fas fa-moon"></i></button>
+        <button class="icon-btn" id="techModeBtn" title="Modo Técnico"><i class="fas fa-microchip"></i></button>
+        <button class="icon-btn" id="receiptBtn" title="Recibo"><i class="fas fa-receipt"></i></button>
+        <button class="icon-btn" id="shuffleBtn" title="Mezclar"><i class="fas fa-random"></i></button>
       </div>
     </div>
     
     <div class="search-wrapper">
       <div class="search-container">
         <input type="text" id="searchInput" class="search-input" placeholder="Buscar modelo exacto... Ej: Redmi Note 10 Pro" autocomplete="off">
-        <div class="search-actions">
+        <div class="search-actions" id="searchActions">
+          <div id="searchLoaderIndicator" style="display: none;"><div class="search-loader"></div></div>
           <button id="clearSearchBtn" style="display: none;"><i class="fas fa-times"></i></button>
         </div>
       </div>
@@ -658,7 +669,7 @@
     <button class="filter-chip" data-filter="LCD">📟 LCD</button>
   </div>
 
-  <div class="main-content">
+  <div class="main-content" id="mainScrollContainer">
     <div id="resultsCount" class="results-count"></div>
     <div id="resultsContainer"></div>
   </div>
@@ -669,21 +680,15 @@
   </nav>
 </div>
 
-<div id="techModal" class="modal">
-  <div class="modal-content">
-    <h3>🔐 Acceso Técnico</h3>
-    <input type="password" id="techPassword" placeholder="Clave de acceso" autocomplete="off">
-    <div class="modal-buttons">
-      <button onclick="closeModal('techModal')">Cancelar</button>
-      <button id="confirmTechBtn">Acceder</button>
-    </div>
-  </div>
-</div>
+<div id="techModal" class="modal"><div class="modal-content"><h3>🔐 Acceso Técnico</h3><input type="password" id="techPassword" placeholder="Clave de acceso" autocomplete="off"><div class="modal-buttons"><button onclick="closeModal('techModal')">Cancelar</button><button id="confirmTechBtn">Acceder</button></div></div></div>
 
 <script>
   // ============================================================
-  // MOTOR DE BÚSQUEDA PRECISA
+  // MOTOR DE BÚSQUEDA AVANZADO + SCROLL AUTOMÁTICO AL TOP
   // ============================================================
+  let searchDebounceTimer = null;
+  let isSearching = false;
+  const mainScrollContainer = document.getElementById("mainScrollContainer");
   
   function normalizeText(str) {
     return str
@@ -695,24 +700,47 @@
       .trim();
   }
 
-  function getTokens(str) {
-    return normalizeText(str).split(" ").filter(t => t.length > 0);
+  // ALGORITMO DE PUNTUACIÓN PARA MEJORAR COINCIDENCIAS
+  function getRelevanceScore(item, searchTokens) {
+    const modeloNorm = normalizeText(item.modelo);
+    const marcaNorm = normalizeText(item.marca);
+    const combined = modeloNorm + " " + marcaNorm;
+    let totalScore = 0;
+    
+    for (const token of searchTokens) {
+      if (combined.includes(token)) {
+        totalScore += 10;
+        if (modeloNorm.startsWith(token)) totalScore += 5;
+        const wordBoundary = new RegExp(`\\b${token}\\b`);
+        if (wordBoundary.test(combined)) totalScore += 3;
+      }
+    }
+    
+    const allTokensMatch = searchTokens.every(token => combined.includes(token));
+    if (allTokensMatch) totalScore += 20;
+    if (normalizeText(item.modelo) === searchTokens.join(" ")) totalScore += 50;
+    
+    return totalScore;
   }
 
   function performPreciseSearch(data, searchTerm) {
     if (!searchTerm.trim()) return data;
     
     const searchTokens = getTokens(searchTerm);
+    if (searchTokens.length === 0) return data;
     
-    return data.filter(item => {
-      const modeloNormalized = normalizeText(item.modelo);
-      const marcaNormalized = normalizeText(item.marca);
-      const combinedText = modeloNormalized + " " + marcaNormalized;
-      
-      return searchTokens.every(token => {
-        return combinedText.includes(token);
-      });
-    });
+    const scored = data.map(item => ({
+      item,
+      score: getRelevanceScore(item, searchTokens)
+    }));
+    
+    let filtered = scored.filter(s => s.score > 0);
+    filtered.sort((a, b) => b.score - a.score);
+    return filtered.map(s => s.item);
+  }
+
+  function getTokens(str) {
+    return normalizeText(str).split(" ").filter(t => t.length > 0);
   }
 
   function generateSuggestions(searchTerm) {
@@ -722,48 +750,41 @@
     const suggestionsMap = new Map();
     
     allData.forEach(product => {
-      const modeloNormalized = normalizeText(product.modelo);
-      const marcaNormalized = normalizeText(product.marca);
-      const combinedText = modeloNormalized + " " + marcaNormalized;
-      
-      const allTokensMatch = searchTokens.every(token => combinedText.includes(token));
-      
-      if (allTokensMatch) {
+      const score = getRelevanceScore(product, searchTokens);
+      if (score > 0) {
         const key = `${product.marca}|${product.modelo}`;
-        if (!suggestionsMap.has(key)) {
+        if (!suggestionsMap.has(key) || suggestionsMap.get(key).score < score) {
           suggestionsMap.set(key, {
             marca: product.marca,
             modelo: product.modelo,
             tipo: product.tipo,
-            venta: product.venta
+            venta: product.venta,
+            score: score
           });
         }
       }
     });
     
     return Array.from(suggestionsMap.values())
-      .sort((a, b) => a.venta - b.venta)
+      .sort((a, b) => b.score - a.score)
       .slice(0, 8);
   }
 
   function highlightMatch(text, searchTerm) {
     if (!searchTerm.trim()) return escapeHtml(text);
-    
     const tokens = getTokens(searchTerm);
     let result = escapeHtml(text);
-    
     tokens.forEach(token => {
       if (token.length < 1) return;
       const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const regex = new RegExp(`(${escapedToken})`, 'gi');
       result = result.replace(regex, '<span class="suggestion-highlight">$1</span>');
     });
-    
     return result;
   }
 
   // ============================================================
-  // CONFIGURACIÓN
+  // CONFIGURACIÓN DE DATOS
   // ============================================================
   const CONFIG = {
     dataSources: [
@@ -782,7 +803,6 @@
   let techMode = false;
   let currentTab = "home";
   let currentFilter = "all";
-  let popupWindow = null;
   let currentTheme = "light";
   let selectedSuggestionIndex = -1;
 
@@ -791,27 +811,58 @@
   const resultsCount = document.getElementById("resultsCount");
   const suggestionsPanel = document.getElementById("suggestionsPanel");
   const clearSearchBtn = document.getElementById("clearSearchBtn");
+  const searchLoaderIndicator = document.getElementById("searchLoaderIndicator");
+
+  function showSearchLoader() {
+    if (searchLoaderIndicator) searchLoaderIndicator.style.display = "inline-flex";
+    isSearching = true;
+  }
+  
+  function hideSearchLoader() {
+    if (searchLoaderIndicator) searchLoaderIndicator.style.display = "none";
+    isSearching = false;
+  }
+  
+  // FUNCIÓN PARA SCROLLEAR AL INICIO DEL CONTENIDO
+  function scrollToTopOfResults() {
+    if (mainScrollContainer) {
+      mainScrollContainer.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  }
 
   function applyFiltersAndSearch() {
-    let data = [...allData];
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
     
-    if (currentFilter !== "all") {
-      data = data.filter(item => item.tipo === currentFilter);
-    }
+    showSearchLoader();
     
-    const searchTerm = searchInput.value.trim();
-    if (searchTerm) {
-      data = performPreciseSearch(data, searchTerm);
-      clearSearchBtn.style.display = 'block';
-    } else {
-      clearSearchBtn.style.display = 'none';
-    }
-    
-    data.sort((a, b) => a.venta - b.venta);
-    
-    filteredData = data;
-    updateResultsCount();
-    render();
+    searchDebounceTimer = setTimeout(() => {
+      let data = [...allData];
+      
+      if (currentFilter !== "all") {
+        data = data.filter(item => item.tipo === currentFilter);
+      }
+      
+      const searchTerm = searchInput.value.trim();
+      if (searchTerm) {
+        data = performPreciseSearch(data, searchTerm);
+        clearSearchBtn.style.display = 'block';
+      } else {
+        clearSearchBtn.style.display = 'none';
+      }
+      
+      data.sort((a, b) => a.venta - b.venta);
+      
+      filteredData = data;
+      updateResultsCount();
+      render();
+      hideSearchLoader();
+      
+      // SCROLL AUTOMÁTICO AL INICIO DE RESULTADOS (nueva búsqueda = empezar desde arriba)
+      scrollToTopOfResults();
+    }, 200);
   }
 
   function updateSuggestions() {
@@ -824,14 +875,13 @@
     }
     
     const suggestions = generateSuggestions(searchTerm);
-    
     if (suggestions.length === 0) {
       suggestionsPanel.classList.remove('active');
       return;
     }
     
     suggestionsPanel.innerHTML = `
-      <div class="suggestion-header">💡 COINCIDENCIAS (${suggestions.length})</div>
+      <div class="suggestion-header">💡 MEJORES COINCIDENCIAS (${suggestions.length})</div>
       ${suggestions.map((s, index) => `
         <div class="suggestion-item" data-index="${index}" data-modelo="${escapeHtml(s.modelo)}">
           <i class="fas fa-mobile-alt"></i>
@@ -908,6 +958,7 @@
       filteredData = shuffleArray(allData);
       updateResultsCount();
       render();
+      scrollToTopOfResults();
       showToast("🔄 Productos mezclados");
     }
   }
@@ -951,14 +1002,11 @@
   function parseCSV(text, providerName) {
     const lines = text.split("\n").filter(line => line.trim() !== "");
     if (lines.length < 2) return [];
-    
     const data = [];
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
       if (!line.trim()) continue;
-      
       const columns = parseCSVLine(line);
-      
       if (columns.length >= 6) {
         const marca = cleanText(columns[0]);
         const modelo = cleanText(columns[1]);
@@ -966,17 +1014,8 @@
         const proveedor = cleanText(columns[3]) || providerName;
         const precio_compra = parsePrice(columns[4]);
         const precio_venta = parsePrice(columns[5]);
-        
         if (modelo && modelo !== "Modelo" && modelo !== "") {
-          data.push({
-            id: crypto.randomUUID(),
-            marca: marca || "N/A",
-            modelo: modelo,
-            tipo: tipo === "OLED" ? "OLED" : "LCD",
-            proveedor: proveedor,
-            compra: precio_compra,
-            venta: precio_venta
-          });
+          data.push({ id: crypto.randomUUID(), marca: marca || "N/A", modelo, tipo: tipo === "OLED" ? "OLED" : "LCD", proveedor, compra: precio_compra, venta: precio_venta });
         }
       } else if (columns.length >= 5) {
         const marca = cleanText(columns[0]);
@@ -984,17 +1023,8 @@
         const tipo = cleanText(columns[2]).toUpperCase();
         const precio_compra = parsePrice(columns[3]);
         const precio_venta = parsePrice(columns[4]);
-        
         if (modelo && modelo !== "Modelo" && modelo !== "") {
-          data.push({
-            id: crypto.randomUUID(),
-            marca: marca || "N/A",
-            modelo: modelo,
-            tipo: tipo === "OLED" ? "OLED" : "LCD",
-            proveedor: providerName,
-            compra: precio_compra,
-            venta: precio_venta
-          });
+          data.push({ id: crypto.randomUUID(), marca: marca || "N/A", modelo, tipo: tipo === "OLED" ? "OLED" : "LCD", proveedor: providerName, compra: precio_compra, venta: precio_venta });
         }
       }
     }
@@ -1005,294 +1035,62 @@
     const result = [];
     let current = "";
     let inQuotes = false;
-    
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === "," && !inQuotes) {
-        result.push(current.trim());
-        current = "";
-      } else {
-        current += char;
-      }
+      if (char === '"') inQuotes = !inQuotes;
+      else if (char === "," && !inQuotes) { result.push(current.trim()); current = ""; }
+      else current += char;
     }
     result.push(current.trim());
     return result.map(field => field.replace(/^"|"$/g, ""));
   }
 
-  function cleanText(text) {
-    if (!text) return "";
-    return text.trim().replace(/^"|"$/g, "");
-  }
-
+  function cleanText(text) { return text ? text.trim().replace(/^"|"$/g, "") : ""; }
   function parsePrice(priceStr) {
-    if (!priceStr || priceStr.trim() === "") return 0;
-    let str = priceStr.toString().trim();
-    str = str.replace(/[^\d.,-]/g, "");
+    if (!priceStr) return 0;
+    let str = priceStr.toString().trim().replace(/[^\d.,-]/g, "");
     const num = parseFloat(str.replace(/,/g, "."));
-    if (isNaN(num)) return 0;
-    return Math.round(num);
+    return isNaN(num) ? 0 : Math.round(num);
   }
 
   function render() {
     if (!container) return;
-    
-    if (currentTab === "compare") {
-      showCompareModal();
-      return;
-    }
-    
+    if (currentTab === "compare") { showCompareModal(); return; }
     container.innerHTML = renderCards(filteredData);
   }
 
   function renderCards(data) {
     if (data.length === 0) {
       const searchTerm = searchInput.value.trim();
-      return `
-        <div class="empty-state">
-          <i class="fas fa-search"></i>
-          <p style="font-weight: 600; margin-bottom: 8px;">Sin resultados</p>
-          ${searchTerm ? `<p style="font-size: 13px;">No se encontró "${escapeHtml(searchTerm)}"</p>` : ''}
-          <p style="font-size: 11px; margin-top: 12px; color: var(--text-tertiary);">💡 Escribe el nombre exacto del modelo</p>
-        </div>
-      `;
+      return `<div class="empty-state"><i class="fas fa-search"></i><p style="font-weight: 600; margin-bottom: 8px;">Sin resultados</p>${searchTerm ? `<p style="font-size: 13px;">No se encontró "${escapeHtml(searchTerm)}"</p>` : ''}<p style="font-size: 11px; margin-top: 12px;">💡 Escribe el nombre exacto del modelo</p></div>`;
     }
-    
-    return `
-      <div class="cards-view">
-        ${data.map((item) => `
-          <div class="product-card">
-            <div class="card-header">
-              <div>
-                <div class="card-brand">${escapeHtml(item.marca)}</div>
-                <div class="card-model">${escapeHtml(item.modelo)}</div>
-              </div>
-            </div>
-            <div class="card-specs">
-              <span class="card-type ${item.tipo === 'OLED' ? 'oled' : ''}">${item.tipo}</span>
-              ${techMode ? `<span class="supplier-badge">🏷️ ${escapeHtml(item.proveedor)}</span>` : ''}
-              ${techMode ? `<span class="price-badge">Compra: ${item.compra.toLocaleString()} Bs</span>` : ''}
-            </div>
-            <div class="card-price-row">
-              <span class="card-price" onclick="copyPriceToClipboard('${item.id}')">${item.venta.toLocaleString()} Bs</span>
-              <div class="card-actions-group">
-                <button class="image-btn" onclick="openGooglePopup('${item.id}')"><i class="fab fa-google"></i> LCD</button>
-                <button class="whatsapp-btn" onclick="shareToWhatsApp('${item.id}')"><i class="fab fa-whatsapp"></i></button>
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
+    return `<div class="cards-view">${data.map(item => `<div class="product-card"><div class="card-header"><div><div class="card-brand">${escapeHtml(item.marca)}</div><div class="card-model">${escapeHtml(item.modelo)}</div></div></div><div class="card-specs"><span class="card-type ${item.tipo === 'OLED' ? 'oled' : ''}">${item.tipo}</span>${techMode ? `<span class="supplier-badge">🏷️ ${escapeHtml(item.proveedor)}</span><span class="price-badge">Compra: ${item.compra.toLocaleString()} Bs</span>` : ''}</div><div class="card-price-row"><span class="card-price" onclick="copyPriceToClipboard('${item.id}')">${item.venta.toLocaleString()} Bs</span><div class="card-actions-group"><button class="image-btn" onclick="openGooglePopup('${item.id}')"><i class="fab fa-google"></i> LCD</button><button class="whatsapp-btn" onclick="shareToWhatsApp('${item.id}')"><i class="fab fa-whatsapp"></i></button></div></div></div>`).join('')}</div>`;
   }
 
-  function copyPriceToClipboard(productId) {
-    const product = allData.find(p => p.id === productId);
-    if (!product) return;
-    
-    const message = `📱 ${product.marca} ${product.modelo}\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
-    
-    navigator.clipboard.writeText(message).then(() => {
-      showToast("✅ Precio copiado");
-      if (navigator.vibrate) navigator.vibrate(50);
-    }).catch(() => {
-      showToast("❌ Error al copiar");
-    });
-  }
-
-  function shareToWhatsApp(productId) {
-    const product = allData.find(p => p.id === productId);
-    if (!product) return;
-    
-    const message = `📱 *${product.marca} ${product.modelo}*\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/?text=${encoded}`, "_blank");
-    if (navigator.vibrate) navigator.vibrate(50);
-  }
-
-  function openGooglePopup(productId) {
-    const product = allData.find(p => p.id === productId);
-    if (!product) return;
-    
-    const searchTerm = `LCD ${product.modelo} ${product.marca} pantalla`;
-    const encodedTerm = encodeURIComponent(searchTerm);
-    const googleUrl = `https://www.google.com/search?q=${encodedTerm}&tbm=isch`;
-    
-    const width = Math.min(450, screen.width - 40);
-    const height = Math.min(650, screen.height - 80);
-    const left = (screen.width - width) / 2;
-    const top = (screen.height - height) / 2;
-    
-    popupWindow = window.open(googleUrl, 'GoogleImagesPopup', 
-      `width=${width},height=${height},left=${left},top=${top},toolbar=yes,location=yes,scrollbars=yes,resizable=yes`);
-    if (popupWindow) popupWindow.focus();
-    if (navigator.vibrate) navigator.vibrate(50);
-  }
-
-  function updateResultsCount() {
-    if (resultsCount) {
-      const count = filteredData.length;
-      resultsCount.textContent = `${count} producto${count !== 1 ? 's' : ''}`;
-    }
-  }
-
-  function showTechModal() {
-    document.getElementById("techModal").style.display = "flex";
-    document.getElementById("techPassword").focus();
-  }
-
-  function closeModal(modalId) {
-    document.getElementById(modalId).style.display = "none";
-    const input = document.querySelector(`#${modalId} input`);
-    if (input) input.value = "";
-  }
-
-  function showToast(message) {
-    const existingToast = document.querySelector('.toast');
-    if (existingToast) existingToast.remove();
-    
-    const toast = document.createElement("div");
-    toast.className = "toast";
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
-  }
-
-  function showSkeleton() {
-    if (container) {
-      container.innerHTML = `
-        <div class="cards-view">
-          ${Array(6).fill().map(() => `
-            <div class="product-card" style="height: 120px;">
-              <div style="background: linear-gradient(90deg, var(--border) 25%, transparent 50%, var(--border) 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 12px; height: 100%;"></div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    }
-  }
-
-  function showError() {
-    if (container) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <i class="fas fa-exclamation-triangle"></i>
-          <p>Error cargando datos</p>
-          <button onclick="location.reload()" style="margin-top: 16px; padding: 12px 24px; background: var(--xiaomi-orange); border: none; border-radius: 30px; color: white; font-weight: 600;">Reintentar</button>
-        </div>
-      `;
-    }
-  }
-
-  function showCompareModal() {
-    const compareData = filteredData.slice(0, 4);
-    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
-    compareData.forEach(p => {
-      html += `
-        <div style="background: var(--bg-secondary); padding: 14px; border-radius: 16px; border-left: 4px solid var(--xiaomi-orange);">
-          <div style="font-size: 12px; color: var(--xiaomi-orange); font-weight: 700;">${escapeHtml(p.marca)}</div>
-          <div style="font-size: 15px; font-weight: 600; margin: 4px 0;">${escapeHtml(p.modelo)}</div>
-          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">${p.tipo}</div>
-          <div style="font-size: 22px; font-weight: 800;">${p.venta.toLocaleString()} Bs</div>
-        </div>
-      `;
-    });
-    html += '</div><div class="modal-buttons" style="margin-top: 16px;"><button onclick="closeCompareModal()" style="flex:1; padding: 12px; background: var(--xiaomi-orange); border: none; border-radius: 30px; color: white; font-weight: 600;">Cerrar</button></div>';
-    
-    const modalHtml = `
-      <div id="compareModal" class="modal" style="display: flex;">
-        <div class="modal-content" style="max-width: 350px;">
-          <h3>📊 Comparar</h3>
-          ${html}
-        </div>
-      </div>
-    `;
-    
-    const existing = document.getElementById("compareModal");
-    if (existing) existing.remove();
-    document.body.insertAdjacentHTML("beforeend", modalHtml);
-  }
-
-  function closeCompareModal() {
-    const modal = document.getElementById("compareModal");
-    if (modal) modal.remove();
-  }
-
-  function escapeHtml(str) {
-    if (!str) return "";
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
+  function copyPriceToClipboard(productId) { const p = allData.find(p => p.id === productId); if(p){ const msg = `📱 ${p.marca} ${p.modelo}\n💰 Precio: ${p.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`; navigator.clipboard.writeText(msg).then(()=>showToast("✅ Precio copiado")).catch(()=>showToast("❌ Error")); if(navigator.vibrate) navigator.vibrate(50); } }
+  function shareToWhatsApp(productId) { const p = allData.find(p => p.id === productId); if(p){ window.open(`https://wa.me/?text=${encodeURIComponent(`📱 *${p.marca} ${p.modelo}*\n💰 Precio: ${p.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`)}`, "_blank"); if(navigator.vibrate) navigator.vibrate(50); } }
+  function openGooglePopup(productId) { const p = allData.find(p => p.id === productId); if(p){ window.open(`https://www.google.com/search?q=${encodeURIComponent(`LCD ${p.modelo} ${p.marca} pantalla`)}&tbm=isch`, "_blank", "width=450,height=650,toolbar=yes,scrollbars=yes"); if(navigator.vibrate) navigator.vibrate(50); } }
+  function updateResultsCount() { if(resultsCount) resultsCount.textContent = `${filteredData.length} producto${filteredData.length !== 1 ? 's' : ''}`; }
+  function showTechModal() { document.getElementById("techModal").style.display = "flex"; document.getElementById("techPassword").focus(); }
+  function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; const input = document.querySelector(`#${modalId} input`); if(input) input.value = ""; }
+  function showToast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2000); }
+  function showSkeleton(){ if(container) container.innerHTML=`<div class="cards-view">${Array(6).fill().map(()=>`<div class="product-card" style="height:120px;"><div style="background:linear-gradient(90deg, var(--border) 25%, transparent 50%, var(--border) 75%); background-size:200% 100%; animation:loading 1.5s infinite; border-radius:12px; height:100%;"></div></div>`).join('')}</div>`; }
+  function showError(){ if(container) container.innerHTML=`<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error cargando datos</p><button onclick="location.reload()" style="margin-top:16px;padding:12px 24px;background:var(--xiaomi-orange);border:none;border-radius:30px;color:white;font-weight:600;">Reintentar</button></div>`; }
+  function showCompareModal(){ const compareData = filteredData.slice(0,4); let html = '<div style="display:flex;flex-direction:column;gap:12px;">'; compareData.forEach(p=>{ html+=`<div style="background:var(--bg-secondary);padding:14px;border-radius:16px;border-left:4px solid var(--xiaomi-orange);"><div style="font-size:12px;color:var(--xiaomi-orange);font-weight:700;">${escapeHtml(p.marca)}</div><div style="font-size:15px;font-weight:600;margin:4px 0;">${escapeHtml(p.modelo)}</div><div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">${p.tipo}</div><div style="font-size:22px;font-weight:800;">${p.venta.toLocaleString()} Bs</div></div>`; }); html+='</div><div class="modal-buttons" style="margin-top:16px;"><button onclick="closeCompareModal()" style="flex:1;padding:12px;background:var(--xiaomi-orange);border:none;border-radius:30px;color:white;font-weight:600;">Cerrar</button></div>'; const modalHtml=`<div id="compareModal" class="modal" style="display:flex;"><div class="modal-content" style="max-width:350px;"><h3>📊 Comparar</h3>${html}</div></div>`; const existing=document.getElementById("compareModal"); if(existing) existing.remove(); document.body.insertAdjacentHTML("beforeend",modalHtml); }
+  function closeCompareModal(){ const modal=document.getElementById("compareModal"); if(modal) modal.remove(); }
+  function escapeHtml(str){ if(!str) return ""; const div=document.createElement('div'); div.textContent=str; return div.innerHTML; }
 
   function setupEventListeners() {
-    searchInput?.addEventListener("input", () => {
-      updateSuggestions();
-    });
-    
-    searchInput?.addEventListener("keydown", (e) => {
-      const items = suggestionsPanel.querySelectorAll('.suggestion-item');
-      
-      if (e.key === 'ArrowDown' && items.length > 0) {
-        e.preventDefault();
-        selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, items.length - 1);
-        items.forEach((item, i) => item.classList.toggle('active', i === selectedSuggestionIndex));
-      } else if (e.key === 'ArrowUp' && items.length > 0) {
-        e.preventDefault();
-        selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, 0);
-        items.forEach((item, i) => item.classList.toggle('active', i === selectedSuggestionIndex));
-      } else if (e.key === 'Enter') {
-        suggestionsPanel.classList.remove('active');
-        applyFiltersAndSearch();
-      } else if (e.key === 'Escape') {
-        suggestionsPanel.classList.remove('active');
-        selectedSuggestionIndex = -1;
-      }
-    });
-    
-    document.getElementById("clearSearchBtn")?.addEventListener("click", () => {
-      searchInput.value = "";
-      suggestionsPanel.classList.remove('active');
-      clearSearchBtn.style.display = 'none';
-      applyFiltersAndSearch();
-      searchInput.focus();
-    });
-    
+    searchInput?.addEventListener("input", () => { updateSuggestions(); applyFiltersAndSearch(); });
+    searchInput?.addEventListener("keydown", (e) => { if(e.key === 'Enter'){ suggestionsPanel.classList.remove('active'); applyFiltersAndSearch(); } if(e.key === 'Escape') suggestionsPanel.classList.remove('active'); });
+    document.getElementById("clearSearchBtn")?.addEventListener("click", () => { searchInput.value = ""; suggestionsPanel.classList.remove('active'); clearSearchBtn.style.display = 'none'; applyFiltersAndSearch(); searchInput.focus(); });
     document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
     document.getElementById("techModeBtn")?.addEventListener("click", showTechModal);
     document.getElementById("shuffleBtn")?.addEventListener("click", () => shuffleResults());
-    
-    document.getElementById("confirmTechBtn")?.addEventListener("click", () => {
-      if (document.getElementById("techPassword").value === CONFIG.passwords.tech) {
-        techMode = true;
-        closeModal("techModal");
-        showToast("🔧 Modo técnico activado");
-        render();
-      } else {
-        showToast("❌ Clave incorrecta");
-        if (navigator.vibrate) navigator.vibrate(200);
-      }
-    });
-    
-    document.getElementById("receiptBtn")?.addEventListener("click", () => {
-      window.open("http://xiaomi.scz.red/1/", "_blank");
-    });
-    
-    document.querySelectorAll(".nav-item").forEach(item => {
-      item.addEventListener("click", () => {
-        currentTab = item.dataset.tab;
-        document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
-        item.classList.add("active");
-        render();
-      });
-    });
-    
-    document.addEventListener("click", (e) => {
-      if (!e.target.closest(".search-wrapper")) {
-        suggestionsPanel.classList.remove("active");
-      }
-    });
+    document.getElementById("confirmTechBtn")?.addEventListener("click", () => { if(document.getElementById("techPassword").value === CONFIG.passwords.tech){ techMode=true; closeModal("techModal"); showToast("🔧 Modo técnico activado"); render(); } else { showToast("❌ Clave incorrecta"); if(navigator.vibrate) navigator.vibrate(200); } });
+    document.getElementById("receiptBtn")?.addEventListener("click", () => { window.open("http://xiaomi.scz.red/1/", "_blank"); });
+    document.querySelectorAll(".nav-item").forEach(item => { item.addEventListener("click", () => { currentTab = item.dataset.tab; document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active")); item.classList.add("active"); render(); }); });
+    document.addEventListener("click", (e) => { if(!e.target.closest(".search-wrapper")) suggestionsPanel.classList.remove("active"); });
   }
 
   window.copyPriceToClipboard = copyPriceToClipboard;
