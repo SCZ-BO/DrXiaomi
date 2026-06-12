@@ -288,7 +288,7 @@
         return;
       }
       
-      const message = `📱 ${product.marca} ${product.modelo}\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
+      const message = `📱 ${product.marca} ${product.modelo}\n💰 Precio Pantalla: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
       
       navigator.clipboard.writeText(message).then(() => {
         showToast("✅ Precio copiado");
@@ -314,7 +314,7 @@
     let product = filteredData.find(p => p.id === productId);
     if (!product) product = allData.find(p => p.id === productId);
     if (!product) return;
-    const message = `📱 *${product.marca} ${product.modelo}*\n💰 Precio: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
+    const message = `📱 *${product.marca} ${product.modelo}*\n💰 Precio Pantalla: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
     if (navigator.vibrate) navigator.vibrate(50);
   };
