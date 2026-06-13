@@ -2,550 +2,662 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#FF6900">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="Catálogo de pantallas y repuestos - Búsqueda precisa">
-  <title>DR. XIAOMI | Pantallas y Repuestos</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>DR XIAOMI · ORANGE LAB · Robotic Repair Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    :root { --xiaomi-orange: #FF6900; --xiaomi-orange-dark: #E55A00; --xiaomi-orange-soft: #FF8A3C; --xiaomi-orange-glow: rgba(255, 105, 0, 0.15); --shadow-sm: 0 1px 2px rgba(0,0,0,0.04); --shadow-md: 0 4px 12px rgba(0,0,0,0.06); --transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1); }
-    [data-theme="light"] { --bg-primary: #F5F5F7; --bg-secondary: #FFFFFF; --bg-card: #FFFFFF; --text-primary: #1D1D1F; --text-secondary: #6E6E73; --text-tertiary: #8E8E93; --border: #E5E5EA; --card-border: #F0F0F3; --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); --suggestion-bg: #FFFFFF; --suggestion-hover: #F5F5F7; }
-    [data-theme="dark"] { --bg-primary: #0A0A0C; --bg-secondary: #1C1C1E; --bg-card: #1C1C1E; --text-primary: #F5F5F7; --text-secondary: #A1A1A6; --text-tertiary: #6E6E73; --border: #2C2C2E; --card-border: #2C2C2E; --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); --suggestion-bg: #1C1C1E; --suggestion-hover: #2C2C2E; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; position: fixed; width: 100%; height: 100%; transition: background 0.35s ease; -webkit-font-smoothing: antialiased; }
-    .app { max-width: 100%; height: 100%; margin: 0 auto; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-primary); }
-    .header { background: var(--bg-primary); border-bottom: 1px solid transparent; padding: 14px 18px 12px; flex-shrink: 0; position: relative; z-index: 50; }
-    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .logo { display: flex; align-items: center; gap: 10px; }
-    .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--xiaomi-orange), var(--xiaomi-orange-dark)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: white; box-shadow: 0 2px 8px var(--xiaomi-orange-glow); }
-    .logo h1 { font-size: 19px; font-weight: 700; letter-spacing: -0.4px; color: var(--text-primary); }
-    .logo span { font-weight: 500; color: var(--text-secondary); }
-    .header-actions { display: flex; gap: 4px; }
-    .icon-btn { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 30px; padding: 8px 10px; color: var(--text-secondary); cursor: pointer; font-size: 15px; transition: var(--transition); display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; }
-    .icon-btn:active { transform: scale(0.92); color: var(--xiaomi-orange); border-color: var(--xiaomi-orange); }
-    .search-wrapper { position: relative; }
-    .search-container { position: relative; }
-    .search-input { width: 100%; padding: 13px 86px 13px 18px; background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 30px; color: var(--text-primary); font-size: 15px; font-weight: 500; transition: var(--transition); box-shadow: var(--shadow-sm); letter-spacing: -0.2px; }
-    .search-input:focus { outline: none; border-color: var(--xiaomi-orange); box-shadow: 0 0 0 4px var(--xiaomi-orange-glow); }
-    .search-input::placeholder { color: var(--text-tertiary); font-weight: 400; }
-    .search-actions { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: flex; gap: 2px; align-items: center; }
-    .search-actions button { background: var(--bg-primary); border: none; color: var(--text-secondary); cursor: pointer; font-size: 14px; padding: 6px 10px; border-radius: 20px; transition: var(--transition); }
-    .search-loader { width: 22px; height: 22px; border: 2px solid var(--border); border-top: 2px solid var(--xiaomi-orange); border-radius: 50%; animation: spinLoader 0.6s linear infinite; margin-right: 6px; display: inline-block; }
-    @keyframes spinLoader { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .suggestions-panel { position: absolute; top: 100%; left: 0; right: 0; margin-top: 8px; background: var(--suggestion-bg); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); max-height: 280px; overflow-y: auto; display: none; z-index: 60; }
-    .suggestions-panel.active { display: block; }
-    .suggestion-header { padding: 10px 18px; font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-    .suggestion-item { padding: 12px 18px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; transition: var(--transition); font-size: 14px; font-weight: 500; color: var(--text-primary); }
-    .suggestion-item:last-child { border-bottom: none; }
-    .suggestion-item:active, .suggestion-item.active { background: var(--suggestion-hover); color: var(--xiaomi-orange); }
-    .suggestion-item i { color: var(--text-tertiary); font-size: 12px; width: 16px; }
-    .suggestion-highlight { color: var(--xiaomi-orange); font-weight: 700; }
-    .quick-filters { padding: 12px 18px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; background: var(--bg-primary); border-bottom: 1px solid var(--border); }
-    .quick-filters::-webkit-scrollbar { display: none; }
-    .filter-chip { padding: 8px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border); cursor: pointer; white-space: nowrap; transition: var(--transition); }
-    .filter-chip.active { background: var(--xiaomi-orange); color: white; border-color: var(--xiaomi-orange); }
-    .main-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-    .cards-view { display: flex; flex-direction: column; gap: 14px; padding: 18px; padding-bottom: 80px; }
-    .product-card { background: var(--bg-card); border-radius: 24px; padding: 18px 20px; border: 1px solid var(--card-border); transition: var(--transition); position: relative; box-shadow: var(--card-shadow); overflow: hidden; }
-    .product-card::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; background: linear-gradient(180deg, var(--xiaomi-orange), var(--xiaomi-orange-soft)); border-radius: 4px; }
-    .product-card:active { transform: scale(0.985); }
-    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; padding-left: 10px; }
-    .card-brand { font-size: 11px; font-weight: 700; color: var(--xiaomi-orange); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
-    .card-model { font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.4px; word-break: break-word; }
-    .card-specs { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; padding-left: 10px; }
-    .card-type { padding: 6px 14px; border-radius: 30px; font-size: 11px; font-weight: 600; background: var(--bg-primary); color: var(--text-secondary); }
-    .card-type.oled { background: rgba(255, 105, 0, 0.12); color: var(--xiaomi-orange-dark); }
-    .supplier-badge, .price-badge { padding: 6px 14px; border-radius: 30px; font-size: 11px; font-weight: 500; background: var(--bg-primary); color: var(--text-secondary); }
-    .card-price-row { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); padding-left: 10px; }
-    .card-price { font-size: 28px; font-weight: 800; color: var(--text-primary); cursor: pointer; transition: var(--transition); letter-spacing: -0.8px; padding: 4px 12px; border-radius: 14px; }
-    .card-price:active { color: var(--xiaomi-orange); background: var(--xiaomi-orange-glow); }
-    .card-actions-group { display: flex; gap: 10px; }
-    .image-btn, .whatsapp-btn { border: none; padding: 9px 18px; border-radius: 40px; font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 4px; }
-    .image-btn:active, .whatsapp-btn:active { transform: scale(0.93); }
-    .image-btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); }
-    .whatsapp-btn { background: #25D366; color: white; }
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-primary); border-top: 1px solid var(--border); display: flex; padding: 8px 24px 16px; gap: 12px; z-index: 100; }
-    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 10px; border: none; background: transparent; color: var(--text-tertiary); border-radius: 16px; cursor: pointer; font-size: 10px; font-weight: 600; transition: var(--transition); }
-    .nav-item.active { color: var(--xiaomi-orange); background: var(--xiaomi-orange-glow); }
-    .nav-item i { font-size: 20px; }
-    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(12px); z-index: 200; align-items: center; justify-content: center; padding: 24px; }
-    .modal-content { background: var(--bg-card); border-radius: 24px; padding: 28px; max-width: 320px; width: 100%; border: 1px solid var(--border); }
-    .modal-content h3 { margin-bottom: 20px; font-size: 18px; font-weight: 700; }
-    .modal-content input { width: 100%; padding: 14px 18px; background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 18px; color: var(--text-primary); font-size: 16px; margin-bottom: 20px; }
-    .modal-content input:focus { outline: none; border-color: var(--xiaomi-orange); }
-    .modal-buttons { display: flex; gap: 12px; }
-    .modal-buttons button { flex: 1; padding: 14px; border: none; border-radius: 18px; cursor: pointer; font-weight: 700; font-size: 15px; }
-    .modal-buttons button:first-child { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); }
-    .modal-buttons button:last-child { background: var(--xiaomi-orange); color: white; }
-    .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--bg-card); padding: 10px 20px; border-radius: 40px; color: var(--text-primary); font-size: 13px; font-weight: 600; z-index: 150; animation: fadeInUp 0.3s ease; border: 1px solid var(--border); white-space: nowrap; max-width: 90%; white-space: normal; text-align: center; }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(12px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-    .results-count { padding: 16px 20px 4px; font-size: 13px; font-weight: 600; color: var(--text-tertiary); }
-    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-tertiary); }
-    .empty-state i { font-size: 48px; opacity: 0.2; margin-bottom: 16px; }
-    .main-content::-webkit-scrollbar { width: 3px; }
-    .main-content::-webkit-scrollbar-track { background: transparent; }
-    .main-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: #0A0C10;
+      color: #E8EDF2;
+      overflow-x: hidden;
+    }
+
+    /* FONDO INDUSTRIAL */
+    .lab-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 30% 20%, #14161c 0%, #050608 100%);
+      z-index: -2;
+    }
+
+    .lab-bg::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        repeating-linear-gradient(0deg, rgba(255, 105, 0, 0.06) 0px, rgba(255, 105, 0, 0.06) 1px, transparent 1px, transparent 14px),
+        repeating-linear-gradient(90deg, rgba(255, 105, 0, 0.04) 0px, rgba(255, 105, 0, 0.04) 1px, transparent 1px, transparent 14px);
+      pointer-events: none;
+    }
+
+    .lab-bg::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at 70% 40%, rgba(255, 105, 0, 0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* Herramientas flotantes */
+    .lab-tools {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.45;
+    }
+
+    .tool-icon {
+      position: absolute;
+      font-size: 3rem;
+      color: #E65C00;
+      filter: drop-shadow(0 0 8px rgba(255, 105, 0, 0.4));
+      animation: floatTool 14s infinite ease-in-out;
+    }
+
+    .microscope { bottom: 8%; left: 4%; font-size: 4rem; animation-delay: 0s; }
+    .screwdriver { bottom: 22%; right: 5%; font-size: 3.2rem; animation-delay: 1.2s; }
+    .pliers { top: 12%; left: 2%; font-size: 3rem; animation-delay: 0.6s; }
+    .soldering { bottom: 38%; left: 10%; font-size: 3.5rem; animation-delay: 2s; }
+    .chip { top: 55%; right: 8%; font-size: 3rem; animation-delay: 1.5s; }
+    .multimeter { top: 20%; right: 12%; font-size: 3.3rem; animation-delay: 2.5s; }
+    .magnifier { bottom: 48%; right: 18%; font-size: 3rem; animation-delay: 0.3s; }
+    .gear { top: 35%; left: 18%; font-size: 2.8rem; animation-delay: 1.8s; }
+    .pcb { bottom: 15%; right: 25%; font-size: 3.2rem; animation-delay: 0.9s; }
+    .oscilloscope { top: 70%; left: 25%; font-size: 3.4rem; animation-delay: 2.2s; }
+
+    @keyframes floatTool {
+      0% { transform: translateY(0px) rotate(0deg); opacity: 0.35; }
+      50% { transform: translateY(-14px) rotate(4deg); opacity: 0.65; }
+      100% { transform: translateY(0px) rotate(0deg); opacity: 0.35; }
+    }
+
+    /* CONTENEDOR PRINCIPAL */
+    .glass-app {
+      max-width: 550px;
+      margin: 0 auto;
+      background: rgba(8, 10, 16, 0.85);
+      backdrop-filter: blur(12px);
+      min-height: 100vh;
+      position: relative;
+      z-index: 10;
+      border-left: 1px solid rgba(255, 105, 0, 0.4);
+      border-right: 1px solid rgba(255, 105, 0, 0.4);
+      box-shadow: 0 0 50px rgba(255, 105, 0, 0.12);
+    }
+
+    /* ===== CABECERA MEJORADA - SIN ESPACIOS VACÍOS ===== */
+    .lab-header {
+      padding: 1.2rem 1.5rem 0.8rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 105, 0, 0.3);
+      background: linear-gradient(180deg, rgba(255,105,0,0.05) 0%, transparent 100%);
+    }
+
+    /* Contenedor compacto del título */
+    .title-container {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
+    }
+
+    .main-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #FFFFFF, #FF8C42, #FF6900);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .orange-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255, 105, 0, 0.2);
+      border: 1px solid #FF6900;
+      border-radius: 2rem;
+      padding: 0.2rem 0.8rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #FF8C42;
+    }
+
+    .orange-badge i {
+      font-size: 0.7rem;
+    }
+
+    /* Fila de características del laboratorio */
+    .lab-features {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .lab-feature {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.65rem;
+      background: rgba(255, 105, 0, 0.08);
+      padding: 0.2rem 0.7rem;
+      border-radius: 1.5rem;
+      color: #FFB074;
+    }
+
+    .lab-feature i {
+      font-size: 0.7rem;
+      color: #FF6900;
+    }
+
+    /* SLIDER */
+    .slider-container {
+      margin: 1rem 1.5rem;
+      border-radius: 1.2rem;
+      background: #0E1118;
+      border: 1px solid rgba(255, 105, 0, 0.7);
+      box-shadow: inset 0 0 12px rgba(255, 105, 0, 0.1);
+    }
+    .slider-frame {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 1rem;
+    }
+    .slider-track { display: flex; transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1); }
+    .slide { min-width: 100%; position: relative; }
+    .slide img {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      filter: brightness(0.9) contrast(1.1);
+      border-radius: 0.8rem;
+    }
+    .slide-caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(0deg, #0A0E16, transparent);
+      padding: 0.8rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #FF8C42;
+    }
+    .slider-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 105, 0, 0.55);
+      backdrop-filter: blur(6px);
+      border: 1px solid #FF6900;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 15;
+    }
+    .slider-btn:hover { background: #FF6900; color: #0A0E16; box-shadow: 0 0 16px #FF6900; }
+    .slider-btn-left { left: 10px; }
+    .slider-btn-right { right: 10px; }
+    .slider-dots {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.6rem;
+      position: absolute;
+      bottom: 5px;
+      left: 0;
+      right: 0;
+      z-index: 15;
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(200, 180, 150, 0.4);
+      cursor: pointer;
+    }
+    .dot.active { background: #FF6900; box-shadow: 0 0 10px #FF6900; width: 20px; border-radius: 6px; }
+
+    /* TARJETA CONSULTA */
+    .consult-card {
+      background: rgba(10, 12, 18, 0.9);
+      border: 1px solid rgba(255, 105, 0, 0.5);
+      border-radius: 1.5rem;
+      margin: 1rem 1.5rem;
+      padding: 1.2rem;
+    }
+    .consult-label {
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      color: #FF8C42;
+      margin-bottom: 0.7rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .consult-input-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      align-items: center;
+    }
+    .consult-input {
+      flex: 2;
+      background: #0C101A;
+      border: 1px solid rgba(255, 105, 0, 0.4);
+      border-radius: 2rem;
+      padding: 0.8rem 1.2rem;
+      font-family: 'Space Grotesk', monospace;
+      font-size: 0.85rem;
+      color: #fff;
+      outline: none;
+    }
+    .consult-input:focus { border-color: #FF6900; }
+    .consult-btn {
+      background: linear-gradient(95deg, #FF6900, #FF8C42);
+      border: none;
+      border-radius: 2rem;
+      padding: 0.8rem 1.5rem;
+      font-weight: 700;
+      color: #0A0E16;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+    .phone-number-mini {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.8rem;
+      font-size: 0.7rem;
+      color: #E68844;
+      background: rgba(0,0,0,0.4);
+      padding: 0.2rem 0.7rem;
+      border-radius: 1.5rem;
+    }
+
+    /* GRID SERVICIOS */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.9rem;
+      margin: 1.5rem;
+    }
+    .tech-card {
+      background: rgba(10, 12, 18, 0.85);
+      border-radius: 1.2rem;
+      padding: 1rem 0.6rem;
+      text-align: center;
+      border: 1px solid rgba(255, 105, 0, 0.35);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .tech-card:hover {
+      transform: translateY(-5px);
+      border-color: #FF6900;
+      box-shadow: 0 0 22px rgba(255, 105, 0, 0.3);
+    }
+    .tech-card i { font-size: 1.9rem; color: #FF8C42; margin-bottom: 0.4rem; display: block; }
+    .tech-card h3 { font-size: 0.85rem; }
+
+    /* MARCAS */
+    .brand-strip {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.6rem;
+      margin: 1rem 1.5rem;
+      padding: 0.6rem;
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 2rem;
+    }
+    .brand-item {
+      background: rgba(255, 105, 0, 0.12);
+      padding: 0.25rem 0.9rem;
+      border-radius: 2rem;
+      font-size: 0.7rem;
+      transition: 0.2s;
+    }
+    .brand-item:hover { background: #FF6900; color: #000; }
+
+    /* ALERTA */
+    .alert-tech {
+      margin: 0 1.5rem 1.5rem;
+      padding: 0.7rem 1rem;
+      background: rgba(255, 105, 0, 0.1);
+      border-left: 3px solid #FF8C42;
+      border-radius: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.7rem;
+    }
+
+    /* BOTONES */
+    .neon-buttons {
+      display: flex;
+      gap: 0.8rem;
+      margin: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .btn-neon {
+      flex: 1;
+      background: linear-gradient(95deg, #FF6900, #FF8C42);
+      border: none;
+      padding: 0.8rem;
+      border-radius: 2rem;
+      font-weight: 700;
+      color: #0A0E16;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      min-width: 110px;
+    }
+    .btn-outline-neon {
+      flex: 1;
+      background: transparent;
+      border: 1.5px solid #FF6900;
+      border-radius: 2rem;
+      padding: 0.8rem;
+      font-weight: 600;
+      color: #FF8C42;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      min-width: 110px;
+    }
+    .btn-outline-neon:hover { background: rgba(255, 105, 0, 0.15); }
+    .btn-tech-icon {
+      background: rgba(255, 105, 0, 0.15);
+      border: 1.5px solid #FF6900;
+      border-radius: 2rem;
+      padding: 0.8rem 1rem;
+      font-weight: 600;
+      color: #FF8C42;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: 0.2s;
+      min-width: 100px;
+    }
+    .btn-tech-icon:hover {
+      background: #FF6900;
+      color: #0A0E16;
+      box-shadow: 0 0 18px rgba(255, 105, 0, 0.5);
+    }
+
+    /* FOOTER */
+    .tech-footer {
+      background: rgba(0, 0, 0, 0.55);
+      padding: 1rem;
+      text-align: center;
+      border-top: 1px solid rgba(255, 105, 0, 0.3);
+      font-size: 0.7rem;
+    }
+
+    /* TOAST */
+    .toast-lab {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #0E121C;
+      border: 1px solid #FF6900;
+      border-radius: 2rem;
+      padding: 0.5rem 1.2rem;
+      color: #FF8C42;
+      font-size: 0.75rem;
+      z-index: 200;
+      transition: transform 0.25s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .toast-lab.show { transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
-<div class="app">
-  <header class="header">
-    <div class="header-top">
-      <div class="logo"><div class="logo-icon">MI</div><h1>DR XIAOMI <span>Catálogo</span></h1></div>
-      <div class="header-actions">
-        <button class="icon-btn" id="themeToggle" title="Tema"><i class="fas fa-moon"></i></button>
-        <button class="icon-btn" id="techModeBtn" title="Modo Técnico"><i class="fas fa-microchip"></i></button>
-        <button class="icon-btn" id="receiptBtn" title="Recibo"><i class="fas fa-receipt"></i></button>
-        <button class="icon-btn" id="shuffleBtn" title="Mezclar"><i class="fas fa-random"></i></button>
-      </div>
-    </div>
-    <div class="search-wrapper">
-      <div class="search-container">
-        <input type="text" id="searchInput" class="search-input" placeholder="Buscar modelo exacto... Ej: Redmi Note 10 Pro" autocomplete="off">
-        <div class="search-actions" id="searchActions">
-          <div id="searchLoaderIndicator" style="display: none;"><div class="search-loader"></div></div>
-          <button id="clearSearchBtn" style="display: none;"><i class="fas fa-times"></i></button>
-        </div>
-      </div>
-      <div class="suggestions-panel" id="suggestionsPanel"></div>
-    </div>
-  </header>
-  <div class="quick-filters" id="quickFilters">
-    <button class="filter-chip active" data-filter="all">📱 Todos</button>
-    <button class="filter-chip" data-filter="OLED">✨ OLED</button>
-    <button class="filter-chip" data-filter="LCD">📟 LCD</button>
-  </div>
-  <div class="main-content" id="mainScrollContainer">
-    <div id="resultsCount" class="results-count"></div>
-    <div id="resultsContainer"></div>
-  </div>
-  <nav class="bottom-nav">
-    <button class="nav-item active" data-tab="home"><i class="fas fa-home"></i><span>Inicio</span></button>
-    <button class="nav-item" data-tab="compare"><i class="fas fa-chart-line"></i><span>Comparar</span></button>
-  </nav>
+<div class="lab-bg"></div>
+<div class="lab-tools">
+  <i class="fas fa-microscope tool-icon microscope"></i>
+  <i class="fas fa-tools tool-icon screwdriver"></i>
+  <i class="fas fa-wrench tool-icon pliers"></i>
+  <i class="fas fa-microchip tool-icon chip"></i>
+  <i class="fas fa-bolt tool-icon soldering"></i>
+  <i class="fas fa-microscope tool-icon oscilloscope"></i>
+  <i class="fas fa-search tool-icon magnifier"></i>
+  <i class="fas fa-cogs tool-icon gear"></i>
+  <i class="fas fa-microchip tool-icon pcb"></i>
 </div>
-<div id="techModal" class="modal"><div class="modal-content"><h3>🔐 Acceso Técnico</h3><input type="password" id="techPassword" placeholder="Clave de acceso" autocomplete="off"><div class="modal-buttons"><button onclick="closeModal('techModal')">Cancelar</button><button id="confirmTechBtn">Acceder</button></div></div></div>
+
+<div class="glass-app">
+  <!-- ===== CABECERA MEJORADA - COMPACTA Y SIN ESPACIOS VACÍOS ===== -->
+  <div class="lab-header">
+    <div class="title-container">
+      <span class="main-title">DR XIAOMI</span>
+      <span class="orange-badge">
+        <i class="fas fa-microchip"></i> 
+      </span>
+    </div>
+    
+    <div class="lab-features">
+      <span class="lab-feature"><i class="fas fa-microscope"></i> Reparacion de Telefono</span>
+      <span class="lab-feature"><i class="fas fa-shield-alt"></i> Servicio Garantizado</span>
+      <span class="lab-feature"><i class="fas fa-tools"></i> Microsoldadura</span>
+    </div>
+  </div>
+
+  <!-- SLIDER -->
+  <div class="slider-container">
+    <div class="slider-frame">
+      <div class="slider-track" id="sliderTrack">
+        <div class="slide"><img src="imagenes/0000.jpg" alt="Microscopio"><div class="slide-caption"><i class="fas fa-microscope"></i> Servicio Tecnico Especializado</div></div>
+        <div class="slide"><img src="imagenes/0001.jpg" alt="Pantalla"><div class="slide-caption"><i class="fas fa-battery-full"></i> Cambio Pantalla · </div></div>
+        <div class="slide"><img src="imagenes/0002.jpg" alt="Microsoldadura"><div class="slide-caption"><i class="fas fa-microchip"></i> Microsoldadura de Precisión</div></div>
+        <div class="slide"><img src="imagenes/0003.jpg" alt="Bateria"><div class="slide-caption"><i class="fas fa-tools"></i> Cambio de Bateria</div></div>
+        <div class="slide"><img src="imagenes/0004.jpg" alt="Laboratorio"><div class="slide-caption"><i class="fas fa-microscope"></i> Servicio Tecnico Garantizado</div></div>
+      </div>
+      <div class="slider-btn slider-btn-left" id="sliderPrev"><i class="fas fa-chevron-left"></i></div>
+      <div class="slider-btn slider-btn-right" id="sliderNext"><i class="fas fa-chevron-right"></i></div>
+      <div class="slider-dots" id="sliderDots"></div>
+    </div>
+  </div>
+
+  <!-- CONSULTA -->
+  <div class="consult-card">
+    <span class="consult-label"><i class="fas fa-microscope"></i> DIAGNÓSTICO ORANGE LAB · DESCRIBE LA FALLA</span>
+    <div class="consult-input-group">
+      <input type="text" class="consult-input" id="problemInput" placeholder="Ej: No enciende, pantalla rota, sobrecalienta...">
+      <button class="consult-btn" id="consultBtn"><i class="fab fa-whatsapp"></i> CONSULTAR AL LAB</button>
+    </div>
+    <div class="phone-number-mini"><i class="fas fa-flask"></i> Orange Lab: 75589308 · Diagnóstico con herramientas de precisión</div>
+  </div>
+
+  <!-- SERVICIOS -->
+  <div class="tech-grid">
+    <div class="tech-card" data-service="Micro soldadura"><i class="fas fa-microchip"></i><h3>MICRO SOLDADURA</h3></div>
+    <div class="tech-card" data-service="Cambio de Pantalla"><i class="fas fa-tachometer-alt"></i><h3>PANTALLA</h3></div>
+    <div class="tech-card" data-service="Puerto de carga"><i class="fas fa-plug"></i><h3>PUERTO CARGA</h3></div>
+    <div class="tech-card" data-service="Batería"><i class="fas fa-battery-full"></i><h3>BATERÍA</h3></div>
+    <div class="tech-card" data-service="Óptica / Cámara"><i class="fas fa-camera"></i><h3>ÓPTICA CÁMARA</h3></div>
+    <div class="tech-card" data-service="Placa lógica"><i class="fas fa-microscope"></i><h3>PLACA LÓGICA</h3></div>
+  </div>
+
+  <!-- MARCAS -->
+  <div class="brand-strip">
+    <span class="brand-item">XIAOMI</span><span class="brand-item">TECNO</span><span class="brand-item">REALME</span>
+    <span class="brand-item">SAMSUNG</span><span class="brand-item">HUAWEI</span><span class="brand-item">IPHONE</span>
+  </div>
+
+  <!-- ALERTA -->
+  <div class="alert-tech">
+    <i class="fas fa-microscope"></i>
+    <span><strong>LABORATORIO ROBÓTICO ORANGE · MICROSOLDADURA · HERRAMIENTAS DE PRECISIÓN · GARANTÍA 6 MESES</strong></span>
+  </div>
+
+  <!-- BOTONES -->
+  <div class="neon-buttons">
+    <button class="btn-neon" id="repairNowBtn"><i class="fas fa-screwdriver"></i> REPARAR AHORA</button>
+    <button class="btn-outline-neon" id="diagnosticBtn"><i class="fas fa-microscope"></i> DIAGNÓSTICO</button>
+    <button class="btn-tech-icon" id="techRedirectBtn">
+      <i class="fas fa-headset"></i> <i class="fas fa-microchip"></i> TÉCNICO
+    </button>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="tech-footer">
+    <p><i class="fas fa-map-marker-alt"></i> Centro Comercial Cañoto #K 1 · Orange Lab Santa Cruz</p>
+    <p style="margin-top: 0.3rem;">🕒 Lun - Sab 9:00 a 19:30 | Equipo especializado en microelectrónica</p>
+  </div>
+</div>
 
 <script>
-  // ============================================================
-  // DATOS Y CONFIGURACIÓN
-  // ============================================================
-  let allData = [];
-  let filteredData = [];
-  let techMode = false;
-  let currentTab = "home";
-  let currentFilter = "all";
-  let currentTheme = "light";
-  let searchDebounceTimer = null;
+  // SLIDER
+  const track = document.getElementById('sliderTrack');
+  const slides = document.querySelectorAll('.slide');
+  const prevBtn = document.getElementById('sliderPrev');
+  const nextBtn = document.getElementById('sliderNext');
+  const dotsContainer = document.getElementById('sliderDots');
+  let currentIndex = 0;
+  const totalSlides = slides.length;
 
-  const CONFIG = {
-    dataSources: [
-      { name: "J&A", url: "https://xiaomi.scz.red/precio/data/ja2.csv" },
-      { name: "CentralCell", url: "https://xiaomi.scz.red/precio/data/centralcel.csv" },
-      { name: "Osmobil", url: "https://xiaomi.scz.red/precio/data/osmobil.csv" },
-      { name: "CFH LP", url: "https://xiaomi.scz.red/precio/data/CFH.csv" },
-      { name: "BITE", url: "https://xiaomi.scz.red/precio/data/boe.csv" },
-      { name: "MR PANTALLA", url: "https://xiaomi.scz.red/precio/data/mrpantalla.csv" }
-    ],
-    passwords: { tech: "123456" }
-  };
-
-  const container = document.getElementById("resultsContainer");
-  const searchInput = document.getElementById("searchInput");
-  const resultsCount = document.getElementById("resultsCount");
-  const suggestionsPanel = document.getElementById("suggestionsPanel");
-  const clearSearchBtn = document.getElementById("clearSearchBtn");
-  const searchLoaderIndicator = document.getElementById("searchLoaderIndicator");
-  const mainScrollContainer = document.getElementById("mainScrollContainer");
-
-  // ============================================================
-  // UTILIDADES
-  // ============================================================
-  function showToast(msg) { 
-    const t = document.createElement("div"); 
-    t.className = "toast"; 
-    t.textContent = msg; 
-    document.body.appendChild(t); 
-    setTimeout(() => t.remove(), 2000); 
+  for (let i = 0; i < totalSlides; i++) {
+    const dot = document.createElement('div');
+    dot.classList.add('dot');
+    if (i === 0) dot.classList.add('active');
+    dot.addEventListener('click', () => goToSlide(i));
+    dotsContainer.appendChild(dot);
   }
+  const dots = document.querySelectorAll('.dot');
 
-  function escapeHtml(str) { if (!str) return ""; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
-
-  function normalizeText(str) {
-    return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
-  }
-
-  function getTokens(str) { return normalizeText(str).split(" ").filter(t => t.length > 0); }
-
-  // ============================================================
-  // BÚSQUEDA PRECISA
-  // ============================================================
-  function performPreciseSearch(data, searchTerm) {
-    if (!searchTerm.trim()) return data;
-    const searchTokens = getTokens(searchTerm);
-    if (searchTokens.length === 0) return data;
-    
-    const results = [];
-    for (const item of data) {
-      const modeloNorm = normalizeText(item.modelo);
-      const marcaNorm = normalizeText(item.marca);
-      const combined = modeloNorm + " " + marcaNorm;
-      
-      let allWordsPresent = true;
-      for (const token of searchTokens) {
-        if (!combined.includes(token)) { allWordsPresent = false; break; }
-      }
-      
-      if (allWordsPresent) {
-        let score = 0;
-        if (modeloNorm === searchTokens.join(" ")) score = 100;
-        else if (modeloNorm.startsWith(searchTokens.join(" "))) score = 90;
-        else {
-          let position = 0, foundInOrder = true;
-          for (const token of searchTokens) {
-            const idx = modeloNorm.indexOf(token, position);
-            if (idx === -1) { foundInOrder = false; break; }
-            position = idx + token.length;
-          }
-          score = foundInOrder ? 80 : 50;
-        }
-        score += searchTokens.length * 5;
-        results.push({ item, score });
-      }
-    }
-    results.sort((a, b) => b.score - a.score);
-    return results.map(r => r.item);
-  }
-
-  function generateSuggestions(searchTerm) {
-    if (!searchTerm.trim() || searchTerm.trim().length < 2) return [];
-    const searchTokens = getTokens(searchTerm);
-    const suggestionsMap = new Map();
-    
-    for (const product of allData) {
-      const modeloNorm = normalizeText(product.modelo);
-      const combined = modeloNorm + " " + normalizeText(product.marca);
-      let allWordsPresent = true;
-      for (const token of searchTokens) {
-        if (!combined.includes(token)) { allWordsPresent = false; break; }
-      }
-      if (allWordsPresent) {
-        let score = 0;
-        if (modeloNorm === searchTokens.join(" ")) score = 100;
-        else if (modeloNorm.startsWith(searchTokens.join(" "))) score = 90;
-        else {
-          let position = 0, foundInOrder = true;
-          for (const token of searchTokens) {
-            const idx = modeloNorm.indexOf(token, position);
-            if (idx === -1) { foundInOrder = false; break; }
-            position = idx + token.length;
-          }
-          score = foundInOrder ? 80 : 50;
-        }
-        const key = `${product.marca}|${product.modelo}`;
-        if (!suggestionsMap.has(key) || suggestionsMap.get(key).score < score) {
-          suggestionsMap.set(key, { ...product, score });
-        }
-      }
-    }
-    return Array.from(suggestionsMap.values()).sort((a, b) => b.score - a.score).slice(0, 8);
-  }
-
-  function highlightMatch(text, searchTerm) {
-    if (!searchTerm.trim()) return escapeHtml(text);
-    const tokens = getTokens(searchTerm);
-    let result = escapeHtml(text);
-    tokens.forEach(token => {
-      const regex = new RegExp(`(${token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-      result = result.replace(regex, '<span class="suggestion-highlight">$1</span>');
+  function updateDots() {
+    dots.forEach((dot, idx) => {
+      if (idx === currentIndex) dot.classList.add('active');
+      else dot.classList.remove('active');
     });
-    return result;
   }
 
-  // ============================================================
-  // FUNCIONES PRINCIPALES (CORREGIDAS)
-  // ============================================================
-  function scrollToTopOfResults() { if (mainScrollContainer) mainScrollContainer.scrollTo({ top: 0, behavior: 'smooth' }); }
-  function showSearchLoader() { if (searchLoaderIndicator) searchLoaderIndicator.style.display = "inline-flex"; }
-  function hideSearchLoader() { if (searchLoaderIndicator) searchLoaderIndicator.style.display = "none"; }
+  function goToSlide(index) {
+    currentIndex = (index + totalSlides) % totalSlides;
+    track.style.transform = `translateX(-${currentIndex * 100}%)`;
+    updateDots();
+  }
 
-  // FUNCIÓN COPIAR PRECIO - CORREGIDA Y FUNCIONAL
-  window.copyPriceToClipboard = function(productId) {
-    try {
-      // Buscar en filteredData primero (más rápido) o en allData
-      let product = filteredData.find(p => p.id === productId);
-      if (!product) product = allData.find(p => p.id === productId);
-      
-      if (!product) {
-        showToast("❌ Producto no encontrado");
-        return;
-      }
-      
-      const message = `📱 ${product.marca} ${product.modelo}\n💰 Precio Pantalla: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
-      
-      navigator.clipboard.writeText(message).then(() => {
-        showToast("✅ Precio copiado");
-        if (navigator.vibrate) navigator.vibrate(50);
-      }).catch((err) => {
-        console.error("Error clipboard:", err);
-        // Fallback para navegadores que no soportan clipboard API
-        const textarea = document.createElement('textarea');
-        textarea.value = message;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        showToast("✅ Precio copiado");
-      });
-    } catch (error) {
-      console.error("Error en copyPriceToClipboard:", error);
-      showToast("❌ Error al copiar");
+  function nextSlide() { goToSlide(currentIndex + 1); }
+  function prevSlide() { goToSlide(currentIndex - 1); }
+
+  nextBtn.addEventListener('click', nextSlide);
+  prevBtn.addEventListener('click', prevSlide);
+
+  let autoInterval = setInterval(nextSlide, 5500);
+  const sliderContainer = document.querySelector('.slider-container');
+  sliderContainer.addEventListener('mouseenter', () => clearInterval(autoInterval));
+  sliderContainer.addEventListener('mouseleave', () => { autoInterval = setInterval(nextSlide, 5500); });
+
+  // WHATSAPP + REDIRECCIÓN
+  const whatsappNumber = "59175589308";
+  function openWhatsApp(msg) {
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+
+  function showToast(message) {
+    let toast = document.querySelector('.toast-lab');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'toast-lab';
+      document.body.appendChild(toast);
     }
-  };
-
-  window.shareToWhatsApp = function(productId) {
-    let product = filteredData.find(p => p.id === productId);
-    if (!product) product = allData.find(p => p.id === productId);
-    if (!product) return;
-    const message = `📱 *${product.marca} ${product.modelo}*\n💰 Precio Pantalla: ${product.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
-    if (navigator.vibrate) navigator.vibrate(50);
-  };
-
-  window.openGooglePopup = function(productId) {
-    let product = filteredData.find(p => p.id === productId);
-    if (!product) product = allData.find(p => p.id === productId);
-    if (!product) return;
-    const searchTerm = `LCD ${product.modelo} ${product.marca} pantalla`;
-    window.open(`https://www.google.com/search?q=${encodeURIComponent(searchTerm)}&tbm=isch`, "_blank", "width=450,height=650,toolbar=yes,scrollbars=yes");
-    if (navigator.vibrate) navigator.vibrate(50);
-  };
-
-  function applyFiltersAndSearch() {
-    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-    showSearchLoader();
-    searchDebounceTimer = setTimeout(() => {
-      let data = [...allData];
-      if (currentFilter !== "all") data = data.filter(item => item.tipo === currentFilter);
-      const searchTerm = searchInput.value.trim();
-      if (searchTerm) {
-        data = performPreciseSearch(data, searchTerm);
-        clearSearchBtn.style.display = 'block';
-      } else {
-        clearSearchBtn.style.display = 'none';
-      }
-      data.sort((a, b) => a.venta - b.venta);
-      filteredData = data;
-      updateResultsCount();
-      render();
-      hideSearchLoader();
-      scrollToTopOfResults();
-    }, 150);
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
   }
 
-  function updateSuggestions() {
-    const searchTerm = searchInput.value.trim();
-    if (!searchTerm || searchTerm.length < 2) { suggestionsPanel.classList.remove('active'); return; }
-    const suggestions = generateSuggestions(searchTerm);
-    if (suggestions.length === 0) { suggestionsPanel.classList.remove('active'); return; }
-    
-    suggestionsPanel.innerHTML = `
-      <div class="suggestion-header">🎯 COINCIDENCIAS EXACTAS (${suggestions.length})</div>
-      ${suggestions.map((s, idx) => `
-        <div class="suggestion-item" data-modelo="${escapeHtml(s.modelo)}">
-          <i class="fas fa-mobile-alt"></i>
-          <div style="flex:1;"><div>${highlightMatch(s.modelo, searchTerm)}</div><div style="font-size:11px;color:var(--text-tertiary);">${escapeHtml(s.marca)} · ${s.venta.toLocaleString()} Bs</div></div>
-          <span style="font-size:10px;color:var(--text-tertiary);background:var(--bg-primary);padding:2px 8px;border-radius:10px;">${s.tipo}</span>
-        </div>
-      `).join('')}
-    `;
-    suggestionsPanel.querySelectorAll('.suggestion-item').forEach(item => {
-      item.addEventListener('click', () => {
-        searchInput.value = item.dataset.modelo;
-        suggestionsPanel.classList.remove('active');
-        applyFiltersAndSearch();
-        if (navigator.vibrate) navigator.vibrate(30);
-      });
+  function getSmartMessage(defaultMsg, service = null) {
+    const problem = document.getElementById('problemInput').value.trim();
+    if (problem) {
+      if (service) return `🔬 DR XIAOMI ORANGE LAB · Servicio: ${service}. Descripción: ${problem}. ¿Diagnóstico con microscopio?`;
+      return `🧪 DR XIAOMI LAB · Falla: ${problem}. Necesito revisión técnica.`;
+    }
+    return defaultMsg;
+  }
+
+  document.getElementById('consultBtn').addEventListener('click', () => {
+    const problem = document.getElementById('problemInput').value.trim();
+    const msg = problem ? `🔧 Orange Lab DR XIAOMI: Mi equipo presenta: ${problem}. Necesito revisión con microscopio.` : "Hola DR XIAOMI, necesito información de su laboratorio de reparación en Santa Cruz.";
+    openWhatsApp(msg);
+    showToast("📡 Conectando con Orange Lab...");
+  });
+
+  document.getElementById('repairNowBtn').addEventListener('click', () => {
+    openWhatsApp(getSmartMessage("🛠️ DR XIAOMI ORANGE LAB: Solicito reparación URGENTE para mi celular. ¿Puedo llevar al taller de precisión?"));
+    showToast("⚡ Abriendo canal de reparación");
+  });
+
+  document.getElementById('diagnosticBtn').addEventListener('click', () => {
+    openWhatsApp(getSmartMessage("🔬 Orange Lab DR XIAOMI: Deseo agendar diagnóstico con microscopio y herramientas especializadas."));
+    showToast("🔍 Diagnóstico técnico vía WhatsApp");
+  });
+
+  // Botón técnico - CAMBIA LA URL CUANDO ME LA DES
+  document.getElementById('techRedirectBtn').addEventListener('click', () => {
+    // 🔁 CAMBIA ESTA URL POR LA QUE ME DES MÁS ADELANTE
+    window.location.href = 'https://xiaomi.scz.red/precio/';
+  });
+
+  const techCards = document.querySelectorAll('.tech-card');
+  techCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const service = card.querySelector('h3')?.innerText || "reparación especializada";
+      const msg = getSmartMessage(`🔬 DR XIAOMI ORANGE LAB: Necesito servicio de ${service}. ¿Utilizan microscopio y equipo profesional?`, service);
+      openWhatsApp(msg);
+      showToast(`🛠️ Consultando servicio: ${service}`);
     });
-    suggestionsPanel.classList.add('active');
-  }
+  });
 
-  function updateResultsCount() { if(resultsCount) resultsCount.textContent = `${filteredData.length} producto${filteredData.length !== 1 ? 's' : ''}`; }
-
-  function render() {
-    if (!container) return;
-    if (currentTab === "compare") { showCompareModal(); return; }
-    if (filteredData.length === 0) {
-      const searchTerm = searchInput.value.trim();
-      container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><p style="font-weight:600;margin-bottom:8px;">Sin resultados</p>${searchTerm ? `<p style="font-size:13px;">No se encontró "${escapeHtml(searchTerm)}"</p>` : ''}</div>`;
-      return;
-    }
-    container.innerHTML = `<div class="cards-view">${filteredData.map(item => `
-      <div class="product-card">
-        <div class="card-header"><div><div class="card-brand">${escapeHtml(item.marca)}</div><div class="card-model">${escapeHtml(item.modelo)}</div></div></div>
-        <div class="card-specs"><span class="card-type ${item.tipo === 'OLED' ? 'oled' : ''}">${item.tipo}</span>${techMode ? `<span class="supplier-badge">🏷️ ${escapeHtml(item.proveedor)}</span><span class="price-badge">Compra: ${item.compra.toLocaleString()} Bs</span>` : ''}</div>
-        <div class="card-price-row"><span class="card-price" onclick="window.copyPriceToClipboard('${item.id}')">${item.venta.toLocaleString()} Bs</span><div class="card-actions-group"><button class="image-btn" onclick="window.openGooglePopup('${item.id}')"><i class="fab fa-google"></i> LCD</button><button class="whatsapp-btn" onclick="window.shareToWhatsApp('${item.id}')"><i class="fab fa-whatsapp"></i></button></div></div>
-      </div>
-    `).join('')}</div>`;
-  }
-
-  // ============================================================
-  // CARGA DE DATOS CSV
-  // ============================================================
-  async function loadData() {
-    try {
-      allData = [];
-      for (const source of CONFIG.dataSources) {
-        try {
-          const response = await fetch(source.url);
-          const text = await response.text();
-          const data = parseCSV(text, source.name);
-          allData.push(...data);
-        } catch (error) { console.error(`Error cargando ${source.name}:`, error); }
-      }
-      filteredData = [...allData].sort((a, b) => a.venta - b.venta);
-      updateResultsCount();
-      render();
-    } catch (error) { showError(); }
-  }
-
-  function parseCSV(text, providerName) {
-    const lines = text.split("\n").filter(line => line.trim() !== "");
-    if (lines.length < 2) return [];
-    const data = [];
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i];
-      if (!line.trim()) continue;
-      const columns = parseCSVLine(line);
-      if (columns.length >= 6) {
-        const marca = cleanText(columns[0]);
-        const modelo = cleanText(columns[1]);
-        const tipo = cleanText(columns[2]).toUpperCase();
-        const proveedor = cleanText(columns[3]) || providerName;
-        const precio_compra = parsePrice(columns[4]);
-        const precio_venta = parsePrice(columns[5]);
-        if (modelo && modelo !== "Modelo" && modelo !== "") {
-          data.push({ id: crypto.randomUUID(), marca: marca || "N/A", modelo, tipo: tipo === "OLED" ? "OLED" : "LCD", proveedor, compra: precio_compra, venta: precio_venta });
-        }
-      } else if (columns.length >= 5) {
-        const marca = cleanText(columns[0]);
-        const modelo = cleanText(columns[1]);
-        const tipo = cleanText(columns[2]).toUpperCase();
-        const precio_compra = parsePrice(columns[3]);
-        const precio_venta = parsePrice(columns[4]);
-        if (modelo && modelo !== "Modelo" && modelo !== "") {
-          data.push({ id: crypto.randomUUID(), marca: marca || "N/A", modelo, tipo: tipo === "OLED" ? "OLED" : "LCD", proveedor: providerName, compra: precio_compra, venta: precio_venta });
-        }
-      }
-    }
-    return data;
-  }
-
-  function parseCSVLine(line) {
-    const result = [];
-    let current = "", inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"') inQuotes = !inQuotes;
-      else if (char === "," && !inQuotes) { result.push(current.trim()); current = ""; }
-      else current += char;
-    }
-    result.push(current.trim());
-    return result.map(field => field.replace(/^"|"$/g, ""));
-  }
-
-  function cleanText(text) { return text ? text.trim().replace(/^"|"$/g, "") : ""; }
-  function parsePrice(priceStr) {
-    if (!priceStr) return 0;
-    let str = priceStr.toString().trim().replace(/[^\d.,-]/g, "");
-    const num = parseFloat(str.replace(/,/g, "."));
-    return isNaN(num) ? 0 : Math.round(num);
-  }
-
-  function showSkeleton() { if(container) container.innerHTML = `<div class="cards-view">${Array(6).fill().map(() => `<div class="product-card" style="height:120px;"><div style="background:linear-gradient(90deg, var(--border) 25%, transparent 50%, var(--border) 75%); background-size:200% 100%; animation:loading 1.5s infinite; border-radius:12px; height:100%;"></div></div>`).join('')}</div>`; }
-  function showError() { if(container) container.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error cargando datos</p><button onclick="location.reload()" style="margin-top:16px;padding:12px 24px;background:var(--xiaomi-orange);border:none;border-radius:30px;color:white;font-weight:600;">Reintentar</button></div>`; }
-  
-  function showCompareModal() {
-    const compareData = filteredData.slice(0, 4);
-    let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
-    compareData.forEach(p => {
-      html += `<div style="background:var(--bg-secondary);padding:14px;border-radius:16px;border-left:4px solid var(--xiaomi-orange);"><div style="font-size:12px;color:var(--xiaomi-orange);font-weight:700;">${escapeHtml(p.marca)}</div><div style="font-size:15px;font-weight:600;margin:4px 0;">${escapeHtml(p.modelo)}</div><div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">${p.tipo}</div><div style="font-size:22px;font-weight:800;">${p.venta.toLocaleString()} Bs</div></div>`;
-    });
-    html += '</div><div class="modal-buttons" style="margin-top:16px;"><button onclick="window.closeCompareModal()" style="flex:1;padding:12px;background:var(--xiaomi-orange);border:none;border-radius:30px;color:white;font-weight:600;">Cerrar</button></div>';
-    const modalHtml = `<div id="compareModal" class="modal" style="display:flex;"><div class="modal-content" style="max-width:350px;"><h3>📊 Comparar</h3>${html}</div></div>`;
-    const existing = document.getElementById("compareModal");
-    if (existing) existing.remove();
-    document.body.insertAdjacentHTML("beforeend", modalHtml);
-  }
-  window.closeCompareModal = function() { const modal = document.getElementById("compareModal"); if (modal) modal.remove(); };
-  window.closeModal = function(modalId) { document.getElementById(modalId).style.display = "none"; const input = document.querySelector(`#${modalId} input`); if(input) input.value = ""; };
-  function showTechModal() { document.getElementById("techModal").style.display = "flex"; document.getElementById("techPassword").focus(); }
-  function toggleTheme() {
-    if (currentTheme === "light") {
-      currentTheme = "dark";
-      document.documentElement.setAttribute("data-theme", "dark");
-      document.querySelector("#themeToggle i").className = "fas fa-sun";
-    } else {
-      currentTheme = "light";
-      document.documentElement.setAttribute("data-theme", "light");
-      document.querySelector("#themeToggle i").className = "fas fa-moon";
-    }
-    localStorage.setItem("theme", currentTheme);
-    render();
-  }
-  function loadTheme() {
-    const saved = localStorage.getItem("theme");
-    if (saved === "dark") {
-      currentTheme = "dark";
-      document.documentElement.setAttribute("data-theme", "dark");
-      document.querySelector("#themeToggle i").className = "fas fa-sun";
-    } else {
-      currentTheme = "light";
-      document.documentElement.setAttribute("data-theme", "light");
-      document.querySelector("#themeToggle i").className = "fas fa-moon";
-    }
-  }
-
-  function setupEventListeners() {
-    searchInput?.addEventListener("input", () => { updateSuggestions(); applyFiltersAndSearch(); });
-    searchInput?.addEventListener("keydown", (e) => { if(e.key === 'Enter'){ suggestionsPanel.classList.remove('active'); applyFiltersAndSearch(); } if(e.key === 'Escape') suggestionsPanel.classList.remove('active'); });
-    clearSearchBtn?.addEventListener("click", () => { searchInput.value = ""; suggestionsPanel.classList.remove('active'); clearSearchBtn.style.display = 'none'; applyFiltersAndSearch(); searchInput.focus(); });
-    document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
-    document.getElementById("techModeBtn")?.addEventListener("click", showTechModal);
-    document.getElementById("shuffleBtn")?.addEventListener("click", () => { if(allData.length){ filteredData = [...allData].sort(() => Math.random() - 0.5); updateResultsCount(); render(); scrollToTopOfResults(); showToast("🔄 Productos mezclados"); } });
-    document.getElementById("confirmTechBtn")?.addEventListener("click", () => { if(document.getElementById("techPassword").value === CONFIG.passwords.tech){ techMode = true; closeModal("techModal"); showToast("🔧 Modo técnico activado"); render(); } else { showToast("❌ Clave incorrecta"); if(navigator.vibrate) navigator.vibrate(200); } });
-    document.getElementById("receiptBtn")?.addEventListener("click", () => { window.open("http://xiaomi.scz.red/1/", "_blank"); });
-    document.querySelectorAll(".filter-chip").forEach(filter => {
-      filter.addEventListener("click", () => {
-        document.querySelectorAll(".filter-chip").forEach(f => f.classList.remove("active"));
-        filter.classList.add("active");
-        currentFilter = filter.dataset.filter;
-        applyFiltersAndSearch();
-      });
-    });
-    document.querySelectorAll(".nav-item").forEach(item => {
-      item.addEventListener("click", () => {
-        currentTab = item.dataset.tab;
-        document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
-        item.classList.add("active");
-        render();
-      });
-    });
-    document.addEventListener("click", (e) => { if(!e.target.closest(".search-wrapper")) suggestionsPanel.classList.remove("active"); });
-  }
-
-  // INICIALIZAR
-  showSkeleton();
-  loadData();
-  setupEventListeners();
-  loadTheme();
+  // Animación de entrada
+  const fadeElements = document.querySelectorAll('.tech-card, .brand-item, .neon-buttons button, .consult-card, .slider-container');
+  fadeElements.forEach((el, idx) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(12px)';
+    setTimeout(() => {
+      el.style.transition = 'all 0.4s ease';
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    }, idx * 30);
+  });
 </script>
 </body>
 </html>
