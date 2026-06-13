@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>DR XIAOMI · SANTA CRUZ · Robotic Repair Center</title>
+  <title>DR XIAOMI · ORANGE LAB · Robotic Repair Center</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
@@ -474,9 +474,9 @@
     </div>
     
     <div class="lab-features">
-      <span class="lab-feature"><i class="fas fa-microscope"></i> Reparacion de Telefono</span>
+      <span class="lab-feature"><i class="fas fa-microscope"></i> Reparacion</span>
       <span class="lab-feature"><i class="fas fa-shield-alt"></i> Servicio Garantizado</span>
-      <span class="lab-feature"><i class="fas fa-tools"></i> Microsoldadura</span>
+      <span class="lab-feature"><i class="fas fa-tools"></i> Especializado</span>
     </div>
   </div>
 
@@ -498,7 +498,7 @@
 
   <!-- CONSULTA -->
   <div class="consult-card">
-    <span class="consult-label"><i class="fas fa-microscope"></i> DIAGNÓSTICO DR XIAOMI · DESCRIBE LA FALLA</span>
+    <span class="consult-label"><i class="fas fa-microscope"></i> DIAGNÓSTICO ORANGE LAB · DESCRIBE LA FALLA</span>
     <div class="consult-input-group">
       <input type="text" class="consult-input" id="problemInput" placeholder="Ej: No enciende, pantalla rota, sobrecalienta...">
       <button class="consult-btn" id="consultBtn"><i class="fab fa-whatsapp"></i> CONSULTAR</button>
@@ -525,12 +525,12 @@
   <!-- ALERTA -->
   <div class="alert-tech">
     <i class="fas fa-microscope"></i>
-    <span><strong>LABORATORIO ELECTRONICO · MICROSOLDADURA · HERRAMIENTAS DE PRECISIÓN · GARANTÍA 6 MESES</strong></span>
+    <span><strong>DR XIAOMI · MICROSOLDADURA · HERRAMIENTAS DE PRECISIÓN · GARANTÍA REAL</strong></span>
   </div>
 
   <!-- BOTONES -->
   <div class="neon-buttons">
-    <button class="btn-neon" id="repairNowBtn"><i class="fas fa-screwdriver"></i> REPARAR AHORA</button>
+    <button class="btn-neon" id="repairNowBtn"><i class="fas fa-screwdriver"></i> CONSULTAR</button>
     <button class="btn-outline-neon" id="diagnosticBtn"><i class="fas fa-microscope"></i> DIAGNÓSTICO</button>
     <button class="btn-tech-icon" id="techRedirectBtn">
       <i class="fas fa-headset"></i> <i class="fas fa-microchip"></i> TÉCNICO
@@ -539,7 +539,7 @@
 
   <!-- FOOTER -->
   <div class="tech-footer">
-    <p><i class="fas fa-map-marker-alt"></i> Centro Comercial Cañoto #K 1 · Dr. Xiaomi Santa Cruz</p>
+    <p><i class="fas fa-map-marker-alt"></i> Centro Comercial Cañoto #K 1 · Orange Lab Santa Cruz</p>
     <p style="margin-top: 0.3rem;">🕒 Lun - Sab 9:00 a 19:30 | Equipo especializado en microelectrónica</p>
   </div>
 </div>
@@ -588,7 +588,7 @@
   sliderContainer.addEventListener('mouseleave', () => { autoInterval = setInterval(nextSlide, 5500); });
 
   // WHATSAPP + REDIRECCIÓN
-  const whatsappNumber = "59175959450";
+  const whatsappNumber = "59175589308";
   function openWhatsApp(msg) {
     window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, '_blank');
   }
@@ -608,7 +608,7 @@
   function getSmartMessage(defaultMsg, service = null) {
     const problem = document.getElementById('problemInput').value.trim();
     if (problem) {
-      if (service) return `🔬 DR XIAOMI  · Servicio: ${service}. Descripción: ${problem}. ¿Diagnóstico con microscopio?`;
+      if (service) return `🔬 DR XIAOMI ORANGE LAB · Servicio: ${service}. Descripción: ${problem}. ¿Diagnóstico con microscopio?`;
       return `🧪 DR XIAOMI LAB · Falla: ${problem}. Necesito revisión técnica.`;
     }
     return defaultMsg;
@@ -616,18 +616,18 @@
 
   document.getElementById('consultBtn').addEventListener('click', () => {
     const problem = document.getElementById('problemInput').value.trim();
-    const msg = problem ? `🔧 DR XIAOMI: Mi equipo presenta: ${problem}. Necesito revisión con microscopio.` : "Hola DR XIAOMI, necesito información de su laboratorio de reparación en Santa Cruz.";
+    const msg = problem ? `🔧 Orange Lab DR XIAOMI: Mi equipo presenta: ${problem}. Necesito revisión con microscopio.` : "Hola DR XIAOMI, necesito información de su laboratorio de reparación en Santa Cruz.";
     openWhatsApp(msg);
-    showToast("📡 Conectando con Dr. Xiaomi...");
+    showToast("📡 Conectando con Orange Lab...");
   });
 
   document.getElementById('repairNowBtn').addEventListener('click', () => {
-    openWhatsApp(getSmartMessage("🛠️ DR XIAOMI : Solicito reparación URGENTE para mi celular. ¿Puedo llevar al taller de precisión?"));
+    openWhatsApp(getSmartMessage("🛠️ DR XIAOMI ORANGE LAB: Solicito reparación URGENTE para mi celular. ¿Puedo llevar al taller de precisión?"));
     showToast("⚡ Abriendo canal de reparación");
   });
 
   document.getElementById('diagnosticBtn').addEventListener('click', () => {
-    openWhatsApp(getSmartMessage("🔬 DR XIAOMI: Deseo agendar diagnóstico con microscopio y herramientas especializadas."));
+    openWhatsApp(getSmartMessage("🔬 Orange Lab DR XIAOMI: Deseo agendar diagnóstico con microscopio y herramientas especializadas."));
     showToast("🔍 Diagnóstico técnico vía WhatsApp");
   });
 
@@ -641,7 +641,7 @@
   techCards.forEach(card => {
     card.addEventListener('click', () => {
       const service = card.querySelector('h3')?.innerText || "reparación especializada";
-      const msg = getSmartMessage(`🔬 DR XIAOMI : Necesito servicio de ${service}. ¿Utilizan microscopio y equipo profesional?`, service);
+      const msg = getSmartMessage(`🔬 DR XIAOMI ORANGE LAB: Necesito servicio de ${service}. ¿Utilizan microscopio y equipo profesional?`, service);
       openWhatsApp(msg);
       showToast(`🛠️ Consultando servicio: ${service}`);
     });
