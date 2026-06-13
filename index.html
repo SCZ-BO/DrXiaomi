@@ -3,51 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0A0C10" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+  <meta name="description" content="DR XIAOMI · Reparación especializada en microsoldadura, cambio de pantalla, batería y placa lógica. Diagnóstico con microscopio y garantía real.">
+  <meta name="keywords" content="reparacion xiaomi, microsoldadura, cambio pantalla, tecnico celular santa cruz, orange lab">
+  <meta name="format-detection" content="telephone=no">
   <title>DR XIAOMI · ORANGE LAB · Robotic Repair Center</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22DR%20XIAOMI%20ORANGE%20LAB%22,%22short_name%22:%22DR%20XIAOMI%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%230A0C10%22,%22background_color%22:%22%230A0C10%22,%22icons%22:[{%22src%22:%22https://placehold.co/192x192/FF6900/white?text=DX%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22}]}">
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ===== MODO OSCURO / CLARO NATIVO ===== */
+    :root {
+      --bg-primary: #0A0C10;
+      --bg-secondary: #14161c;
+      --bg-card: rgba(10, 12, 18, 0.95);
+      --text-primary: #E8EDF2;
+      --text-secondary: #FFB074;
+      --border-color: rgba(255, 105, 0, 0.5);
+      --glass-bg: rgba(8, 10, 16, 0.92);
+      --toolbar-bg: rgba(0,0,0,0.6);
+      --map-filter: grayscale(20%) brightness(0.8);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-primary: #F5F5F7;
+        --bg-secondary: #E8E8ED;
+        --bg-card: rgba(255, 255, 255, 0.95);
+        --text-primary: #1A1C22;
+        --text-secondary: #E65C00;
+        --border-color: rgba(255, 105, 0, 0.6);
+        --glass-bg: rgba(245, 245, 247, 0.92);
+        --toolbar-bg: rgba(255,255,255,0.7);
+        --map-filter: grayscale(10%) brightness(0.95);
+      }
+      .lab-bg::before {
+        background-image: repeating-linear-gradient(0deg, rgba(255, 105, 0, 0.08) 0px, rgba(255, 105, 0, 0.08) 1px, transparent 1px, transparent 14px);
+      }
+      .consult-input { background: #FFFFFF; color: #1A1C22; }
+      .tech-card { background: rgba(255,255,255,0.9); }
+      .alert-tech { background: rgba(255,105,0,0.15); }
     }
 
     body {
-      font-family: 'Space Grotesk', sans-serif;
-      background: #0A0C10;
-      color: #E8EDF2;
+      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow-y: auto;
       overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
     }
 
-    /* FONDO INDUSTRIAL */
+    /* Fondo industrial */
     .lab-bg {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: radial-gradient(circle at 30% 20%, #14161c 0%, #050608 100%);
+      background: radial-gradient(circle at 30% 20%, var(--bg-secondary) 0%, var(--bg-primary) 100%);
       z-index: -2;
     }
-
     .lab-bg::before {
       content: '';
       position: absolute;
       width: 100%;
       height: 100%;
-      background-image: 
-        repeating-linear-gradient(0deg, rgba(255, 105, 0, 0.06) 0px, rgba(255, 105, 0, 0.06) 1px, transparent 1px, transparent 14px),
-        repeating-linear-gradient(90deg, rgba(255, 105, 0, 0.04) 0px, rgba(255, 105, 0, 0.04) 1px, transparent 1px, transparent 14px);
+      background-image: repeating-linear-gradient(0deg, rgba(255, 105, 0, 0.05) 0px, rgba(255, 105, 0, 0.05) 1px, transparent 1px, transparent 14px);
       pointer-events: none;
     }
-
     .lab-bg::after {
       content: '';
       position: absolute;
       width: 100%;
       height: 100%;
-      background: radial-gradient(ellipse at 70% 40%, rgba(255, 105, 0, 0.08) 0%, transparent 60%);
+      background: radial-gradient(ellipse at 70% 40%, rgba(255, 105, 0, 0.1) 0%, transparent 70%);
       pointer-events: none;
     }
 
@@ -60,149 +100,157 @@
       height: 100%;
       z-index: -1;
       pointer-events: none;
-      opacity: 0.45;
+      opacity: 0.25;
     }
-
     .tool-icon {
       position: absolute;
-      font-size: 3rem;
+      font-size: 2.5rem;
       color: #E65C00;
-      filter: drop-shadow(0 0 8px rgba(255, 105, 0, 0.4));
-      animation: floatTool 14s infinite ease-in-out;
+      animation: floatTool 18s infinite ease-in-out;
     }
-
-    .microscope { bottom: 8%; left: 4%; font-size: 4rem; animation-delay: 0s; }
-    .screwdriver { bottom: 22%; right: 5%; font-size: 3.2rem; animation-delay: 1.2s; }
-    .pliers { top: 12%; left: 2%; font-size: 3rem; animation-delay: 0.6s; }
-    .soldering { bottom: 38%; left: 10%; font-size: 3.5rem; animation-delay: 2s; }
-    .chip { top: 55%; right: 8%; font-size: 3rem; animation-delay: 1.5s; }
-    .multimeter { top: 20%; right: 12%; font-size: 3.3rem; animation-delay: 2.5s; }
-    .magnifier { bottom: 48%; right: 18%; font-size: 3rem; animation-delay: 0.3s; }
-    .gear { top: 35%; left: 18%; font-size: 2.8rem; animation-delay: 1.8s; }
-    .pcb { bottom: 15%; right: 25%; font-size: 3.2rem; animation-delay: 0.9s; }
-    .oscilloscope { top: 70%; left: 25%; font-size: 3.4rem; animation-delay: 2.2s; }
+    .microscope { bottom: 6%; left: 2%; font-size: 3rem; }
+    .screwdriver { bottom: 18%; right: 3%; font-size: 2.8rem; animation-delay: 1.2s; }
+    .pliers { top: 12%; left: 1%; font-size: 2.5rem; animation-delay: 0.6s; }
+    .chip { top: 50%; right: 2%; font-size: 2.7rem; animation-delay: 1.5s; }
 
     @keyframes floatTool {
-      0% { transform: translateY(0px) rotate(0deg); opacity: 0.35; }
-      50% { transform: translateY(-14px) rotate(4deg); opacity: 0.65; }
-      100% { transform: translateY(0px) rotate(0deg); opacity: 0.35; }
+      0% { transform: translateY(0px) rotate(0deg); opacity: 0.2; }
+      50% { transform: translateY(-12px) rotate(3deg); opacity: 0.5; }
+      100% { transform: translateY(0px) rotate(0deg); opacity: 0.2; }
     }
 
-    /* CONTENEDOR PRINCIPAL */
+    /* Barra de progreso scroll */
+    #scrollProgress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 3px;
+      background: linear-gradient(90deg, #FF6900, #FF8C42);
+      z-index: 1000;
+      transition: width 0.1s ease-out;
+      box-shadow: 0 0 6px #FF6900;
+    }
+
+    /* Contenedor principal */
     .glass-app {
       max-width: 550px;
       margin: 0 auto;
-      background: rgba(8, 10, 16, 0.85);
-      backdrop-filter: blur(12px);
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
       min-height: 100vh;
       position: relative;
       z-index: 10;
-      border-left: 1px solid rgba(255, 105, 0, 0.4);
-      border-right: 1px solid rgba(255, 105, 0, 0.4);
-      box-shadow: 0 0 50px rgba(255, 105, 0, 0.12);
+      border-left: 1px solid rgba(255, 105, 0, 0.3);
+      border-right: 1px solid rgba(255, 105, 0, 0.3);
+      display: flex;
+      flex-direction: column;
     }
 
-    /* ===== CABECERA MEJORADA - SIN ESPACIOS VACÍOS ===== */
+    /* CABECERA */
     .lab-header {
-      padding: 1.2rem 1.5rem 0.8rem;
+      padding: 0.9rem 1.5rem 0.6rem;
       text-align: center;
       border-bottom: 1px solid rgba(255, 105, 0, 0.3);
-      background: linear-gradient(180deg, rgba(255,105,0,0.05) 0%, transparent 100%);
+      background: linear-gradient(180deg, rgba(255,105,0,0.08) 0%, transparent 100%);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(12px);
+      z-index: 20;
     }
-
-    /* Contenedor compacto del título */
     .title-container {
       display: flex;
       align-items: baseline;
       justify-content: center;
       gap: 0.5rem;
       flex-wrap: wrap;
-      margin-bottom: 0.5rem;
     }
-
     .main-title {
-      font-size: 2.2rem;
+      font-size: 2rem;
       font-weight: 800;
       background: linear-gradient(135deg, #FFFFFF, #FF8C42, #FF6900);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      letter-spacing: -0.5px;
     }
-
     .orange-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
       background: rgba(255, 105, 0, 0.2);
       border: 1px solid #FF6900;
       border-radius: 2rem;
-      padding: 0.2rem 0.8rem;
-      font-size: 0.65rem;
-      font-weight: 600;
-      color: #FF8C42;
+      padding: 0.2rem 0.7rem;
+      font-size: 0.6rem;
     }
-
-    .orange-badge i {
-      font-size: 0.7rem;
-    }
-
-    /* Fila de características del laboratorio */
     .lab-features {
       display: flex;
       justify-content: center;
-      gap: 1rem;
-      margin-top: 0.6rem;
+      gap: 0.7rem;
+      margin-top: 0.5rem;
       flex-wrap: wrap;
     }
-
     .lab-feature {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
-      font-size: 0.65rem;
-      background: rgba(255, 105, 0, 0.08);
+      gap: 0.3rem;
+      font-size: 0.6rem;
+      background: rgba(255, 105, 0, 0.1);
       padding: 0.2rem 0.7rem;
-      border-radius: 1.5rem;
-      color: #FFB074;
-    }
-
-    .lab-feature i {
-      font-size: 0.7rem;
-      color: #FF6900;
+      border-radius: 2rem;
+      color: var(--text-secondary);
     }
 
     /* SLIDER */
     .slider-container {
-      margin: 1rem 1.5rem;
-      border-radius: 1.2rem;
+      margin: 1rem 1.2rem;
+      border-radius: 1.5rem;
       background: #0E1118;
-      border: 1px solid rgba(255, 105, 0, 0.7);
-      box-shadow: inset 0 0 12px rgba(255, 105, 0, 0.1);
+      border: 1px solid rgba(255, 105, 0, 0.6);
+      overflow: hidden;
+      position: relative;
     }
     .slider-frame {
       position: relative;
       width: 100%;
       overflow: hidden;
-      border-radius: 1rem;
+      touch-action: pan-y pinch-zoom;
     }
-    .slider-track { display: flex; transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1); }
-    .slide { min-width: 100%; position: relative; }
+    .slider-track {
+      display: flex;
+      transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+    .slide {
+      min-width: 100%;
+      position: relative;
+    }
     .slide img {
       width: 100%;
       aspect-ratio: 16 / 9;
       object-fit: cover;
-      filter: brightness(0.9) contrast(1.1);
-      border-radius: 0.8rem;
+      display: block;
+      background: #1a1e2a;
+    }
+    .skeleton-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #1a1e2a 25%, #2a2e3a 50%, #1a1e2a 75%);
+      background-size: 200% 100%;
+      animation: skeletonShine 1.5s infinite;
+      z-index: 1;
+    }
+    @keyframes skeletonShine {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
     .slide-caption {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(0deg, #0A0E16, transparent);
+      background: linear-gradient(0deg, #0A0E16CC, transparent);
       padding: 0.8rem 1rem;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 600;
       color: #FF8C42;
     }
@@ -210,76 +258,61 @@
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      background: rgba(255, 105, 0, 0.55);
-      backdrop-filter: blur(6px);
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
       border: 1px solid #FF6900;
-      border-radius: 50%;
-      width: 38px;
-      height: 38px;
+      border-radius: 40px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       z-index: 15;
     }
-    .slider-btn:hover { background: #FF6900; color: #0A0E16; box-shadow: 0 0 16px #FF6900; }
-    .slider-btn-left { left: 10px; }
-    .slider-btn-right { right: 10px; }
+    .slider-btn:active { transform: translateY(-50%) scale(0.94); background: #FF6900; }
+    .slider-btn-left { left: 12px; }
+    .slider-btn-right { right: 12px; }
     .slider-dots {
       display: flex;
       justify-content: center;
-      gap: 0.5rem;
-      padding: 0.6rem;
+      gap: 0.6rem;
+      padding: 0.5rem;
       position: absolute;
-      bottom: 5px;
+      bottom: 8px;
       left: 0;
       right: 0;
       z-index: 15;
     }
     .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(200, 180, 150, 0.4);
-      cursor: pointer;
+      width: 7px;
+      height: 7px;
+      border-radius: 10px;
+      background: rgba(200, 180, 150, 0.5);
+      transition: all 0.2s;
     }
-    .dot.active { background: #FF6900; box-shadow: 0 0 10px #FF6900; width: 20px; border-radius: 6px; }
+    .dot.active { background: #FF6900; width: 24px; box-shadow: 0 0 8px #FF6900; }
 
-    /* TARJETA CONSULTA */
+    /* Tarjeta consulta */
     .consult-card {
-      background: rgba(10, 12, 18, 0.9);
-      border: 1px solid rgba(255, 105, 0, 0.5);
-      border-radius: 1.5rem;
-      margin: 1rem 1.5rem;
-      padding: 1.2rem;
-    }
-    .consult-label {
-      font-size: 0.7rem;
-      letter-spacing: 2px;
-      color: #FF8C42;
-      margin-bottom: 0.7rem;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-    .consult-input-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 1.8rem;
+      margin: 0.8rem 1.2rem;
+      padding: 1rem 1.2rem;
     }
     .consult-input {
       flex: 2;
-      background: #0C101A;
-      border: 1px solid rgba(255, 105, 0, 0.4);
+      background: var(--bg-secondary);
+      border: 1px solid rgba(255, 105, 0, 0.5);
       border-radius: 2rem;
       padding: 0.8rem 1.2rem;
-      font-family: 'Space Grotesk', monospace;
+      font-family: monospace;
       font-size: 0.85rem;
-      color: #fff;
+      color: var(--text-primary);
       outline: none;
     }
-    .consult-input:focus { border-color: #FF6900; }
+    .consult-input:focus { border-color: #FF6900; box-shadow: 0 0 0 2px rgba(255,105,0,0.3); }
     .consult-btn {
       background: linear-gradient(95deg, #FF6900, #FF8C42);
       border: none;
@@ -292,154 +325,126 @@
       gap: 0.5rem;
       cursor: pointer;
     }
-    .phone-number-mini {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 0.8rem;
-      font-size: 0.7rem;
-      color: #E68844;
-      background: rgba(0,0,0,0.4);
-      padding: 0.2rem 0.7rem;
-      border-radius: 1.5rem;
-    }
+    .consult-btn:active { transform: scale(0.97); }
 
-    /* GRID SERVICIOS */
+    /* Grid servicios */
     .tech-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 0.9rem;
-      margin: 1.5rem;
+      margin: 0.8rem 1.2rem;
     }
     .tech-card {
-      background: rgba(10, 12, 18, 0.85);
-      border-radius: 1.2rem;
-      padding: 1rem 0.6rem;
+      background: var(--bg-card);
+      border-radius: 1.4rem;
+      padding: 0.9rem 0.4rem;
       text-align: center;
-      border: 1px solid rgba(255, 105, 0, 0.35);
+      border: 1px solid rgba(255, 105, 0, 0.4);
       cursor: pointer;
-      transition: 0.2s;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
     }
-    .tech-card:hover {
-      transform: translateY(-5px);
-      border-color: #FF6900;
-      box-shadow: 0 0 22px rgba(255, 105, 0, 0.3);
-    }
-    .tech-card i { font-size: 1.9rem; color: #FF8C42; margin-bottom: 0.4rem; display: block; }
-    .tech-card h3 { font-size: 0.85rem; }
+    .tech-card:active { transform: scale(0.97); background: rgba(255, 105, 0, 0.15); }
+    .tech-card i { font-size: 1.8rem; color: #FF8C42; margin-bottom: 0.4rem; display: block; }
+    .tech-card h3 { font-size: 0.8rem; }
 
-    /* MARCAS */
-    .brand-strip {
+    /* Redes sociales */
+    .social-icons {
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
-      gap: 0.6rem;
-      margin: 1rem 1.5rem;
-      padding: 0.6rem;
-      background: rgba(0, 0, 0, 0.45);
-      border-radius: 2rem;
+      gap: 2rem;
+      margin: 1rem 1.2rem 0.5rem;
+      padding: 0.5rem;
     }
-    .brand-item {
-      background: rgba(255, 105, 0, 0.12);
-      padding: 0.25rem 0.9rem;
-      border-radius: 2rem;
-      font-size: 0.7rem;
-      transition: 0.2s;
-    }
-    .brand-item:hover { background: #FF6900; color: #000; }
-
-    /* ALERTA */
-    .alert-tech {
-      margin: 0 1.5rem 1.5rem;
-      padding: 0.7rem 1rem;
-      background: rgba(255, 105, 0, 0.1);
-      border-left: 3px solid #FF8C42;
-      border-radius: 0.8rem;
+    .social-icon {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 0.6rem;
-      font-size: 0.7rem;
+      gap: 0.3rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      background: rgba(255, 105, 0, 0.1);
+      border: 1px solid rgba(255, 105, 0, 0.3);
     }
+    .social-icon:active { transform: scale(0.95); background: rgba(255, 105, 0, 0.3); }
+    .social-icon i { font-size: 1.8rem; }
+    .social-icon span { font-size: 0.6rem; font-weight: 500; }
+    .social-icon .fa-facebook { color: #1877F2; }
+    .social-icon .fa-tiktok { color: #000000; text-shadow: 0 0 2px #FF004F; }
+    .social-icon .fa-whatsapp { color: #25D366; }
 
-    /* BOTONES */
+    /* Botones */
     .neon-buttons {
       display: flex;
       gap: 0.8rem;
-      margin: 1.5rem;
+      margin: 0.8rem 1.2rem;
       flex-wrap: wrap;
     }
-    .btn-neon {
+    .btn-neon, .btn-outline-neon, .btn-tech-icon {
       flex: 1;
-      background: linear-gradient(95deg, #FF6900, #FF8C42);
-      border: none;
-      padding: 0.8rem;
-      border-radius: 2rem;
-      font-weight: 700;
-      color: #0A0E16;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      min-width: 110px;
-    }
-    .btn-outline-neon {
-      flex: 1;
-      background: transparent;
-      border: 1.5px solid #FF6900;
-      border-radius: 2rem;
-      padding: 0.8rem;
-      font-weight: 600;
-      color: #FF8C42;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      min-width: 110px;
-    }
-    .btn-outline-neon:hover { background: rgba(255, 105, 0, 0.15); }
-    .btn-tech-icon {
-      background: rgba(255, 105, 0, 0.15);
-      border: 1.5px solid #FF6900;
-      border-radius: 2rem;
-      padding: 0.8rem 1rem;
-      font-weight: 600;
-      color: #FF8C42;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      transition: 0.2s;
       min-width: 100px;
+      padding: 0.8rem 0.2rem;
+      border-radius: 2.5rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      font-size: 0.75rem;
     }
-    .btn-tech-icon:hover {
-      background: #FF6900;
-      color: #0A0E16;
-      box-shadow: 0 0 18px rgba(255, 105, 0, 0.5);
-    }
+    .btn-neon:active, .btn-outline-neon:active, .btn-tech-icon:active { transform: scale(0.96); }
+    .btn-neon { background: linear-gradient(95deg, #FF6900, #FF8C42); border: none; color: #0A0E16; }
+    .btn-outline-neon { background: transparent; border: 1.5px solid #FF6900; color: #FF8C42; }
+    .btn-tech-icon { background: rgba(255, 105, 0, 0.18); border: 1.5px solid #FF6900; color: #FF9F5C; }
 
-    /* FOOTER */
+    /* FOOTER CON MAPA */
     .tech-footer {
-      background: rgba(0, 0, 0, 0.55);
+      background: var(--toolbar-bg);
       padding: 1rem;
       text-align: center;
       border-top: 1px solid rgba(255, 105, 0, 0.3);
       font-size: 0.7rem;
+      margin-top: auto;
+    }
+    .map-container {
+      margin: 0.8rem 0 0.5rem;
+      border-radius: 1.2rem;
+      overflow: hidden;
+      border: 1px solid rgba(255, 105, 0, 0.4);
+      height: 160px;
+    }
+    .map-container iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      filter: var(--map-filter);
+      transition: filter 0.3s;
+    }
+    .footer-address {
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
     }
 
-    /* TOAST */
+    /* Toast */
     .toast-lab {
       position: fixed;
-      bottom: 20px;
+      bottom: 28px;
       left: 50%;
       transform: translateX(-50%) translateY(100px);
-      background: #0E121C;
+      background: #1A1E2C;
+      backdrop-filter: blur(20px);
       border: 1px solid #FF6900;
       border-radius: 2rem;
-      padding: 0.5rem 1.2rem;
-      color: #FF8C42;
+      padding: 0.6rem 1.4rem;
+      color: #FFB074;
       font-size: 0.75rem;
       z-index: 200;
       transition: transform 0.25s;
@@ -447,48 +452,55 @@
       white-space: nowrap;
     }
     .toast-lab.show { transform: translateX(-50%) translateY(0); }
+
+    .offline-badge {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #FF3B30;
+      color: white;
+      text-align: center;
+      font-size: 0.7rem;
+      padding: 4px;
+      z-index: 1001;
+      transform: translateY(-100%);
+      transition: transform 0.3s;
+    }
+    .offline-badge.show { transform: translateY(0); }
   </style>
 </head>
 <body>
+<div id="scrollProgress"></div>
+<div id="offlineBadge" class="offline-badge">📡 Sin conexión a internet - Algunas funciones pueden no estar disponibles</div>
 <div class="lab-bg"></div>
 <div class="lab-tools">
   <i class="fas fa-microscope tool-icon microscope"></i>
   <i class="fas fa-tools tool-icon screwdriver"></i>
   <i class="fas fa-wrench tool-icon pliers"></i>
   <i class="fas fa-microchip tool-icon chip"></i>
-  <i class="fas fa-bolt tool-icon soldering"></i>
-  <i class="fas fa-microscope tool-icon oscilloscope"></i>
-  <i class="fas fa-search tool-icon magnifier"></i>
-  <i class="fas fa-cogs tool-icon gear"></i>
-  <i class="fas fa-microchip tool-icon pcb"></i>
 </div>
 
 <div class="glass-app">
-  <!-- ===== CABECERA MEJORADA - COMPACTA Y SIN ESPACIOS VACÍOS ===== -->
   <div class="lab-header">
     <div class="title-container">
       <span class="main-title">DR XIAOMI</span>
-      <span class="orange-badge">
-        <i class="fas fa-microchip"></i> 
-      </span>
+      <span class="orange-badge"><i class="fas fa-microchip"></i> ORANGE LAB</span>
     </div>
-    
     <div class="lab-features">
-      <span class="lab-feature"><i class="fas fa-microscope"></i> Reparacion</span>
-      <span class="lab-feature"><i class="fas fa-shield-alt"></i> Servicio Garantizado</span>
-      <span class="lab-feature"><i class="fas fa-tools"></i> Especializado</span>
+      <span class="lab-feature"><i class="fas fa-microscope"></i> Microsoldadura</span>
+      <span class="lab-feature"><i class="fas fa-shield-alt"></i> Garantía +90d</span>
+      <span class="lab-feature"><i class="fas fa-tachometer-alt"></i> Diagnóstico Exprés</span>
     </div>
   </div>
 
-  <!-- SLIDER -->
   <div class="slider-container">
-    <div class="slider-frame">
+    <div class="slider-frame" id="sliderFrame">
       <div class="slider-track" id="sliderTrack">
-        <div class="slide"><img src="imagenes/0000.jpg" alt="Microscopio"><div class="slide-caption"><i class="fas fa-microscope"></i> Servicio Tecnico Especializado</div></div>
-        <div class="slide"><img src="imagenes/0001.jpg" alt="Pantalla"><div class="slide-caption"><i class="fas fa-battery-full"></i> Cambio Pantalla · </div></div>
-        <div class="slide"><img src="imagenes/0002.jpg" alt="Microsoldadura"><div class="slide-caption"><i class="fas fa-microchip"></i> Microsoldadura de Precisión</div></div>
-        <div class="slide"><img src="imagenes/0003.jpg" alt="Bateria"><div class="slide-caption"><i class="fas fa-tools"></i> Cambio de Bateria</div></div>
-        <div class="slide"><img src="imagenes/0004.jpg" alt="Laboratorio"><div class="slide-caption"><i class="fas fa-microscope"></i> Servicio Tecnico Garantizado</div></div>
+        <div class="slide"><img src="imagenes/0000.jpg" alt="Microscopio"><div class="slide-caption"><i class="fas fa-microscope"></i> Laboratorio de precisión</div></div>
+        <div class="slide"><img src="imagenes/0001.jpg" alt="Pantalla"><div class="slide-caption"><i class="fas fa-mobile-alt"></i> Pantallas originales</div></div>
+        <div class="slide"><img src="imagenes/0002.jpg" alt="Microsoldadura"><div class="slide-caption"><i class="fas fa-microchip"></i> Microsoldadura profesional</div></div>
+        <div class="slide"><img src="imagenes/0003.jpg" alt="Bateria"><div class="slide-caption"><i class="fas fa-battery-full"></i> Batería garantizada</div></div>
       </div>
       <div class="slider-btn slider-btn-left" id="sliderPrev"><i class="fas fa-chevron-left"></i></div>
       <div class="slider-btn slider-btn-right" id="sliderNext"><i class="fas fa-chevron-right"></i></div>
@@ -496,56 +508,87 @@
     </div>
   </div>
 
-  <!-- CONSULTA -->
   <div class="consult-card">
-    <span class="consult-label"><i class="fas fa-microscope"></i> DIAGNÓSTICO ORANGE LAB · DESCRIBE LA FALLA</span>
-    <div class="consult-input-group">
-      <input type="text" class="consult-input" id="problemInput" placeholder="Ej: No enciende, pantalla rota, sobrecalienta...">
+    <span class="consult-label"><i class="fas fa-microscope"></i> DESCRIBE LA FALLA · DIAGNÓSTICO POR INGENIERÍA</span>
+    <div style="display:flex; flex-wrap:wrap; gap:0.7rem;">
+      <input type="text" class="consult-input" id="problemInput" placeholder="Ej: No enciende, pantalla rota, no carga...">
       <button class="consult-btn" id="consultBtn"><i class="fab fa-whatsapp"></i> CONSULTAR</button>
     </div>
-    <div class="phone-number-mini"><i class="fas fa-flask"></i> Dr: Xiaomi: 75959450 · Diagnóstico con herramientas de precisión</div>
+    <div style="display:flex; gap:0.8rem; margin-top:0.8rem; flex-wrap:wrap;">
+      <button id="callBtn" class="btn-outline-neon" style="flex:1; padding:0.5rem;"><i class="fas fa-phone"></i> LLAMAR</button>
+      <button id="shareBtn" class="btn-outline-neon" style="flex:1; padding:0.5rem;"><i class="fas fa-share-alt"></i> COMPARTIR</button>
+    </div>
   </div>
 
-  <!-- SERVICIOS -->
   <div class="tech-grid">
-    <div class="tech-card" data-service="Micro soldadura"><i class="fas fa-microchip"></i><h3>MICRO SOLDADURA</h3></div>
-    <div class="tech-card" data-service="Cambio de Pantalla"><i class="fas fa-tachometer-alt"></i><h3>PANTALLA</h3></div>
-    <div class="tech-card" data-service="Puerto de carga"><i class="fas fa-plug"></i><h3>PUERTO CARGA</h3></div>
-    <div class="tech-card" data-service="Batería"><i class="fas fa-battery-full"></i><h3>BATERÍA</h3></div>
-    <div class="tech-card" data-service="Óptica / Cámara"><i class="fas fa-camera"></i><h3>ÓPTICA CÁMARA</h3></div>
-    <div class="tech-card" data-service="Placa lógica"><i class="fas fa-microscope"></i><h3>PLACA LÓGICA</h3></div>
+    <div class="tech-card" data-service="Micro soldadura avanzada"><i class="fas fa-microchip"></i><h3>MICRO SOLDADURA</h3></div>
+    <div class="tech-card" data-service="Cambio de Pantalla OLED/LCD"><i class="fas fa-tachometer-alt"></i><h3>PANTALLA</h3></div>
+    <div class="tech-card" data-service="Reparación puerto de carga"><i class="fas fa-plug"></i><h3>PUERTO CARGA</h3></div>
+    <div class="tech-card" data-service="Cambio de Batería Original"><i class="fas fa-battery-full"></i><h3>BATERÍA</h3></div>
+    <div class="tech-card" data-service="Óptica / Cámara profesional"><i class="fas fa-camera"></i><h3>ÓPTICA CÁMARA</h3></div>
+    <div class="tech-card" data-service="Reparación Placa Lógica (IC)"><i class="fas fa-microscope"></i><h3>PLACA LÓGICA</h3></div>
   </div>
 
-  <!-- MARCAS -->
-  <div class="brand-strip">
-    <span class="brand-item">XIAOMI</span><span class="brand-item">TECNO</span><span class="brand-item">REALME</span>
-    <span class="brand-item">SAMSUNG</span><span class="brand-item">HUAWEI</span><span class="brand-item">IPHONE</span>
+  <div class="brand-strip" style="display:flex; flex-wrap:wrap; justify-content:center; gap:0.5rem; margin:0.5rem 1.2rem;">
+    <span class="brand-item" style="background:rgba(255,105,0,0.12); padding:0.3rem 1rem; border-radius:2rem;">XIAOMI</span>
+    <span class="brand-item" style="background:rgba(255,105,0,0.12); padding:0.3rem 1rem; border-radius:2rem;">TECNO</span>
+    <span class="brand-item" style="background:rgba(255,105,0,0.12); padding:0.3rem 1rem; border-radius:2rem;">REALME</span>
+    <span class="brand-item" style="background:rgba(255,105,0,0.12); padding:0.3rem 1rem; border-radius:2rem;">SAMSUNG</span>
+    <span class="brand-item" style="background:rgba(255,105,0,0.12); padding:0.3rem 1rem; border-radius:2rem;">IPHONE</span>
   </div>
 
-  <!-- ALERTA -->
-  <div class="alert-tech">
-    <i class="fas fa-microscope"></i>
-    <span><strong>DR XIAOMI · MICROSOLDADURA · HERRAMIENTAS DE PRECISIÓN · GARANTÍA REAL</strong></span>
+  <!-- ===== REDES SOCIALES ===== -->
+  <div class="social-icons">
+    <div class="social-icon" id="facebookBtn">
+      <i class="fab fa-facebook"></i>
+      <span>Facebook</span>
+    </div>
+    <div class="social-icon" id="tiktokBtn">
+      <i class="fab fa-tiktok"></i>
+      <span>TikTok</span>
+    </div>
+    <div class="social-icon" id="whatsappSocialBtn">
+      <i class="fab fa-whatsapp"></i>
+      <span>WhatsApp</span>
+    </div>
   </div>
 
-  <!-- BOTONES -->
   <div class="neon-buttons">
-    <button class="btn-neon" id="repairNowBtn"><i class="fas fa-screwdriver"></i> CONSULTAR</button>
+    <button class="btn-neon" id="repairNowBtn"><i class="fas fa-screwdriver"></i> REPARAR</button>
     <button class="btn-outline-neon" id="diagnosticBtn"><i class="fas fa-microscope"></i> DIAGNÓSTICO</button>
-    <button class="btn-tech-icon" id="techRedirectBtn">
-      <i class="fas fa-headset"></i> <i class="fas fa-microchip"></i> TÉCNICO
-    </button>
+    <button class="btn-tech-icon" id="techRedirectBtn"><i class="fas fa-headset"></i> TÉCNICO</button>
   </div>
 
-  <!-- FOOTER -->
+  <!-- ===== FOOTER CON MAPA ===== -->
   <div class="tech-footer">
-    <p><i class="fas fa-map-marker-alt"></i> Centro Comercial Cañoto #K 1 · Orange Lab Santa Cruz</p>
-    <p style="margin-top: 0.3rem;">🕒 Lun - Sab 9:00 a 19:30 | Equipo especializado en microelectrónica</p>
+    <div class="map-container">
+      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3802.774129038947!2d-63.1847789!3d-17.6224889!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x93f1e3a8f0c8d4c7%3A0x4e5d5c8b3f2a1e0!2sCentro%20Comercial%20Ca%C3%B1oto!5e0!3m2!1ses!2sbo!4v1700000000000!5m2!1ses!2sbo" 
+        allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+    <div class="footer-address">
+      <i class="fas fa-map-marker-alt" style="color:#FF6900;"></i>
+      <span>Centro Comercial Cañoto #K 1 · Orange Lab Santa Cruz - Bolivia</span>
+    </div>
+    <p style="margin-top: 0.5rem;">🕒 Lun - Sab 9:00 a 19:30 | Diagnóstico con microscopio</p>
+    <p style="margin-top: 0.3rem; font-size: 0.6rem;">📞 +591 75959450 | ✉️ drxiaomi@orangelab.bo</p>
   </div>
 </div>
 
 <script>
-  // SLIDER
+  // ==================== VIBRACIÓN ====================
+  function vibrate() { if (window.navigator?.vibrate) window.navigator.vibrate(12); }
+
+  // ==================== OFFLINE DETECTION ====================
+  const offlineBadge = document.getElementById('offlineBadge');
+  function updateOnlineStatus() {
+    if (!navigator.onLine) { offlineBadge.classList.add('show'); showToast("⚠️ Sin conexión a internet"); } 
+    else { offlineBadge.classList.remove('show'); }
+  }
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  updateOnlineStatus();
+
+  // ==================== SLIDER ====================
   const track = document.getElementById('sliderTrack');
   const slides = document.querySelectorAll('.slide');
   const prevBtn = document.getElementById('sliderPrev');
@@ -553,7 +596,6 @@
   const dotsContainer = document.getElementById('sliderDots');
   let currentIndex = 0;
   const totalSlides = slides.length;
-
   for (let i = 0; i < totalSlides; i++) {
     const dot = document.createElement('div');
     dot.classList.add('dot');
@@ -562,101 +604,101 @@
     dotsContainer.appendChild(dot);
   }
   const dots = document.querySelectorAll('.dot');
-
-  function updateDots() {
-    dots.forEach((dot, idx) => {
-      if (idx === currentIndex) dot.classList.add('active');
-      else dot.classList.remove('active');
-    });
-  }
-
-  function goToSlide(index) {
-    currentIndex = (index + totalSlides) % totalSlides;
-    track.style.transform = `translateX(-${currentIndex * 100}%)`;
-    updateDots();
-  }
-
-  function nextSlide() { goToSlide(currentIndex + 1); }
-  function prevSlide() { goToSlide(currentIndex - 1); }
-
+  function updateDots() { dots.forEach((dot, idx) => idx === currentIndex ? dot.classList.add('active') : dot.classList.remove('active')); }
+  function goToSlide(index) { currentIndex = (index + totalSlides) % totalSlides; track.style.transform = `translateX(-${currentIndex * 100}%)`; updateDots(); }
+  function nextSlide() { goToSlide(currentIndex + 1); vibrate(); }
+  function prevSlide() { goToSlide(currentIndex - 1); vibrate(); }
+  let touchStartX = 0;
+  document.getElementById('sliderFrame').addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
+  document.getElementById('sliderFrame').addEventListener('touchend', (e) => {
+    const diff = e.changedTouches[0].screenX - touchStartX;
+    if (Math.abs(diff) > 40) { diff > 0 ? prevSlide() : nextSlide(); }
+  });
   nextBtn.addEventListener('click', nextSlide);
   prevBtn.addEventListener('click', prevSlide);
-
   let autoInterval = setInterval(nextSlide, 5500);
   const sliderContainer = document.querySelector('.slider-container');
   sliderContainer.addEventListener('mouseenter', () => clearInterval(autoInterval));
   sliderContainer.addEventListener('mouseleave', () => { autoInterval = setInterval(nextSlide, 5500); });
 
-  // WHATSAPP + REDIRECCIÓN
-  const whatsappNumber = "59175589308";
-  function openWhatsApp(msg) {
-    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, '_blank');
-  }
+  // Skeleton loading
+  document.querySelectorAll('.slide img').forEach(img => {
+    const skeleton = document.createElement('div');
+    skeleton.className = 'skeleton-img';
+    img.parentElement.style.position = 'relative';
+    img.parentElement.appendChild(skeleton);
+    img.addEventListener('load', () => skeleton.remove());
+    if (img.complete) skeleton.remove();
+  });
 
+  // ==================== WHATSAPP + LOADING ====================
+  const whatsappNumber = "59175589308";
+  function openWhatsApp(msg) { window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, '_blank'); }
   function showToast(message) {
     let toast = document.querySelector('.toast-lab');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.className = 'toast-lab';
-      document.body.appendChild(toast);
-    }
+    if (!toast) { toast = document.createElement('div'); toast.className = 'toast-lab'; document.body.appendChild(toast); }
     toast.textContent = message;
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2000);
+    setTimeout(() => toast.classList.remove('show'), 2200);
   }
-
+  async function withLoading(btn, callback) {
+    if (!navigator.onLine) { showToast("📡 Sin conexión"); return; }
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Conectando...';
+    btn.disabled = true;
+    vibrate();
+    await callback();
+    setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 800);
+  }
   function getSmartMessage(defaultMsg, service = null) {
     const problem = document.getElementById('problemInput').value.trim();
-    if (problem) {
-      if (service) return `🔬 DR XIAOMI ORANGE LAB · Servicio: ${service}. Descripción: ${problem}. ¿Diagnóstico con microscopio?`;
-      return `🧪 DR XIAOMI LAB · Falla: ${problem}. Necesito revisión técnica.`;
-    }
+    if (problem) return service ? `🔬 DR XIAOMI · Servicio: ${service}. Descripción: ${problem}` : `🔧 Falla: ${problem}`;
     return defaultMsg;
   }
-
-  document.getElementById('consultBtn').addEventListener('click', () => {
+  document.getElementById('consultBtn').addEventListener('click', () => withLoading(document.getElementById('consultBtn'), async () => {
     const problem = document.getElementById('problemInput').value.trim();
-    const msg = problem ? `🔧 Orange Lab DR XIAOMI: Mi equipo presenta: ${problem}. Necesito revisión con microscopio.` : "Hola DR XIAOMI, necesito información de su laboratorio de reparación en Santa Cruz.";
-    openWhatsApp(msg);
-    showToast("📡 Conectando con Orange Lab...");
+    if (!problem) { showToast("⚠️ Describe la falla"); return; }
+    openWhatsApp(`🔧  - Mi dispositivo presenta: ${problem}. Necesito diagnóstico.`);
+    showToast("📡 Conectando...");
+  }));
+  document.getElementById('repairNowBtn').addEventListener('click', () => withLoading(document.getElementById('repairNowBtn'), async () => { openWhatsApp("🛠️ Solicito reparación URGENTE para mi celular."); showToast("⚡ Canal de reparación"); }));
+  document.getElementById('diagnosticBtn').addEventListener('click', () => { window.location.href = 'https://xiaomi.scz.red/diagnostico.html'; showToast("🔄 Portal técnico"); vibrate(); });
+  document.getElementById('techRedirectBtn').addEventListener('click', () => { window.location.href = 'https://xiaomi.scz.red/precio/'; showToast("🔄 Portal técnico"); vibrate(); });
+  document.querySelectorAll('.tech-card').forEach(card => card.addEventListener('click', () => { vibrate(); const service = card.querySelector('h3')?.innerText; openWhatsApp(`🔬 DR XIAOMI: Necesito servicio de ${service}.`); showToast(`🛠️ ${service}`); }));
+  document.querySelectorAll('.brand-item').forEach(b => b.addEventListener('click', () => { vibrate(); openWhatsApp(`🔬 Hola, tengo un ${b.innerText} que necesita reparación.`); showToast(`📱 ${b.innerText}`); }));
+
+  // Llamar
+  document.getElementById('callBtn').addEventListener('click', () => { vibrate(); window.location.href = 'tel:+59175959450'; showToast("📞 Llamando..."); });
+  // Compartir
+  document.getElementById('shareBtn').addEventListener('click', () => {
+    vibrate();
+    if (navigator.share) navigator.share({ title: 'DR XIAOMI Orange Lab', text: '🔬 Laboratorio técnico especializado', url: window.location.href });
+    else window.open(`https://wa.me/?text=🔥 Mira este laboratorio: ${window.location.href}`);
+    showToast("📤 Compartiendo...");
   });
 
-  document.getElementById('repairNowBtn').addEventListener('click', () => {
-    openWhatsApp(getSmartMessage("🛠️ DR XIAOMI ORANGE LAB: Solicito reparación URGENTE para mi celular. ¿Puedo llevar al taller de precisión?"));
-    showToast("⚡ Abriendo canal de reparación");
+  // ===== REDES SOCIALES =====
+  document.getElementById('facebookBtn').addEventListener('click', () => {
+    vibrate();
+    window.open('https://www.facebook.com/profile.php?id=61573960358330', '_blank');
+    showToast("📘 Abriendo Facebook");
+  });
+  document.getElementById('tiktokBtn').addEventListener('click', () => {
+    vibrate();
+    window.open('https://www.tiktok.com/@dr.xiaomi', '_blank');
+    showToast("🎵 Abriendo TikTok");
+  });
+  document.getElementById('whatsappSocialBtn').addEventListener('click', () => {
+    vibrate();
+    window.open(`https://wa.me/${whatsappNumber}?text=Hola%20DR%20XIAOMI%2C%20vi%20su%20laboratorio%20en%20la%20web%20y%20necesito%20informaci%C3%B3n.`, '_blank');
+    showToast("💬 Abriendo WhatsApp");
   });
 
-  document.getElementById('diagnosticBtn').addEventListener('click', () => {
-    openWhatsApp(getSmartMessage("🔬 Orange Lab DR XIAOMI: Deseo agendar diagnóstico con microscopio y herramientas especializadas."));
-    showToast("🔍 Diagnóstico técnico vía WhatsApp");
-  });
-
-  // Botón técnico - CAMBIA LA URL CUANDO ME LA DES
-  document.getElementById('techRedirectBtn').addEventListener('click', () => {
-    // 🔁 CAMBIA ESTA URL POR LA QUE ME DES MÁS ADELANTE
-    window.location.href = 'https://xiaomi.scz.red/precio/';
-  });
-
-  const techCards = document.querySelectorAll('.tech-card');
-  techCards.forEach(card => {
-    card.addEventListener('click', () => {
-      const service = card.querySelector('h3')?.innerText || "reparación especializada";
-      const msg = getSmartMessage(`🔬 DR XIAOMI ORANGE LAB: Necesito servicio de ${service}. ¿Utilizan microscopio y equipo profesional?`, service);
-      openWhatsApp(msg);
-      showToast(`🛠️ Consultando servicio: ${service}`);
-    });
-  });
-
-  // Animación de entrada
-  const fadeElements = document.querySelectorAll('.tech-card, .brand-item, .neon-buttons button, .consult-card, .slider-container');
-  fadeElements.forEach((el, idx) => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(12px)';
-    setTimeout(() => {
-      el.style.transition = 'all 0.4s ease';
-      el.style.opacity = '1';
-      el.style.transform = 'translateY(0)';
-    }, idx * 30);
+  // Barra de progreso
+  window.addEventListener('scroll', () => {
+    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    document.getElementById('scrollProgress').style.width = (winScroll / height) * 100 + '%';
   });
 </script>
 </body>
