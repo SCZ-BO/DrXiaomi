@@ -659,8 +659,43 @@ async function generarPDF(rec) {
     ...(rec.tipo_seguridad === 'patron' && rec.patron ? [`Patrón: ${rec.patron}`] : [])
   ]);
 
+  // ── FOTOS EN PDF ────────────────────────────────────────────
+  if (rec.fotos && rec.fotos.length > 0) {
+    pdf.addPage(); y = 15;
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.setTextColor(255, 105, 0);
+    pdf.text('FOTOS DEL EQUIPO', m, y);
+    pdf.setDrawColor(255, 105, 0); pdf.line(m, y + 1, 195, y + 1);
+    y += 8;
+
+    const fotosPerRow = 2;
+    const fotoW = 82, fotoH = 62, gapX = 12, gapY = 10;
+
+    for (let i = 0; i < rec.fotos.length; i++) {
+      try {
+        const url = rec.fotos[i];
+        // Fetch imagen y convertir a base64 para jsPDF
+        const resp = await fetch(url);
+        const blob = await resp.blob();
+        const b64 = await new Promise(res => {
+          const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(blob);
+        });
+        const col = i % fotosPerRow;
+        const row = Math.floor(i / fotosPerRow);
+        const x = m + col * (fotoW + gapX);
+        const fy = y + row * (fotoH + gapY);
+        if (fy + fotoH > 270) { pdf.addPage(); y = 15; }
+        pdf.addImage(b64, 'JPEG', x, fy, fotoW, fotoH);
+        pdf.setDrawColor(200); pdf.rect(x, fy, fotoW, fotoH);
+        pdf.setFontSize(7); pdf.setTextColor(120);
+        pdf.text(`Foto ${i + 1}`, x + fotoW / 2, fy + fotoH + 4, { align: 'center' });
+      } catch(e) { /* si falla una foto, continúa */ }
+    }
+    y = y + Math.ceil(rec.fotos.length / fotosPerRow) * (fotoH + gapY) + 10;
+  }
+
   if (y > 230) { pdf.addPage(); y = 20; }
-  y += 8; pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text('CONDICIONES DEL SERVICIO', m, y);
+  y += 8; pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.setTextColor(0);
+  pdf.text('CONDICIONES DEL SERVICIO', m, y);
   pdf.setDrawColor(200); pdf.line(m, y + 1, 195, y + 1);
   pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7);
   ['1. Conserve este recibo; solo con él puede retirar su equipo.',
@@ -886,7 +921,7 @@ async function openModal(id) {
     ).join('');
 
     const photos = rec.fotos && rec.fotos.length
-      ? `<div class="photo-grid">${rec.fotos.map(p => `<img src="${p}" class="preview-image">`).join('')}</div>` : '';
+      ? `<div class="photo-grid">${rec.fotos.map(p => `<a href="${p}" target="_blank" title="Ver foto completa"><img src="${p}" class="preview-image" style="cursor:zoom-in;border-color:var(--orange)"></a>`).join('')}</div>` : '';
 
     document.getElementById('modalBody').innerHTML = `
       <div style="margin-bottom:14px">${badge(rec.status)}</div>
@@ -932,12 +967,24 @@ async function openModal(id) {
       <button class="btn btn-orange" onclick="generarPDF(window._modalRec)">
         <i class="fas fa-file-pdf"></i> Descargar PDF
       </button>
+      <button class="btn" style="background:#6C63FF;color:#fff;margin-top:12px" onclick="abrirEditar('${id}')">
+        <i class="fas fa-edit"></i> Editar registro
+      </button>
       <button class="btn btn-green" onclick="enviarWhatsApp('${rec.telefono}','${rec.nombre.split(' ')[0]}','${rec.id}','${rec.total}','${rec.marca}','${rec.modelo}')">
         <i class="fab fa-whatsapp"></i> WhatsApp
       </button>
-      <button class="btn btn-ghost" onclick="notificarListo('${rec.id}')">
+      ${rec.status==='listo' ? `
+      <button class="btn" style="background:#00C853;color:#fff" onclick="notificarListo()">
+        <i class="fab fa-whatsapp"></i> ✅ Avisar que está LISTO
+      </button>` : ''}
+      ${rec.status==='devuelto' ? `
+      <button class="btn" style="background:#F44336;color:#fff" onclick="notificarDevuelto()">
+        <i class="fab fa-whatsapp"></i> ❌ Avisar SIN SOLUCIÓN
+      </button>` : ''}
+      ${rec.status!=='listo' && rec.status!=='devuelto' ? `
+      <button class="btn btn-ghost" onclick="notificarListo()">
         <i class="fas fa-bell"></i> Avisar que está listo
-      </button>
+      </button>` : ''}
       <button class="btn btn-danger" onclick="eliminarRecibo('${id}')" style="margin-top:8px">
         <i class="fas fa-trash"></i> Eliminar registro
       </button>
@@ -979,11 +1026,20 @@ async function eliminarRecibo(id) {
   }
 }
 
-function notificarListo(id) {
+function notificarListo() {
   const rec = window._modalRec;
   if (!rec) return;
-  const msg = `Hola ${rec.nombre.split(' ')[0]}! 🎉\n\nTu ${rec.marca} ${rec.modelo} ya está LISTO para retirar.\n\n📄 Recibo: ${rec.id}\n\n🔧 DR. XIAOMI SCZ\nCentro Comercial Cañoto #K1\nTel: 75959450\nPor favor traer el recibo al momento de retirar.`;
-  window.open(`https://wa.me/591${rec.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+  const svc = (rec.servicios||[]).map(s=>s.desc).filter(Boolean).join(', ') || 'reparación';
+  const msg = `Estimado cliente, su teléfono *${rec.marca} ${rec.modelo}* por la reparación de *${svc}* ya está listo. Puede pasar a retirar su equipo.\n\n🔧 DR. XIAOMI SCZ · 75959450`;
+  window.open(`https://wa.me/591${rec.telefono.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function notificarDevuelto() {
+  const rec = window._modalRec;
+  if (!rec) return;
+  const svc = (rec.servicios||[]).map(s=>s.desc).filter(Boolean).join(', ') || 'reparación';
+  const msg = `Estimado cliente, su teléfono *${rec.marca} ${rec.modelo}* por la reparación de *${svc}* no se ha podido reparar. Puede pasar a retirar su equipo.\n\n🔧 DR. XIAOMI SCZ · 75959450`;
+  window.open(`https://wa.me/591${rec.telefono.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 // ══════════════════════════════════════
@@ -1023,6 +1079,149 @@ document.getElementById('searchInput').addEventListener('input', function () {
     }
   }, 500);
 });
+
+// ══════════════════════════════════════
+//  EDITAR REGISTRO
+// ══════════════════════════════════════
+function abrirEditar(id) {
+  const clave = prompt('🔐 Ingresa la clave para editar:');
+  if (clave !== '2011') { toast('❌ Clave incorrecta'); return; }
+  const rec = window._modalRec;
+  if (!rec) return;
+
+  // Servicios rows
+  const svcsHtml = (rec.servicios || []).map((s, i) => `
+    <div class="servicio-item" id="esv-${i}">
+      <input type="text" class="edit-svc-desc" placeholder="Descripción" value="${s.desc || ''}">
+      <input type="number" class="edit-svc-costo" placeholder="Bs." step="0.01" min="0" value="${s.costo || ''}">
+      <button type="button" class="btn-rem" style="display:flex" onclick="this.closest('.servicio-item').remove();recalcEdit()">✕</button>
+    </div>`).join('');
+
+  document.getElementById('editModalBody').innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title"><i class="fas fa-user"></i> CLIENTE</div>
+      <label>Nombre</label>
+      <input type="text" id="e_nombre" value="${rec.nombre || ''}">
+      <label>Teléfono</label>
+      <input type="tel" id="e_telefono" value="${rec.telefono || ''}">
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title"><i class="fas fa-mobile-alt"></i> DISPOSITIVO</div>
+      <label>Marca</label>
+      <select id="e_marca">
+        ${['Xiaomi','Samsung','Huawei','Tecno','Honor','Infinix','iPhone','Motorola','Otro'].map(m =>
+          `<option ${rec.marca===m?'selected':''}>${m}</option>`).join('')}
+      </select>
+      <label>Modelo</label>
+      <input type="text" id="e_modelo" value="${rec.modelo || ''}">
+      <label>IMEI / Serial</label>
+      <input type="text" id="e_imei" value="${rec.imei || ''}">
+      <label>¿Enciende?</label>
+      <select id="e_enciende">
+        ${['Sí','No','A veces'].map(o => `<option ${rec.enciende===o?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title"><i class="fas fa-clipboard-list"></i> ESTADO Y FALLA</div>
+      <label>Estado del equipo</label>
+      <textarea id="e_estado" rows="2">${rec.estado || ''}</textarea>
+      <label>Falla reportada</label>
+      <textarea id="e_falla" rows="2">${rec.falla || ''}</textarea>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title"><i class="fas fa-tools"></i> SERVICIOS</div>
+      <div id="e_serviciosList">${svcsHtml}</div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="addEditServicio()" style="margin-top:8px">
+        <i class="fas fa-plus"></i> Añadir servicio
+      </button>
+      <div class="costos-container" style="margin-top:12px">
+        <div class="costo-box">
+          <label>TOTAL</label>
+          <input type="number" id="e_total" readonly>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-orange" onclick="guardarEdicion('${id}')">
+      <i class="fas fa-save"></i> Guardar cambios
+    </button>
+    <button class="btn btn-ghost" onclick="closeEditModal()" style="margin-top:8px">
+      Cancelar
+    </button>
+  `;
+
+  recalcEdit();
+  document.querySelectorAll('#e_serviciosList .edit-svc-costo').forEach(i => i.addEventListener('input', recalcEdit));
+  document.getElementById('editModalOverlay').classList.add('open');
+}
+
+function recalcEdit() {
+  let t = 0;
+  document.querySelectorAll('.edit-svc-costo').forEach(i => t += parseFloat(i.value) || 0);
+  const el = document.getElementById('e_total');
+  if (el) el.value = t.toFixed(2);
+}
+
+function addEditServicio() {
+  const list = document.getElementById('e_serviciosList');
+  const div = document.createElement('div');
+  div.className = 'servicio-item';
+  div.innerHTML = `
+    <input type="text" class="edit-svc-desc" placeholder="Descripción">
+    <input type="number" class="edit-svc-costo" placeholder="Bs." step="0.01" min="0">
+    <button type="button" class="btn-rem" style="display:flex" onclick="this.closest('.servicio-item').remove();recalcEdit()">✕</button>`;
+  list.appendChild(div);
+  div.querySelector('.edit-svc-costo').addEventListener('input', recalcEdit);
+}
+
+async function guardarEdicion(id) {
+  const servicios = Array.from(document.querySelectorAll('#e_serviciosList .servicio-item')).map(item => ({
+    desc: item.querySelector('.edit-svc-desc').value.trim(),
+    costo: item.querySelector('.edit-svc-costo').value || '0'
+  })).filter(s => s.desc || parseFloat(s.costo) > 0);
+
+  const changes = {
+    nombre:       document.getElementById('e_nombre').value.trim(),
+    telefono:     document.getElementById('e_telefono').value.trim(),
+    marca:        document.getElementById('e_marca').value,
+    modelo:       document.getElementById('e_modelo').value.trim(),
+    imei:         document.getElementById('e_imei').value.trim() || null,
+    enciende:     document.getElementById('e_enciende').value,
+    estado:       document.getElementById('e_estado').value.trim() || null,
+    falla:        document.getElementById('e_falla').value.trim() || null,
+    servicios,
+    total:        parseFloat(document.getElementById('e_total').value) || 0
+  };
+
+  loading(true, 'Guardando cambios...');
+  try {
+    await dbUpdate(id, changes);
+    toast('✅ Registro actualizado');
+    closeEditModal();
+    closeModalDirect();
+    renderRecepciones();
+    setTimeout(() => openModal(id), 400);
+  } catch(err) {
+    toast('❌ ' + err.message);
+  } finally {
+    loading(false);
+  }
+}
+
+function closeEditModal() {
+  document.getElementById('editModalOverlay').classList.remove('open');
+}
 </script>
+
+<!-- MODAL EDITAR -->
+<div class="modal-overlay" id="editModalOverlay" onclick="if(event.target.id==='editModalOverlay')closeEditModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" style="color:#6C63FF"><i class="fas fa-edit"></i> Editar Registro</div>
+      <button class="close-btn" onclick="closeEditModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="editModalBody"></div>
+  </div>
+</div>
+
 </body>
 </html>
