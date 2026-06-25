@@ -2,994 +2,1027 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DR.Xiaomi - Servicio Técnico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#FF6900">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>DR.Xiaomi · Sistema</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
-    :root {
-      --bg-primary: #121212;
-      --bg-secondary: #1a1a1a;
-      --bg-tertiary: #2d2d2d;
-      --text-primary: #f9fafb;
-      --text-secondary: #9ca3af;
-      --accent: #ff7b00;
-      --accent-hover: #ff9a3d;
-      --border: #374151;
-      --success: #16a34a;
-      --error: #f97373;
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    :root{
+      --orange:#FF6900;--orange-dark:#E55A00;
+      --success:#00C853;--warning:#FFB300;--danger:#F44336;--info:#2196F3;
+      --transition:all 0.2s ease;
     }
+    [data-theme="dark"]{--bg:#0D0D0D;--bg2:#1A1A1A;--bg3:#2C2C2C;--text:#FFFFFF;--text2:#A0A0A0;--border:#2A2A2A;}
+    [data-theme="light"]{--bg:#F5F5F5;--bg2:#FFFFFF;--bg3:#F0F0F0;--text:#1A1A1A;--text2:#666666;--border:#E0E0E0;}
+    body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background 0.3s}
 
-    *{margin:0;padding:0;box-sizing:border-box}
+    .nav{display:flex;background:var(--bg2);border-bottom:2px solid var(--border);position:sticky;top:0;z-index:200}
+    .nav-btn{flex:1;padding:14px 4px 10px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-size:10px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:4px;transition:var(--transition);letter-spacing:0.3px}
+    .nav-btn i{font-size:18px}
+    .nav-btn.active{color:var(--orange);border-bottom:3px solid var(--orange)}
 
-    body{
-      font-family:'Roboto',sans-serif;
-      background: radial-gradient(circle at top, #1f2933 0, #020617 45%, #000 100%);
-      color: var(--text-primary);
-      display:flex;
-      justify-content:center;
-      padding:20px;
-      min-height:100vh;
-    }
+    .page{display:none;padding:16px;max-width:540px;margin:0 auto}
+    .page.active{display:block}
 
-    .container{
-      width:100%;
-      max-width:430px;
-      background:var(--bg-primary);
-      border-radius:24px;
-      box-shadow:0 20px 40px rgba(0,0,0,0.6),
-                 0 0 0 1px rgba(148,163,184,0.15);
-      overflow:hidden;
-    }
+    .card{background:var(--bg2);border:2px solid var(--border);border-radius:20px;padding:18px;margin-bottom:16px;position:relative}
+    .card::before{content:'';position:absolute;left:0;top:16px;bottom:16px;width:4px;background:var(--orange);border-radius:4px}
+    .card-title{color:var(--orange);font-size:13px;font-weight:700;margin-bottom:14px;letter-spacing:0.5px}
+    label{display:block;margin-top:12px;color:var(--text2);font-size:12px;font-weight:500}
+    label.req::after{content:" *";color:var(--orange)}
+    input,select,textarea{width:100%;padding:11px 13px;font-size:14px;font-family:'Inter',sans-serif;border:2px solid var(--border);border-radius:12px;background:var(--bg3);color:var(--text);transition:var(--transition);margin-top:6px}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange)}
+    input[readonly]{opacity:0.6;cursor:default}
 
-    header{
-      background:rgba(15,23,42,0.95);
-      padding:14px 16px;
-      text-align:center;
-      border-bottom:1px solid rgba(148,163,184,0.3);
-    }
+    .btn{padding:13px 20px;border:none;border-radius:40px;cursor:pointer;font-weight:700;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:var(--transition);width:100%;margin-top:12px}
+    .btn:active{transform:scale(0.97)}
+    .btn-orange{background:var(--orange);color:#fff}
+    .btn-green{background:#25D366;color:#fff}
+    .btn-ghost{background:var(--bg3);color:var(--text);border:2px solid var(--border)}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn-sm{padding:7px 14px;font-size:12px;margin-top:0;width:auto;border-radius:20px}
 
-    header h1{
-      color:var(--accent);
-      font-size:18px;
-      margin:0;
-      letter-spacing:0.06em;
-    }
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+    .stat-card{background:var(--bg2);border:2px solid var(--border);border-radius:16px;padding:12px 8px;text-align:center}
+    .stat-num{font-size:22px;font-weight:800;line-height:1}
+    .stat-lbl{font-size:10px;color:var(--text2);margin-top:4px;font-weight:600}
+    .stat-card.s-total .stat-num{color:var(--orange)}
+    .stat-card.s-proceso .stat-num{color:var(--warning)}
+    .stat-card.s-listo .stat-num{color:var(--success)}
+    .stat-card.s-devuelto .stat-num{color:var(--info)}
 
-    main{
-      padding:16px 14px 18px;
-      background:var(--bg-primary);
-    }
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700}
+    .badge-recibido{background:rgba(33,150,243,0.15);color:var(--info)}
+    .badge-proceso{background:rgba(255,179,0,0.15);color:var(--warning)}
+    .badge-listo{background:rgba(0,200,83,0.15);color:var(--success)}
+    .badge-devuelto{background:rgba(244,67,54,0.15);color:var(--danger)}
 
-    fieldset{
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:12px 10px;
-      margin-bottom:14px;
-      background:var(--bg-secondary);
-    }
+    .rec-item{background:var(--bg2);border:2px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;cursor:pointer;transition:var(--transition)}
+    .rec-item:hover{border-color:var(--orange)}
+    .rec-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+    .rec-num{font-size:12px;font-weight:700;color:var(--orange)}
+    .rec-name{font-size:14px;font-weight:600;margin-top:2px}
+    .rec-device{font-size:12px;color:var(--text2);margin-top:2px}
+    .rec-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid var(--border)}
+    .rec-total{font-weight:700;color:var(--orange)}
+    .rec-date{font-size:11px;color:var(--text2)}
 
-    legend{
-      padding:0 8px;
-      font-weight:600;
-      color:var(--text-primary);
-      font-size:13px;
-    }
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;backdrop-filter:blur(6px)}
+    .modal-overlay.open{display:flex;align-items:flex-end;justify-content:center}
+    .modal{background:var(--bg2);border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;animation:slideUp 0.25s ease}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .modal-title{font-size:16px;font-weight:700;color:var(--orange)}
+    .close-btn{background:var(--bg3);border:none;color:var(--text2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
 
-    label{
-      display:block;
-      margin-top:8px;
-      color:var(--text-secondary);
-      font-size:13px;
-    }
+    .status-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+    .status-opt{padding:12px;border:2px solid var(--border);border-radius:14px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;transition:var(--transition)}
+    .status-opt.sel-recibido{border-color:var(--info);background:rgba(33,150,243,0.1);color:var(--info)}
+    .status-opt.sel-proceso{border-color:var(--warning);background:rgba(255,179,0,0.1);color:var(--warning)}
+    .status-opt.sel-listo{border-color:var(--success);background:rgba(0,200,83,0.1);color:var(--success)}
+    .status-opt.sel-devuelto{border-color:var(--danger);background:rgba(244,67,54,0.1);color:var(--danger)}
+    .status-opt.inactive{opacity:0.4}
 
-    input,select,textarea,button{
-      width:100%;
-      font-size:14px;
-    }
+    .search-wrap{position:relative;margin-bottom:14px}
+    .search-wrap i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text2)}
+    .search-wrap input{padding-left:38px}
 
-    input,select,textarea{
-      padding:8px 10px;
-      margin-top:4px;
-      border:1px solid var(--border);
-      border-radius:10px;
-      background:var(--bg-tertiary);
-      color:var(--text-primary);
-    }
+    .filter-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none}
+    .filter-chips::-webkit-scrollbar{display:none}
+    .chip{padding:6px 14px;border-radius:20px;border:2px solid var(--border);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:var(--bg3);color:var(--text2);transition:var(--transition)}
+    .chip.active{border-color:var(--orange);color:var(--orange);background:rgba(255,105,0,0.1)}
 
-    input::placeholder,
-    textarea::placeholder{
-      color:#6b7280;
-      font-size:13px;
-    }
+    .servicio-item{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+    .servicio-item input:first-child{flex:3}
+    .servicio-item input[type="number"]{flex:1.2;text-align:right}
+    .btn-rem{width:34px;height:34px;border:2px solid var(--border);border-radius:50%;background:var(--bg3);color:var(--text2);cursor:pointer;font-size:14px;flex-shrink:0;display:none;align-items:center;justify-content:center;margin-top:6px}
 
-    button{
-      padding:12px;
-      background:var(--accent);
-      color:#fff;
-      border:none;
-      border-radius:999px;
-      cursor:pointer;
-      margin-top:16px;
-      font-weight:600;
-      letter-spacing:0.03em;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      box-shadow:0 8px 20px rgba(255,123,0,0.35);
-      transition:all 0.25s ease;
-    }
+    #pattern-container{position:relative;width:100%;height:200px;border:2px solid var(--border);border-radius:16px;background:var(--bg);margin-top:10px;overflow:hidden}
+    #pattern-container canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+    #pattern-sequence{margin-top:8px;text-align:center;color:var(--text2);font-size:12px}
 
-    button:hover{
-      background:var(--accent-hover);
-      transform:translateY(-1px);
-      box-shadow:0 12px 26px rgba(255,123,0,0.4);
-    }
+    .photo-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .preview-image{width:75px;height:75px;object-fit:cover;border-radius:10px;border:2px solid var(--border)}
 
-    .button-icon{
-      font-size:16px;
-    }
+    #loading{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;justify-content:center;align-items:center;backdrop-filter:blur(8px)}
+    #loading.show{display:flex}
+    #loading .inner{background:var(--bg2);padding:24px 32px;border-radius:20px;text-align:center;border:2px solid var(--border)}
+    .spinner{border:3px solid var(--border);border-top:3px solid var(--orange);border-radius:50%;width:32px;height:32px;animation:spin 1s linear infinite;margin:0 auto 12px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    #loading-msg{font-size:13px;color:var(--text2);margin-top:6px}
 
-    .date-container{
-      margin-bottom:8px;
-      text-align:right;
-      color:var(--text-secondary);
-      font-size:11px;
-    }
+    #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--bg2);border:2px solid var(--border);border-radius:40px;padding:10px 20px;font-size:13px;font-weight:600;z-index:600;opacity:0;transition:opacity 0.3s;white-space:nowrap;max-width:90vw}
+    #toast.show{opacity:1}
 
-    #pattern-container{
-      position:relative;
-      width:100%;
-      height:220px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      background:var(--bg-primary);
-      margin-top:8px;
-      overflow:hidden;
-    }
+    /* DB status indicator */
+    .db-status{display:flex;align-items:center;gap:6px;font-size:11px;padding:6px 12px;border-radius:20px;margin-bottom:14px;font-weight:600}
+    .db-status.online{background:rgba(0,200,83,0.12);color:var(--success);border:1px solid rgba(0,200,83,0.3)}
+    .db-status.offline{background:rgba(244,67,54,0.12);color:var(--danger);border:1px solid rgba(244,67,54,0.3)}
+    .db-status.connecting{background:rgba(255,179,0,0.12);color:var(--warning);border:1px solid rgba(255,179,0,0.3)}
+    .db-dot{width:8px;height:8px;border-radius:50%;background:currentColor}
 
-    #pattern-container canvas{
-      position:absolute;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
-    }
+    .date-row{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:4px}
 
-    #pattern-sequence{
-      margin-top:8px;
-      text-align:center;
-      color:var(--text-secondary);
-      font-size:13px;
-    }
+    .empty{text-align:center;padding:48px 16px;color:var(--text2)}
+    .empty i{font-size:48px;margin-bottom:12px;opacity:0.3;display:block}
 
-    #imagePreview{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:8px;
-    }
+    .info-row{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+    .info-row:last-child{border:none}
+    .info-lbl{color:var(--text2);min-width:100px;font-weight:500;flex-shrink:0}
+    .info-val{color:var(--text);font-weight:600}
 
-    .preview-image{
-      width:80px;
-      height:80px;
-      object-fit:cover;
-      border-radius:10px;
-      border:1px solid var(--border);
-    }
+    .costos-container{display:flex;gap:12px;margin-top:12px}
+    .costo-box{flex:1;border:2px solid var(--border);border-radius:14px;padding:12px;background:var(--bg2)}
+    .costo-box label{font-size:11px;font-weight:600;margin:0}
+    .costo-box input{border:none;background:transparent;font-size:20px;font-weight:800;padding:4px 0;text-align:right;color:var(--orange)}
 
-    #photoCounter{
-      font-size:11px;
-      color:var(--text-secondary);
-      margin-top:4px;
-    }
+    .whatsapp-box{display:none;background:rgba(37,211,102,0.08);border:2px solid #25D366;border-radius:16px;padding:14px;margin-top:12px;text-align:center}
+    .whatsapp-box.show{display:block}
+    .whatsapp-box h4{color:#25D366;margin-bottom:10px;font-size:13px}
 
-    #confirmation{
-      display:none;
-      background:rgba(22,163,74,0.15);
-      color:#bbf7d0;
-      padding:10px 12px;
-      border-radius:999px;
-      margin-top:12px;
-      text-align:center;
-      font-size:12px;
-      border:1px solid rgba(34,197,94,0.5);
-    }
-
-    .costos-container{
-      display:flex;
-      gap:12px;
-      margin-top:12px;
-    }
-
-    .costo-box{
-      flex:1;
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:10px;
-      background:var(--bg-tertiary);
-    }
-
-    .costo-box label{
-      font-weight:600;
-      color:var(--text-secondary);
-      font-size:12px;
-    }
-
-    .costo-box input{
-      text-align:right;
-      font-weight:600;
-      border:none;
-      background:transparent;
-      color:var(--text-primary);
-      margin-top:6px;
-      font-size:15px;
-    }
-
-    .servicios-container{margin-top:10px;}
-
-    .servicio-item{
-      display:flex;
-      gap:8px;
-      margin-bottom:8px;
-      align-items:center;
-    }
-
-    .servicio-item input{
-      flex:3;
-    }
-
-    .servicio-item input[type="number"]{
-      flex:1.2;
-      text-align:right;
-    }
-
-    .servicio-item button{
-      flex:0 0 34px;
-      margin-top:0;
-      padding:6px 0;
-      border-radius:999px;
-      background:var(--bg-tertiary);
-      box-shadow:none;
-      color:var(--text-secondary);
-    }
-
-    .servicio-item button:hover{
-      background:#7f1d1d;
-      color:#fecaca;
-      box-shadow:0 0 0 1px rgba(248,113,113,0.6);
-      transform:none;
-    }
-
-    #addServicio{
-      background:#2563eb;
-      box-shadow:0 8px 18px rgba(37,99,235,0.35);
-      width:auto;
-      padding-inline:14px;
-      font-size:13px;
-    }
-
-    #addServicio:hover{
-      background:#1d4ed8;
-    }
-
-    input:focus,select:focus,textarea:focus{
-      border-color:var(--accent);
-      outline:none;
-      box-shadow:0 0 0 1px rgba(255,123,0,0.6);
-    }
-
-    .required-field::after{
-      content:" *";
-      color:#f97373;
-    }
-
-    #loading{
-      display:none;
-      position:fixed;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
-      background:rgba(0,0,0,0.6);
-      z-index:1000;
-      justify-content:center;
-      align-items:center;
-    }
-
-    #loading div{
-      background:var(--bg-secondary);
-      padding:20px 24px;
-      border-radius:16px;
-      text-align:center;
-      color:var(--text-primary);
-      border:1px solid var(--border);
-      box-shadow:0 18px 40px rgba(0,0,0,0.8);
-      font-size:13px;
-    }
-
-    .spinner{
-      border:4px solid #1f2937;
-      border-top:4px solid var(--accent);
-      border-radius:50%;
-      width:30px;
-      height:30px;
-      animation:spin 1s linear infinite;
-      margin:0 auto 10px;
-    }
-
-    @keyframes spin{
-      0%{transform:rotate(0deg)}
-      100%{transform:rotate(360deg)}
-    }
+    .theme-toggle{position:fixed;bottom:20px;right:20px;width:44px;height:44px;border-radius:50%;background:var(--bg2);border:2px solid var(--border);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:100}
 
     @media(max-width:480px){
-      body{padding:10px;}
-      .container{border-radius:0;max-width:100%;box-shadow:none;}
-      header h1{font-size:16px;}
-      label{font-size:12px;}
-      .servicio-item{flex-direction:column;align-items:stretch;}
-      .servicio-item button{align-self:flex-end;}
-      .costos-container{flex-direction:column;}
+      .page{padding:12px}
+      .stats-row{grid-template-columns:repeat(2,1fr)}
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header><h1>RECIBO SERVICIO TÉCNICO</h1></header>
-    <main>
-      <form id="formRecibo">
-        <fieldset>
-          <legend>Datos del Cliente</legend>
-          <div class="date-container">
-            <span id="dateTimeDisplay"></span>
-            <span id="numeroReciboDisplay" style="margin-left:10px;"></span>
-          </div>
-          <label class="required-field">Nombre</label>
-          <input type="text" id="nombre" required placeholder="Ej: Juan Pérez">
-          <label class="required-field">Teléfono</label>
-          <input type="tel" id="telefono" required placeholder="Ej: 75522004" pattern="[0-9]{7,8}">
-        </fieldset>
 
-        <fieldset>
-          <legend>Dispositivo</legend>
-          <label class="required-field">Marca</label>
-          <select id="marca" required>
-            <option value="">Seleccionar</option>
-            <option>Xiaomi</option>
-            <option>Samsung</option>
-            <option>Huawei</option>
-            <option>Tecno</option>
-            <option>Honor</option>
-            <option>Infinix</option>
-            <option>iPhone</option>
-          </select>
+<nav class="nav">
+  <button class="nav-btn active" onclick="showPage('nuevo')" id="nav-nuevo">
+    <i class="fas fa-plus-circle"></i>NUEVO
+  </button>
+  <button class="nav-btn" onclick="showPage('recepciones')" id="nav-recepciones">
+    <i class="fas fa-list"></i>RECEPCIONES
+  </button>
+  <button class="nav-btn" onclick="showPage('buscar')" id="nav-buscar">
+    <i class="fas fa-search"></i>BUSCAR
+  </button>
+</nav>
 
-          <label class="required-field">Modelo</label>
-          <input type="text" id="modelo" required placeholder="Ej: Redmi Note 10">
-
-          <label>IMEI/Serial (opcional)</label>
-          <input type="text" id="imei" placeholder="15 dígitos">
-
-          <label class="required-field">¿Enciende?</label>
-          <select id="enciende" required>
-            <option value="">Seleccionar</option>
-            <option>Sí</option>
-            <option>No</option>
-            <option>A veces</option>
-          </select>
-        </fieldset>
-
-        <fieldset>
-          <legend>Estado y Falla</legend>
-          <label>Estado del equipo</label>
-          <textarea id="estado" rows="2" placeholder="Describa el estado físico del equipo"></textarea>
-          <label>Falla reportada</label>
-          <textarea id="falla" rows="2" placeholder="Describa la falla que presenta el equipo"></textarea>
-        </fieldset>
-
-        <fieldset>
-          <legend>Seguridad</legend>
-          <label>Tipo</label>
-          <select id="tipoSeguridad">
-            <option value="patron">Patrón</option>
-            <option value="pin">PIN</option>
-            <option value="ninguno">Ninguno</option>
-          </select>
-          <div id="pinContainer" style="display:none;margin-top:8px">
-            <label>PIN</label>
-            <input type="password" id="pinInput" maxlength="6" placeholder="6 dígitos">
-          </div>
-        </fieldset>
-
-        <fieldset id="field-patron">
-          <legend>Patrón</legend>
-          <div id="pattern-container">
-            <canvas id="bgCanvas" width="300" height="220"></canvas>
-            <canvas id="lineCanvas" width="300" height="220"></canvas>
-          </div>
-          <div id="pattern-sequence">Secuencia: –</div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Fotos (máx.4)</legend>
-          <input type="file" id="fotos" accept="image/*" multiple>
-          <div id="photoCounter">0/4 fotos seleccionadas</div>
-          <div id="imagePreview"></div>
-        </fieldset>
-        
-        <fieldset>
-          <legend>Servicios y Costos (Bs.)</legend>
-          <div class="servicios-container" id="serviciosList">
-            <div class="servicio-item">
-              <input type="text" class="servicio-desc" placeholder="Descripción del servicio">
-              <input type="number" class="servicio-costo" placeholder="Bs. 0.00" step="0.01" min="0">
-              <button type="button" class="removeServicio" style="display:none">×</button>
-            </div>
-          </div>
-          <button type="button" id="addServicio">+ Añadir otro servicio</button>
-          
-          <div class="costos-container">
-            <div class="costo-box">
-              <label>Costo total</label>
-              <input type="number" id="costoTotal" placeholder="Bs. 0.00" readonly>
-            </div>
-          </div>
-        </fieldset>
-        
-        <input type="hidden" id="patternValue">
-        <div id="confirmation">Recibo generado con éxito!</div>
-        <button type="submit" id="generateBtn">
-          <span class="button-icon">📄</span>
-          Generar Recibo PDF
-        </button>
-      </form>
-    </main>
-  </div>
-  
-  <div id="loading">
-    <div>
-      <div class="spinner"></div>
-      <p>Generando recibo...</p>
+<!-- ══════ PAGE: NUEVO ══════ -->
+<div class="page active" id="page-nuevo">
+  <form id="formRecibo">
+    <div class="card">
+      <div class="card-title"><i class="fas fa-user"></i> DATOS DEL CLIENTE</div>
+      <div class="date-row">
+        <span id="dateTimeDisplay"></span>
+        <span id="numeroReciboDisplay" style="color:var(--orange);font-weight:700"></span>
+      </div>
+      <label class="req">Nombre completo</label>
+      <input type="text" id="nombre" required placeholder="Ej: Juan Pérez">
+      <label class="req">Teléfono / WhatsApp</label>
+      <input type="tel" id="telefono" required placeholder="75959450" pattern="[0-9]{7,8}">
     </div>
-  </div>
 
-  <script>
-    // Contador de recibos persistente
-    let contadorRecibos = parseInt(localStorage.getItem('contadorRecibos') || '1340', 10);
+    <div class="card">
+      <div class="card-title"><i class="fas fa-mobile-alt"></i> DISPOSITIVO</div>
+      <label class="req">Marca</label>
+      <select id="marca" required>
+        <option value="">Seleccionar</option>
+        <option>Xiaomi</option><option>Samsung</option><option>Huawei</option>
+        <option>Tecno</option><option>Honor</option><option>Infinix</option>
+        <option>iPhone</option><option>Motorola</option><option>Otro</option>
+      </select>
+      <label class="req">Modelo</label>
+      <input type="text" id="modelo" required placeholder="Ej: Redmi Note 10">
+      <label>IMEI / Serial (opcional)</label>
+      <input type="text" id="imei" placeholder="15 dígitos">
+      <label class="req">¿Enciende?</label>
+      <select id="enciende" required>
+        <option value="">Seleccionar</option>
+        <option>Sí</option><option>No</option><option>A veces</option>
+      </select>
+    </div>
 
-    const config = {
-      nombreTienda: "DR . XIAOMI SCZ",
-      direccion: "Centro Comercial Cañoto #k1, Santa Cruz",
-      telefono: "75522004",
-      horario: "Lunes a Viernes 9:00 - 20:00"
-    };
+    <div class="card">
+      <div class="card-title"><i class="fas fa-clipboard-list"></i> ESTADO Y FALLA</div>
+      <label>Estado del equipo</label>
+      <textarea id="estado" rows="2" placeholder="Describa el estado físico del equipo"></textarea>
+      <label>Falla reportada</label>
+      <textarea id="falla" rows="2" placeholder="Describa la falla que presenta el equipo"></textarea>
+    </div>
 
-    function actualizarHeaderReciboPreview() {
-      const fechaSpan = document.getElementById('dateTimeDisplay');
-      const numeroSpan = document.getElementById('numeroReciboDisplay');
-      if (!fechaSpan || !numeroSpan) return;
+    <div class="card">
+      <div class="card-title"><i class="fas fa-lock"></i> SEGURIDAD</div>
+      <label>Tipo de seguridad</label>
+      <select id="tipoSeguridad">
+        <option value="patron">Patrón</option>
+        <option value="pin">PIN</option>
+        <option value="ninguno">Ninguno</option>
+      </select>
+      <div id="pinContainer" style="display:none">
+        <label>PIN de acceso</label>
+        <input type="password" id="pinInput" maxlength="6" placeholder="6 dígitos">
+      </div>
+    </div>
 
-      const numeroPreview = `REC-${contadorRecibos + 1}`;
-      fechaSpan.textContent = new Date().toLocaleString();
-      numeroSpan.textContent = `Recibo #${numeroPreview}`;
-    }
-    
-    document.addEventListener('DOMContentLoaded', () => {
-      actualizarHeaderReciboPreview();
+    <div class="card" id="field-patron">
+      <div class="card-title"><i class="fas fa-th"></i> PATRÓN</div>
+      <div id="pattern-container">
+        <canvas id="bgCanvas" width="300" height="200"></canvas>
+        <canvas id="lineCanvas" width="300" height="200"></canvas>
+      </div>
+      <div id="pattern-sequence">Secuencia: –</div>
+      <input type="hidden" id="patternValue">
+    </div>
 
-      // Toggle seguridad
-      const tipo = document.getElementById('tipoSeguridad'), 
-            pinCont = document.getElementById('pinContainer'), 
-            fieldP = document.getElementById('field-patron');
+    <div class="card">
+      <div class="card-title"><i class="fas fa-camera"></i> FOTOS (máx. 4)</div>
+      <input type="file" id="fotos" accept="image/*" multiple>
+      <div id="photoCounter" style="font-size:11px;color:var(--text2);margin-top:6px">0/4 fotos</div>
+      <div class="photo-grid" id="imagePreview"></div>
+    </div>
 
-      tipo.addEventListener('change', () => { 
-        pinCont.style.display = (tipo.value === 'pin') ? 'block' : 'none'; 
-        fieldP.style.display = (tipo.value === 'patron') ? 'block' : 'none'; 
-      });
-      // Estado inicial (select arranca en "patron")
-      pinCont.style.display = 'none';
-      fieldP.style.display = 'block';
-      
-      // Vista previa de imágenes
-      const fotosInput = document.getElementById('fotos');
-      const imagePreview = document.getElementById('imagePreview');
-      const photoCounter = document.getElementById('photoCounter');
-      
-      fotosInput.addEventListener('change', function() {
-        imagePreview.innerHTML = '';
-        const files = this.files;
-        if (files.length > 4) {
-          photoCounter.textContent = 'Máximo 4 fotos. Has seleccionado demasiadas.';
-          photoCounter.style.color = '#f97373';
-          this.value = '';
-          setTimeout(() => {
-            photoCounter.textContent = '0/4 fotos seleccionadas';
-            photoCounter.style.color = 'var(--text-secondary)';
-          }, 2500);
-          return;
-        }
-
-        photoCounter.textContent = `${files.length}/4 fotos seleccionadas`;
-        
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          if (!file.type.match('image.*')) continue;
-          
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.classList.add('preview-image');
-            imagePreview.appendChild(img);
-          }
-          reader.readAsDataURL(file);
-        }
-      });
-
-      // Gestión de servicios
-      const serviciosList = document.getElementById('serviciosList');
-      const addServicioBtn = document.getElementById('addServicio');
-      const costoTotal = document.getElementById('costoTotal');
-      
-      function calcularTotal() {
-        let total = 0;
-        document.querySelectorAll('.servicio-costo').forEach(input => {
-          total += parseFloat(input.value) || 0;
-        });
-        costoTotal.value = total.toFixed(2);
-      }
-      
-      function addServicio() {
-        const servicioItem = document.createElement('div');
-        servicioItem.className = 'servicio-item';
-        servicioItem.innerHTML = `
+    <div class="card">
+      <div class="card-title"><i class="fas fa-tools"></i> SERVICIOS Y COSTOS</div>
+      <div id="serviciosList">
+        <div class="servicio-item">
           <input type="text" class="servicio-desc" placeholder="Descripción del servicio">
-          <input type="number" class="servicio-costo" placeholder="Bs. 0.00" step="0.01" min="0">
-          <button type="button" class="removeServicio">×</button>
-        `;
-        serviciosList.appendChild(servicioItem);
-        
-        servicioItem.querySelector('.removeServicio').addEventListener('click', function() {
-          serviciosList.removeChild(servicioItem);
-          calcularTotal();
-          updateRemoveButtons();
-        });
-        
-        servicioItem.querySelector('.servicio-costo').addEventListener('input', calcularTotal);
-        updateRemoveButtons();
-      }
-      
-      function updateRemoveButtons() {
-        const items = serviciosList.querySelectorAll('.servicio-item');
-        items.forEach((item) => {
-          const removeBtn = item.querySelector('.removeServicio');
-          removeBtn.style.display = items.length > 1 ? 'block' : 'none';
-        });
-      }
-      
-      addServicioBtn.addEventListener('click', () => {
-        addServicio();
-      });
-      
-      // Eventos iniciales del primer servicio
-      const firstCosto = serviciosList.querySelector('.servicio-costo');
-      const firstRemove = serviciosList.querySelector('.removeServicio');
+          <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0">
+          <button type="button" class="btn-rem">✕</button>
+        </div>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" id="addServicio" style="margin-top:8px">
+        <i class="fas fa-plus"></i> Añadir servicio
+      </button>
+      <div class="costos-container">
+        <div class="costo-box">
+          <label>TOTAL</label>
+          <input type="number" id="costoTotal" placeholder="0.00" readonly>
+        </div>
+      </div>
+    </div>
 
-      if (firstCosto) {
-        firstCosto.addEventListener('input', calcularTotal);
-      }
-      if (firstRemove) {
-        firstRemove.addEventListener('click', function() {
-          if (serviciosList.querySelectorAll('.servicio-item').length > 1) {
-            serviciosList.removeChild(this.parentNode);
-            calcularTotal();
-            updateRemoveButtons();
-          }
-        });
-      }
+    <div class="whatsapp-box" id="whatsappAction">
+      <h4><i class="fab fa-whatsapp"></i> Enviar comprobante</h4>
+      <p id="whatsappMessage" style="font-size:12px;color:var(--text2);margin-bottom:10px"></p>
+      <button type="button" class="btn btn-green btn-sm" id="sendWhatsappBtn" style="width:100%">
+        <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
+      </button>
+    </div>
 
-      updateRemoveButtons();
-      
-      // Validación de teléfono (solo números)
-      document.getElementById('telefono').addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '');
-      });
-      
-      // PatternLock
-      class PatternLock {
-        constructor(){
-          this.bg = document.getElementById('bgCanvas');
-          this.ln = document.getElementById('lineCanvas');
-          this.bgc = this.bg.getContext('2d');
-          this.lnc = this.ln.getContext('2d');
-          this.r = 20; 
-          this.w = this.bg.width; 
-          this.h = this.bg.height;
-          this.pts = []; 
-          this.path = []; 
-          this.d = false;
-          this.seqEl = document.getElementById('pattern-sequence');
-          this.valEl = document.getElementById('patternValue');
-          this.init();
+    <button type="submit" class="btn btn-orange" id="generateBtn">
+      <i class="fas fa-save"></i> Guardar y Generar PDF
+    </button>
+  </form>
+</div>
+
+<!-- ══════ PAGE: RECEPCIONES ══════ -->
+<div class="page" id="page-recepciones">
+  <div id="dbStatusBar" class="db-status connecting">
+    <div class="db-dot"></div>
+    <span id="dbStatusText">Conectando a Supabase...</span>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card s-total"><div class="stat-num" id="stat-total">–</div><div class="stat-lbl">TOTAL</div></div>
+    <div class="stat-card s-proceso"><div class="stat-num" id="stat-proceso">–</div><div class="stat-lbl">EN PROCESO</div></div>
+    <div class="stat-card s-listo"><div class="stat-num" id="stat-listo">–</div><div class="stat-lbl">LISTOS</div></div>
+    <div class="stat-card s-devuelto"><div class="stat-num" id="stat-devuelto">–</div><div class="stat-lbl">DEVUELTOS</div></div>
+  </div>
+  <div class="filter-chips">
+    <div class="chip active" data-filter="todos">Todos</div>
+    <div class="chip" data-filter="recibido">🔵 Recibido</div>
+    <div class="chip" data-filter="proceso">🟡 En Proceso</div>
+    <div class="chip" data-filter="listo">🟢 Listo</div>
+    <div class="chip" data-filter="devuelto">🔴 Devuelto</div>
+  </div>
+  <div id="listaRecepciones"></div>
+</div>
+
+<!-- ══════ PAGE: BUSCAR ══════ -->
+<div class="page" id="page-buscar">
+  <div class="search-wrap">
+    <i class="fas fa-search"></i>
+    <input type="text" id="searchInput" placeholder="Nombre, N° recibo, modelo, teléfono...">
+  </div>
+  <div id="searchResults"></div>
+</div>
+
+<!-- ══════ MODAL ══════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Detalle</div>
+      <button class="close-btn" onclick="closeModalDirect()"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div id="loading"><div class="inner"><div class="spinner"></div><p id="loading-msg">Procesando...</p></div></div>
+<div id="toast"></div>
+
+<button class="theme-toggle" id="themeToggle"><i class="fas fa-sun"></i></button>
+
+<script>
+// ══════════════════════════════════════
+//  SUPABASE CONFIG
+// ══════════════════════════════════════
+const SUPA_URL = 'https://sujeakdhztduuwlxikaz.supabase.co';
+const SUPA_KEY = 'sb_publishable_U-YR3VetXL_67mhVb9EajQ_1LKzNwUz';
+const TABLE    = 'recepciones';
+
+async function supaFetch(path, options = {}) {
+  const res = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': `Bearer ${SUPA_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || '',
+      ...options.headers
+    },
+    ...options
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function dbInsert(rec) {
+  return supaFetch(TABLE, {
+    method: 'POST',
+    prefer: 'return=representation',
+    body: JSON.stringify(rec)
+  });
+}
+
+async function dbGetAll(filter = '') {
+  const q = filter && filter !== 'todos' ? `&status=eq.${filter}` : '';
+  return supaFetch(`${TABLE}?select=*&order=fecha_iso.desc${q}`);
+}
+
+async function dbUpdate(id, changes) {
+  return supaFetch(`${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    prefer: 'return=representation',
+    body: JSON.stringify(changes)
+  });
+}
+
+async function dbDelete(id) {
+  return supaFetch(`${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
+}
+
+async function dbSearch(q) {
+  const enc = encodeURIComponent(q);
+  return supaFetch(`${TABLE}?select=*&or=(nombre.ilike.*${enc}*,id.ilike.*${enc}*,modelo.ilike.*${enc}*,marca.ilike.*${enc}*,telefono.ilike.*${enc}*)&order=fecha_iso.desc`);
+}
+
+// ══════════════════════════════════════
+//  THEME
+// ══════════════════════════════════════
+let theme = localStorage.getItem('xm_theme') || 'dark';
+function setTheme(t) {
+  theme = t;
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('xm_theme', t);
+  document.querySelector('#themeToggle i').className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
+setTheme(theme);
+document.getElementById('themeToggle').addEventListener('click', () => setTheme(theme === 'dark' ? 'light' : 'dark'));
+
+// ══════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════
+const config = {
+  nombreTienda: "DR. XIAOMI SCZ",
+  direccion: "Centro Comercial Cañoto #K1, Santa Cruz",
+  telefono: "75959450",
+  horario: "Lunes a Sábado 9:00 - 20:00"
+};
+
+function genNumRecibo() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `REC-${p(d.getDate())}${p(d.getMonth()+1)}${String(d.getFullYear()).slice(-2)}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function loading(show, msg = 'Procesando...') {
+  document.getElementById('loading').classList.toggle('show', show);
+  document.getElementById('loading-msg').textContent = msg;
+}
+
+function badge(status) {
+  const map = {
+    recibido: ['badge-recibido', '🔵 Recibido'],
+    proceso:  ['badge-proceso',  '🟡 En Proceso'],
+    listo:    ['badge-listo',    '🟢 Listo'],
+    devuelto: ['badge-devuelto', '🔴 Devuelto']
+  };
+  const [cls, lbl] = map[status] || map['recibido'];
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+
+function formatFecha(iso) {
+  const f = new Date(iso);
+  return `${String(f.getDate()).padStart(2,'0')}/${String(f.getMonth()+1).padStart(2,'0')}/${f.getFullYear()} ${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')}`;
+}
+
+// ══════════════════════════════════════
+//  NAV
+// ══════════════════════════════════════
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page).classList.add('active');
+  if (page === 'recepciones') renderRecepciones();
+  if (page === 'buscar') document.getElementById('searchInput').focus();
+}
+
+// ══════════════════════════════════════
+//  HEADER CLOCK
+// ══════════════════════════════════════
+let lastRecibo = null, lastTel = null, lastNombre = null;
+function actualizarHeader() {
+  const ds = document.getElementById('dateTimeDisplay');
+  const ns = document.getElementById('numeroReciboDisplay');
+  if (ds) ds.textContent = new Date().toLocaleString();
+  if (ns && !lastRecibo) ns.textContent = genNumRecibo();
+}
+actualizarHeader();
+setInterval(actualizarHeader, 1000);
+
+// ══════════════════════════════════════
+//  SEGURIDAD TOGGLE
+// ══════════════════════════════════════
+const tipoSeg = document.getElementById('tipoSeguridad');
+const pinCont = document.getElementById('pinContainer');
+const patronField = document.getElementById('field-patron');
+tipoSeg.addEventListener('change', () => {
+  pinCont.style.display = tipoSeg.value === 'pin' ? 'block' : 'none';
+  patronField.style.display = tipoSeg.value === 'patron' ? 'block' : 'none';
+});
+pinCont.style.display = 'none';
+
+// ══════════════════════════════════════
+//  FOTOS
+// ══════════════════════════════════════
+document.getElementById('fotos').addEventListener('change', function () {
+  const preview = document.getElementById('imagePreview');
+  const counter = document.getElementById('photoCounter');
+  preview.innerHTML = '';
+  if (this.files.length > 4) {
+    counter.textContent = '❌ Máximo 4 fotos'; this.value = '';
+    setTimeout(() => counter.textContent = '0/4 fotos', 2000); return;
+  }
+  counter.textContent = `${this.files.length}/4 fotos seleccionadas`;
+  Array.from(this.files).forEach(file => {
+    if (!file.type.match('image.*')) return;
+    const r = new FileReader();
+    r.onload = e => {
+      const img = document.createElement('img');
+      img.src = e.target.result; img.className = 'preview-image';
+      preview.appendChild(img);
+    };
+    r.readAsDataURL(file);
+  });
+});
+
+// ══════════════════════════════════════
+//  SERVICIOS
+// ══════════════════════════════════════
+const serviciosList = document.getElementById('serviciosList');
+const costoTotal = document.getElementById('costoTotal');
+
+function calcTotal() {
+  let t = 0;
+  document.querySelectorAll('.servicio-costo').forEach(i => t += parseFloat(i.value) || 0);
+  costoTotal.value = t.toFixed(2);
+}
+function updateRemBtns() {
+  const items = serviciosList.querySelectorAll('.servicio-item');
+  items.forEach(item => {
+    const btn = item.querySelector('.btn-rem');
+    if (btn) btn.style.display = items.length > 1 ? 'flex' : 'none';
+  });
+}
+function addServicio(desc = '', costo = '') {
+  const div = document.createElement('div');
+  div.className = 'servicio-item';
+  div.innerHTML = `<input type="text" class="servicio-desc" placeholder="Descripción" value="${desc}">
+    <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0" value="${costo}">
+    <button type="button" class="btn-rem">✕</button>`;
+  serviciosList.appendChild(div);
+  div.querySelector('.btn-rem').addEventListener('click', function () {
+    if (serviciosList.querySelectorAll('.servicio-item').length > 1) { div.remove(); calcTotal(); updateRemBtns(); }
+  });
+  div.querySelector('.servicio-costo').addEventListener('input', calcTotal);
+  updateRemBtns();
+}
+document.getElementById('addServicio').addEventListener('click', () => addServicio());
+serviciosList.querySelector('.servicio-costo').addEventListener('input', calcTotal);
+serviciosList.querySelector('.btn-rem').addEventListener('click', function () {
+  if (serviciosList.querySelectorAll('.servicio-item').length > 1) {
+    this.closest('.servicio-item').remove(); calcTotal(); updateRemBtns();
+  }
+});
+updateRemBtns();
+
+// ══════════════════════════════════════
+//  PATTERN LOCK
+// ══════════════════════════════════════
+class PatternLock {
+  constructor() {
+    this.bg = document.getElementById('bgCanvas'); this.ln = document.getElementById('lineCanvas');
+    this.bgc = this.bg.getContext('2d'); this.lnc = this.ln.getContext('2d');
+    this.r = 18; this.w = this.bg.width; this.h = this.bg.height;
+    this.pts = []; this.path = []; this.d = false;
+    this.seqEl = document.getElementById('pattern-sequence');
+    this.valEl = document.getElementById('patternValue');
+    this.init();
+  }
+  init() {
+    const cols = 3, rows = 3, margin = 24, sepX = (this.w - 2 * margin) / (cols - 1), sepY = (this.h - 2 * margin) / (rows - 1);
+    let id = 1;
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) this.pts.push({ id: id++, x: margin + sepX * x, y: margin + sepY * y, sel: false });
+    this.draw(); this.attach();
+  }
+  draw() {
+    this.bgc.clearRect(0, 0, this.w, this.h);
+    this.bgc.strokeStyle = '#4b5563'; this.bgc.lineWidth = 2;
+    this.pts.forEach(p => { this.bgc.beginPath(); this.bgc.arc(p.x, p.y, this.r, 0, 2 * Math.PI); this.bgc.stroke(); });
+  }
+  attach() {
+    ['mousedown', 'touchstart'].forEach(e => this.ln.addEventListener(e, ev => this.start(ev)));
+    ['mousemove', 'touchmove'].forEach(e => this.ln.addEventListener(e, ev => this.move(ev)));
+    ['mouseup', 'mouseleave', 'touchend'].forEach(e => this.ln.addEventListener(e, () => this.end()));
+  }
+  pos(e) { const rect = this.ln.getBoundingClientRect(), t = e.touches ? e.touches[0] : e; return { x: t.clientX - rect.left, y: t.clientY - rect.top }; }
+  hit(pt) { return this.pts.find(p => !p.sel && Math.hypot(p.x - pt.x, p.y - pt.y) < this.r + 5); }
+  start(e) { e.preventDefault(); this.d = true; this.path = []; this.pts.forEach(p => p.sel = false); this.lnc.clearRect(0, 0, this.w, this.h); this.seqEl.textContent = 'Secuencia: –'; this.valEl.value = ''; }
+  move(e) { if (!this.d) return; e.preventDefault(); const p = this.pos(e), h = this.hit(p); if (h) { h.sel = true; this.path.push(h); } this.render(p); }
+  end() { if (!this.d) return; this.d = false; const seq = this.path.map(p => p.id); this.seqEl.textContent = 'Secuencia: ' + (seq.length ? seq.join(' → ') : '–'); this.valEl.value = seq.join(','); }
+  render(c) {
+    this.lnc.clearRect(0, 0, this.w, this.h); if (!this.path.length) return;
+    this.lnc.strokeStyle = '#FF6900'; this.lnc.lineWidth = 4; this.lnc.lineCap = 'round';
+    this.lnc.beginPath(); this.lnc.moveTo(this.path[0].x, this.path[0].y);
+    this.path.forEach(p => this.lnc.lineTo(p.x, p.y)); if (this.d) this.lnc.lineTo(c.x, c.y); this.lnc.stroke();
+    this.path.forEach(p => { this.lnc.beginPath(); this.lnc.arc(p.x, p.y, this.r / 2, 0, 2 * Math.PI); this.lnc.fillStyle = '#FF6900'; this.lnc.fill(); });
+  }
+  reset() { this.path = []; this.pts.forEach(p => p.sel = false); this.draw(); this.lnc.clearRect(0, 0, this.w, this.h); this.seqEl.textContent = 'Secuencia: –'; this.valEl.value = ''; }
+}
+const lock = new PatternLock();
+
+// ══════════════════════════════════════
+//  WHATSAPP
+// ══════════════════════════════════════
+function enviarWhatsApp(numero, nombre, numRecibo, total, marca, modelo) {
+  const msg = `Hola ${nombre}, gracias por confiar en DR. XIAOMI.\n\n✅ COMPROBANTE DE RECEPCIÓN\n📄 Recibo: ${numRecibo}\n📅 Fecha: ${new Date().toLocaleString()}\n📱 Equipo: ${marca} ${modelo}\n💰 Presupuesto: Bs. ${total}\n\nSu equipo ha sido ingresado a nuestro taller. Le notificaremos cuando esté listo.\n\n🔧 DR. XIAOMI SCZ\nCentro Comercial Cañoto #K1\nTel: 75959450`;
+  window.open(`https://wa.me/591${numero.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+document.getElementById('sendWhatsappBtn').addEventListener('click', () => {
+  if (lastTel && lastRecibo) {
+    const total = document.getElementById('costoTotal').value || '0';
+    enviarWhatsApp(lastTel, lastNombre, lastRecibo, total, document.getElementById('marca').value, document.getElementById('modelo').value);
+  }
+});
+
+// ══════════════════════════════════════
+//  GENERAR PDF
+// ══════════════════════════════════════
+async function generarPDF(rec) {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+  const fecha = new Date(rec.fecha_iso);
+  const centerX = 105, m = 15;
+  let y = 10;
+
+  pdf.setFont('helvetica');
+  pdf.setFontSize(14); pdf.setTextColor(255, 105, 0);
+  pdf.text(config.nombreTienda, centerX, y + 5, { align: 'center' });
+  pdf.setFontSize(8); pdf.setTextColor(100);
+  pdf.text(config.direccion, centerX, y + 9, { align: 'center' });
+  pdf.text(`Tel: ${config.telefono} · ${config.horario}`, centerX, y + 13, { align: 'center' });
+  pdf.setDrawColor(255, 105, 0); pdf.line(20, y + 16, 190, y + 16);
+
+  y += 24;
+  pdf.setFontSize(11); pdf.setTextColor(0); pdf.setFont('helvetica', 'bold');
+  pdf.text('RECIBO DE SERVICIO TÉCNICO', centerX, y, { align: 'center' });
+  y += 6; pdf.setFontSize(8); pdf.setFont('helvetica', 'normal');
+  pdf.text(`N° Recibo: ${rec.id}`, m, y);
+  pdf.text(`Fecha: ${fecha.toLocaleDateString()} ${fecha.toLocaleTimeString().slice(0, 5)}`, 200 - m, y, { align: 'right' });
+
+  const sec = (title, lines) => {
+    y += 8; pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text(title, m, y);
+    pdf.setDrawColor(200); pdf.line(m, y + 1, 195, y + 1);
+    pdf.setFont('helvetica', 'normal');
+    lines.forEach(l => { y += 5; pdf.text(l, m, y); });
+  };
+
+  sec('DATOS DEL CLIENTE', [`Nombre: ${rec.nombre}`, `Teléfono: ${rec.telefono}`]);
+  sec('DATOS DEL EQUIPO', [
+    `Marca: ${rec.marca}`, `Modelo: ${rec.modelo}`, `¿Enciende?: ${rec.enciende}`,
+    ...(rec.imei ? [`IMEI/Serial: ${rec.imei}`] : [])
+  ]);
+  sec('ESTADO Y FALLA', [`Estado: ${rec.estado || '-'}`, `Falla: ${rec.falla || '-'}`]);
+
+  y += 8; pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text('SERVICIOS Y COSTOS', m, y);
+  pdf.setDrawColor(200); pdf.line(m, y + 1, 195, y + 1);
+
+  const svcs = (rec.servicios || []).map(s => [s.desc, `Bs. ${parseFloat(s.costo).toFixed(2)}`]);
+  pdf.autoTable({
+    startY: y + 4, head: [['Descripción', 'Costo (Bs.)']],
+    body: svcs, styles: { fontSize: 8 },
+    headStyles: { fillColor: [255, 105, 0], textColor: 255 },
+    columnStyles: { 0: { cellWidth: 120 }, 1: { halign: 'right' } },
+    margin: { left: m, right: 15 }
+  });
+
+  y = pdf.autoTable.previous.finalY + 4;
+  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10);
+  pdf.setDrawColor(255, 105, 0); pdf.setFillColor(255, 250, 240);
+  pdf.roundedRect(120, y - 4, 70, 8, 2, 2, 'FD');
+  pdf.text(`TOTAL: Bs. ${parseFloat(rec.total).toFixed(2)}`, 155, y + 1, { align: 'center' });
+
+  sec('SEGURIDAD', [
+    `Tipo: ${rec.tipo_seguridad}`,
+    ...(rec.tipo_seguridad === 'pin' && rec.pin ? [`PIN: ${rec.pin}`] : []),
+    ...(rec.tipo_seguridad === 'patron' && rec.patron ? [`Patrón: ${rec.patron}`] : [])
+  ]);
+
+  if (y > 230) { pdf.addPage(); y = 20; }
+  y += 8; pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text('CONDICIONES DEL SERVICIO', m, y);
+  pdf.setDrawColor(200); pdf.line(m, y + 1, 195, y + 1);
+  pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7);
+  ['1. Conserve este recibo; solo con él puede retirar su equipo.',
+    '2. La fecha de entrega está sujeta a disponibilidad de repuestos.',
+    '3. El retiro debe hacerse dentro de los 10 días posteriores al aviso.',
+    '4. Pasados 20 días sin retiro, el equipo se considera abandonado.',
+    '5. Garantía: 30 días en repuesto / 60 días en mano de obra.'
+  ].forEach((t, i) => pdf.text(t, m, y + 5 + i * 4));
+
+  const firmaY = y + 30;
+  pdf.line(130, firmaY, 190, firmaY);
+  pdf.text('Firma del cliente', 160, firmaY + 4, { align: 'center' });
+
+  pdf.setFontSize(7); pdf.setTextColor(120);
+  pdf.text(`© ${fecha.getFullYear()} ${config.nombreTienda} · Todos los derechos reservados`, centerX, 287, { align: 'center' });
+  pdf.save(`Recibo_${rec.id}_${rec.nombre.split(' ')[0]}.pdf`);
+}
+
+// ══════════════════════════════════════
+//  SUBMIT FORM
+// ══════════════════════════════════════
+document.getElementById('telefono').addEventListener('input', function () { this.value = this.value.replace(/[^0-9]/g, ''); });
+
+document.getElementById('formRecibo').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!document.getElementById('formRecibo').checkValidity()) { toast('⚠️ Complete los campos requeridos'); return; }
+
+  const servicios = Array.from(document.querySelectorAll('.servicio-item')).map(item => ({
+    desc: item.querySelector('.servicio-desc').value.trim(),
+    costo: item.querySelector('.servicio-costo').value || '0'
+  })).filter(s => s.desc || parseFloat(s.costo) > 0);
+
+  if (!servicios.length) { toast('⚠️ Agregue al menos un servicio'); return; }
+
+  loading(true, 'Comprimiendo fotos...');
+
+  // ── COMPRIMIR FOTO ──────────────────────────────────────────
+  // Reduce a máx 1000px de ancho/alto y calidad 0.72 (JPEG)
+  async function comprimirFoto(file) {
+    return new Promise(res => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const MAX = 1000;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else       { w = Math.round(w * MAX / h); h = MAX; }
         }
-        init(){
-          const cols=3, rows=3, margin=20;
-          const sepX=(this.w-2*margin)/(cols-1), sepY=(this.h-2*margin)/(rows-1);
-          let id=1;
-          for(let y=0;y<rows;y++){
-            for(let x=0;x<cols;x++){
-              this.pts.push({id:id++,x:margin+sepX*x,y:margin+sepY*y,sel:false});
-            }
-          }
-          this.draw(); 
-          this.attach();
-        }
-        draw(){
-          this.bgc.clearRect(0,0,this.w,this.h);
-          this.bgc.strokeStyle='#4b5563'; 
-          this.bgc.lineWidth=2;
-          this.pts.forEach(p=>{
-            this.bgc.beginPath();
-            this.bgc.arc(p.x,p.y,this.r,0,2*Math.PI);
-            this.bgc.stroke();
-          });
-        }
-        attach(){
-          ['mousedown','touchstart'].forEach(e=>this.ln.addEventListener(e,ev=>this.start(ev)));
-          ['mousemove','touchmove'].forEach(e=>this.ln.addEventListener(e,ev=>this.move(ev)));
-          ['mouseup','mouseleave','touchend'].forEach(e=>this.ln.addEventListener(e,()=>this.end()));
-        }
-        pos(e){
-          const rect=this.ln.getBoundingClientRect(),
-                t=e.touches?e.touches[0]:e;
-          return {x:t.clientX-rect.left,y:t.clientY-rect.top};
-        }
-        hit(pt){
-          return this.pts.find(p=>!p.sel&&Math.hypot(p.x-pt.x,p.y-pt.y)<this.r+5);
-        }
-        start(e){
-          e.preventDefault();
-          this.d=true;
-          this.path=[];
-          this.pts.forEach(p=>p.sel=false);
-          this.lnc.clearRect(0,0,this.w,this.h);
-          this.seqEl.textContent='Secuencia: –';
-          this.valEl.value = '';
-        }
-        move(e){
-          if(!this.d)return;
-          e.preventDefault();
-          const p=this.pos(e),
-                h=this.hit(p);
-          if(h){
-            h.sel=true;
-            this.path.push(h);
-          }
-          this.render(p);
-        }
-        end(){
-          if(!this.d)return;
-          this.d=false;
-          const seq=this.path.map(p=>p.id);
-          this.seqEl.textContent='Secuencia: '+(seq.length ? seq.join(' → ') : '–');
-          this.valEl.value=seq.join(',');
-        }
-        render(c){
-          this.lnc.clearRect(0,0,this.w,this.h);
-          if(!this.path.length)return;
-          this.lnc.strokeStyle='#f97316';
-          this.lnc.lineWidth=4;
-          this.lnc.lineCap='round';
-          this.lnc.beginPath();
-          this.lnc.moveTo(this.path[0].x,this.path[0].y);
-          this.path.forEach(p=>this.lnc.lineTo(p.x,p.y));
-          if(this.d)this.lnc.lineTo(c.x,c.y);
-          this.lnc.stroke();
-          this.path.forEach(p=>{
-            this.lnc.beginPath();
-            this.lnc.arc(p.x,p.y,this.r/2,0,2*Math.PI);
-            this.lnc.fillStyle='#f97316';
-            this.lnc.fill();
-          });
-        }
-      }
-      const lock = new PatternLock();
-      
-      // Generar PDF profesional mejorado
-      document.getElementById('formRecibo').addEventListener('submit', async e => {
-        e.preventDefault();
-
-        const form = document.getElementById('formRecibo');
-        if (!form.checkValidity()) {
-          alert('Por favor complete todos los campos requeridos');
-          return;
-        }
-
-        // Validar que haya al menos un servicio con descripción o costo > 0
-        const servicios = Array.from(document.querySelectorAll('.servicio-item'));
-        const hayServicioValido = servicios.some(item => {
-          const desc = item.querySelector('.servicio-desc').value.trim();
-          const costo = parseFloat(item.querySelector('.servicio-costo').value) || 0;
-          return desc !== '' || costo > 0;
-        });
-
-        if (!hayServicioValido) {
-          alert('Agrega al menos un servicio con descripción o costo mayor a 0.');
-          return;
-        }
-
-        const loading = document.getElementById('loading');
-        loading.style.display = 'flex';
-
-        try {
-          const { jsPDF } = window.jspdf;
-          const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-
-          // ====== DATOS BÁSICOS ======
-          const fecha = new Date();
-          const nombreCompleto = document.getElementById('nombre').value.trim();
-          const nombreCliente = nombreCompleto.split(' ')[0] || 'Cliente';
-          const telefono = document.getElementById('telefono').value;
-          const marca = document.getElementById('marca').value;
-          const modelo = document.getElementById('modelo').value;
-          const imei = document.getElementById('imei').value;
-          const enciende = document.getElementById('enciende').value;
-          const estado = document.getElementById('estado').value || '-';
-          const falla = document.getElementById('falla').value || '-';
-          const tipoSeguridad = document.getElementById('tipoSeguridad').value;
-          const pin = document.getElementById('pinInput').value || '-';
-          const patron = document.getElementById('patternValue').value || '-';
-
-          // Número de recibo consistente + guardado
-          contadorRecibos++;
-          localStorage.setItem('contadorRecibos', contadorRecibos);
-          const numeroRecibo = `REC-${contadorRecibos}`;
-          actualizarHeaderReciboPreview();
-
-          // ====== FUENTE GENERAL ======
-          pdf.setFont('courier', 'normal');
-          pdf.setFontSize(9);
-          pdf.setTextColor(0);
-
-          let y = 10;
-          const marginLeft = 15;
-          const centerX = 105;
-
-          // ====== ENCABEZADO TIENDA ======
-          pdf.setFontSize(14);
-          pdf.setTextColor(255, 152, 0);
-          pdf.text(config.nombreTienda, centerX, y + 5, { align: 'center' });
-
-          pdf.setFontSize(8);
-          pdf.setTextColor(100);
-          pdf.text(config.direccion, centerX, y + 9, { align: 'center' });
-          pdf.text(`Tel: ${config.telefono} · ${config.horario}`, centerX, y + 13, { align: 'center' });
-
-          pdf.setDrawColor(255, 152, 0);
-          pdf.line(20, y + 16, 190, y + 16);
-
-          // ====== TÍTULO ======
-          y += 24;
-          pdf.setFontSize(11);
-          pdf.setTextColor(0);
-          pdf.setFont('courier', 'bold');
-          pdf.text('RECIBO DE SERVICIO TÉCNICO', centerX, y, { align: 'center' });
-
-          // Número y fecha
-          y += 6;
-          pdf.setFontSize(8);
-          pdf.setFont('courier', 'normal');
-          pdf.text(`N° Recibo: ${numeroRecibo}`, marginLeft, y);
-          pdf.text(
-            `Fecha: ${fecha.toLocaleDateString()} ${fecha.toLocaleTimeString().slice(0, 5)}`,
-            200 - marginLeft,
-            y,
-            { align: 'right' }
-          );
-
-          // ====== DATOS DEL CLIENTE ======
-          y += 8;
-          pdf.setFont('courier', 'bold');
-          pdf.text('DATOS DEL CLIENTE', marginLeft, y);
-          pdf.setDrawColor(200);
-          pdf.line(marginLeft, y + 1, 195, y + 1);
-
-          y += 5;
-          pdf.setFont('courier', 'normal');
-          pdf.setFontSize(9);
-          pdf.text(`Nombre: ${nombreCompleto}`, marginLeft, y);
-          y += 5;
-          pdf.text(`Teléfono: ${telefono}`, marginLeft, y);
-
-          // ====== DATOS DEL EQUIPO ======
-          y += 8;
-          pdf.setFont('courier', 'bold');
-          pdf.text('DATOS DEL EQUIPO', marginLeft, y);
-          pdf.setDrawColor(200);
-          pdf.line(marginLeft, y + 1, 195, y + 1);
-
-          pdf.setFont('courier', 'normal');
-          y += 5;
-          pdf.text(`Marca: ${marca}`, marginLeft, y);
-          y += 5;
-          pdf.text(`Modelo: ${modelo}`, marginLeft, y);
-          y += 5;
-          pdf.text(`¿Enciende?: ${enciende}`, marginLeft, y);
-          if (imei) {
-            y += 5;
-            pdf.text(`IMEI/Serial: ${imei}`, marginLeft, y);
-          }
-
-          // ====== ESTADO Y FALLA ======
-          y += 8;
-          pdf.setFont('courier', 'bold');
-          pdf.text('ESTADO Y FALLA', marginLeft, y);
-          pdf.setDrawColor(200);
-          pdf.line(marginLeft, y + 1, 195, y + 1);
-
-          pdf.setFont('courier', 'normal');
-          y += 5;
-          pdf.text(`Estado: ${estado}`, marginLeft, y);
-          y += 5;
-          pdf.text(`Falla reportada: ${falla}`, marginLeft, y);
-
-          // ====== SERVICIOS ======
-          y += 8;
-          pdf.setFont('courier', 'bold');
-          pdf.text('SERVICIOS Y COSTOS (Bs.)', marginLeft, y);
-          pdf.setDrawColor(200);
-          pdf.line(marginLeft, y + 1, 195, y + 1);
-
-          const serviciosData = [];
-          document.querySelectorAll('.servicio-item').forEach(item => {
-            const desc = item.querySelector('.servicio-desc').value || '-';
-            const costo = parseFloat(item.querySelector('.servicio-costo').value) || 0;
-            serviciosData.push([desc, `Bs. ${costo.toFixed(2)}`]);
-          });
-
-          pdf.autoTable({
-            startY: y + 4,
-            head: [['Descripción', 'Costo (Bs.)']],
-            body: serviciosData,
-            styles: { fontSize: 8, font: 'courier' },
-            headStyles: { fillColor: [50, 50, 50], textColor: 255 },
-            columnStyles: {
-              0: { cellWidth: 120 },
-              1: { halign: 'right' }
-            },
-            margin: { left: marginLeft, right: 15 }
-          });
-
-          y = pdf.autoTable.previous.finalY + 4;
-
-          const total = parseFloat(document.getElementById('costoTotal').value) || 0;
-          pdf.setFont('courier', 'bold');
-          pdf.setFontSize(10);
-          pdf.setDrawColor(255, 152, 0);
-          pdf.setFillColor(255, 250, 240);
-
-          pdf.roundedRect(120, y - 4, 70, 8, 2, 2, 'FD');
-          pdf.text(`TOTAL: Bs. ${total.toFixed(2)}`, 155, y + 1, { align: 'center' });
-
-          // ====== SEGURIDAD ======
-          y += 12;
-          pdf.setFont('courier', 'bold');
-          pdf.setFontSize(9);
-          pdf.text('SEGURIDAD DEL DISPOSITIVO', marginLeft, y);
-          pdf.setDrawColor(200);
-          pdf.line(marginLeft, y + 1, 195, y + 1);
-
-          pdf.setFont('courier', 'normal');
-          y += 5;
-          pdf.text(`Tipo de seguridad: ${tipoSeguridad}`, marginLeft, y);
-
-          if (tipoSeguridad === 'pin') {
-            y += 5;
-            pdf.text(`PIN: ${pin}`, marginLeft, y);
-          } else if (tipoSeguridad === 'patron') {
-            y += 5;
-            pdf.text(`Secuencia patrón: ${patron}`, marginLeft, y);
-          }
-
-          // ====== IMÁGENES ======
-          const files = document.getElementById('fotos').files;
-          if (files.length > 0) {
-            y += 10;
-            pdf.setFont('courier', 'bold');
-            pdf.text('IMÁGENES DEL EQUIPO', marginLeft, y);
-            pdf.setDrawColor(200);
-            pdf.line(marginLeft, y + 1, 195, y + 1);
-
-            let xImg = marginLeft;
-            let yImg = y + 4;
-
-            for (let i = 0; i < Math.min(files.length, 4); i++) {
-              const file = files[i];
-              const imageData = await new Promise(res => {
-                const r = new FileReader();
-                r.onload = e2 => res(e2.target.result);
-                r.readAsDataURL(file);
-              });
-
-              if (yImg > 230) {
-                pdf.addPage();
-                yImg = 20;
-                xImg = marginLeft;
-              }
-
-              pdf.addImage(imageData, 'JPEG', xImg, yImg, 80, 40);
-
-              if (i % 2 === 0) {
-                xImg += 90;
-              } else {
-                xImg = marginLeft;
-                yImg += 45;
-              }
-            }
-
-            y = yImg + 50;
-          } else {
-            y += 8;
-          }
-
-          // ====== CONDICIONES ======
-          if (y > 230) {
-            pdf.addPage();
-            y = 20;
-          }
-
-          pdf.setFont('courier', 'bold');
-          pdf.setFontSize(9);
-          pdf.text('CONDICIONES DEL SERVICIO', marginLeft, y);
-          pdf.setDrawColor(200);
-          pdf.line(marginLeft, y + 1, 195, y + 1);
-
-          pdf.setFont('courier', 'normal');
-          pdf.setFontSize(7);
-          y += 5;
-
-          const condiciones = [
-            '1. Conserve este recibo; solo con él puede retirar su equipo.',
-            '2. La fecha de entrega está sujeta a disponibilidad de repuestos.',
-            '3. El retiro debe hacerse dentro de los 10 días posteriores al aviso.',
-            '4. Pasados 30 días sin retiro, el equipo se considera abandonado.',
-            '5. Garantía: 30 días en repuesto / 60 días en mano de obra.'
-          ];
-
-          condiciones.forEach((txt, i) => {
-            pdf.text(txt, marginLeft, y + i * 4);
-          });
-
-          const firmaY = y + condiciones.length * 4 + 10;
-          pdf.line(130, firmaY, 190, firmaY);
-          pdf.text('Firma del cliente', 160, firmaY + 4, { align: 'center' });
-
-          pdf.setFontSize(7);
-          pdf.setTextColor(120);
-          pdf.text(
-            `© ${fecha.getFullYear()} ${config.nombreTienda} · Todos los derechos reservados`,
-            centerX,
-            287,
-            { align: 'center' }
-          );
-
-          pdf.save(`Recibo_${numeroRecibo}_${nombreCliente}.pdf`);
-
-          const confirmation = document.getElementById('confirmation');
-          confirmation.textContent = `Recibo ${numeroRecibo} generado con éxito!`;
-          confirmation.style.display = 'block';
-          setTimeout(() => (confirmation.style.display = 'none'), 4000);
-
-        } catch (err) {
-          alert('Error al generar PDF: ' + err.message);
-        } finally {
-          loading.style.display = 'none';
-        }
-      });
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(blob => res(blob), 'image/jpeg', 0.72);
+      };
+      img.src = url;
     });
-  </script>
+  }
+
+  // ── SUBIR A SUPABASE STORAGE ────────────────────────────────
+  async function subirFoto(blob, nombre) {
+    const res = await fetch(
+      `${SUPA_URL}/storage/v1/object/fotos-recepciones/${nombre}`,
+      {
+        method: 'POST',
+        headers: {
+          'apikey': SUPA_KEY,
+          'Authorization': `Bearer ${SUPA_KEY}`,
+          'Content-Type': 'image/jpeg',
+          'Cache-Control': '3600'
+        },
+        body: blob
+      }
+    );
+    if (!res.ok) throw new Error('Error subiendo foto: ' + await res.text());
+    return `${SUPA_URL}/storage/v1/object/public/fotos-recepciones/${nombre}`;
+  }
+
+  const numRecibo = genNumRecibo();
+  const nombreCompleto = document.getElementById('nombre').value.trim();
+  const fotosInput = document.getElementById('fotos');
+  const fotosUrls = [];
+
+  let fotoIdx = 0;
+  for (const file of fotosInput.files) {
+    fotoIdx++;
+    loading(true, `Subiendo foto ${fotoIdx}/${fotosInput.files.length}...`);
+    const blob = await comprimirFoto(file);
+    const nombre = `${numRecibo}_${fotoIdx}.jpg`;
+    const url = await subirFoto(blob, nombre);
+    fotosUrls.push(url);
+  }
+
+  loading(true, 'Guardando en Supabase...');
+
+  const rec = {
+    id: numRecibo,
+    fecha_iso: new Date().toISOString(),
+    nombre: nombreCompleto,
+    telefono: document.getElementById('telefono').value,
+    marca: document.getElementById('marca').value,
+    modelo: document.getElementById('modelo').value,
+    imei: document.getElementById('imei').value || null,
+    enciende: document.getElementById('enciende').value,
+    estado: document.getElementById('estado').value || null,
+    falla: document.getElementById('falla').value || null,
+    tipo_seguridad: document.getElementById('tipoSeguridad').value,
+    pin: document.getElementById('pinInput').value || null,
+    patron: document.getElementById('patternValue').value || null,
+    servicios,
+    total: parseFloat(document.getElementById('costoTotal').value) || 0,
+    fotos: fotosUrls,
+    status: 'recibido'
+  };
+
+  try {
+    await dbInsert(rec);
+    lastRecibo = numRecibo; lastTel = rec.telefono; lastNombre = rec.nombre.split(' ')[0];
+    document.getElementById('numeroReciboDisplay').textContent = numRecibo;
+    document.getElementById('whatsappAction').classList.add('show');
+    document.getElementById('whatsappMessage').innerHTML = `<strong>${rec.nombre}</strong> · ${rec.telefono}`;
+
+    loading(true, 'Generando PDF...');
+    await generarPDF(rec);
+    toast('✅ ' + numRecibo + ' guardado en Supabase');
+  } catch (err) {
+    toast('❌ Error: ' + err.message);
+  } finally {
+    loading(false);
+  }
+
+  // Reset
+  document.getElementById('formRecibo').reset();
+  document.getElementById('imagePreview').innerHTML = '';
+  document.getElementById('photoCounter').textContent = '0/4 fotos';
+  document.querySelectorAll('#serviciosList .servicio-item:not(:first-child)').forEach(el => el.remove());
+  document.getElementById('costoTotal').value = '';
+  lock.reset();
+  lastRecibo = null;
+  document.getElementById('whatsappAction').classList.remove('show');
+});
+
+// ══════════════════════════════════════
+//  RENDER LISTA
+// ══════════════════════════════════════
+let currentFilter = 'todos';
+
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentFilter = chip.dataset.filter;
+    renderRecepciones();
+  });
+});
+
+async function renderRecepciones() {
+  const bar = document.getElementById('dbStatusBar');
+  const barText = document.getElementById('dbStatusText');
+  const container = document.getElementById('listaRecepciones');
+  container.innerHTML = '<div class="empty"><i class="fas fa-spinner fa-spin"></i><p>Cargando...</p></div>';
+
+  try {
+    const data = await dbGetAll(currentFilter);
+
+    // Stats (siempre traemos todos para contar)
+    const all = currentFilter !== 'todos' ? await dbGetAll('todos') : data;
+    const stats = { recibido: 0, proceso: 0, listo: 0, devuelto: 0 };
+    (all || []).forEach(r => stats[r.status] = (stats[r.status] || 0) + 1);
+    document.getElementById('stat-total').textContent = (all || []).length;
+    document.getElementById('stat-proceso').textContent = stats.proceso;
+    document.getElementById('stat-listo').textContent = stats.listo;
+    document.getElementById('stat-devuelto').textContent = stats.devuelto;
+
+    bar.className = 'db-status online';
+    barText.textContent = `☁️ Supabase conectado · ${(data || []).length} registros`;
+
+    if (!data || data.length === 0) {
+      container.innerHTML = `<div class="empty"><i class="fas fa-inbox"></i><p>No hay registros${currentFilter !== 'todos' ? ' en este estado' : ''}</p></div>`;
+      return;
+    }
+
+    container.innerHTML = data.map(rec => `
+      <div class="rec-item" onclick="openModal('${rec.id}')">
+        <div class="rec-top">
+          <div>
+            <div class="rec-num">${rec.id}</div>
+            <div class="rec-name">${rec.nombre}</div>
+            <div class="rec-device"><i class="fas fa-mobile-alt"></i> ${rec.marca} ${rec.modelo}</div>
+          </div>
+          ${badge(rec.status)}
+        </div>
+        <div class="rec-bottom">
+          <span class="rec-total">Bs. ${parseFloat(rec.total).toFixed(2)}</span>
+          <span class="rec-date"><i class="fas fa-clock"></i> ${formatFecha(rec.fecha_iso)}</span>
+        </div>
+      </div>`).join('');
+
+  } catch (err) {
+    bar.className = 'db-status offline';
+    barText.textContent = '❌ Sin conexión a Supabase';
+    container.innerHTML = `<div class="empty"><i class="fas fa-wifi"></i><p>Error de conexión.<br><small>${err.message}</small></p></div>`;
+  }
+}
+
+// ══════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════
+let allRecs = [];
+
+async function openModal(id) {
+  loading(true, 'Cargando detalle...');
+  try {
+    const data = await supaFetch(`${TABLE}?id=eq.${encodeURIComponent(id)}&select=*`);
+    const rec = data && data[0];
+    if (!rec) { toast('❌ No encontrado'); return; }
+
+    allRecs = [rec];
+    document.getElementById('modalTitle').textContent = rec.id;
+
+    const svcs = (rec.servicios || []).map(s =>
+      `<div class="info-row"><span class="info-lbl">${s.desc}</span><span class="info-val" style="color:var(--orange)">Bs. ${parseFloat(s.costo).toFixed(2)}</span></div>`
+    ).join('');
+
+    const photos = rec.fotos && rec.fotos.length
+      ? `<div class="photo-grid">${rec.fotos.map(p => `<img src="${p}" class="preview-image">`).join('')}</div>` : '';
+
+    document.getElementById('modalBody').innerHTML = `
+      <div style="margin-bottom:14px">${badge(rec.status)}</div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title"><i class="fas fa-tasks"></i> CAMBIAR ESTADO</div>
+        <div class="status-grid">
+          <div class="status-opt ${rec.status==='recibido'?'sel-recibido':'inactive'}" onclick="changeStatus('${id}','recibido')">🔵 Recibido</div>
+          <div class="status-opt ${rec.status==='proceso'?'sel-proceso':'inactive'}" onclick="changeStatus('${id}','proceso')">🟡 En Proceso</div>
+          <div class="status-opt ${rec.status==='listo'?'sel-listo':'inactive'}" onclick="changeStatus('${id}','listo')">🟢 Listo</div>
+          <div class="status-opt ${rec.status==='devuelto'?'sel-devuelto':'inactive'}" onclick="changeStatus('${id}','devuelto')">🔴 Devuelto</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title"><i class="fas fa-user"></i> CLIENTE</div>
+        <div class="info-row"><span class="info-lbl">Nombre</span><span class="info-val">${rec.nombre}</span></div>
+        <div class="info-row"><span class="info-lbl">Teléfono</span><span class="info-val">${rec.telefono}</span></div>
+        <div class="info-row"><span class="info-lbl">Fecha</span><span class="info-val">${formatFecha(rec.fecha_iso)}</span></div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title"><i class="fas fa-mobile-alt"></i> DISPOSITIVO</div>
+        <div class="info-row"><span class="info-lbl">Marca</span><span class="info-val">${rec.marca}</span></div>
+        <div class="info-row"><span class="info-lbl">Modelo</span><span class="info-val">${rec.modelo}</span></div>
+        <div class="info-row"><span class="info-lbl">Enciende</span><span class="info-val">${rec.enciende}</span></div>
+        ${rec.imei ? `<div class="info-row"><span class="info-lbl">IMEI</span><span class="info-val">${rec.imei}</span></div>` : ''}
+        ${rec.estado ? `<div class="info-row"><span class="info-lbl">Estado</span><span class="info-val">${rec.estado}</span></div>` : ''}
+        ${rec.falla ? `<div class="info-row"><span class="info-lbl">Falla</span><span class="info-val">${rec.falla}</span></div>` : ''}
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title"><i class="fas fa-tools"></i> SERVICIOS</div>
+        ${svcs}
+        <div class="info-row" style="margin-top:6px">
+          <span class="info-lbl" style="font-weight:700">TOTAL</span>
+          <span class="info-val" style="color:var(--orange);font-size:16px;font-weight:800">Bs. ${parseFloat(rec.total).toFixed(2)}</span>
+        </div>
+      </div>
+
+      ${photos ? `<div class="card" style="margin-bottom:12px"><div class="card-title"><i class="fas fa-camera"></i> FOTOS</div>${photos}</div>` : ''}
+
+      <button class="btn btn-orange" onclick="generarPDF(window._modalRec)">
+        <i class="fas fa-file-pdf"></i> Descargar PDF
+      </button>
+      <button class="btn btn-green" onclick="enviarWhatsApp('${rec.telefono}','${rec.nombre.split(' ')[0]}','${rec.id}','${rec.total}','${rec.marca}','${rec.modelo}')">
+        <i class="fab fa-whatsapp"></i> WhatsApp
+      </button>
+      <button class="btn btn-ghost" onclick="notificarListo('${rec.id}')">
+        <i class="fas fa-bell"></i> Avisar que está listo
+      </button>
+      <button class="btn btn-danger" onclick="eliminarRecibo('${id}')" style="margin-top:8px">
+        <i class="fas fa-trash"></i> Eliminar registro
+      </button>
+    `;
+
+    window._modalRec = rec;
+    document.getElementById('modalOverlay').classList.add('open');
+  } catch (err) {
+    toast('❌ ' + err.message);
+  } finally {
+    loading(false);
+  }
+}
+
+function closeModal(e) { if (e.target.id === 'modalOverlay') closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+async function changeStatus(id, status) {
+  try {
+    await dbUpdate(id, { status });
+    toast('✅ Estado: ' + status);
+    closeModalDirect();
+    renderRecepciones();
+    setTimeout(() => openModal(id), 400);
+  } catch (err) {
+    toast('❌ ' + err.message);
+  }
+}
+
+async function eliminarRecibo(id) {
+  if (!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')) return;
+  try {
+    await dbDelete(id);
+    closeModalDirect();
+    renderRecepciones();
+    toast('🗑️ Registro eliminado');
+  } catch (err) {
+    toast('❌ ' + err.message);
+  }
+}
+
+function notificarListo(id) {
+  const rec = window._modalRec;
+  if (!rec) return;
+  const msg = `Hola ${rec.nombre.split(' ')[0]}! 🎉\n\nTu ${rec.marca} ${rec.modelo} ya está LISTO para retirar.\n\n📄 Recibo: ${rec.id}\n\n🔧 DR. XIAOMI SCZ\nCentro Comercial Cañoto #K1\nTel: 75959450\nPor favor traer el recibo al momento de retirar.`;
+  window.open(`https://wa.me/591${rec.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// ══════════════════════════════════════
+//  BUSCAR
+// ══════════════════════════════════════
+let searchTimeout;
+document.getElementById('searchInput').addEventListener('input', function () {
+  clearTimeout(searchTimeout);
+  const q = this.value.trim();
+  const container = document.getElementById('searchResults');
+  if (!q) { container.innerHTML = ''; return; }
+  container.innerHTML = '<div class="empty"><i class="fas fa-spinner fa-spin"></i><p>Buscando...</p></div>';
+  searchTimeout = setTimeout(async () => {
+    try {
+      const results = await dbSearch(q);
+      if (!results || results.length === 0) {
+        container.innerHTML = `<div class="empty"><i class="fas fa-search"></i><p>Sin resultados para "${q}"</p></div>`;
+        return;
+      }
+      container.innerHTML = results.map(rec => `
+        <div class="rec-item" onclick="openModal('${rec.id}')">
+          <div class="rec-top">
+            <div>
+              <div class="rec-num">${rec.id}</div>
+              <div class="rec-name">${rec.nombre}</div>
+              <div class="rec-device">${rec.marca} ${rec.modelo} · ${rec.telefono}</div>
+            </div>
+            ${badge(rec.status)}
+          </div>
+          <div class="rec-bottom">
+            <span class="rec-total">Bs. ${parseFloat(rec.total).toFixed(2)}</span>
+            <span class="rec-date">${formatFecha(rec.fecha_iso)}</span>
+          </div>
+        </div>`).join('');
+    } catch (err) {
+      container.innerHTML = `<div class="empty"><i class="fas fa-wifi"></i><p>Error: ${err.message}</p></div>`;
+    }
+  }, 500);
+});
+</script>
 </body>
 </html>
