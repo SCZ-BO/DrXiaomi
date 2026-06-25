@@ -704,7 +704,7 @@ document.getElementById('formRecibo').addEventListener('submit', async e => {
       const img = new Image();
       const url = URL.createObjectURL(file);
       img.onload = () => {
-        const MAX = 1000;
+        const MAX = 800;
         let w = img.width, h = img.height;
         if (w > MAX || h > MAX) {
           if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
@@ -714,7 +714,7 @@ document.getElementById('formRecibo').addEventListener('submit', async e => {
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
         URL.revokeObjectURL(url);
-        canvas.toBlob(blob => res(blob), 'image/jpeg', 0.72);
+        canvas.toBlob(blob => res(blob), 'image/jpeg', 0.60);
       };
       img.src = url;
     });
