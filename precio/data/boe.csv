@@ -2,6 +2,16 @@ Marca,Modelo,Tipo,Proveedor,Precio Compra,Precio Venta
 INFINIX,Note 30 pro,OLED,MarcoCell,400,660
 INFINIX,Zero 30,OLED,MarcoCell,650,880
 INFINIX,Infinix hot 60 pro plus,OLED,MarcoCell,650,880
+
+ZTE,Blade V30 Vita,Incell,MarcoCel,130,280
+XIAOMI,12T Pro,Incell,MarcoCel,170,270
+HUAWEI,P40 Pro,Incell,MarcoCel,250,310
+XIAOMI,POCO F3,OLED,MarcoCel,400,600
+XIAOMI,Redmi Pad SE,—,MarcoCel,400,650
+SAMSUNG,A17,OLED con marco,MarcoCel,400,590
+XIAOMI,POCO F5 Pro,—,MarcoCel,580,880
+XIAOMI,Redmi Note 15 Pro+ 5G 5G,—,MarcoCel,750,980
+
 IPHONE,11 black,LCD,boe,245,450
 IPHONE,11,LCD,boe,250,460
 IPHONE,X,LCD,boe,245,450
