@@ -121,7 +121,7 @@
     }
 
     /* ============================================================
-       PROGRESO
+       BARRA PROGRESO
     ============================================================ */
     #scrollProgress {
       position: fixed;
@@ -153,8 +153,6 @@
       display: flex;
       flex-direction: column;
       padding-bottom: calc(90px + var(--safe-bottom));
-      /* ✅ espacio para que el header sticky no corte el contenido */
-      padding-top: var(--safe-top);
     }
 
     /* ============================================================
@@ -170,7 +168,6 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       z-index: 20;
-      /* ✅ padding-top con safe-area SOLO para la barra de estado */
       padding-top: calc(1.2rem + var(--safe-top));
     }
 
@@ -237,7 +234,6 @@
       overflow: hidden;
       position: relative;
       box-shadow: 0 8px 24px -8px rgba(255,105,0,0.35);
-      /* ✅ Asegurar que se vea bien */
       aspect-ratio: 16 / 9;
     }
     .slider-frame {
@@ -610,7 +606,7 @@
     .toast-lab.show { transform: translateX(-50%) translateY(0); }
 
     /* ============================================================
-       OFFLINE
+       OFFLINE BADGE
     ============================================================ */
     .offline-badge {
       position: fixed;
@@ -630,11 +626,10 @@
     .offline-badge.show { transform: translateY(0); }
 
     /* ============================================================
-       BANNER INSTALAR (con soporte iOS + Android)
+       BANNER INSTALAR (iOS + Android + Desktop)
     ============================================================ */
     .install-banner {
       position: fixed;
-      /* ✅ CORREGIDO: ahora queda ARRIBA del bottom nav */
       bottom: calc(88px + var(--safe-bottom));
       left: 50%;
       transform: translateX(-50%) translateY(300%);
@@ -650,30 +645,37 @@
       z-index: 1500;
       box-shadow: 0 12px 40px -8px rgba(255,105,0,0.6);
       transition: transform 0.4s cubic-bezier(.2,.9,.4,1.2);
-      /* ✅ Que no se salga de la pantalla */
       box-sizing: border-box;
     }
     .install-banner.show { transform: translateX(-50%) translateY(0); }
 
-    /* ✅ Estilos específicos por plataforma */
+    /* ✅ Borde según plataforma */
     .install-banner.ios { border-color: #007AFF; }
-    .install-banner.ios .install-banner-icon {
-      background: linear-gradient(135deg, #007AFF, #5AC8FA);
-    }
     .install-banner.android { border-color: var(--accent); }
+    .install-banner.desktop { border-color: var(--accent); }
 
+    /* ✅ Ícono del banner (contenedor del logo) */
     .install-banner-icon {
-      width: 44px;
-      height: 44px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      width: 46px;
+      height: 46px;
+      background: transparent;
+      padding: 0;
+      overflow: hidden;
       border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 1.4rem;
+      box-shadow: 0 4px 12px -2px rgba(255, 105, 0, 0.5);
       flex-shrink: 0;
+      display: block;
     }
+
+    /* ✅ Logo dentro del banner */
+    .install-banner-logo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+      display: block;
+    }
+
     .install-banner-text {
       flex: 1;
       min-width: 0;
@@ -847,10 +849,10 @@
     <div class="nav-item" data-nav="map"><i class="fas fa-map-marker-alt"></i><span>Ubicación</span></div>
   </nav>
 
-  <!-- ✅ BANNER INSTALAR — ADAPTATIVO iOS/Android -->
+  <!-- ✅ BANNER INSTALAR — con LOGO real -->
   <div class="install-banner" id="installBanner">
     <div class="install-banner-icon" id="installIcon">
-      <i class="fas fa-mobile-alt"></i>
+      <img src="imagenes/web-app-manifest-192x192.png" alt="DR XIAOMI" class="install-banner-logo">
     </div>
     <div class="install-banner-text">
       <strong id="installTitle">Instalar DR XIAOMI</strong>
@@ -885,14 +887,15 @@
     }
 
     // ============================================================
-    // ✅ DETECCIÓN DE PLATAFORMA (iOS / Android / Otro)
+    // ✅ DETECCIÓN DE PLATAFORMA
     // ============================================================
     function detectPlatform() {
       const ua = navigator.userAgent || '';
       const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
       const isAndroid = /Android/i.test(ua);
       const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-      return { isIOS, isAndroid, isSafari };
+      const isDesktop = !isIOS && !isAndroid;
+      return { isIOS, isAndroid, isSafari, isDesktop };
     }
 
     const PLATFORM = detectPlatform();
@@ -1119,70 +1122,71 @@
     }, { passive: true });
 
     // ============================================================
-    // ✅ INSTALACIÓN PWA — ADAPTATIVA iOS / Android
+    // ✅ INSTALACIÓN PWA — ADAPTATIVA iOS / Android / DESKTOP
     // ============================================================
     let deferredPrompt = null;
     const installBanner = $('#installBanner');
     const installTitle = $('#installTitle');
     const installSubtitle = $('#installSubtitle');
     const installBtn = $('#installBtn');
-    const installIcon = $('#installIcon');
 
-    // ✅ Configurar el banner según plataforma
+    // ✅ Configurar el banner según plataforma (SIN tocar el logo)
     function setupInstallBanner() {
       if (PLATFORM.isIOS) {
         installBanner.classList.add('ios');
         installTitle.textContent = 'Instalar en iPhone';
         installSubtitle.textContent = 'Toca Compartir ⬆️ y "Añadir a pantalla de inicio"';
         installBtn.innerHTML = 'VER CÓMO';
-        installIcon.innerHTML = '<i class="fab fa-apple"></i>';
       } else if (PLATFORM.isAndroid) {
         installBanner.classList.add('android');
         installTitle.textContent = 'Instalar DR XIAOMI';
         installSubtitle.textContent = 'Acceso rápido desde tu inicio';
         installBtn.innerHTML = 'INSTALAR';
-        installIcon.innerHTML = '<i class="fab fa-android"></i>';
+      } else {
+        installBanner.classList.add('desktop');
+        installTitle.textContent = 'Instalar DR XIAOMI';
+        installSubtitle.textContent = 'Accede como app de escritorio';
+        installBtn.innerHTML = 'INSTALAR';
       }
     }
     setupInstallBanner();
 
-    // ✅ ANDROID: evento nativo
+    // ✅ Mostrar banner
+    const installClosed = localStorage.getItem('drxiaomi_install_closed');
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                      || window.navigator.standalone === true;
+
+    // ANDROID: evento nativo
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      if (!localStorage.getItem('drxiaomi_install_closed')) {
+      if (!installClosed && !isStandalone) {
         setTimeout(() => installBanner.classList.add('show'), 3500);
       }
     });
 
-    // ✅ iOS: mostrar banner manual (Safari no tiene beforeinstallprompt)
-    if (PLATFORM.isIOS && PLATFORM.isSafari && !localStorage.getItem('drxiaomi_install_closed')) {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-                        || window.navigator.standalone === true;
-      if (!isStandalone) {
-        setTimeout(() => installBanner.classList.add('show'), 3500);
-      }
+    // iOS + DESKTOP: mostrar manual
+    if ((PLATFORM.isIOS || PLATFORM.isDesktop) && !installClosed && !isStandalone) {
+      setTimeout(() => installBanner.classList.add('show'), 3500);
     }
 
-    // ✅ Click en botón INSTALAR
+    // ✅ Click en INSTALAR
     installBtn.addEventListener('click', async () => {
       if (PLATFORM.isIOS) {
-        // En iOS mostramos instrucciones
-        showToast('⬆️ Toca Compartir y luego "Añadir a pantalla de inicio"', 4000);
+        showToast('⬆️ Toca Compartir y luego "Añadir a pantalla de inicio"', 4500);
         return;
       }
-      // Android: prompt nativo
-      if (!deferredPrompt) {
-        showToast('📲 Usa el menú del navegador para instalar');
-        return;
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          showToast('✅ App instalada');
+          installBanner.classList.remove('show');
+        }
+        deferredPrompt = null;
+      } else {
+        showToast('📲 Usa el menú del navegador → "Instalar app"', 3500);
       }
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        showToast('✅ App instalada');
-        installBanner.classList.remove('show');
-      }
-      deferredPrompt = null;
     });
 
     $('#installClose').addEventListener('click', () => {
@@ -1195,7 +1199,7 @@
       showToast('🎉 App instalada correctamente');
     });
 
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (isStandalone) {
       document.body.classList.add('is-standalone');
     }
   </script>
