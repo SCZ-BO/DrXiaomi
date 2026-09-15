@@ -17,18 +17,22 @@
   <link rel="canonical" href="https://xiaomi.scz.red/">
   <title>DR XIAOMI · ORANGE LAB · Robotic Repair Center</title>
 
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="imagenes/icono-192.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="imagenes/icono-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="imagenes/icono-512.png">
+  <!-- ===== FAVICONS (todos en /imagenes/) ===== -->
+  <link rel="icon" type="image/png" sizes="96x96" href="imagenes/favicon-96x96.png">
+  <link rel="icon" type="image/svg+xml" href="imagenes/favicon.svg">
+  <link rel="shortcut icon" href="imagenes/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="imagenes/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="imagenes/apple-touch-icon.png">
 
-  <!-- Fuentes -->
+  <!-- ===== PWA MANIFEST ===== -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- ===== FUENTES ===== -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Iconos -->
+  <!-- ===== ICONOS ===== -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
   <style>
@@ -177,7 +181,7 @@
       border-right: 1px solid rgba(255, 105, 0, 0.3);
       display: flex;
       flex-direction: column;
-      padding-bottom: calc(74px + var(--safe-bottom)); /* espacio para bottom nav */
+      padding-bottom: calc(74px + var(--safe-bottom));
     }
 
     /* ============================================================
@@ -960,7 +964,6 @@
     nextBtn.addEventListener('click', nextSlide);
     prevBtn.addEventListener('click', prevSlide);
 
-    // Swipe
     let touchStartX = 0;
     let touchStartY = 0;
     const frame = $('#sliderFrame');
@@ -976,13 +979,11 @@
       }
     }, { passive: true });
 
-    // Auto-play
     let autoInterval = setInterval(nextSlide, 5500);
     const sliderContainer = $('.slider-container');
     sliderContainer.addEventListener('mouseenter', () => clearInterval(autoInterval));
     sliderContainer.addEventListener('mouseleave', () => { autoInterval = setInterval(nextSlide, 5500); });
 
-    // Skeleton en imágenes
     $$('.slide img').forEach(img => {
       const parent = img.parentElement;
       parent.style.position = 'relative';
@@ -1014,7 +1015,6 @@
       setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 800);
     }
 
-    // Consultar
     $('#consultBtn').addEventListener('click', () => {
       const problem = $('#problemInput').value.trim();
       if (!problem) { showToast('⚠️ Describe la falla primero'); vibrate([15, 30, 15]); return; }
@@ -1024,12 +1024,10 @@
       });
     });
 
-    // Enter en el input = consultar
     $('#problemInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') $('#consultBtn').click();
     });
 
-    // Reparar
     $('#repairNowBtn').addEventListener('click', () => {
       withLoading($('#repairNowBtn'), async () => {
         openWhatsApp('🛠️ Solicito reparación urgente de mi equipo.');
@@ -1037,21 +1035,18 @@
       });
     });
 
-    // Diagnóstico
     $('#diagnosticBtn').addEventListener('click', () => {
       if (!navigator.onLine) { showToast('📡 Necesitas internet'); return; }
       vibrate();
       window.location.href = 'https://xiaomi.scz.red/diagnostico.html';
     });
 
-    // Técnico
     $('#techRedirectBtn').addEventListener('click', () => {
       if (!navigator.onLine) { showToast('📡 Necesitas internet'); return; }
       vibrate();
       window.location.href = 'https://xiaomi.scz.red/precio/';
     });
 
-    // Tarjetas de servicio
     $$('.tech-card').forEach(card => {
       card.addEventListener('click', () => {
         vibrate();
@@ -1061,7 +1056,6 @@
       });
     });
 
-    // Marcas
     $$('.brand-item').forEach(b => {
       b.addEventListener('click', () => {
         vibrate();
@@ -1070,13 +1064,11 @@
       });
     });
 
-    // Llamar
     $('#callBtn').addEventListener('click', () => {
       vibrate();
       window.location.href = 'tel:+59175959450';
     });
 
-    // Compartir
     $('#shareBtn').addEventListener('click', async () => {
       vibrate();
       if (navigator.share) {
@@ -1092,7 +1084,6 @@
       }
     });
 
-    // Redes
     $('#facebookBtn').addEventListener('click', () => {
       vibrate();
       if (!navigator.onLine) { showToast('📡 Sin conexión'); return; }
@@ -1131,7 +1122,7 @@
     });
 
     // ============================================================
-    // PROGRESO SCROLL (optimizado)
+    // PROGRESO SCROLL
     // ============================================================
     let ticking = false;
     window.addEventListener('scroll', () => {
@@ -1155,7 +1146,6 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      // Mostrar banner solo si no fue cerrado antes
       if (!localStorage.getItem('drxiaomi_install_closed')) {
         setTimeout(() => installBanner.classList.add('show'), 4000);
       }
@@ -1185,9 +1175,6 @@
       showToast('🎉 App instalada correctamente');
     });
 
-    // ============================================================
-    // DETECCIÓN DE STANDALONE (cambiar active del nav)
-    // ============================================================
     if (window.matchMedia('(display-mode: standalone)').matches) {
       document.body.classList.add('is-standalone');
     }
