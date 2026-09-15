@@ -7,13 +7,15 @@ const ASSETS = [
   './imagenes/0001.jpg',
   './imagenes/0002.jpg',
   './imagenes/0003.jpg',
-  './imagenes/icono-192.png',
-  './imagenes/icono-512.png',
+  './imagenes/web-app-manifest-192x192.png',
+  './imagenes/web-app-manifest-512x512.png',
+  './imagenes/apple-touch-icon.png',
+  './imagenes/favicon.ico',
+  './imagenes/favicon.svg',
   'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'
 ];
 
-// INSTALL
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE)
@@ -22,7 +24,6 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// ACTIVATE
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
@@ -31,14 +32,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// FETCH
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
 
-  // Imágenes: cache-first
   const isImage = req.destination === 'image' || /\.(jpg|jpeg|png|webp|svg|gif|ico)$/i.test(url.pathname);
   if (isImage) {
     event.respondWith(
@@ -56,7 +55,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML/navegación: network-first con fallback a cache
   if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
     event.respondWith(
       fetch(req)
@@ -70,7 +68,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Resto: cache-first con revalidación
   event.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req).then((res) => {
