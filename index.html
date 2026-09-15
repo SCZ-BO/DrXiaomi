@@ -17,7 +17,7 @@
   <link rel="canonical" href="https://xiaomi.scz.red/">
   <title>DR XIAOMI · ORANGE LAB · Robotic Repair Center</title>
 
-  <!-- ===== FAVICONS (todos en /imagenes/) ===== -->
+  <!-- ===== FAVICONS ===== -->
   <link rel="icon" type="image/png" sizes="96x96" href="imagenes/favicon-96x96.png">
   <link rel="icon" type="image/svg+xml" href="imagenes/favicon.svg">
   <link rel="shortcut icon" href="imagenes/favicon.ico">
@@ -82,9 +82,6 @@
         --map-filter: grayscale(10%) brightness(0.95);
         --nav-bg: rgba(255, 255, 255, 0.85);
       }
-      .lab-bg::before {
-        background-image: repeating-linear-gradient(0deg, rgba(255, 105, 0, 0.08) 0px, rgba(255, 105, 0, 0.08) 1px, transparent 1px, transparent 14px);
-      }
       .consult-input { background: #FFFFFF; color: #1A1C22; }
       .tech-card { background: rgba(255,255,255,0.9); }
     }
@@ -100,7 +97,7 @@
     }
 
     /* ============================================================
-       FONDO INDUSTRIAL
+       FONDO
     ============================================================ */
     .lab-bg {
       position: fixed;
@@ -124,33 +121,7 @@
     }
 
     /* ============================================================
-       HERRAMIENTAS FLOTANTES
-    ============================================================ */
-    .lab-tools {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-      opacity: 0.25;
-    }
-    .tool-icon {
-      position: absolute;
-      font-size: 2.5rem;
-      color: #E65C00;
-      animation: floatTool 18s infinite ease-in-out;
-    }
-    .microscope { bottom: 6%; left: 2%; font-size: 3rem; }
-    .screwdriver { bottom: 18%; right: 3%; font-size: 2.8rem; animation-delay: 1.2s; }
-    .pliers { top: 12%; left: 1%; font-size: 2.5rem; animation-delay: 0.6s; }
-    .chip { top: 50%; right: 2%; font-size: 2.7rem; animation-delay: 1.5s; }
-    @keyframes floatTool {
-      0%   { transform: translateY(0) rotate(0); opacity: 0.2; }
-      50%  { transform: translateY(-12px) rotate(3deg); opacity: 0.5; }
-      100% { transform: translateY(0) rotate(0); opacity: 0.2; }
-    }
-
-    /* ============================================================
-       BARRA DE PROGRESO
+       PROGRESO
     ============================================================ */
     #scrollProgress {
       position: fixed;
@@ -181,14 +152,16 @@
       border-right: 1px solid rgba(255, 105, 0, 0.3);
       display: flex;
       flex-direction: column;
-      padding-bottom: calc(74px + var(--safe-bottom));
+      padding-bottom: calc(90px + var(--safe-bottom));
+      /* ✅ espacio para que el header sticky no corte el contenido */
+      padding-top: var(--safe-top);
     }
 
     /* ============================================================
        HEADER
     ============================================================ */
     .lab-header {
-      padding: calc(0.9rem + var(--safe-top)) 1.5rem 0.6rem;
+      padding: 1.2rem 1.5rem 0.8rem;
       text-align: center;
       border-bottom: 1px solid rgba(255, 105, 0, 0.3);
       background: linear-gradient(180deg, rgba(255,105,0,0.08) 0%, transparent 100%);
@@ -197,20 +170,8 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       z-index: 20;
-    }
-    .lab-header::after {
-      content: '';
-      position: absolute;
-      left: 0; right: 0; bottom: -14px;
-      height: 14px;
-      background: linear-gradient(180deg, rgba(10,12,16,0.55), transparent);
-      pointer-events: none;
-      opacity: 0.9;
-    }
-    @media (prefers-color-scheme: light) {
-      .lab-header::after {
-        background: linear-gradient(180deg, rgba(245,245,247,0.55), transparent);
-      }
+      /* ✅ padding-top con safe-area SOLO para la barra de estado */
+      padding-top: calc(1.2rem + var(--safe-top));
     }
 
     .title-container {
@@ -241,27 +202,28 @@
       background: rgba(255, 105, 0, 0.2);
       border: 1px solid var(--accent);
       border-radius: 2rem;
-      padding: 0.2rem 0.7rem;
-      font-size: 0.6rem;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.65rem;
       font-weight: 600;
     }
     .lab-features {
       display: flex;
       justify-content: center;
-      gap: 0.7rem;
-      margin-top: 0.5rem;
+      gap: 0.6rem;
+      margin-top: 0.7rem;
       flex-wrap: wrap;
     }
     .lab-feature {
       display: flex;
       align-items: center;
       gap: 0.3rem;
-      font-size: 0.6rem;
+      font-size: 0.62rem;
       background: rgba(255, 105, 0, 0.1);
-      padding: 0.25rem 0.7rem;
+      padding: 0.3rem 0.75rem;
       border-radius: 2rem;
       color: var(--text-secondary);
       font-weight: 500;
+      border: 1px solid rgba(255,105,0,0.2);
     }
 
     /* ============================================================
@@ -275,25 +237,30 @@
       overflow: hidden;
       position: relative;
       box-shadow: 0 8px 24px -8px rgba(255,105,0,0.35);
+      /* ✅ Asegurar que se vea bien */
+      aspect-ratio: 16 / 9;
     }
     .slider-frame {
       position: relative;
       width: 100%;
+      height: 100%;
       overflow: hidden;
       touch-action: pan-y pinch-zoom;
     }
     .slider-track {
       display: flex;
+      height: 100%;
       transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
       will-change: transform;
     }
     .slide {
       min-width: 100%;
       position: relative;
+      height: 100%;
     }
     .slide img {
       width: 100%;
-      aspect-ratio: 16 / 9;
+      height: 100%;
       object-fit: cover;
       display: block;
       background: #1a1e2a;
@@ -363,7 +330,7 @@
     .dot.active { background: var(--accent); width: 24px; box-shadow: 0 0 8px var(--accent); }
 
     /* ============================================================
-       TARJETA CONSULTA
+       CONSULTA
     ============================================================ */
     .consult-card {
       background: var(--bg-card);
@@ -412,7 +379,7 @@
     }
 
     /* ============================================================
-       GRID SERVICIOS
+       SERVICIOS
     ============================================================ */
     .tech-grid {
       display: grid;
@@ -471,7 +438,7 @@
     .brand-item:active { transform: scale(0.94); background: rgba(255,105,0,0.25); border-color: var(--accent); }
 
     /* ============================================================
-       REDES SOCIALES
+       REDES
     ============================================================ */
     .social-icons {
       display: flex;
@@ -506,7 +473,7 @@
     .social-icon .fa-whatsapp { color: #25D366; }
 
     /* ============================================================
-       BOTONES PRINCIPALES
+       BOTONES
     ============================================================ */
     .neon-buttons {
       display: flex;
@@ -553,7 +520,7 @@
       border-radius: 1.2rem;
       overflow: hidden;
       border: 1px solid rgba(255, 105, 0, 0.4);
-      height: 180px;
+      height: 200px;
       position: relative;
     }
     .map-container iframe {
@@ -574,7 +541,7 @@
     }
 
     /* ============================================================
-       BOTTOM NAV (estilo app nativa)
+       BOTTOM NAV
     ============================================================ */
     .bottom-nav {
       position: fixed;
@@ -587,7 +554,7 @@
       backdrop-filter: blur(20px) saturate(180%);
       -webkit-backdrop-filter: blur(20px) saturate(180%);
       border-top: 1px solid rgba(255, 105, 0, 0.3);
-      padding: 0.5rem 0.5rem calc(0.5rem + var(--safe-bottom));
+      padding: 0.6rem 0.5rem calc(0.6rem + var(--safe-bottom));
       display: flex;
       justify-content: space-around;
       align-items: center;
@@ -602,7 +569,7 @@
       gap: 3px;
       padding: 0.4rem 0.2rem;
       color: var(--text-secondary);
-      font-size: 0.6rem;
+      font-size: 0.62rem;
       font-weight: 500;
       cursor: pointer;
       border-radius: 0.8rem;
@@ -621,7 +588,7 @@
     ============================================================ */
     .toast-lab {
       position: fixed;
-      bottom: calc(84px + var(--safe-bottom));
+      bottom: calc(100px + var(--safe-bottom));
       left: 50%;
       transform: translateX(-50%) translateY(120px);
       background: #1A1E2C;
@@ -643,7 +610,7 @@
     .toast-lab.show { transform: translateX(-50%) translateY(0); }
 
     /* ============================================================
-       BADGE OFFLINE
+       OFFLINE
     ============================================================ */
     .offline-badge {
       position: fixed;
@@ -663,69 +630,96 @@
     .offline-badge.show { transform: translateY(0); }
 
     /* ============================================================
-       BANNER INSTALAR APP
+       BANNER INSTALAR (con soporte iOS + Android)
     ============================================================ */
     .install-banner {
       position: fixed;
-      bottom: calc(84px + var(--safe-bottom));
+      /* ✅ CORREGIDO: ahora queda ARRIBA del bottom nav */
+      bottom: calc(88px + var(--safe-bottom));
       left: 50%;
-      transform: translateX(-50%) translateY(200%);
-      width: calc(100% - 2.4rem);
+      transform: translateX(-50%) translateY(300%);
+      width: calc(100% - 2rem);
       max-width: 500px;
       background: linear-gradient(135deg, #1A1E2C, #0E1118);
-      border: 1px solid var(--accent);
+      border: 1.5px solid var(--accent);
       border-radius: 1.4rem;
       padding: 1rem 1.2rem;
       display: flex;
       align-items: center;
       gap: 0.8rem;
       z-index: 1500;
-      box-shadow: 0 12px 40px -8px rgba(255,105,0,0.5);
+      box-shadow: 0 12px 40px -8px rgba(255,105,0,0.6);
       transition: transform 0.4s cubic-bezier(.2,.9,.4,1.2);
+      /* ✅ Que no se salga de la pantalla */
+      box-sizing: border-box;
     }
     .install-banner.show { transform: translateX(-50%) translateY(0); }
+
+    /* ✅ Estilos específicos por plataforma */
+    .install-banner.ios { border-color: #007AFF; }
+    .install-banner.ios .install-banner-icon {
+      background: linear-gradient(135deg, #007AFF, #5AC8FA);
+    }
+    .install-banner.android { border-color: var(--accent); }
+
     .install-banner-icon {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #0A0E16;
-      font-size: 1.3rem;
+      color: #fff;
+      font-size: 1.4rem;
       flex-shrink: 0;
     }
-    .install-banner-text { flex: 1; min-width: 0; }
-    .install-banner-text strong { display: block; font-size: 0.85rem; color: var(--text-primary); }
-    .install-banner-text span { display: block; font-size: 0.65rem; color: var(--text-secondary); margin-top: 2px; }
+    .install-banner-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .install-banner-text strong {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    .install-banner-text span {
+      display: block;
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+      margin-top: 3px;
+      line-height: 1.3;
+    }
     .install-banner-btn {
       background: linear-gradient(95deg, var(--accent), var(--accent-2));
       border: none;
       color: #0A0E16;
-      padding: 0.55rem 1rem;
+      padding: 0.6rem 1.1rem;
       border-radius: 2rem;
       font-weight: 700;
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       cursor: pointer;
       font-family: inherit;
       flex-shrink: 0;
       transition: transform 0.12s;
+      white-space: nowrap;
     }
     .install-banner-btn:active { transform: scale(0.92); }
     .install-banner-close {
       background: transparent;
       border: none;
       color: var(--text-secondary);
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       cursor: pointer;
       padding: 4px;
-      opacity: 0.6;
+      opacity: 0.7;
       flex-shrink: 0;
+      line-height: 1;
     }
 
     /* ============================================================
-       STANDALONE (cuando está instalada como app)
+       STANDALONE
     ============================================================ */
     @media (display-mode: standalone) {
       .install-banner { display: none !important; }
@@ -745,20 +739,9 @@
   </style>
 </head>
 <body>
-  <!-- Progreso -->
   <div id="scrollProgress"></div>
-
-  <!-- Offline -->
   <div id="offlineBadge" class="offline-badge">📡 Sin conexión — algunas funciones no disponibles</div>
-
-  <!-- Fondo -->
   <div class="lab-bg"></div>
-  <div class="lab-tools" aria-hidden="true">
-    <i class="fas fa-microscope tool-icon microscope"></i>
-    <i class="fas fa-tools tool-icon screwdriver"></i>
-    <i class="fas fa-wrench tool-icon pliers"></i>
-    <i class="fas fa-microchip tool-icon chip"></i>
-  </div>
 
   <div class="glass-app">
     <!-- HEADER -->
@@ -864,12 +847,14 @@
     <div class="nav-item" data-nav="map"><i class="fas fa-map-marker-alt"></i><span>Ubicación</span></div>
   </nav>
 
-  <!-- BANNER INSTALAR -->
+  <!-- ✅ BANNER INSTALAR — ADAPTATIVO iOS/Android -->
   <div class="install-banner" id="installBanner">
-    <div class="install-banner-icon"><i class="fas fa-mobile-alt"></i></div>
+    <div class="install-banner-icon" id="installIcon">
+      <i class="fas fa-mobile-alt"></i>
+    </div>
     <div class="install-banner-text">
-      <strong>Instalar DR XIAOMI</strong>
-      <span>Acceso rápido desde tu inicio</span>
+      <strong id="installTitle">Instalar DR XIAOMI</strong>
+      <span id="installSubtitle">Acceso rápido desde tu inicio</span>
     </div>
     <button class="install-banner-btn" id="installBtn">INSTALAR</button>
     <button class="install-banner-close" id="installClose" aria-label="Cerrar">✕</button>
@@ -878,9 +863,6 @@
   <script>
     'use strict';
 
-    // ============================================================
-    // UTILIDADES
-    // ============================================================
     const $ = (sel) => document.querySelector(sel);
     const $$ = (sel) => document.querySelectorAll(sel);
 
@@ -903,6 +885,19 @@
     }
 
     // ============================================================
+    // ✅ DETECCIÓN DE PLATAFORMA (iOS / Android / Otro)
+    // ============================================================
+    function detectPlatform() {
+      const ua = navigator.userAgent || '';
+      const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+      const isAndroid = /Android/i.test(ua);
+      const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+      return { isIOS, isAndroid, isSafari };
+    }
+
+    const PLATFORM = detectPlatform();
+
+    // ============================================================
     // SERVICE WORKER
     // ============================================================
     if ('serviceWorker' in navigator) {
@@ -914,7 +909,7 @@
     }
 
     // ============================================================
-    // OFFLINE DETECTION
+    // OFFLINE
     // ============================================================
     const offlineBadge = $('#offlineBadge');
     function updateOnlineStatus() {
@@ -984,20 +979,8 @@
     sliderContainer.addEventListener('mouseenter', () => clearInterval(autoInterval));
     sliderContainer.addEventListener('mouseleave', () => { autoInterval = setInterval(nextSlide, 5500); });
 
-    $$('.slide img').forEach(img => {
-      const parent = img.parentElement;
-      parent.style.position = 'relative';
-      const skeleton = document.createElement('div');
-      skeleton.className = 'skeleton-img';
-      parent.appendChild(skeleton);
-      const remove = () => skeleton.remove();
-      img.addEventListener('load', remove);
-      img.addEventListener('error', () => { remove(); showToast('⚠️ Falta imagen: ' + img.src.split('/').pop()); });
-      if (img.complete) remove();
-    });
-
     // ============================================================
-    // WHATSAPP + ACCIONES
+    // WHATSAPP
     // ============================================================
     const whatsappNumber = '59175959450';
     function openWhatsApp(msg) {
@@ -1086,12 +1069,10 @@
 
     $('#facebookBtn').addEventListener('click', () => {
       vibrate();
-      if (!navigator.onLine) { showToast('📡 Sin conexión'); return; }
       window.open('https://www.facebook.com/DrXiaomi.scz', '_blank');
     });
     $('#tiktokBtn').addEventListener('click', () => {
       vibrate();
-      if (!navigator.onLine) { showToast('📡 Sin conexión'); return; }
       window.open('https://www.tiktok.com/@dr.xiaomi.scz', '_blank');
     });
     $('#whatsappSocialBtn').addEventListener('click', () => {
@@ -1138,20 +1119,59 @@
     }, { passive: true });
 
     // ============================================================
-    // INSTALACIÓN PWA
+    // ✅ INSTALACIÓN PWA — ADAPTATIVA iOS / Android
     // ============================================================
     let deferredPrompt = null;
     const installBanner = $('#installBanner');
+    const installTitle = $('#installTitle');
+    const installSubtitle = $('#installSubtitle');
+    const installBtn = $('#installBtn');
+    const installIcon = $('#installIcon');
 
+    // ✅ Configurar el banner según plataforma
+    function setupInstallBanner() {
+      if (PLATFORM.isIOS) {
+        installBanner.classList.add('ios');
+        installTitle.textContent = 'Instalar en iPhone';
+        installSubtitle.textContent = 'Toca Compartir ⬆️ y "Añadir a pantalla de inicio"';
+        installBtn.innerHTML = 'VER CÓMO';
+        installIcon.innerHTML = '<i class="fab fa-apple"></i>';
+      } else if (PLATFORM.isAndroid) {
+        installBanner.classList.add('android');
+        installTitle.textContent = 'Instalar DR XIAOMI';
+        installSubtitle.textContent = 'Acceso rápido desde tu inicio';
+        installBtn.innerHTML = 'INSTALAR';
+        installIcon.innerHTML = '<i class="fab fa-android"></i>';
+      }
+    }
+    setupInstallBanner();
+
+    // ✅ ANDROID: evento nativo
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
       if (!localStorage.getItem('drxiaomi_install_closed')) {
-        setTimeout(() => installBanner.classList.add('show'), 4000);
+        setTimeout(() => installBanner.classList.add('show'), 3500);
       }
     });
 
-    $('#installBtn').addEventListener('click', async () => {
+    // ✅ iOS: mostrar banner manual (Safari no tiene beforeinstallprompt)
+    if (PLATFORM.isIOS && PLATFORM.isSafari && !localStorage.getItem('drxiaomi_install_closed')) {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                        || window.navigator.standalone === true;
+      if (!isStandalone) {
+        setTimeout(() => installBanner.classList.add('show'), 3500);
+      }
+    }
+
+    // ✅ Click en botón INSTALAR
+    installBtn.addEventListener('click', async () => {
+      if (PLATFORM.isIOS) {
+        // En iOS mostramos instrucciones
+        showToast('⬆️ Toca Compartir y luego "Añadir a pantalla de inicio"', 4000);
+        return;
+      }
+      // Android: prompt nativo
       if (!deferredPrompt) {
         showToast('📲 Usa el menú del navegador para instalar');
         return;
