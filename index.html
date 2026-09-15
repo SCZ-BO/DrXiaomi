@@ -2,34 +2,53 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, maximum-scale=1">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DR XIAOMI">
+  <meta name="application-name" content="DR XIAOMI">
   <meta name="theme-color" content="#0A0C10" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
   <meta name="description" content="DR XIAOMI · Reparación especializada en microsoldadura, cambio de pantalla, batería y placa lógica. Diagnóstico con microscopio y garantía real.">
   <meta name="keywords" content="reparacion xiaomi, microsoldadura, cambio pantalla, tecnico celular santa cruz, orange lab">
   <meta name="format-detection" content="telephone=no">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://xiaomi.scz.red/">
   <title>DR XIAOMI · ORANGE LAB · Robotic Repair Center</title>
 
-  <!-- ✅ FUENTE CORREGIDA (sin peso 800 que no existe) -->
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="imagenes/icono-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="imagenes/icono-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="imagenes/icono-512.png">
+
+  <!-- Fuentes -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+  <!-- Iconos -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-  <!-- ✅ MANIFEST CORREGIDO (icono sin enlace roto) -->
-  <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22DR%20XIAOMI%20ORANGE%20LAB%22,%22short_name%22:%22DR%20XIAOMI%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%23FF6900%22,%22background_color%22:%22%230A0C10%22,%22icons%22:[{%22src%22:%22https://xiaomi.scz.red/icono.png%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22}]}">
-
   <style>
+    /* ============================================================
+       RESET + BASE
+    ============================================================ */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
     }
-    /* ===== MODO OSCURO / CLARO NATIVO ===== */
+    html, body {
+      overscroll-behavior-y: contain;
+      scroll-behavior: smooth;
+    }
+
+    /* ============================================================
+       VARIABLES DE TEMA
+    ============================================================ */
     :root {
       --bg-primary: #0A0C10;
       --bg-secondary: #14161c;
@@ -40,6 +59,11 @@
       --glass-bg: rgba(8, 10, 16, 0.92);
       --toolbar-bg: rgba(0,0,0,0.6);
       --map-filter: grayscale(20%) brightness(0.8);
+      --accent: #FF6900;
+      --accent-2: #FF8C42;
+      --nav-bg: rgba(10, 12, 18, 0.85);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
     @media (prefers-color-scheme: light) {
       :root {
@@ -52,55 +76,55 @@
         --glass-bg: rgba(245, 245, 247, 0.92);
         --toolbar-bg: rgba(255,255,255,0.7);
         --map-filter: grayscale(10%) brightness(0.95);
+        --nav-bg: rgba(255, 255, 255, 0.85);
       }
       .lab-bg::before {
         background-image: repeating-linear-gradient(0deg, rgba(255, 105, 0, 0.08) 0px, rgba(255, 105, 0, 0.08) 1px, transparent 1px, transparent 14px);
       }
       .consult-input { background: #FFFFFF; color: #1A1C22; }
       .tech-card { background: rgba(255,255,255,0.9); }
-      .alert-tech { background: rgba(255,105,0,0.15); }
     }
+
     body {
       font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
       background: var(--bg-primary);
       color: var(--text-primary);
-      overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
     }
-    /* Fondo industrial */
+
+    /* ============================================================
+       FONDO INDUSTRIAL
+    ============================================================ */
     .lab-bg {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background: radial-gradient(circle at 30% 20%, var(--bg-secondary) 0%, var(--bg-primary) 100%);
       z-index: -2;
     }
     .lab-bg::before {
       content: '';
       position: absolute;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background-image: repeating-linear-gradient(0deg, rgba(255, 105, 0, 0.05) 0px, rgba(255, 105, 0, 0.05) 1px, transparent 1px, transparent 14px);
       pointer-events: none;
     }
     .lab-bg::after {
       content: '';
       position: absolute;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background: radial-gradient(ellipse at 70% 40%, rgba(255, 105, 0, 0.1) 0%, transparent 70%);
       pointer-events: none;
     }
-    /* Herramientas flotantes */
+
+    /* ============================================================
+       HERRAMIENTAS FLOTANTES
+    ============================================================ */
     .lab-tools {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       z-index: -1;
       pointer-events: none;
       opacity: 0.25;
@@ -116,47 +140,75 @@
     .pliers { top: 12%; left: 1%; font-size: 2.5rem; animation-delay: 0.6s; }
     .chip { top: 50%; right: 2%; font-size: 2.7rem; animation-delay: 1.5s; }
     @keyframes floatTool {
-      0% { transform: translateY(0px) rotate(0deg); opacity: 0.2; }
-      50% { transform: translateY(-12px) rotate(3deg); opacity: 0.5; }
-      100% { transform: translateY(0px) rotate(0deg); opacity: 0.2; }
+      0%   { transform: translateY(0) rotate(0); opacity: 0.2; }
+      50%  { transform: translateY(-12px) rotate(3deg); opacity: 0.5; }
+      100% { transform: translateY(0) rotate(0); opacity: 0.2; }
     }
-    /* Barra de progreso scroll */
+
+    /* ============================================================
+       BARRA DE PROGRESO
+    ============================================================ */
     #scrollProgress {
       position: fixed;
       top: 0;
       left: 0;
       width: 0%;
       height: 3px;
-      background: linear-gradient(90deg, #FF6900, #FF8C42);
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
       z-index: 1000;
-      transition: width 0.1s ease-out;
-      box-shadow: 0 0 6px #FF6900;
+      transition: width 0.08s linear;
+      box-shadow: 0 0 6px var(--accent);
     }
-    /* Contenedor principal */
+
+    /* ============================================================
+       CONTENEDOR PRINCIPAL
+    ============================================================ */
     .glass-app {
       max-width: 550px;
       margin: 0 auto;
       background: var(--glass-bg);
       backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       min-height: 100vh;
+      min-height: 100dvh;
       position: relative;
       z-index: 10;
       border-left: 1px solid rgba(255, 105, 0, 0.3);
       border-right: 1px solid rgba(255, 105, 0, 0.3);
       display: flex;
       flex-direction: column;
+      padding-bottom: calc(74px + var(--safe-bottom)); /* espacio para bottom nav */
     }
-    /* CABECERA */
+
+    /* ============================================================
+       HEADER
+    ============================================================ */
     .lab-header {
-      padding: 0.9rem 1.5rem 0.6rem;
+      padding: calc(0.9rem + var(--safe-top)) 1.5rem 0.6rem;
       text-align: center;
       border-bottom: 1px solid rgba(255, 105, 0, 0.3);
       background: linear-gradient(180deg, rgba(255,105,0,0.08) 0%, transparent 100%);
       position: sticky;
       top: 0;
       backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       z-index: 20;
     }
+    .lab-header::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; bottom: -14px;
+      height: 14px;
+      background: linear-gradient(180deg, rgba(10,12,16,0.55), transparent);
+      pointer-events: none;
+      opacity: 0.9;
+    }
+    @media (prefers-color-scheme: light) {
+      .lab-header::after {
+        background: linear-gradient(180deg, rgba(245,245,247,0.55), transparent);
+      }
+    }
+
     .title-container {
       display: flex;
       align-items: baseline;
@@ -166,18 +218,28 @@
     }
     .main-title {
       font-size: 2rem;
-      font-weight: 800;
+      font-weight: 700;
       background: linear-gradient(135deg, #FFFFFF, #FF8C42, #FF6900);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      letter-spacing: -0.5px;
+    }
+    @media (prefers-color-scheme: light) {
+      .main-title {
+        background: linear-gradient(135deg, #1A1C22, #E65C00, #FF6900);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
     }
     .orange-badge {
       background: rgba(255, 105, 0, 0.2);
-      border: 1px solid #FF6900;
+      border: 1px solid var(--accent);
       border-radius: 2rem;
       padding: 0.2rem 0.7rem;
       font-size: 0.6rem;
+      font-weight: 600;
     }
     .lab-features {
       display: flex;
@@ -192,11 +254,15 @@
       gap: 0.3rem;
       font-size: 0.6rem;
       background: rgba(255, 105, 0, 0.1);
-      padding: 0.2rem 0.7rem;
+      padding: 0.25rem 0.7rem;
       border-radius: 2rem;
       color: var(--text-secondary);
+      font-weight: 500;
     }
-    /* SLIDER */
+
+    /* ============================================================
+       SLIDER
+    ============================================================ */
     .slider-container {
       margin: 1rem 1.2rem;
       border-radius: 1.5rem;
@@ -204,6 +270,7 @@
       border: 1px solid rgba(255, 105, 0, 0.6);
       overflow: hidden;
       position: relative;
+      box-shadow: 0 8px 24px -8px rgba(255,105,0,0.35);
     }
     .slider-frame {
       position: relative;
@@ -214,6 +281,7 @@
     .slider-track {
       display: flex;
       transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      will-change: transform;
     }
     .slide {
       min-width: 100%;
@@ -228,26 +296,22 @@
     }
     .skeleton-img {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background: linear-gradient(90deg, #1a1e2a 25%, #2a2e3a 50%, #1a1e2a 75%);
       background-size: 200% 100%;
       animation: skeletonShine 1.5s infinite;
       z-index: 1;
     }
     @keyframes skeletonShine {
-      0% { background-position: 200% 0; }
+      0%   { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
     .slide-caption {
       position: absolute;
       bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(0deg, #0A0E16CC, transparent);
-      padding: 0.8rem 1rem;
+      left: 0; right: 0;
+      background: linear-gradient(0deg, rgba(10,14,22,0.85), transparent);
+      padding: 1rem 1rem 2rem;
       font-size: 0.7rem;
       font-weight: 600;
       color: #FF8C42;
@@ -258,7 +322,8 @@
       transform: translateY(-50%);
       background: rgba(0,0,0,0.6);
       backdrop-filter: blur(8px);
-      border: 1px solid #FF6900;
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--accent);
       border-radius: 40px;
       width: 40px;
       height: 40px;
@@ -267,8 +332,10 @@
       justify-content: center;
       cursor: pointer;
       z-index: 15;
+      color: #FF8C42;
+      transition: transform 0.15s cubic-bezier(.2,.9,.4,1.2), background 0.15s;
     }
-    .slider-btn:active { transform: translateY(-50%) scale(0.94); background: #FF6900; }
+    .slider-btn:active { transform: translateY(-50%) scale(0.9); background: var(--accent); color: #0A0E16; }
     .slider-btn-left { left: 12px; }
     .slider-btn-right { right: 12px; }
     .slider-dots {
@@ -278,8 +345,7 @@
       padding: 0.5rem;
       position: absolute;
       bottom: 8px;
-      left: 0;
-      right: 0;
+      left: 0; right: 0;
       z-index: 15;
     }
     .dot {
@@ -287,10 +353,14 @@
       height: 7px;
       border-radius: 10px;
       background: rgba(200, 180, 150, 0.5);
-      transition: all 0.2s;
+      transition: all 0.25s;
+      cursor: pointer;
     }
-    .dot.active { background: #FF6900; width: 24px; box-shadow: 0 0 8px #FF6900; }
-    /* Tarjeta consulta */
+    .dot.active { background: var(--accent); width: 24px; box-shadow: 0 0 8px var(--accent); }
+
+    /* ============================================================
+       TARJETA CONSULTA
+    ============================================================ */
     .consult-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
@@ -298,20 +368,31 @@
       margin: 0.8rem 1.2rem;
       padding: 1rem 1.2rem;
     }
+    .consult-label {
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 0.6rem;
+    }
     .consult-input {
       flex: 2;
+      min-width: 0;
       background: var(--bg-secondary);
       border: 1px solid rgba(255, 105, 0, 0.5);
       border-radius: 2rem;
       padding: 0.8rem 1.2rem;
-      font-family: monospace;
+      font-family: 'Space Grotesk', monospace;
       font-size: 0.85rem;
       color: var(--text-primary);
       outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .consult-input:focus { border-color: #FF6900; box-shadow: 0 0 0 2px rgba(255,105,0,0.3); }
+    .consult-input::placeholder { color: var(--text-secondary); opacity: 0.6; }
+    .consult-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,105,0,0.2); }
     .consult-btn {
-      background: linear-gradient(95deg, #FF6900, #FF8C42);
+      background: linear-gradient(95deg, var(--accent), var(--accent-2));
       border: none;
       border-radius: 2rem;
       padding: 0.8rem 1.5rem;
@@ -321,9 +402,14 @@
       align-items: center;
       gap: 0.5rem;
       cursor: pointer;
+      font-family: inherit;
+      font-size: 0.8rem;
+      min-height: 44px;
     }
-    .consult-btn:active { transform: scale(0.97); }
-    /* Grid servicios */
+
+    /* ============================================================
+       GRID SERVICIOS
+    ============================================================ */
     .tech-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -333,22 +419,60 @@
     .tech-card {
       background: var(--bg-card);
       border-radius: 1.4rem;
-      padding: 0.9rem 0.4rem;
+      padding: 1rem 0.5rem;
       text-align: center;
       border: 1px solid rgba(255, 105, 0, 0.4);
       cursor: pointer;
-      transition: all 0.15s;
       position: relative;
       overflow: hidden;
+      min-height: 96px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
     }
-    .tech-card:active { transform: scale(0.97); background: rgba(255, 105, 0, 0.15); }
-    .tech-card i { font-size: 1.8rem; color: #FF8C42; margin-bottom: 0.4rem; display: block; }
-    .tech-card h3 { font-size: 0.8rem; }
-    /* Redes sociales */
+    .tech-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(255,105,0,0.15), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .tech-card:active::before { opacity: 1; }
+    .tech-card i { font-size: 1.7rem; color: var(--accent-2); }
+    .tech-card h3 { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.3px; }
+
+    /* ============================================================
+       MARCAS
+    ============================================================ */
+    .brand-strip {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 0.5rem 1.2rem;
+    }
+    .brand-item {
+      background: rgba(255,105,0,0.12);
+      padding: 0.35rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: transform 0.12s, background 0.15s, border-color 0.15s;
+    }
+    .brand-item:active { transform: scale(0.94); background: rgba(255,105,0,0.25); border-color: var(--accent); }
+
+    /* ============================================================
+       REDES SOCIALES
+    ============================================================ */
     .social-icons {
       display: flex;
       justify-content: center;
-      gap: 2rem;
+      gap: 1.2rem;
       margin: 1rem 1.2rem 0.5rem;
       padding: 0.5rem;
     }
@@ -358,19 +482,28 @@
       align-items: center;
       gap: 0.3rem;
       cursor: pointer;
-      transition: all 0.2s;
-      padding: 0.5rem 1rem;
-      border-radius: 2rem;
-      background: rgba(255, 105, 0, 0.1);
+      padding: 0.6rem 1rem;
+      border-radius: 1.2rem;
+      background: rgba(255, 105, 0, 0.08);
       border: 1px solid rgba(255, 105, 0, 0.3);
+      min-height: 60px;
+      min-width: 70px;
+      justify-content: center;
+      transition: transform 0.12s cubic-bezier(.2,.9,.4,1.2), background 0.15s;
     }
-    .social-icon:active { transform: scale(0.95); background: rgba(255, 105, 0, 0.3); }
-    .social-icon i { font-size: 1.8rem; }
+    .social-icon:active { transform: scale(0.92); background: rgba(255, 105, 0, 0.25); }
+    .social-icon i { font-size: 1.6rem; }
     .social-icon span { font-size: 0.6rem; font-weight: 500; }
     .social-icon .fa-facebook { color: #1877F2; }
     .social-icon .fa-tiktok { color: #000000; text-shadow: 0 0 2px #FF004F; }
+    @media (prefers-color-scheme: dark) {
+      .social-icon .fa-tiktok { color: #FFFFFF; }
+    }
     .social-icon .fa-whatsapp { color: #25D366; }
-    /* Botones */
+
+    /* ============================================================
+       BOTONES PRINCIPALES
+    ============================================================ */
     .neon-buttons {
       display: flex;
       gap: 0.8rem;
@@ -380,6 +513,7 @@
     .btn-neon, .btn-outline-neon, .btn-tech-icon {
       flex: 1;
       min-width: 100px;
+      min-height: 44px;
       padding: 0.8rem 0.2rem;
       border-radius: 2.5rem;
       font-weight: 700;
@@ -388,13 +522,20 @@
       justify-content: center;
       gap: 0.6rem;
       cursor: pointer;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
+      font-family: inherit;
+      letter-spacing: 0.3px;
+      transition: transform 0.12s cubic-bezier(.2,.9,.4,1.2), background 0.15s, box-shadow 0.2s;
     }
-    .btn-neon:active, .btn-outline-neon:active, .btn-tech-icon:active { transform: scale(0.96); }
-    .btn-neon { background: linear-gradient(95deg, #FF6900, #FF8C42); border: none; color: #0A0E16; }
-    .btn-outline-neon { background: transparent; border: 1.5px solid #FF6900; color: #FF8C42; }
-    .btn-tech-icon { background: rgba(255, 105, 0, 0.18); border: 1.5px solid #FF6900; color: #FF9F5C; }
-    /* FOOTER CON MAPA */
+    .btn-neon { background: linear-gradient(95deg, var(--accent), var(--accent-2)); border: none; color: #0A0E16; box-shadow: 0 4px 16px -4px rgba(255,105,0,0.5); }
+    .btn-outline-neon { background: transparent; border: 1.5px solid var(--accent); color: var(--accent-2); }
+    .btn-tech-icon { background: rgba(255, 105, 0, 0.18); border: 1.5px solid var(--accent); color: #FF9F5C; }
+    .btn-neon:active, .btn-outline-neon:active, .btn-tech-icon:active { transform: scale(0.94); }
+    .btn-outline-neon:active { background: rgba(255,105,0,0.15); }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
     .tech-footer {
       background: var(--toolbar-bg);
       padding: 1rem;
@@ -408,12 +549,14 @@
       border-radius: 1.2rem;
       overflow: hidden;
       border: 1px solid rgba(255, 105, 0, 0.4);
-      height: 160px;
+      height: 180px;
+      position: relative;
     }
     .map-container iframe {
       width: 100%;
-      height: 100%;
+      height: 100% !important;
       border: 0;
+      display: block;
       filter: var(--map-filter);
       transition: filter 0.3s;
     }
@@ -425,25 +568,79 @@
       gap: 0.5rem;
       flex-wrap: wrap;
     }
-    /* Toast */
+
+    /* ============================================================
+       BOTTOM NAV (estilo app nativa)
+    ============================================================ */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 550px;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-top: 1px solid rgba(255, 105, 0, 0.3);
+      padding: 0.5rem 0.5rem calc(0.5rem + var(--safe-bottom));
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 999;
+      box-shadow: 0 -8px 24px -8px rgba(0,0,0,0.4);
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 0.4rem 0.2rem;
+      color: var(--text-secondary);
+      font-size: 0.6rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 0.8rem;
+      transition: all 0.2s;
+      opacity: 0.7;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .nav-item i { font-size: 1.15rem; }
+    .nav-item.active { color: var(--accent); opacity: 1; }
+    .nav-item.active i { filter: drop-shadow(0 0 6px rgba(255,105,0,0.6)); }
+    .nav-item:active { transform: scale(0.9); }
+
+    /* ============================================================
+       TOAST
+    ============================================================ */
     .toast-lab {
       position: fixed;
-      bottom: 28px;
+      bottom: calc(84px + var(--safe-bottom));
       left: 50%;
-      transform: translateX(-50%) translateY(100px);
+      transform: translateX(-50%) translateY(120px);
       background: #1A1E2C;
       backdrop-filter: blur(20px);
-      border: 1px solid #FF6900;
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--accent);
       border-radius: 2rem;
-      padding: 0.6rem 1.4rem;
+      padding: 0.7rem 1.5rem;
       color: #FFB074;
       font-size: 0.75rem;
-      z-index: 200;
-      transition: transform 0.25s;
+      font-weight: 500;
+      z-index: 2000;
+      transition: transform 0.3s cubic-bezier(.2,.9,.4,1.2);
       pointer-events: none;
-      white-space: nowrap;
+      max-width: 90vw;
+      text-align: center;
+      box-shadow: 0 8px 32px -8px rgba(255,105,0,0.4);
     }
     .toast-lab.show { transform: translateX(-50%) translateY(0); }
+
+    /* ============================================================
+       BADGE OFFLINE
+    ============================================================ */
     .offline-badge {
       position: fixed;
       top: 0;
@@ -453,297 +650,547 @@
       color: white;
       text-align: center;
       font-size: 0.7rem;
-      padding: 4px;
-      z-index: 1001;
+      font-weight: 600;
+      padding: calc(4px + var(--safe-top)) 8px 4px;
+      z-index: 3000;
       transform: translateY(-100%);
       transition: transform 0.3s;
     }
     .offline-badge.show { transform: translateY(0); }
+
+    /* ============================================================
+       BANNER INSTALAR APP
+    ============================================================ */
+    .install-banner {
+      position: fixed;
+      bottom: calc(84px + var(--safe-bottom));
+      left: 50%;
+      transform: translateX(-50%) translateY(200%);
+      width: calc(100% - 2.4rem);
+      max-width: 500px;
+      background: linear-gradient(135deg, #1A1E2C, #0E1118);
+      border: 1px solid var(--accent);
+      border-radius: 1.4rem;
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      z-index: 1500;
+      box-shadow: 0 12px 40px -8px rgba(255,105,0,0.5);
+      transition: transform 0.4s cubic-bezier(.2,.9,.4,1.2);
+    }
+    .install-banner.show { transform: translateX(-50%) translateY(0); }
+    .install-banner-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0A0E16;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .install-banner-text { flex: 1; min-width: 0; }
+    .install-banner-text strong { display: block; font-size: 0.85rem; color: var(--text-primary); }
+    .install-banner-text span { display: block; font-size: 0.65rem; color: var(--text-secondary); margin-top: 2px; }
+    .install-banner-btn {
+      background: linear-gradient(95deg, var(--accent), var(--accent-2));
+      border: none;
+      color: #0A0E16;
+      padding: 0.55rem 1rem;
+      border-radius: 2rem;
+      font-weight: 700;
+      font-size: 0.7rem;
+      cursor: pointer;
+      font-family: inherit;
+      flex-shrink: 0;
+      transition: transform 0.12s;
+    }
+    .install-banner-btn:active { transform: scale(0.92); }
+    .install-banner-close {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 4px;
+      opacity: 0.6;
+      flex-shrink: 0;
+    }
+
+    /* ============================================================
+       STANDALONE (cuando está instalada como app)
+    ============================================================ */
+    @media (display-mode: standalone) {
+      .install-banner { display: none !important; }
+    }
+
+    /* ============================================================
+       REDUCE MOTION
+    ============================================================ */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
   </style>
 </head>
 <body>
-<div id="scrollProgress"></div>
-<div id="offlineBadge" class="offline-badge">📡 Sin conexión a internet - Algunas funciones pueden no estar disponibles</div>
-<div class="lab-bg"></div>
-<div class="lab-tools">
-  <i class="fas fa-microscope tool-icon microscope"></i>
-  <i class="fas fa-tools tool-icon screwdriver"></i>
-  <i class="fas fa-wrench tool-icon pliers"></i>
-  <i class="fas fa-microchip tool-icon chip"></i>
-</div>
-<div class="glass-app">
-  <div class="lab-header">
-    <div class="title-container">
-      <span class="main-title">DR XIAOMI</span>
-      <span class="orange-badge"><i class="fas fa-microchip"></i> Santa Cruz</span>
-    </div>
-    <div class="lab-features">
-      <span class="lab-feature"><i class="fas fa-microscope"></i> Microsoldadura</span>
-      <span class="lab-feature"><i class="fas fa-shield-alt"></i> Garantía +90d</span>
-      <span class="lab-feature"><i class="fas fa-tachometer-alt"></i> Diagnóstico Exprés</span>
-    </div>
+  <!-- Progreso -->
+  <div id="scrollProgress"></div>
+
+  <!-- Offline -->
+  <div id="offlineBadge" class="offline-badge">📡 Sin conexión — algunas funciones no disponibles</div>
+
+  <!-- Fondo -->
+  <div class="lab-bg"></div>
+  <div class="lab-tools" aria-hidden="true">
+    <i class="fas fa-microscope tool-icon microscope"></i>
+    <i class="fas fa-tools tool-icon screwdriver"></i>
+    <i class="fas fa-wrench tool-icon pliers"></i>
+    <i class="fas fa-microchip tool-icon chip"></i>
   </div>
-  <div class="slider-container">
-    <div class="slider-frame" id="sliderFrame">
-      <div class="slider-track" id="sliderTrack">
-        <!-- ⚠️ RECUERDA: Crea carpeta "imagenes" y sube las fotos -->
-        <div class="slide"><img src="imagenes/0000.jpg" alt="Microscopio"><div class="slide-caption"><i class="fas fa-microscope"></i> Laboratorio de precisión</div></div>
-        <div class="slide"><img src="imagenes/0001.jpg" alt="Pantalla"><div class="slide-caption"><i class="fas fa-mobile-alt"></i> Pantallas originales</div></div>
-        <div class="slide"><img src="imagenes/0002.jpg" alt="Microsoldadura"><div class="slide-caption"><i class="fas fa-microchip"></i> Microsoldadura profesional</div></div>
-        <div class="slide"><img src="imagenes/0003.jpg" alt="Bateria"><div class="slide-caption"><i class="fas fa-battery-full"></i> Batería garantizada</div></div>
+
+  <div class="glass-app">
+    <!-- HEADER -->
+    <header class="lab-header">
+      <div class="title-container">
+        <span class="main-title">DR XIAOMI</span>
+        <span class="orange-badge"><i class="fas fa-microchip"></i> Santa Cruz</span>
       </div>
-      <div class="slider-btn slider-btn-left" id="sliderPrev"><i class="fas fa-chevron-left"></i></div>
-      <div class="slider-btn slider-btn-right" id="sliderNext"><i class="fas fa-chevron-right"></i></div>
-      <div class="slider-dots" id="sliderDots"></div>
+      <div class="lab-features">
+        <span class="lab-feature"><i class="fas fa-microscope"></i> Microsoldadura</span>
+        <span class="lab-feature"><i class="fas fa-shield-alt"></i> Garantía +90d</span>
+        <span class="lab-feature"><i class="fas fa-tachometer-alt"></i> Diagnóstico Exprés</span>
+      </div>
+    </header>
+
+    <!-- SLIDER -->
+    <section class="slider-container" aria-label="Galería">
+      <div class="slider-frame" id="sliderFrame">
+        <div class="slider-track" id="sliderTrack">
+          <div class="slide"><img src="imagenes/0000.jpg" alt="Microscopio" loading="lazy"><div class="slide-caption"><i class="fas fa-microscope"></i> Laboratorio de precisión</div></div>
+          <div class="slide"><img src="imagenes/0001.jpg" alt="Pantalla" loading="lazy"><div class="slide-caption"><i class="fas fa-mobile-alt"></i> Pantallas originales</div></div>
+          <div class="slide"><img src="imagenes/0002.jpg" alt="Microsoldadura" loading="lazy"><div class="slide-caption"><i class="fas fa-microchip"></i> Microsoldadura profesional</div></div>
+          <div class="slide"><img src="imagenes/0003.jpg" alt="Batería" loading="lazy"><div class="slide-caption"><i class="fas fa-battery-full"></i> Batería garantizada</div></div>
+        </div>
+        <button class="slider-btn slider-btn-left" id="sliderPrev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+        <button class="slider-btn slider-btn-right" id="sliderNext" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
+        <div class="slider-dots" id="sliderDots"></div>
+      </div>
+    </section>
+
+    <!-- CONSULTA -->
+    <section class="consult-card">
+      <span class="consult-label"><i class="fas fa-microscope"></i> DESCRIBE LA FALLA · DIAGNÓSTICO POR INGENIERÍA</span>
+      <div style="display:flex; flex-wrap:wrap; gap:0.7rem;">
+        <input type="text" class="consult-input" id="problemInput" placeholder="Ej: No enciende, pantalla rota, no carga..." autocomplete="off">
+        <button class="consult-btn" id="consultBtn"><i class="fab fa-whatsapp"></i> CONSULTAR</button>
+      </div>
+      <div style="display:flex; gap:0.8rem; margin-top:0.8rem; flex-wrap:wrap;">
+        <button id="callBtn" class="btn-outline-neon" style="flex:1; padding:0.55rem; font-size:0.7rem;"><i class="fas fa-phone"></i> LLAMAR</button>
+        <button id="shareBtn" class="btn-outline-neon" style="flex:1; padding:0.55rem; font-size:0.7rem;"><i class="fas fa-share-alt"></i> COMPARTIR</button>
+      </div>
+    </section>
+
+    <!-- SERVICIOS -->
+    <section class="tech-grid" aria-label="Servicios">
+      <div class="tech-card" data-service="Micro soldadura avanzada"><i class="fas fa-microchip"></i><h3>MICRO SOLDADURA</h3></div>
+      <div class="tech-card" data-service="Cambio de Pantalla OLED/LCD"><i class="fas fa-mobile-alt"></i><h3>PANTALLA</h3></div>
+      <div class="tech-card" data-service="Reparación puerto de carga"><i class="fas fa-plug"></i><h3>PUERTO CARGA</h3></div>
+      <div class="tech-card" data-service="Cambio de Batería Original"><i class="fas fa-battery-full"></i><h3>BATERÍA</h3></div>
+      <div class="tech-card" data-service="Óptica / Cámara profesional"><i class="fas fa-camera"></i><h3>ÓPTICA CÁMARA</h3></div>
+      <div class="tech-card" data-service="Reparación Placa Lógica (IC)"><i class="fas fa-microscope"></i><h3>PLACA LÓGICA</h3></div>
+    </section>
+
+    <!-- MARCAS -->
+    <div class="brand-strip">
+      <span class="brand-item">XIAOMI</span>
+      <span class="brand-item">TECNO</span>
+      <span class="brand-item">REALME</span>
+      <span class="brand-item">SAMSUNG</span>
+      <span class="brand-item">IPHONE</span>
     </div>
-  </div>
-  <div class="consult-card">
-    <span class="consult-label"><i class="fas fa-microscope"></i> DESCRIBE LA FALLA · DIAGNÓSTICO POR INGENIERÍA</span>
-    <div style="display:flex; flex-wrap:wrap; gap:0.7rem;">
-      <input type="text" class="consult-input" id="problemInput" placeholder="Ej: No enciende, pantalla rota, no carga...">
-      <button class="consult-btn" id="consultBtn"><i class="fab fa-whatsapp"></i> CONSULTAR</button>
+
+    <!-- REDES -->
+    <div class="social-icons">
+      <div class="social-icon" id="facebookBtn"><i class="fab fa-facebook"></i><span>Facebook</span></div>
+      <div class="social-icon" id="tiktokBtn"><i class="fab fa-tiktok"></i><span>TikTok</span></div>
+      <div class="social-icon" id="whatsappSocialBtn"><i class="fab fa-whatsapp"></i><span>WhatsApp</span></div>
     </div>
-    <div style="display:flex; gap:0.8rem; margin-top:0.8rem; flex-wrap:wrap;">
-      <button id="callBtn" class="btn-outline-neon" style="flex:1; padding:0.5rem;"><i class="fas fa-phone"></i> LLAMAR</button>
-      <button id="shareBtn" class="btn-outline-neon" style="flex:1; padding:0.5rem;"><i class="fas fa-share-alt"></i> COMPARTIR</button>
+
+    <!-- BOTONES -->
+    <div class="neon-buttons">
+      <button class="btn-neon" id="repairNowBtn"><i class="fas fa-screwdriver"></i> REPARAR</button>
+      <button class="btn-outline-neon" id="diagnosticBtn"><i class="fas fa-microscope"></i> DIAGNÓSTICO</button>
+      <button class="btn-tech-icon" id="techRedirectBtn"><i class="fas fa-headset"></i> TÉCNICO</button>
     </div>
+
+    <!-- FOOTER -->
+    <footer class="tech-footer">
+      <div class="map-container">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3799.2255866790465!2d-63.1893993!3d-17.781092!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x93f1e9c1f43af029%3A0xe9a6a99436ca013f!2sXIAOMI%20SCZ!5e0!3m2!1ses-419!2sbo!4v1789082785272!5m2!1ses-419!2sbo"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Ubicación DR XIAOMI">
+        </iframe>
+      </div>
+      <div class="footer-address">
+        <i class="fas fa-map-marker-alt" style="color:var(--accent);"></i>
+        <span>Centro Comercial Cañoto #K 1 · XIAOMI SCZ - Bolivia</span>
+      </div>
+      <p style="margin-top: 0.5rem;">🕒 Lun - Sab 9:00 a 19:30 | Diagnóstico con microscopio</p>
+      <p style="margin-top: 0.3rem; font-size: 0.6rem;">📞 +591 75959450 | ✉️ XIAOMI.SCZ@GMAIL.COM</p>
+      <p style="margin-top: 0.8rem; font-size: 0.55rem; opacity: 0.5;">© DR XIAOMI · ORANGE LAB</p>
+    </footer>
   </div>
-  <div class="tech-grid">
-    <div class="tech-card" data-service="Micro soldadura avanzada"><i class="fas fa-microchip"></i><h3>MICRO SOLDADURA</h3></div>
-    <div class="tech-card" data-service="Cambio de Pantalla OLED/LCD"><i class="fas fa-tachometer-alt"></i><h3>PANTALLA</h3></div>
-    <div class="tech-card" data-service="Reparación puerto de carga"><i class="fas fa-plug"></i><h3>PUERTO CARGA</h3></div>
-    <div class="tech-card" data-service="Cambio de Batería Original"><i class="fas fa-battery-full"></i><h3>BATERÍA</h3></div>
-    <div class="tech-card" data-service="Óptica / Cámara profesional"><i class="fas fa-camera"></i><h3>ÓPTICA CÁMARA</h3></div>
-    <div class="tech-card" data-service="Reparación Placa Lógica (IC)"><i class="fas fa-microscope"></i><h3>PLACA LÓGICA</h3></div>
-  </div>
-  <div class="brand-strip" style="display:flex; flex-wrap:wrap; justify-content:center; gap:0.5rem; margin:0.5rem 1.2rem;">
-    <span class="brand-item" style="background:rgba(255,105,0,0.12); padding:0.3rem 1rem; border-radius:2rem;">XIAOMI</span>
-    <span class="brand-item" style="background:rgba(255,105,0,0.12); padding:0.3rem 1rem; border-radius:2rem;">TECNO</span>
-    <span class="brand-item" style="background:rgba(255,105,0,0.12); padding:0.3rem 1rem; border-radius:2rem;">REALME</span>
-    <span class="brand-item" style="background:rgba(255,105,0,0.12); padding:0.3rem 1rem; border-radius:2rem;">SAMSUNG</span>
-    <span class="brand-item" style="background:rgba(255,105,0,0.12); padding:0.3rem 1rem; border-radius:2rem;">IPHONE</span>
-  </div>
-  <!-- ===== REDES SOCIALES ===== -->
-  <div class="social-icons">
-    <div class="social-icon" id="facebookBtn">
-      <i class="fab fa-facebook"></i>
-      <span>Facebook</span>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <div class="nav-item active" data-nav="home"><i class="fas fa-home"></i><span>Inicio</span></div>
+    <div class="nav-item" data-nav="services"><i class="fas fa-tools"></i><span>Servicios</span></div>
+    <div class="nav-item" data-nav="whatsapp"><i class="fab fa-whatsapp"></i><span>WhatsApp</span></div>
+    <div class="nav-item" data-nav="map"><i class="fas fa-map-marker-alt"></i><span>Ubicación</span></div>
+  </nav>
+
+  <!-- BANNER INSTALAR -->
+  <div class="install-banner" id="installBanner">
+    <div class="install-banner-icon"><i class="fas fa-mobile-alt"></i></div>
+    <div class="install-banner-text">
+      <strong>Instalar DR XIAOMI</strong>
+      <span>Acceso rápido desde tu inicio</span>
     </div>
-    <div class="social-icon" id="tiktokBtn">
-      <i class="fab fa-tiktok"></i>
-      <span>TikTok</span>
-    </div>
-    <div class="social-icon" id="whatsappSocialBtn">
-      <i class="fab fa-whatsapp"></i>
-      <span>WhatsApp</span>
-    </div>
+    <button class="install-banner-btn" id="installBtn">INSTALAR</button>
+    <button class="install-banner-close" id="installClose" aria-label="Cerrar">✕</button>
   </div>
-  <div class="neon-buttons">
-    <button class="btn-neon" id="repairNowBtn"><i class="fas fa-screwdriver"></i> REPARAR</button>
-    <button class="btn-outline-neon" id="diagnosticBtn"><i class="fas fa-microscope"></i> DIAGNÓSTICO</button>
-    <button class="btn-tech-icon" id="techRedirectBtn"><i class="fas fa-headset"></i> TÉCNICO</button>
-  </div>
-<!-- ===== FOOTER CON MAPA ✅ IFRAME CORREGIDO ===== -->
-<div class="tech-footer">
-  <div class="map-container">
-    <iframe 
-      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3799.2255866790465!2d-63.1893993!3d-17.781092!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x93f1e9c1f43af029%3A0xe9a6a99436ca013f!2sXIAOMI%20SCZ!5e0!3m2!1ses-419!2sbo!4v1789082785272!5m2!1ses-419!2sbo"
-      width="100%" 
-      height="300"
-      style="border:0;"
-      allowfullscreen="" 
-      loading="lazy">
-    </iframe>
-  </div>
-  <div class="footer-address">
-    <i class="fas fa-map-marker-alt" style="color:#FF6900;"></i>
-    <span>Centro Comercial Cañoto #K 1 · XIAOMI SCZ - Bolivia</span>
-  </div>
-  <p style="margin-top: 0.5rem;">🕒 Lun - Sab 9:00 a 19:30 | Diagnóstico con microscopio</p>
-  <p style="margin-top: 0.3rem; font-size: 0.6rem;">📞 +591 75959450 | ✉️ XIAOMI.SCZ@GMAIL.COM</p>
-</div>
 
-<script>
-  // ==================== VIBRACIÓN ====================
-  function vibrate() { if (window.navigator?.vibrate) window.navigator.vibrate(12); }
+  <script>
+    'use strict';
 
-  // ==================== TOAST UNIVERSAL ====================
-  function showToast(message) {
-    let toast = document.querySelector('.toast-lab');
-    if (!toast) { toast = document.createElement('div'); toast.className = 'toast-lab'; document.body.appendChild(toast); }
-    toast.textContent = message;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2200);
-  }
+    // ============================================================
+    // UTILIDADES
+    // ============================================================
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
 
-  // ==================== OFFLINE DETECTION ====================
-  const offlineBadge = document.getElementById('offlineBadge');
-  function updateOnlineStatus() {
-    if (!navigator.onLine) { offlineBadge.classList.add('show'); showToast("⚠️ Sin conexión a internet"); } 
-    else { offlineBadge.classList.remove('show'); }
-  }
-  window.addEventListener('online', updateOnlineStatus);
-  window.addEventListener('offline', updateOnlineStatus);
-  updateOnlineStatus();
-
-  // ==================== SLIDER ====================
-  const track = document.getElementById('sliderTrack');
-  const slides = document.querySelectorAll('.slide');
-  const prevBtn = document.getElementById('sliderPrev');
-  const nextBtn = document.getElementById('sliderNext');
-  const dotsContainer = document.getElementById('sliderDots');
-  let currentIndex = 0;
-  const totalSlides = slides.length;
-  for (let i = 0; i < totalSlides; i++) {
-    const dot = document.createElement('div');
-    dot.classList.add('dot');
-    if (i === 0) dot.classList.add('active');
-    dot.addEventListener('click', () => goToSlide(i));
-    dotsContainer.appendChild(dot);
-  }
-  const dots = document.querySelectorAll('.dot');
-  function updateDots() { dots.forEach((dot, idx) => idx === currentIndex ? dot.classList.add('active') : dot.classList.remove('active')); }
-  function goToSlide(index) { currentIndex = (index + totalSlides) % totalSlides; track.style.transform = `translateX(-${currentIndex * 100}%)`; updateDots(); }
-  function nextSlide() { goToSlide(currentIndex + 1); vibrate(); }
-  function prevSlide() { goToSlide(currentIndex - 1); vibrate(); }
-  let touchStartX = 0;
-  document.getElementById('sliderFrame').addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
-  document.getElementById('sliderFrame').addEventListener('touchend', (e) => {
-    const diff = e.changedTouches[0].screenX - touchStartX;
-    if (Math.abs(diff) > 40) { diff > 0 ? prevSlide() : nextSlide(); }
-  });
-  nextBtn.addEventListener('click', nextSlide);
-  prevBtn.addEventListener('click', prevSlide);
-  let autoInterval = setInterval(nextSlide, 5500);
-  const sliderContainer = document.querySelector('.slider-container');
-  sliderContainer.addEventListener('mouseenter', () => clearInterval(autoInterval));
-  sliderContainer.addEventListener('mouseleave', () => { autoInterval = setInterval(nextSlide, 5500); });
-  // Skeleton loading con detección de error
-  document.querySelectorAll('.slide img').forEach(img => {
-    const skeleton = document.createElement('div');
-    skeleton.className = 'skeleton-img';
-    img.parentElement.style.position = 'relative';
-    img.parentElement.appendChild(skeleton);
-    img.addEventListener('load', () => skeleton.remove());
-    img.addEventListener('error', () => { skeleton.remove(); showToast("⚠️ Falta imagen: " + img.src.split('/').pop()); });
-    if (img.complete) skeleton.remove();
-  });
-
-  // ==================== WHATSAPP + VALIDACIONES ====================
-  const whatsappNumber = "59175959450";
-  function openWhatsApp(msg) {
-    if (!navigator.onLine) { showToast("📡 Necesitas internet"); return; }
-    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, '_blank');
-  }
-
-  async function withLoading(btn, callback) {
-    if (!navigator.onLine) { showToast("📡 Sin conexión"); return; }
-    const original = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Conectando...';
-    btn.disabled = true;
-    vibrate();
-    await callback();
-    setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 800);
-  }
-
-  // Botón Consultar
-  document.getElementById('consultBtn').addEventListener('click', () => {
-    const problem = document.getElementById('problemInput').value.trim();
-    if (!problem) { showToast("⚠️ Describe la falla primero"); return; }
-    withLoading(document.getElementById('consultBtn'), async () => {
-      openWhatsApp(`🔧 Hola, mi dispositivo presenta: ${problem}. Necesito diagnóstico.`);
-      showToast("📡 Abriendo WhatsApp...");
-    });
-  });
-
-  // Botón Reparar
-  document.getElementById('repairNowBtn').addEventListener('click', () => {
-    withLoading(document.getElementById('repairNowBtn'), async () => {
-      openWhatsApp("🛠️ Solicito reparación urgente de mi equipo.");
-      showToast("⚡ Enviando solicitud...");
-    });
-  });
-
-  // Botón Diagnóstico con validación de página
-  document.getElementById('diagnosticBtn').addEventListener('click', () => {
-    if (!navigator.onLine) { showToast("📡 Necesitas internet"); return; }
-    vibrate();
-    window.location.href = 'https://xiaomi.scz.red/diagnostico.html';
-    showToast("🔄 Cargando diagnóstico...");
-  });
-
-  // Botón Técnico con validación
-  document.getElementById('techRedirectBtn').addEventListener('click', () => {
-    if (!navigator.onLine) { showToast("📡 Necesitas internet"); return; }
-    vibrate();
-    window.location.href = 'https://xiaomi.scz.red/precio/';
-    showToast("🔄 Cargando precios...");
-  });
-
-  // Tarjetas de servicio
-  document.querySelectorAll('.tech-card').forEach(card => {
-    card.addEventListener('click', () => {
-      vibrate();
-      const service = card.dataset.service || card.querySelector('h3')?.innerText;
-      openWhatsApp(`🔬 DR XIAOMI: Necesito servicio de ${service}.`);
-      showToast(`🛠️ ${service}`);
-    });
-  });
-
-  // Marcas
-  document.querySelectorAll('.brand-item').forEach(b => {
-    b.addEventListener('click', () => {
-      vibrate();
-      openWhatsApp(`🔬 Hola, tengo un ${b.innerText} que necesita reparación.`);
-      showToast(`📱 ${b.innerText}`);
-    });
-  });
-
-  // Llamar
-  document.getElementById('callBtn').addEventListener('click', () => {
-    vibrate();
-    window.location.href = 'tel:+59175959450';
-    showToast("📞 Llamando...");
-  });
-
-  // Compartir
-  document.getElementById('shareBtn').addEventListener('click', () => {
-    vibrate();
-    if (navigator.share) {
-      navigator.share({ title: 'DR XIAOMI', text: '🔬 Laboratorio técnico especializado', url: window.location.href });
-    } else {
-      window.open(`https://wa.me/?text=🔥 Mira este laboratorio: ${window.location.href}`);
+    function vibrate(pattern = 12) {
+      if (navigator.vibrate) navigator.vibrate(pattern);
     }
-    showToast("📤 Compartiendo...");
-  });
 
-  // ===== REDES SOCIALES =====
-  document.getElementById('facebookBtn').addEventListener('click', () => {
-    vibrate();
-    if (!navigator.onLine) { showToast("📡 Sin conexión"); return; }
-    window.open('https://www.facebook.com/DrXiaomi.scz', '_blank');
-    showToast("📘 Abriendo Facebook...");
-  });
+    let toastTimer;
+    function showToast(message, duration = 2200) {
+      let toast = $('.toast-lab');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.className = 'toast-lab';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
+    }
 
-  document.getElementById('tiktokBtn').addEventListener('click', () => {
-    vibrate();
-    if (!navigator.onLine) { showToast("📡 Sin conexión"); return; }
-    window.open('https://www.tiktok.com/@dr.xiaomi.scz', '_blank');
-    showToast("🎵 Abriendo TikTok...");
-  });
+    // ============================================================
+    // SERVICE WORKER
+    // ============================================================
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('✅ SW registrado:', reg.scope))
+          .catch(err => console.warn('⚠️ SW error:', err));
+      });
+    }
 
-  document.getElementById('whatsappSocialBtn').addEventListener('click', () => {
-    vibrate();
-    openWhatsApp("Hola DR XIAOMI, vi su sitio web y necesito información.");
-    showToast("💬 Abriendo WhatsApp...");
-  });
+    // ============================================================
+    // OFFLINE DETECTION
+    // ============================================================
+    const offlineBadge = $('#offlineBadge');
+    function updateOnlineStatus() {
+      if (!navigator.onLine) {
+        offlineBadge.classList.add('show');
+        showToast('⚠️ Sin conexión a internet');
+      } else {
+        offlineBadge.classList.remove('show');
+      }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
 
-  // Barra de progreso
-  window.addEventListener('scroll', () => {
-    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-    document.getElementById('scrollProgress').style.width = (winScroll / height) * 100 + '%';
-  });
-</script>
+    // ============================================================
+    // SLIDER
+    // ============================================================
+    const track = $('#sliderTrack');
+    const slides = $$('.slide');
+    const prevBtn = $('#sliderPrev');
+    const nextBtn = $('#sliderNext');
+    const dotsContainer = $('#sliderDots');
+    const totalSlides = slides.length;
+    let currentIndex = 0;
+
+    for (let i = 0; i < totalSlides; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('role', 'button');
+      dot.setAttribute('aria-label', `Ir a la imagen ${i + 1}`);
+      dot.addEventListener('click', () => goToSlide(i));
+      dotsContainer.appendChild(dot);
+    }
+    const dots = $$('.dot');
+
+    function updateDots() {
+      dots.forEach((d, i) => d.classList.toggle('active', i === currentIndex));
+    }
+    function goToSlide(index) {
+      currentIndex = (index + totalSlides) % totalSlides;
+      track.style.transform = `translateX(-${currentIndex * 100}%)`;
+      updateDots();
+    }
+    function nextSlide() { goToSlide(currentIndex + 1); vibrate(); }
+    function prevSlide() { goToSlide(currentIndex - 1); vibrate(); }
+
+    nextBtn.addEventListener('click', nextSlide);
+    prevBtn.addEventListener('click', prevSlide);
+
+    // Swipe
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const frame = $('#sliderFrame');
+    frame.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+    frame.addEventListener('touchend', (e) => {
+      const diffX = e.changedTouches[0].screenX - touchStartX;
+      const diffY = e.changedTouches[0].screenY - touchStartY;
+      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+        diffX > 0 ? prevSlide() : nextSlide();
+      }
+    }, { passive: true });
+
+    // Auto-play
+    let autoInterval = setInterval(nextSlide, 5500);
+    const sliderContainer = $('.slider-container');
+    sliderContainer.addEventListener('mouseenter', () => clearInterval(autoInterval));
+    sliderContainer.addEventListener('mouseleave', () => { autoInterval = setInterval(nextSlide, 5500); });
+
+    // Skeleton en imágenes
+    $$('.slide img').forEach(img => {
+      const parent = img.parentElement;
+      parent.style.position = 'relative';
+      const skeleton = document.createElement('div');
+      skeleton.className = 'skeleton-img';
+      parent.appendChild(skeleton);
+      const remove = () => skeleton.remove();
+      img.addEventListener('load', remove);
+      img.addEventListener('error', () => { remove(); showToast('⚠️ Falta imagen: ' + img.src.split('/').pop()); });
+      if (img.complete) remove();
+    });
+
+    // ============================================================
+    // WHATSAPP + ACCIONES
+    // ============================================================
+    const whatsappNumber = '59175959450';
+    function openWhatsApp(msg) {
+      if (!navigator.onLine) { showToast('📡 Necesitas internet'); return; }
+      window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    async function withLoading(btn, callback) {
+      if (!navigator.onLine) { showToast('📡 Sin conexión'); return; }
+      const original = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Conectando...';
+      btn.disabled = true;
+      vibrate(20);
+      await callback();
+      setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 800);
+    }
+
+    // Consultar
+    $('#consultBtn').addEventListener('click', () => {
+      const problem = $('#problemInput').value.trim();
+      if (!problem) { showToast('⚠️ Describe la falla primero'); vibrate([15, 30, 15]); return; }
+      withLoading($('#consultBtn'), async () => {
+        openWhatsApp(`🔧 Hola, mi dispositivo presenta: ${problem}. Necesito diagnóstico.`);
+        showToast('📡 Abriendo WhatsApp...');
+      });
+    });
+
+    // Enter en el input = consultar
+    $('#problemInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') $('#consultBtn').click();
+    });
+
+    // Reparar
+    $('#repairNowBtn').addEventListener('click', () => {
+      withLoading($('#repairNowBtn'), async () => {
+        openWhatsApp('🛠️ Solicito reparación urgente de mi equipo.');
+        showToast('⚡ Enviando solicitud...');
+      });
+    });
+
+    // Diagnóstico
+    $('#diagnosticBtn').addEventListener('click', () => {
+      if (!navigator.onLine) { showToast('📡 Necesitas internet'); return; }
+      vibrate();
+      window.location.href = 'https://xiaomi.scz.red/diagnostico.html';
+    });
+
+    // Técnico
+    $('#techRedirectBtn').addEventListener('click', () => {
+      if (!navigator.onLine) { showToast('📡 Necesitas internet'); return; }
+      vibrate();
+      window.location.href = 'https://xiaomi.scz.red/precio/';
+    });
+
+    // Tarjetas de servicio
+    $$('.tech-card').forEach(card => {
+      card.addEventListener('click', () => {
+        vibrate();
+        const service = card.dataset.service || card.querySelector('h3')?.innerText;
+        openWhatsApp(`🔬 DR XIAOMI: Necesito servicio de ${service}.`);
+        showToast(`🛠️ ${service}`);
+      });
+    });
+
+    // Marcas
+    $$('.brand-item').forEach(b => {
+      b.addEventListener('click', () => {
+        vibrate();
+        openWhatsApp(`🔬 Hola, tengo un ${b.innerText} que necesita reparación.`);
+        showToast(`📱 ${b.innerText}`);
+      });
+    });
+
+    // Llamar
+    $('#callBtn').addEventListener('click', () => {
+      vibrate();
+      window.location.href = 'tel:+59175959450';
+    });
+
+    // Compartir
+    $('#shareBtn').addEventListener('click', async () => {
+      vibrate();
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'DR XIAOMI',
+            text: '🔬 Laboratorio técnico especializado',
+            url: window.location.href
+          });
+        } catch (e) { /* cancelado */ }
+      } else {
+        window.open(`https://wa.me/?text=🔥 Mira este laboratorio: ${window.location.href}`);
+      }
+    });
+
+    // Redes
+    $('#facebookBtn').addEventListener('click', () => {
+      vibrate();
+      if (!navigator.onLine) { showToast('📡 Sin conexión'); return; }
+      window.open('https://www.facebook.com/DrXiaomi.scz', '_blank');
+    });
+    $('#tiktokBtn').addEventListener('click', () => {
+      vibrate();
+      if (!navigator.onLine) { showToast('📡 Sin conexión'); return; }
+      window.open('https://www.tiktok.com/@dr.xiaomi.scz', '_blank');
+    });
+    $('#whatsappSocialBtn').addEventListener('click', () => {
+      vibrate();
+      openWhatsApp('Hola DR XIAOMI, vi su sitio web y necesito información.');
+    });
+
+    // ============================================================
+    // BOTTOM NAV
+    // ============================================================
+    $$('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        vibrate();
+        const action = item.dataset.nav;
+        $$('.nav-item').forEach(n => n.classList.remove('active'));
+        item.classList.add('active');
+
+        if (action === 'home') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (action === 'services') {
+          $('.tech-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (action === 'whatsapp') {
+          openWhatsApp('Hola DR XIAOMI, necesito información.');
+        } else if (action === 'map') {
+          $('.map-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    });
+
+    // ============================================================
+    // PROGRESO SCROLL (optimizado)
+    // ============================================================
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const winScroll = document.documentElement.scrollTop;
+          const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+          $('#scrollProgress').style.width = (height > 0 ? (winScroll / height) * 100 : 0) + '%';
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // ============================================================
+    // INSTALACIÓN PWA
+    // ============================================================
+    let deferredPrompt = null;
+    const installBanner = $('#installBanner');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Mostrar banner solo si no fue cerrado antes
+      if (!localStorage.getItem('drxiaomi_install_closed')) {
+        setTimeout(() => installBanner.classList.add('show'), 4000);
+      }
+    });
+
+    $('#installBtn').addEventListener('click', async () => {
+      if (!deferredPrompt) {
+        showToast('📲 Usa el menú del navegador para instalar');
+        return;
+      }
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        showToast('✅ App instalada');
+        installBanner.classList.remove('show');
+      }
+      deferredPrompt = null;
+    });
+
+    $('#installClose').addEventListener('click', () => {
+      installBanner.classList.remove('show');
+      localStorage.setItem('drxiaomi_install_closed', '1');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installBanner.classList.remove('show');
+      showToast('🎉 App instalada correctamente');
+    });
+
+    // ============================================================
+    // DETECCIÓN DE STANDALONE (cambiar active del nav)
+    // ============================================================
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      document.body.classList.add('is-standalone');
+    }
+  </script>
 </body>
 </html>
