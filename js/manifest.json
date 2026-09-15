@@ -1,0 +1,42 @@
+{
+  "name": "DR XIAOMI · ORANGE LAB",
+  "short_name": "DR XIAOMI",
+  "description": "Laboratorio de reparación especializada en microsoldadura, pantalla y placa lógica",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#FF6900",
+  "background_color": "#0A0C10",
+  "lang": "es-BO",
+  "dir": "ltr",
+  "categories": ["business", "utilities"],
+  "icons": [
+    {
+      "src": "imagenes/icono-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "imagenes/icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Diagnóstico",
+      "short_name": "Diagnóstico",
+      "url": "./diagnostico.html",
+      "icons": [{ "src": "imagenes/icono-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Precios",
+      "short_name": "Precios",
+      "url": "./precio/",
+      "icons": [{ "src": "imagenes/icono-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
