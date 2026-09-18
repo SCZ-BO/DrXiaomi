@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "red.scz.xiaomi.twa",
+        "sha256_cert_fingerprints": ["D7:C7:80:66:25:22:96:A0:95:F6:24:B0:A8:D1:DC:77:86:DA:AA:72:0D:53:4E:83:D3:C2:46:7B:0A:65:0E:03"]
+      }
+    }]
