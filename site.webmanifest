@@ -1,0 +1,24 @@
+{
+  "name": "DR XIAOMI",
+  "short_name": "DR XIAOMI",
+  "icons": [
+    {
+      "src": "https://xiaomi.scz.red/imagenes/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "https://xiaomi.scz.red/imagenes/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "https://xiaomi.scz.red/imagenes/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#FF6900",
+  "background_color": "#FF6900",
+  "display": "standalone"
+}
