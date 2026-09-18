@@ -8,13 +8,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="description" content="Catálogo de pantallas y repuestos - Búsqueda precisa">
   <title>DR. XIAOMI | Pantallas y Repuestos</title>
-   <!-- Favicon -->
+
+  <!-- Favicon -->
   <link rel="icon" type="image/png" sizes="32x32" href="https://xiaomi.scz.red/imagenes/favicon-32x32.png">
   <link rel="icon" type="image/svg+xml" href="https://xiaomi.scz.red/imagenes/favicon.svg">
   <link rel="icon" type="image/x-icon" href="https://xiaomi.scz.red/imagenes/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="https://xiaomi.scz.red/imagenes/apple-touch-icon.png">
   <link rel="manifest" href="https://xiaomi.scz.red/imagenes/site.webmanifest">
-
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -61,7 +61,6 @@
     body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); overflow-x: hidden; width: 100%; height: 100dvh; transition: background 0.35s ease; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; user-select: none; }
     .app { max-width: 100%; height: 100dvh; margin: 0 auto; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-primary); position: relative; }
 
-    /* HEADER - SIN BLUR para rendimiento */
     .header { background: var(--bg-primary); border-bottom: 1px solid var(--border); padding: calc(14px + var(--safe-top)) 18px 12px; flex-shrink: 0; position: relative; z-index: 50; }
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .logo { display: flex; align-items: center; gap: 10px; }
@@ -74,7 +73,6 @@
     .icon-btn:active { transform: scale(0.9); color: var(--xiaomi-orange); border-color: var(--xiaomi-orange); }
     .icon-btn.syncing i { animation: spinLoader 1s linear infinite; }
 
-    /* SEARCH */
     .search-wrapper { position: relative; }
     .search-container { position: relative; }
     .search-input { width: 100%; padding: 14px 86px 14px 46px; background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 16px; color: var(--text-primary); font-size: 15px; font-weight: 500; transition: var(--transition); letter-spacing: -0.2px; }
@@ -86,7 +84,6 @@
     .search-loader { width: 22px; height: 22px; border: 2px solid var(--border); border-top: 2px solid var(--xiaomi-orange); border-radius: 50%; animation: spinLoader 0.6s linear infinite; margin-right: 6px; display: inline-block; }
     @keyframes spinLoader { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* SUGGESTIONS */
     .suggestions-panel { position: absolute; top: 100%; left: 0; right: 0; margin-top: 8px; background: var(--suggestion-bg); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow-lg); max-height: min(320px, 45vh); overflow-y: auto; display: none; z-index: 60; transform-origin: top; }
     .suggestions-panel.active { display: block; animation: panelIn 0.2s cubic-bezier(0.2, 0.9, 0.4, 1); }
     @keyframes panelIn { from { opacity: 0; transform: translateY(-6px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -101,7 +98,6 @@
     .recent-item { padding: 10px 18px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary); transition: var(--transition-fast); }
     .recent-item:active { background: var(--suggestion-hover); }
 
-    /* FILTERS - SIN BLUR ni SNAP para fluidez */
     .quick-filters { padding: 12px 18px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; background: var(--bg-primary); border-bottom: 1px solid var(--border); }
     .quick-filters::-webkit-scrollbar { display: none; }
     .filter-chip { padding: 9px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border); cursor: pointer; white-space: nowrap; transition: var(--transition); position: relative; overflow: hidden; }
@@ -109,11 +105,9 @@
     .filter-chip[data-filter="ORIG"].active { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); border-color: var(--gold-2); box-shadow: 0 4px 12px var(--gold-glow); color: #4A2800; }
     .filter-chip:active { transform: scale(0.95); }
 
-    /* MAIN - SCROLL OPTIMIZADO */
     .main-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; position: relative; }
     .cards-view { display: flex; flex-direction: column; gap: 14px; padding: 18px; padding-bottom: calc(100px + var(--safe-bottom)); }
 
-    /* CARD - CON CONTENT-VISIBILITY para saltear las que no se ven */
     .product-card {
       background: var(--bg-card); border-radius: 24px; padding: 18px 20px;
       border: 1px solid var(--card-border); position: relative;
@@ -160,7 +154,6 @@
     .image-btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); }
     .whatsapp-btn { background: #25D366; color: white; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3); }
 
-    /* BOTTOM NAV - SIN BLUR */
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-primary); border-top: 1px solid var(--border); display: flex; padding: 8px 24px calc(16px + var(--safe-bottom)); gap: 12px; z-index: 100; }
     .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 10px; border: none; background: transparent; color: var(--text-tertiary); border-radius: 16px; cursor: pointer; font-size: 10px; font-weight: 700; transition: var(--transition-fast); position: relative; overflow: hidden; }
     .nav-item.active { color: var(--xiaomi-orange); background: var(--xiaomi-orange-glow); }
@@ -168,7 +161,6 @@
     .nav-item.active i { transform: scale(1.1); }
     .nav-item:active i { transform: scale(0.85); }
 
-    /* MODALES - SIN BLUR para rendimiento */
     .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--overlay); z-index: 200; align-items: flex-end; justify-content: center; padding: 0; }
     .modal.active { display: flex; animation: modalFade 0.2s ease; }
     @keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
@@ -186,7 +178,6 @@
     .modal-buttons button:first-child { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); }
     .modal-buttons button:last-child { background: var(--xiaomi-orange); color: white; box-shadow: 0 6px 16px var(--xiaomi-orange-glow); }
 
-    /* LOCK SCREEN - OPTIMIZADO */
     .lock-screen {
       position: fixed; inset: 0; z-index: 9999;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -279,16 +270,16 @@
     .lock-pin-wrap { position: relative; margin-bottom: 22px; }
     .lock-pin {
       position: relative;
-      display: flex; gap: 10px; justify-content: center;
+      display: flex; gap: 14px; justify-content: center;
       margin-bottom: 8px;
     }
     .lock-pin-slot {
-      width: 44px; height: 56px;
-      border-radius: 14px;
+      width: 58px; height: 68px;
+      border-radius: 16px;
       background: var(--bg-secondary);
       border: 2px solid var(--border);
       display: flex; align-items: center; justify-content: center;
-      font-size: 22px; font-weight: 800; color: var(--text-primary);
+      font-size: 26px; font-weight: 800; color: var(--text-primary);
       transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1);
       position: relative;
       user-select: none;
@@ -304,7 +295,7 @@
       box-shadow: 0 0 0 4px var(--xiaomi-orange-glow);
     }
     .lock-pin-slot .lock-dot-pin {
-      width: 12px; height: 12px; border-radius: 50%;
+      width: 14px; height: 14px; border-radius: 50%;
       background: var(--xiaomi-orange);
       animation: pinPop 0.2s ease;
     }
@@ -319,7 +310,7 @@
     }
     .lock-input-real:focus { outline: none; }
     .lock-pin-slot.focused::after {
-      content: ''; width: 2px; height: 24px;
+      content: ''; width: 2px; height: 28px;
       background: var(--xiaomi-orange);
       animation: blink 1s step-start infinite;
       position: absolute;
@@ -384,15 +375,13 @@
       .lock-logo-wrap { margin-bottom: 16px; }
       .lock-title { font-size: 21px; }
       .lock-subtitle { margin-bottom: 20px; font-size: 13px; }
-      .lock-pin-slot { width: 40px; height: 50px; font-size: 20px; border-radius: 12px; }
-      .lock-pin { gap: 8px; }
+      .lock-pin-slot { width: 50px; height: 58px; font-size: 22px; border-radius: 14px; }
+      .lock-pin { gap: 10px; }
     }
 
-    /* TOAST */
     .toast { position: fixed; bottom: calc(100px + var(--safe-bottom)); left: 50%; transform: translateX(-50%); background: var(--bg-card); padding: 12px 22px; border-radius: 40px; color: var(--text-primary); font-size: 13px; font-weight: 600; z-index: 150; animation: fadeInUp 0.3s cubic-bezier(0.2, 0.9, 0.4, 1); border: 1px solid var(--border); box-shadow: var(--shadow-lg); max-width: 90%; text-align: center; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(12px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
-    /* RESULTS COUNT */
     .results-count { padding: 16px 20px 4px; font-size: 13px; font-weight: 600; color: var(--text-tertiary); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
     .results-count .offline-tag { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px; background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 5px; }
     .results-count .offline-tag.on { color: #FF9500; border-color: #FF9500; }
@@ -405,16 +394,13 @@
     .main-content::-webkit-scrollbar-track { background: transparent; }
     .main-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
-    /* PULL TO REFRESH */
     .ptr-indicator { position: absolute; top: 0; left: 50%; transform: translateX(-50%) translateY(-60px); background: var(--bg-card); border: 1px solid var(--border); width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--xiaomi-orange); z-index: 10; transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0; box-shadow: var(--shadow-md); }
     .ptr-indicator.visible { opacity: 1; }
     .ptr-indicator.spinning i { animation: spinLoader 0.8s linear infinite; }
 
-    /* RIPPLE - solo activo en táctil */
     .ripple { position: absolute; border-radius: 50%; background: currentColor; opacity: 0.25; transform: scale(0); animation: rippleAnim 0.6s ease-out; pointer-events: none; }
     @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
 
-    /* SPLASH */
     .splash { position: fixed; inset: 0; background: linear-gradient(135deg, var(--xiaomi-orange), var(--xiaomi-orange-dark)); z-index: 10000; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
     .splash.hidden { opacity: 0; pointer-events: none; }
     .splash-inner { text-align: center; color: white; animation: pulseIn 0.5s ease; }
@@ -464,10 +450,8 @@
         <div class="lock-pin-slot" data-index="1"></div>
         <div class="lock-pin-slot" data-index="2"></div>
         <div class="lock-pin-slot" data-index="3"></div>
-        <div class="lock-pin-slot" data-index="4"></div>
-        <div class="lock-pin-slot" data-index="5"></div>
       </div>
-      <input type="password" id="appPassword" class="lock-input-real" inputmode="numeric" autocomplete="off" maxlength="12" aria-label="Clave de acceso">
+      <input type="password" id="appPassword" class="lock-input-real" inputmode="numeric" autocomplete="off" maxlength="4" aria-label="Clave de acceso">
     </div>
 
     <button class="lock-btn" id="unlockBtn">
@@ -555,9 +539,10 @@
       { name: "BITE",         url: "https://xiaomi.scz.red/precio/data/boe.csv" },
       { name: "MR PANTALLA",  url: "https://xiaomi.scz.red/precio/data/mrpantalla.csv" }
     ],
+    // 🔑 CLAVES EN TEXTO PLANO - cambialas cuando quieras
     passwords: {
-      app:  "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
-      tech: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+      app:  "2011",
+      tech: "123456"
     },
     fetchTimeoutMs: 12000,
     cachePrefix: "drxiaomi_csv_",
@@ -567,16 +552,6 @@
     favoritesKey: "drxiaomi_favs_v1",
     recentKey: "drxiaomi_recent_v1"
   };
-
-  // ============================================================
-  // HASH
-  // ============================================================
-  async function hashKey(str) {
-    const enc = new TextEncoder().encode(String(str));
-    const buf = await crypto.subtle.digest('SHA-256', enc);
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-  window.hashKey = hashKey;
 
   // ============================================================
   // ESTADO
@@ -908,7 +883,7 @@
   }
 
   // ============================================================
-  // FILTROS / RENDER CON PAGINACIÓN
+  // FILTROS / RENDER
   // ============================================================
   const TIPO_PESO = { ORIG: 0, OLED: 1, LCD: 2 };
   const PAGE_SIZE = 30;
@@ -1197,7 +1172,7 @@
       }
     });
   }
-  async function tryUnlock() {
+  function tryUnlock() {
     const input = document.getElementById("appPassword");
     const val = input.value.trim();
     if (!val) {
@@ -1207,8 +1182,7 @@
       lockScreen.classList.add('lock-shake');
       return;
     }
-    const h = await hashKey(val);
-    if (h === CONFIG.passwords.app) {
+    if (val === CONFIG.passwords.app) {
       haptic([30, 50, 30]);
       setLockError("");
       unlockApp();
@@ -1324,10 +1298,9 @@
     $("receiptBtn").addEventListener("click", () => window.open("http://xiaomi.scz.red/1/", "_blank"));
     $("lockBtn").addEventListener("click", () => { haptic(30); lockApp(); });
 
-    $("confirmTechBtn").addEventListener("click", async () => {
+    $("confirmTechBtn").addEventListener("click", () => {
       const v = document.getElementById("techPassword").value.trim();
-      const h = await hashKey(v);
-      if (h === CONFIG.passwords.tech) {
+      if (v === CONFIG.passwords.tech) {
         techMode = true; closeModal("techModal"); showToast("🔧 Modo técnico activado"); render(true); haptic(30);
       } else {
         document.getElementById("techError").textContent = "❌ Clave incorrecta";
@@ -1352,7 +1325,6 @@
       if (!e.target.closest(".search-wrapper")) suggestionsPanel.classList.remove('active');
     });
 
-    // Lock screen events
     const appPwdInput = document.getElementById("appPassword");
     $("unlockBtn").addEventListener("click", tryUnlock);
     appPwdInput.addEventListener("input", renderPinDots);
