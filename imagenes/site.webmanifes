@@ -3,17 +3,17 @@
   "short_name": "DR XIAOMI",
   "icons": [
     {
-      "src": "favicon-32x32.png",
+      "src": "https://xiaomi.scz.red/imagenes/favicon-32x32.png",
       "sizes": "32x32",
       "type": "image/png"
     },
     {
-      "src": "apple-touch-icon.png",
+      "src": "https://xiaomi.scz.red/imagenes/apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
     },
     {
-      "src": "web-app-manifest-192x192.png",
+      "src": "https://xiaomi.scz.red/imagenes/web-app-manifest-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     }
