@@ -21,6 +21,9 @@
       --xiaomi-orange-dark: #E55A00;
       --xiaomi-orange-soft: #FF8A3C;
       --xiaomi-orange-glow: rgba(255, 105, 0, 0.15);
+      --gold-1: #FFD700;
+      --gold-2: #FFA500;
+      --gold-glow: rgba(255, 200, 0, 0.35);
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
       --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
       --shadow-lg: 0 20px 40px rgba(0,0,0,0.12);
@@ -96,6 +99,7 @@
     .quick-filters::-webkit-scrollbar { display: none; }
     .filter-chip { padding: 9px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border); cursor: pointer; white-space: nowrap; transition: var(--transition); scroll-snap-align: start; position: relative; overflow: hidden; }
     .filter-chip.active { background: var(--xiaomi-orange); color: white; border-color: var(--xiaomi-orange); box-shadow: 0 4px 12px var(--xiaomi-orange-glow); }
+    .filter-chip[data-filter="ORIG"].active { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); border-color: var(--gold-2); box-shadow: 0 4px 12px var(--gold-glow); color: #4A2800; }
     .filter-chip:active { transform: scale(0.95); }
 
     /* MAIN */
@@ -104,9 +108,13 @@
     .product-card { background: var(--bg-card); border-radius: 24px; padding: 18px 20px; border: 1px solid var(--card-border); transition: var(--transition); position: relative; box-shadow: var(--card-shadow); overflow: hidden; opacity: 0; transform: translateY(8px); animation: cardIn 0.35s cubic-bezier(0.2, 0.9, 0.4, 1) forwards; }
     @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
     .product-card::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; background: linear-gradient(180deg, var(--xiaomi-orange), var(--xiaomi-orange-soft)); border-radius: 4px; }
+    .product-card.is-orig { border-color: rgba(255, 200, 0, 0.35); }
+    .product-card.is-orig::before { background: linear-gradient(180deg, var(--gold-1), var(--gold-2)); box-shadow: 0 0 12px var(--gold-glow); }
     .product-card:active { transform: scale(0.985); }
     .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; padding-left: 10px; gap: 10px; }
     .card-brand { font-size: 11px; font-weight: 700; color: var(--xiaomi-orange); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+    .product-card.is-orig .card-brand { color: #B8860B; }
+    [data-theme="dark"] .product-card.is-orig .card-brand { color: var(--gold-1); }
     .card-model { font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.4px; word-break: break-word; line-height: 1.25; }
     .fav-btn { background: transparent; border: none; color: var(--text-tertiary); font-size: 18px; cursor: pointer; padding: 4px; transition: var(--transition-fast); flex-shrink: 0; }
     .fav-btn.active { color: #FFB800; transform: scale(1.1); }
@@ -114,6 +122,14 @@
     .card-specs { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; padding-left: 10px; }
     .card-type { padding: 6px 14px; border-radius: 30px; font-size: 11px; font-weight: 600; background: var(--bg-primary); color: var(--text-secondary); }
     .card-type.oled { background: rgba(255, 105, 0, 0.12); color: var(--xiaomi-orange-dark); }
+    .card-type.orig {
+      background: linear-gradient(135deg, var(--gold-1), var(--gold-2));
+      color: #4A2800;
+      font-weight: 800;
+      box-shadow: 0 2px 8px var(--gold-glow);
+      letter-spacing: 0.5px;
+    }
+    .card-type.orig::before { content: '👑 '; font-size: 10px; }
     .supplier-badge, .price-badge { padding: 6px 14px; border-radius: 30px; font-size: 11px; font-weight: 500; background: var(--bg-primary); color: var(--text-secondary); }
     .card-price-row { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); padding-left: 10px; gap: 10px; flex-wrap: wrap; }
     .card-price { font-size: 30px; font-weight: 900; color: var(--text-primary); cursor: pointer; transition: var(--transition); letter-spacing: -1px; padding: 4px 12px; border-radius: 14px; }
@@ -150,7 +166,7 @@
     .modal-buttons button:first-child { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); }
     .modal-buttons button:last-child { background: var(--xiaomi-orange); color: white; box-shadow: 0 6px 16px var(--xiaomi-orange-glow); }
 
-    /* LOCK SCREEN - REDISEÑADO */
+    /* LOCK SCREEN */
     .lock-screen {
       position: fixed; inset: 0; z-index: 9999;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -160,8 +176,6 @@
       transition: opacity 0.45s ease, transform 0.45s ease;
     }
     .lock-screen.hidden { opacity: 0; pointer-events: none; transform: scale(1.04); }
-
-    /* Fondo con blobs de luz */
     .lock-bg { position: absolute; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
     .lock-blob {
       position: absolute; border-radius: 50%;
@@ -177,8 +191,6 @@
       33%      { transform: translate(30px, -20px) scale(1.1); }
       66%      { transform: translate(-20px, 25px) scale(0.95); }
     }
-
-    /* Grid de puntos decorativo */
     .lock-grid {
       position: absolute; inset: 0; z-index: 0; pointer-events: none;
       background-image: radial-gradient(circle, rgba(255,105,0,0.10) 1px, transparent 1px);
@@ -187,8 +199,6 @@
       -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
     }
     [data-theme="dark"] .lock-grid { background-image: radial-gradient(circle, rgba(255,105,0,0.14) 1px, transparent 1px); }
-
-    /* Card de vidrio */
     .lock-card {
       position: relative; z-index: 1;
       width: 100%; max-width: 380px;
@@ -216,8 +226,6 @@
       from { opacity: 0; transform: translateY(20px) scale(0.96); }
       to   { opacity: 1; transform: translateY(0) scale(1); }
     }
-
-    /* Logo con halo */
     .lock-logo-wrap { position: relative; display: inline-block; margin-bottom: 22px; }
     .lock-logo-halo {
       position: absolute; inset: -14px;
@@ -247,7 +255,6 @@
       background: linear-gradient(135deg, rgba(255,255,255,0.5), transparent 50%);
       pointer-events: none;
     }
-
     .lock-title {
       font-size: 24px; font-weight: 800; letter-spacing: -0.6px;
       margin-bottom: 6px; color: var(--text-primary);
@@ -257,8 +264,6 @@
       margin-bottom: 28px; line-height: 1.45;
       max-width: 260px; margin-left: auto; margin-right: auto;
     }
-
-    /* PIN de 6 slots */
     .lock-pin-wrap { position: relative; margin-bottom: 22px; }
     .lock-pin {
       position: relative;
@@ -292,8 +297,6 @@
       animation: pinPop 0.2s ease;
     }
     @keyframes pinPop { from { transform: scale(0); } to { transform: scale(1); } }
-
-    /* Input real (invisible) superpuesto */
     .lock-input-real {
       position: absolute; inset: 0;
       opacity: 0; cursor: text;
@@ -303,8 +306,6 @@
       z-index: 2;
     }
     .lock-input-real:focus { outline: none; }
-
-    /* Cursor parpadeante en el slot activo */
     .lock-pin-slot.focused::after {
       content: ''; width: 2px; height: 24px;
       background: var(--xiaomi-orange);
@@ -313,8 +314,6 @@
     }
     .lock-pin-slot.focused.filled::after { display: none; }
     @keyframes blink { 50% { opacity: 0; } }
-
-    /* Botón desbloquear */
     .lock-btn {
       position: relative;
       width: 100%; padding: 17px 20px;
@@ -343,8 +342,6 @@
       0%, 60%, 100% { left: -60%; }
       20%, 40%      { left: 120%; }
     }
-
-    /* Footer con hint */
     .lock-hint {
       margin-top: 20px;
       font-size: 11.5px; color: var(--text-tertiary);
@@ -352,8 +349,6 @@
       font-weight: 500;
     }
     .lock-hint i { font-size: 11px; }
-
-    /* Error */
     .lock-error {
       color: #FF3B30; font-size: 12.5px; font-weight: 600;
       margin-top: 12px; min-height: 18px; text-align: center;
@@ -361,8 +356,6 @@
       transition: opacity 0.25s ease, transform 0.25s ease;
     }
     .lock-error.show { opacity: 1; transform: translateY(0); }
-
-    /* Sacudida elegante */
     .lock-shake { animation: shakeElegant 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
     @keyframes shakeElegant {
       10%, 90% { transform: translateX(-2px); }
@@ -370,15 +363,12 @@
       30%, 50%, 70% { transform: translateX(-8px); }
       40%, 60% { transform: translateX(8px); }
     }
-
-    /* Éxito: card sale con fade y escala */
     .lock-card.success {
       animation: cardSuccess 0.5s cubic-bezier(0.2, 0.9, 0.4, 1) forwards;
     }
     @keyframes cardSuccess {
       to { opacity: 0; transform: scale(0.94) translateY(-12px); }
     }
-
     @media (max-height: 640px) {
       .lock-card { padding: 28px 22px 24px; border-radius: 26px; }
       .lock-logo { width: 64px; height: 64px; font-size: 26px; border-radius: 18px; }
@@ -513,6 +503,7 @@
   </header>
   <div class="quick-filters" id="quickFilters">
     <button class="filter-chip active" data-filter="all">📱 Todos</button>
+    <button class="filter-chip" data-filter="ORIG">👑 ORIG</button>
     <button class="filter-chip" data-filter="OLED">✨ OLED</button>
     <button class="filter-chip" data-filter="LCD">📟 LCD</button>
     <button class="filter-chip" data-filter="FAV">⭐ Favoritos</button>
@@ -681,11 +672,27 @@
     r.push(cur.trim());
     return r.map(f => f.replace(/^"|"$/g, ""));
   }
+
+  // Detector de tipo mejorado: ORIG > OLED > LCD
   function normalizeTipo(raw) {
-    const t = String(raw || "").toUpperCase();
-    if (/AMOLED|OLED/.test(t)) return "OLED";
+    const t = String(raw || "").toUpperCase().trim();
+    if (!t) return "LCD";
+
+    // 1) ORIGINAL (máxima prioridad)
+    // Detecta: ORIG, ORIGINAL, ORI, ORG, OEM, GENUINE, SP, SERVICE PACK
+    if (/\b(ORIG|ORIGINAL|ORI|ORG|GENUINE|OEM|SERVICE\s*PACK|\bSP\b)\b/.test(t)) {
+      return "ORIG";
+    }
+
+    // 2) OLED / AMOLED / SUPER AMOLED / RETINA
+    if (/(AMOLED|OLED|SUPER\s*AMOLED|SUPERAMOLED|RETINA)/.test(t)) {
+      return "OLED";
+    }
+
+    // 3) Todo lo demás cae en LCD (TFT, INCELL, IPS, LCD, etc.)
     return "LCD";
   }
+
   function parseCSV(text, provider) {
     const lines = String(text || "").split(/\r?\n/).filter(l => l.trim() !== "");
     if (lines.length < 2) return [];
@@ -904,6 +911,8 @@
   // ============================================================
   // FILTROS / RENDER
   // ============================================================
+  const TIPO_PESO = { ORIG: 0, OLED: 1, LCD: 2 };
+
   function applyFiltersAndSearch(immediate = false) {
     if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
     const run = () => {
@@ -917,7 +926,13 @@
       } else {
         clearSearchBtn.style.display = 'none';
       }
-      data.sort((a, b) => a.venta - b.venta);
+      // Orden: ORIG → OLED → LCD, dentro de cada grupo por precio ascendente
+      data.sort((a, b) => {
+        const pa = TIPO_PESO[a.tipo] ?? 3;
+        const pb = TIPO_PESO[b.tipo] ?? 3;
+        if (pa !== pb) return pa - pb;
+        return a.venta - b.venta;
+      });
       filteredData = data;
       updateResultsCount();
       render();
@@ -989,8 +1004,12 @@
       container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><p style="font-weight:600;margin-bottom:8px;">Sin resultados</p>${term ? `<p style="font-size:13px;">No se encontró "${escapeHtml(term)}"</p>` : ''}</div>`;
       return;
     }
-    container.innerHTML = `<div class="cards-view">${filteredData.map((item, i) => `
-      <div class="product-card" style="animation-delay:${Math.min(i * 20, 300)}ms">
+    container.innerHTML = `<div class="cards-view">${filteredData.map((item, i) => {
+      const isOrig = item.tipo === 'ORIG';
+      const isOled = item.tipo === 'OLED';
+      const typeClass = isOrig ? 'orig' : isOled ? 'oled' : '';
+      return `
+      <div class="product-card ${isOrig ? 'is-orig' : ''}" style="animation-delay:${Math.min(i * 20, 300)}ms">
         <div class="card-header">
           <div style="min-width:0;flex:1;">
             <div class="card-brand">${escapeHtml(item.marca)}</div>
@@ -1001,7 +1020,7 @@
           </button>
         </div>
         <div class="card-specs">
-          <span class="card-type ${item.tipo === 'OLED' ? 'oled' : ''}">${item.tipo}</span>
+          <span class="card-type ${typeClass}">${item.tipo}</span>
           ${techMode ? `<span class="supplier-badge">🏷️ ${escapeHtml(item.proveedor)}</span><span class="price-badge">Compra: ${item.compra.toLocaleString()} Bs</span>` : ''}
         </div>
         <div class="card-price-row">
@@ -1011,8 +1030,8 @@
             <button class="whatsapp-btn" onclick="window.shareWA('${item.id}')"><i class="fab fa-whatsapp"></i></button>
           </div>
         </div>
-      </div>
-    `).join('')}</div>`;
+      </div>`;
+    }).join('')}</div>`;
   }
   function scrollToTop() { mainScrollContainer?.scrollTo({ top: 0, behavior: 'smooth' }); }
   function showSearchLoader() { if (searchLoaderIndicator) searchLoaderIndicator.style.display = "inline-flex"; }
@@ -1063,8 +1082,9 @@
     if (!data.length) { showToast("Nada para comparar"); return; }
     let html = '<div style="display:flex;flex-direction:column;gap:12px;max-height:60vh;overflow-y:auto;">';
     data.forEach(p => {
-      html += `<div style="background:var(--bg-secondary);padding:14px;border-radius:16px;border-left:4px solid var(--xiaomi-orange);">
-        <div style="font-size:12px;color:var(--xiaomi-orange);font-weight:700;">${escapeHtml(p.marca)}</div>
+      const accent = p.tipo === 'ORIG' ? 'var(--gold-2)' : 'var(--xiaomi-orange)';
+      html += `<div style="background:var(--bg-secondary);padding:14px;border-radius:16px;border-left:4px solid ${accent};">
+        <div style="font-size:12px;color:${accent};font-weight:700;">${escapeHtml(p.marca)}</div>
         <div style="font-size:15px;font-weight:600;margin:4px 0;">${escapeHtml(p.modelo)}</div>
         <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">${p.tipo}${techMode ? ' · ' + escapeHtml(p.proveedor) : ''}</div>
         <div style="font-size:22px;font-weight:800;">${p.venta.toLocaleString()} Bs</div>
@@ -1102,8 +1122,6 @@
   // ============================================================
   // LOCK SCREEN
   // ============================================================
-  const PIN_SLOTS = 6;
-
   function isUnlockValid() {
     try {
       const data = JSON.parse(localStorage.getItem(CONFIG.unlockKey) || "null");
@@ -1301,7 +1319,6 @@
     // Lock screen events
     const appPwdInput = document.getElementById("appPassword");
     $("unlockBtn").addEventListener("click", tryUnlock);
-
     appPwdInput.addEventListener("input", renderPinDots);
     appPwdInput.addEventListener("focus", renderPinDots);
     appPwdInput.addEventListener("blur", () => {
@@ -1310,11 +1327,9 @@
     appPwdInput.addEventListener("keydown", (e) => {
       if (e.key === 'Enter') { e.preventDefault(); tryUnlock(); }
     });
-
     document.querySelectorAll(".lock-pin-slot").forEach(slot => {
       slot.addEventListener("click", () => appPwdInput.focus());
     });
-
     renderPinDots();
 
     window.addEventListener("online", () => { showToast("🌐 Conectado, actualizando..."); loadAllData({ silent: true }); });
