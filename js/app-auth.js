@@ -1,223 +1,155 @@
 /* ============================================================
-   DR. XIAOMI · AUTENTICACIÓN
+   DR. XIAOMI · AUTENTICACIÓN SIMPLE CON PIN
    Archivo: js/app-auth.js
-   Descripción: Login, logout, protección de rutas, perfiles
+   Descripción: Login/logout con PIN hardcodeado, sesión en localStorage
    ============================================================ */
-
-import { auth, db } from './firebase.js';
-import {
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import {
-  doc, getDoc, collection, getDocs, query, orderBy, where
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ============================================================
-   LOGIN / LOGOUT
+   CONFIGURACIÓN DE USUARIOS Y PINs
+   Cambiar los PINs aquí cuando sea necesario
    ============================================================ */
 
-/**
- * Inicia sesión con email y contraseña
- * @param {string} email - email interno (ej: admin@drxiaomi.local)
- * @param {string} password - contraseña del usuario
- * @returns {Promise<{success: boolean, error?: string}>}
- */
-export async function login(email, password) {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    console.log('✅ Login OK:', userCredential.user.uid);
-    return { success: true };
-  } catch (error) {
-    console.error('❌ Error login:', error.code, error.message);
-    return {
-      success: false,
-      error: traducirError(error.code)
-    };
+const USUARIOS = {
+  admin: {
+    pin: '2011xiaomi',
+    nombre: 'Admin',
+    rol: 'admin',
+    icono: '👑',
+    subtitulo: 'Dueño'
+  },
+  tecnico: {
+    pin: '321xiaomi',
+    nombre: 'Técnico',
+    rol: 'tecnico',
+    icono: '👨‍🔧',
+    subtitulo: 'Taller'
   }
-}
+};
 
-/**
- * Traduce errores de Firebase a español
- */
-function traducirError(code) {
-  const errores = {
-    'auth/invalid-email':         'Email inválido',
-    'auth/user-disabled':         'Usuario desactivado',
-    'auth/user-not-found':        'Usuario no encontrado',
-    'auth/wrong-password':        'Contraseña incorrecta',
-    'auth/invalid-credential':    'Usuario o contraseña incorrectos',
-    'auth/too-many-requests':     'Demasiados intentos. Espera un momento.',
-    'auth/network-request-failed':'Sin conexión a internet',
-    'auth/invalid-login-credentials': 'Usuario o contraseña incorrectos'
+const SESION_KEY = 'drx_sesion';
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+
+export function login(usuarioId, pin) {
+  const usuario = USUARIOS[usuarioId];
+
+  if (!usuario) {
+    return { success: false, error: 'Usuario no encontrado' };
+  }
+
+  if (!pin || pin.trim().length === 0) {
+    return { success: false, error: 'Ingresa tu clave' };
+  }
+
+  if (pin !== usuario.pin) {
+    return { success: false, error: 'Clave incorrecta' };
+  }
+
+  const sesion = {
+    usuarioId,
+    nombre: usuario.nombre,
+    rol: usuario.rol,
+    icono: usuario.icono,
+    subtitulo: usuario.subtitulo,
+    fechaLogin: Date.now()
   };
-  return errores[code] || 'Error al iniciar sesión. Intenta de nuevo.';
+
+  localStorage.setItem(SESION_KEY, JSON.stringify(sesion));
+  console.log('✅ Login OK:', usuarioId);
+
+  return { success: true, usuario: sesion };
 }
 
-/**
- * Cierra la sesión actual y redirige al login
- */
-export async function logout(redirectTo = '/login/') {
-  try {
-    await signOut(auth);
-    console.log('👋 Sesión cerrada');
-    if (redirectTo) {
-      window.location.href = redirectTo;
-    }
-  } catch (error) {
-    console.error('❌ Error cerrando sesión:', error);
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+
+export function logout(redirectTo = '/login/') {
+  localStorage.removeItem(SESION_KEY);
+  console.log('👋 Sesión cerrada');
+  if (redirectTo) {
+    window.location.href = redirectTo;
   }
 }
 
 /* ============================================================
-   PERFILES (para la pantalla de login)
+   SESIÓN ACTUAL
    ============================================================ */
 
-/**
- * Obtiene todos los perfiles activos de Firestore
- * @returns {Promise<Array>} array de perfiles ordenados
- */
-export async function getPerfiles() {
+export function getSesion() {
   try {
-    const q = query(
-      collection(db, 'perfiles'),
-      where('activo', '==', true),
-      orderBy('orden', 'asc')
-    );
-    const snapshot = await getDocs(q);
-    const perfiles = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    console.log(`📋 ${perfiles.length} perfiles cargados`);
-    return perfiles;
+    const raw = localStorage.getItem(SESION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
   } catch (error) {
-    console.error('❌ Error cargando perfiles:', error);
-    return [];
-  }
-}
-
-/* ============================================================
-   USUARIO ACTUAL
-   ============================================================ */
-
-/**
- * Obtiene los datos del usuario logueado (uid + rol + nombre)
- * @returns {Promise<Object|null>}
- */
-export async function getUsuarioActual() {
-  const user = auth.currentUser;
-  if (!user) return null;
-
-  try {
-    const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
-    if (!userDoc.exists()) {
-      console.warn('⚠️ Usuario sin documento en Firestore');
-      return {
-        uid: user.uid,
-        email: user.email,
-        nombre: 'Usuario',
-        rol: 'tecnico'
-      };
-    }
-    return {
-      uid: user.uid,
-      email: user.email,
-      ...userDoc.data()
-    };
-  } catch (error) {
-    console.error('❌ Error obteniendo usuario:', error);
+    console.error('Error leyendo sesión:', error);
     return null;
   }
 }
 
-/**
- * Verifica si el usuario actual es admin
- */
-export async function esAdmin() {
-  const usuario = await getUsuarioActual();
-  return usuario?.rol === 'admin';
+export function esAdmin() {
+  const sesion = getSesion();
+  return sesion?.rol === 'admin';
+}
+
+export function esTecnico() {
+  const sesion = getSesion();
+  return sesion?.rol === 'tecnico';
 }
 
 /* ============================================================
-   PROTECCIÓN DE RUTAS
+   PERFILES
    ============================================================ */
 
-/**
- * Espera a que Firebase Auth esté listo y devuelve el usuario.
- * Útil para usar en páginas protegidas.
- * @returns {Promise<Object|null>}
- */
-export function esperarAuth() {
-  return new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      unsubscribe();
-      resolve(user);
-    });
-  });
+export function getPerfiles() {
+  return Object.entries(USUARIOS).map(([id, u]) => ({
+    id,
+    nombre: u.nombre,
+    subtitulo: u.subtitulo,
+    icono: u.icono,
+    rol: u.rol
+  }));
 }
 
-/**
- * Protege una página: si no hay sesión, redirige al login.
- * Si hay sesión, llama al callback con los datos del usuario.
- * @param {Function} callback - función a ejecutar si está autenticado
- * @param {Object} opciones - { requiereAdmin: boolean, redirigirA: string }
- */
-export async function requireAuth(callback, opciones = {}) {
+/* ============================================================
+   PROTECCIÓN DE PÁGINAS
+   ============================================================ */
+
+export function requireAuth(callback, opciones = {}) {
   const { requiereAdmin = false, redirigirA = '/login/' } = opciones;
 
-  // Esperar a que Firebase Auth esté listo
-  await esperarAuth();
+  const sesion = getSesion();
 
-  const user = auth.currentUser;
-
-  // Si no hay sesión, redirigir al login
-  if (!user) {
+  if (!sesion) {
     console.log('🔒 Sin sesión → redirigiendo a login');
     window.location.href = redirigirA;
     return null;
   }
 
-  // Obtener datos del usuario
-  const usuario = await getUsuarioActual();
-
-  // Verificar si es admin cuando se requiere
-  if (requiereAdmin && usuario?.rol !== 'admin') {
+  if (requiereAdmin && sesion.rol !== 'admin') {
     console.log('🔒 No es admin → redirigiendo a /app/');
     window.location.href = '/app/';
     return null;
   }
 
-  // Todo OK, ejecutar callback
   if (typeof callback === 'function') {
-    callback(usuario);
+    callback(sesion);
   }
 
-  return usuario;
+  return sesion;
 }
 
 /* ============================================================
-   HELPERS PARA REDIRIGIR SEGÚN ROL
+   HELPERS
    ============================================================ */
 
-/**
- * Redirige al usuario según su rol después del login
- */
-export async function redirigirSegunRol() {
-  const usuario = await getUsuarioActual();
-  if (!usuario) {
+export function redirigirSegunRol() {
+  const sesion = getSesion();
+  if (!sesion) {
     window.location.href = '/login/';
     return;
   }
-  // Todos van al panel principal (el panel se adapta al rol)
   window.location.href = '/app/';
-}
-
-/**
- * Observa cambios de sesión (útil para detectar cierre de sesión)
- * @param {Function} callback - (user) => {}
- */
-export function onSesionCambia(callback) {
-  return onAuthStateChanged(auth, callback);
 }
