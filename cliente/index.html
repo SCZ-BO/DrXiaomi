@@ -10,15 +10,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
-  <!-- 🔥 Firebase: se carga antes que el script principal -->
+
+  <!-- 🔥 Firebase: carga los módulos desde ./js/ -->
   <script type="module">
     import { Recibos, Clientes } from './js/db.js';
     window.Recibos = Recibos;
     window.Clientes = Clientes;
     console.log('🔥 Firebase listo');
   </script>
-  
+
   <style>
     * {
       margin: 0;
@@ -27,7 +27,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Xiaomi Modern Colors */
     :root {
       --xiaomi-orange: #FF6900;
       --xiaomi-orange-dark: #E55A00;
@@ -624,7 +623,6 @@
     setTheme(currentTheme === "dark" ? "light" : "dark");
   });
 
-  // Generar número de recibo basado en fecha y hora (DDMMYY-HHMMSS)
   function generarNumeroRecibo() {
     const fecha = new Date();
     const dia = String(fecha.getDate()).padStart(2, '0');
@@ -660,7 +658,6 @@
     actualizarHeader();
     setInterval(actualizarHeader, 1000);
 
-    // Toggle seguridad
     const tipo = document.getElementById('tipoSeguridad');
     const pinCont = document.getElementById('pinContainer');
     const fieldP = document.getElementById('field-patron');
@@ -672,7 +669,6 @@
     pinCont.style.display = 'none';
     fieldP.style.display = 'block';
     
-    // Vista previa de imágenes
     const fotosInput = document.getElementById('fotos');
     const imagePreview = document.getElementById('imagePreview');
     const photoCounter = document.getElementById('photoCounter');
@@ -705,7 +701,6 @@
       }
     });
 
-    // Servicios
     const serviciosList = document.getElementById('serviciosList');
     const addServicioBtn = document.getElementById('addServicio');
     const costoTotal = document.getElementById('costoTotal');
@@ -760,12 +755,10 @@
     }
     updateRemoveButtons();
     
-    // Validación teléfono
     document.getElementById('telefono').addEventListener('input', function() {
       this.value = this.value.replace(/[^0-9]/g, '');
     });
     
-    // PatternLock
     class PatternLock {
       constructor(){
         this.bg = document.getElementById('bgCanvas');
@@ -865,7 +858,6 @@
     }
     const lock = new PatternLock();
     
-    // Enviar WhatsApp
     function enviarWhatsApp(numero, nombreCliente, numeroRecibo, total, marca, modelo) {
       const mensaje = `Hola ${nombreCliente}, gracias por confiar en DR. XIAOMI.
 
@@ -897,7 +889,6 @@ Tel: 75959450`;
       }
     });
     
-    // Generar PDF
     document.getElementById('formRecibo').addEventListener('submit', async e => {
       e.preventDefault();
 
@@ -1126,7 +1117,7 @@ Tel: 75959450`;
 
         pdf.save(`Recibo_${numeroRecibo}_${nombreCliente}.pdf`);
 
-        // 💾 GUARDAR EN FIRESTORE (sincronización multi-dispositivo)
+        // 💾 GUARDAR EN FIRESTORE
         try {
           const serviciosDataGuardar = Array.from(document.querySelectorAll('.servicio-item'))
             .map(item => ({
@@ -1160,7 +1151,6 @@ Tel: 75959450`;
           console.log('✅ Recibo sincronizado en la nube');
         } catch (err) {
           console.error('❌ Error al sincronizar con Firestore:', err);
-          // No bloquea el flujo: el PDF ya se generó
         }
 
         const whatsappAction = document.getElementById('whatsappAction');
