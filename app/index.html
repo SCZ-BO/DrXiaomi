@@ -1,1 +1,358 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>DR. Xiaomi · Panel</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <link rel="stylesheet" href="/css/app-theme.css">
+  <link rel="stylesheet" href="/css/app-components.css">
+  <link rel="stylesheet" href="/css/app-layouts.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- ============================================================
+         HEADER
+         ============================================================ -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-logo">
+          <i class="fas fa-tools"></i>
+        </div>
+        <div class="brand-text">
+          <h1>DR. XIAOMI</h1>
+          <p id="userInfo">Cargando...</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
+          <i class="fas fa-right-from-bracket"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ============================================================
+         CONTENIDO
+         ============================================================ -->
+    <main class="app-content">
+
+      <!-- Stats -->
+      <div class="stats-grid" style="margin-bottom: 20px;">
+        <div class="stat-card">
+          <div class="stat-value" id="statActivas">—</div>
+          <div class="stat-label">Activas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value success" id="statListas">—</div>
+          <div class="stat-label">Listas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value brand" id="statHoy">—</div>
+          <div class="stat-label">Hoy</div>
+        </div>
+      </div>
+
+      <!-- Buscador -->
+      <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="search" 
+               id="buscador" 
+               placeholder="Buscar por cliente, teléfono o recibo..."
+               autocomplete="off">
+      </div>
+
+      <!-- Filtros -->
+      <div class="filters-row" id="filtros">
+        <button class="chip chip-interactive active" data-filtro="todos">Todas</button>
+        <button class="chip chip-interactive" data-filtro="recibido">Recibidas</button>
+        <button class="chip chip-interactive" data-filtro="listo">Listas</button>
+        <button class="chip chip-interactive" data-filtro="entregado">Entregadas</button>
+        <button class="chip chip-interactive" data-filtro="devuelto">Devueltas</button>
+      </div>
+
+      <!-- Lista de órdenes -->
+      <div class="cards-list" id="listaOrdenes">
+        <div class="empty-state">
+          <div class="spinner" style="margin: 20px auto;"></div>
+          <p>Cargando órdenes...</p>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ============================================================
+         BOTÓN FLOTANTE - NUEVO RECIBO
+         ============================================================ -->
+    <button class="btn-fab" id="nuevoReciboBtn" title="Nuevo recibo">
+      <i class="fas fa-plus"></i>
+    </button>
+
+  </div>
+
+  <!-- ============================================================
+       SCRIPTS
+       ============================================================ -->
+  <script type="module">
+    import { requireAuth, logout, getSesion } from '/js/app-auth.js';
+    import { toast, haptic, initTheme, toggleTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
+    import { db } from '/js/firebase.js';
+    import { 
+      collection, query, orderBy, onSnapshot, limit 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ============================================================
+    // INICIALIZACIÓN
+    // ============================================================
+
+    initTheme();
+
+    let sesion = null;
+    let ordenes = [];
+    let filtroActual = 'todos';
+    let busquedaActual = '';
+    let unsubscribe = null;
+
+    // Proteger la página
+    requireAuth((s) => {
+      sesion = s;
+      iniciarApp();
+    });
+
+    // ============================================================
+    // INICIAR APP
+    // ============================================================
+
+    function iniciarApp() {
+      // Mostrar info del usuario
+      document.getElementById('userInfo').textContent = 
+        `${sesion.icono || ''} ${sesion.nombre}`;
+
+      // Configurar UI
+      configurarEventos();
+
+      // Cargar órdenes en tiempo real
+      cargarOrdenes();
+
+      toast(`Bienvenido, ${sesion.nombre}`, 'success', 2000);
+    }
+
+    // ============================================================
+    // EVENTOS
+    // ============================================================
+
+    function configurarEventos() {
+      // Logout
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        haptic(20);
+        logout();
+      });
+
+      // Nuevo recibo
+      document.getElementById('nuevoReciboBtn').addEventListener('click', () => {
+        haptic(15);
+        window.location.href = '/cliente/';
+      });
+
+      // Filtros
+      document.getElementById('filtros').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-filtro]');
+        if (!btn) return;
+
+        haptic(10);
+        document.querySelectorAll('#filtros .chip-interactive').forEach(b => 
+          b.classList.remove('active')
+        );
+        btn.classList.add('active');
+        filtroActual = btn.dataset.filtro;
+        renderizarOrdenes();
+      });
+
+      // Buscador
+      document.getElementById('buscador').addEventListener('input', (e) => {
+        busquedaActual = e.target.value.toLowerCase().trim();
+        renderizarOrdenes();
+      });
+    }
+
+    // ============================================================
+    // CARGAR ÓRDENES (tiempo real)
+    // ============================================================
+
+    function cargarOrdenes() {
+      const q = query(
+        collection(db, 'recibos'),
+        orderBy('fecha', 'desc'),
+        limit(200)
+      );
+
+      unsubscribe = onSnapshot(q, 
+        (snapshot) => {
+          ordenes = snapshot.docs.map(d => ({
+            id: d.id,
+            ...d.data()
+          }));
+
+          console.log(`📋 ${ordenes.length} órdenes cargadas`);
+          renderizarOrdenes();
+          actualizarStats();
+        },
+        (error) => {
+          console.error('❌ Error cargando órdenes:', error);
+          
+          // Posible error de índice
+          if (error.message && error.message.includes('index')) {
+            document.getElementById('listaOrdenes').innerHTML = `
+              <div class="empty-state">
+                <i class="fas fa-database"></i>
+                <h3>Falta crear un índice</h3>
+                <p>Abre la consola (F12) para ver el link</p>
+              </div>
+            `;
+          } else {
+            document.getElementById('listaOrdenes').innerHTML = `
+              <div class="empty-state">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error al cargar</h3>
+                <p>${error.message || 'Intenta de nuevo'}</p>
+              </div>
+            `;
+          }
+        }
+      );
+    }
+
+    // ============================================================
+    // RENDERIZAR ORDENES
+    // ============================================================
+
+    function renderizarOrdenes() {
+      const lista = document.getElementById('listaOrdenes');
+
+      // Filtrar
+      let filtradas = ordenes;
+
+      if (filtroActual !== 'todos') {
+        filtradas = filtradas.filter(o => o.estado === filtroActual);
+      }
+
+      if (busquedaActual) {
+        filtradas = filtradas.filter(o => {
+          const texto = [
+            o.numeroRecibo,
+            o.cliente,
+            o.telefono,
+            o.marca,
+            o.modelo
+          ].filter(Boolean).join(' ').toLowerCase();
+          return texto.includes(busquedaActual);
+        });
+      }
+
+      // Vacío
+      if (filtradas.length === 0) {
+        lista.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h3>${busquedaActual ? 'Sin resultados' : 'No hay órdenes'}</h3>
+            <p>${busquedaActual ? 'Prueba otra búsqueda' : 'Crea el primer recibo tocando +'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Render
+      lista.innerHTML = filtradas.map(o => renderCard(o)).join('');
+
+      // Listeners
+      lista.querySelectorAll('.orden-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const id = card.dataset.id;
+          haptic(10);
+          // Próximamente: ir al detalle
+          toast(`Abriendo ${id}... (próximamente)`, 'info', 2000);
+        });
+      });
+    }
+
+    function renderCard(o) {
+      const estadoInfo = {
+        recibido:   { clase: 'recibido',   texto: 'Recibido' },
+        diagnostico:{ clase: 'diagnostico',texto: 'Diagnóstico' },
+        listo:      { clase: 'listo',      texto: 'Listo' },
+        entregado:  { clase: 'entregado',  texto: 'Entregado' },
+        devuelto:   { clase: 'devuelto',   texto: 'Devuelto' },
+        cancelado:  { clase: 'cancelado',  texto: 'Cancelado' }
+      }[o.estado] || { clase: 'recibido', texto: o.estado || 'Sin estado' };
+
+      const total = Number(o.total) || 0;
+
+      return `
+        <div class="card card-interactive orden-card" data-id="${o.id}">
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span class="chip chip-${estadoInfo.clase}">${estadoInfo.texto}</span>
+                <span style="font-size: 11px; color: var(--text-3); font-weight: 600;">
+                  ${o.numeroRecibo || '—'}
+                </span>
+              </div>
+              <div style="font-size: 15px; font-weight: 700; color: var(--text-1); margin-bottom: 2px;">
+                ${escapeHtml(o.cliente) || 'Sin nombre'}
+              </div>
+              <div style="font-size: 13px; color: var(--text-3);">
+                <i class="fas fa-mobile-screen" style="font-size: 11px;"></i>
+                ${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}
+              </div>
+              <div style="font-size: 11px; color: var(--text-3); margin-top: 6px;">
+                <i class="far fa-clock"></i> ${tiempoRelativo(o.fecha)}
+              </div>
+            </div>
+            <div style="text-align: right; flex-shrink: 0;">
+              <div style="font-size: 18px; font-weight: 800; color: var(--brand-500);">
+                ${formatBs(total)}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ============================================================
+    // ACTUALIZAR STATS
+    // ============================================================
+
+    function actualizarStats() {
+      const activas = ordenes.filter(o => 
+        ['recibido', 'diagnostico'].includes(o.estado)
+      ).length;
+
+      const listas = ordenes.filter(o => o.estado === 'listo').length;
+
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+
+      const hoyCount = ordenes.filter(o => {
+        if (!o.fecha) return false;
+        const d = o.fecha.toDate ? o.fecha.toDate() : new Date(o.fecha);
+        return d >= hoy;
+      }).length;
+
+      document.getElementById('statActivas').textContent = activas;
+      document.getElementById('statListas').textContent = listas;
+      document.getElementById('statHoy').textContent = hoyCount;
+    }
+
+  </script>
+
+</body>
+</html>
