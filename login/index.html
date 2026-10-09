@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0A0A0B">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>DR. Xiaomi · Ingresar</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,11 +31,7 @@
 
     <p class="login-section-title">¿Quién está ingresando?</p>
 
-    <div id="perfilesList" style="width: 100%; max-width: 340px;">
-      <!-- Se cargan dinámicamente -->
-      <div class="skeleton" style="height: 84px; margin-bottom: 12px; border-radius: 20px;"></div>
-      <div class="skeleton" style="height: 84px; border-radius: 20px;"></div>
-    </div>
+    <div id="perfilesList" style="width: 100%; max-width: 340px;"></div>
 
     <button id="themeToggle" class="icon-btn" 
             style="position: fixed; top: 20px; right: 20px; width: 44px; height: 44px; background: var(--bg-elev-1); border: 1px solid var(--border-2); border-radius: 12px; color: var(--text-2); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;"
@@ -46,34 +41,38 @@
   </div>
 
   <!-- ============================================================
-       VISTA 2: INGRESAR CONTRASEÑA
+       VISTA 2: INGRESAR CLAVE
        ============================================================ -->
-  <div class="login-container hidden" id="viewPassword">
+  <div class="login-container hidden" id="viewPin">
     <button id="backBtn" 
-            style="position: absolute; top: 20px; left: 20px; width: 44px; height: 44px; background: var(--bg-elev-1); border: 1px solid var(--border-2); border-radius: 12px; color: var(--text-2); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer;"
+            style="position: fixed; top: 20px; left: 20px; width: 44px; height: 44px; background: var(--bg-elev-1); border: 1px solid var(--border-2); border-radius: 12px; color: var(--text-2); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;"
             aria-label="Volver">
       <i class="fas fa-arrow-left"></i>
     </button>
 
-    <div class="login-logo" id="profileIconView">
+    <div class="login-logo" id="profileIconView" style="margin-bottom: 16px;">
       <span style="font-size: 40px;">👑</span>
     </div>
 
-    <h1 class="login-title" id="profileNameView">Admin</h1>
-    <p class="login-subtitle" id="profileRoleView">Dueño</p>
+    <h1 class="login-title" id="profileNameView" style="font-size: 22px;">Admin</h1>
+    <p class="login-subtitle" id="profileRoleView" style="margin-bottom: 32px;">Dueño</p>
 
-    <form id="loginForm" style="width: 100%; max-width: 340px;">
-      <div class="field">
+    <form style="width: 100%; max-width: 340px;" id="pinForm">
+      <div style="position: relative; margin-bottom: 16px;">
         <input type="password" 
-               id="passwordInput" 
-               placeholder=" " 
-               required 
+               id="pinInput" 
+               placeholder="Ingresa tu clave"
                autocomplete="current-password"
+               style="width: 100%; padding: 18px 50px 18px 18px; background: var(--bg-elev-1); border: 1.5px solid var(--border-2); border-radius: 16px; color: var(--text-1); font-size: 16px; font-weight: 600; text-align: center; letter-spacing: 1px; transition: all 0.2s ease; font-family: inherit;"
                autofocus>
-        <label for="passwordInput">Contraseña</label>
+        <button type="button" id="togglePin" 
+                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--text-3); font-size: 16px; cursor: pointer; border-radius: 12px;"
+                aria-label="Mostrar clave">
+          <i class="fas fa-eye"></i>
+        </button>
       </div>
 
-      <div id="loginError" class="field-error hidden" style="text-align: center; margin-top: 4px;"></div>
+      <div id="pinError" style="text-align: center; color: #EF4444; font-size: 14px; font-weight: 600; min-height: 20px; margin-bottom: 12px;"></div>
 
       <button type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn">
         <i class="fas fa-sign-in-alt"></i>
@@ -92,201 +91,141 @@
        SCRIPTS
        ============================================================ -->
   <script type="module">
-    import { getPerfiles, login, redirigirSegunRol } from '/js/app-auth.js';
-    import { 
-      toast, showLoading, hideLoading, 
-      haptic, initTheme, toggleTheme 
-    } from '/js/app-ui.js';
-    import { auth } from '/js/firebase.js';
+    import { getPerfiles, login, getSesion, redirigirSegunRol } from '/js/app-auth.js';
+    import { toast, haptic, initTheme, toggleTheme } from '/js/app-ui.js';
 
-    // ============================================================
-    // INICIALIZACIÓN
-    // ============================================================
+    let perfilActual = null;
 
-    let perfilSeleccionado = null;
+    const viewPerfiles    = document.getElementById('viewPerfiles');
+    const viewPin         = document.getElementById('viewPin');
+    const perfilesList    = document.getElementById('perfilesList');
+    const profileIconView = document.getElementById('profileIconView');
+    const profileNameView = document.getElementById('profileNameView');
+    const profileRoleView = document.getElementById('profileRoleView');
+    const pinForm         = document.getElementById('pinForm');
+    const pinInput        = document.getElementById('pinInput');
+    const pinError        = document.getElementById('pinError');
+    const submitBtn       = document.getElementById('submitBtn');
+    const togglePin       = document.getElementById('togglePin');
+    const backBtn         = document.getElementById('backBtn');
+    const themeToggle     = document.getElementById('themeToggle');
+    const themeToggle2    = document.getElementById('themeToggle2');
 
-    // Referencias del DOM
-    const viewPerfiles       = document.getElementById('viewPerfiles');
-    const viewPassword       = document.getElementById('viewPassword');
-    const perfilesList       = document.getElementById('perfilesList');
-    const profileIconView    = document.getElementById('profileIconView');
-    const profileNameView    = document.getElementById('profileNameView');
-    const profileRoleView    = document.getElementById('profileRoleView');
-    const loginForm          = document.getElementById('loginForm');
-    const passwordInput      = document.getElementById('passwordInput');
-    const loginError         = document.getElementById('loginError');
-    const submitBtn          = document.getElementById('submitBtn');
-    const backBtn            = document.getElementById('backBtn');
-    const themeToggle        = document.getElementById('themeToggle');
-    const themeToggle2       = document.getElementById('themeToggle2');
-
-    // Inicializar tema
     initTheme();
 
-    // Listeners de tema
+    const sesionExistente = getSesion();
+    if (sesionExistente) {
+      console.log('✅ Ya hay sesión activa, redirigiendo...');
+      redirigirSegunRol();
+    }
+
     themeToggle.addEventListener('click', () => { haptic(10); toggleTheme(); });
     themeToggle2.addEventListener('click', () => { haptic(10); toggleTheme(); });
 
-    // ============================================================
-    // SI YA HAY SESIÓN → REDIRIGIR AL APP
-    // ============================================================
+    function cargarPerfiles() {
+      const perfiles = getPerfiles();
 
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        console.log('✅ Ya hay sesión activa, redirigiendo...');
-        redirigirSegunRol();
-      }
-    });
-
-    // ============================================================
-    // CARGAR PERFILES
-    // ============================================================
-
-    async function cargarPerfiles() {
-      try {
-        const perfiles = await getPerfiles();
-
-        if (perfiles.length === 0) {
-          perfilesList.innerHTML = `
-            <div class="empty-state">
-              <i class="fas fa-users-slash"></i>
-              <h3>No hay perfiles disponibles</h3>
-              <p>Contacta al administrador</p>
-            </div>
-          `;
-          return;
-        }
-
-        perfilesList.innerHTML = perfiles.map(p => `
-          <button class="profile-card" data-perfil-id="${p.id}" type="button">
-            <div class="profile-icon">${p.icono || '👤'}</div>
-            <div class="profile-info">
-              <div class="profile-name">${p.nombreVisible}</div>
-              <div class="profile-role">${p.subtitulo || ''}</div>
-            </div>
-            <i class="fas fa-chevron-right profile-arrow"></i>
-          </button>
-        `).join('');
-
-        // Listener en cada tarjeta
-        perfilesList.querySelectorAll('.profile-card').forEach(card => {
-          card.addEventListener('click', () => {
-            const perfilId = card.dataset.perfilId;
-            const perfil = perfiles.find(p => p.id === perfilId);
-            if (perfil) seleccionarPerfil(perfil);
-          });
-        });
-
-      } catch (error) {
-        console.error('Error cargando perfiles:', error);
-        perfilesList.innerHTML = `
-          <div class="empty-state">
-            <i class="fas fa-exclamation-triangle"></i>
-            <h3>Error al cargar</h3>
-            <p>Verifica tu conexión a internet</p>
+      perfilesList.innerHTML = perfiles.map(p => `
+        <button class="profile-card" data-perfil-id="${p.id}" type="button">
+          <div class="profile-icon">${p.icono}</div>
+          <div class="profile-info">
+            <div class="profile-name">${p.nombre}</div>
+            <div class="profile-role">${p.subtitulo}</div>
           </div>
-        `;
-      }
-    }
+          <i class="fas fa-chevron-right profile-arrow"></i>
+        </button>
+      `).join('');
 
-    // ============================================================
-    // SELECCIONAR PERFIL
-    // ============================================================
+      perfilesList.querySelectorAll('.profile-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const perfilId = card.dataset.perfilId;
+          const perfil = perfiles.find(p => p.id === perfilId);
+          if (perfil) seleccionarPerfil(perfil);
+        });
+      });
+    }
 
     function seleccionarPerfil(perfil) {
-      perfilSeleccionado = perfil;
+      perfilActual = perfil;
       haptic(15);
 
-      // Actualizar vista de contraseña
-      profileIconView.innerHTML = `<span style="font-size: 40px;">${perfil.icono || '👤'}</span>`;
-      profileNameView.textContent = perfil.nombreVisible;
-      profileRoleView.textContent = perfil.subtitulo || perfil.rol;
+      profileIconView.innerHTML = `<span style="font-size: 40px;">${perfil.icono}</span>`;
+      profileNameView.textContent = perfil.nombre;
+      profileRoleView.textContent = perfil.subtitulo;
 
-      // Resetear formulario
-      loginForm.reset();
-      loginError.classList.add('hidden');
-      loginError.textContent = '';
+      pinForm.reset();
+      pinError.textContent = '';
+      pinInput.type = 'password';
+      togglePin.innerHTML = '<i class="fas fa-eye"></i>';
 
-      // Cambiar vista
       viewPerfiles.classList.add('hidden');
-      viewPassword.classList.remove('hidden');
+      viewPin.classList.remove('hidden');
 
-      // Focus en el campo de contraseña
-      setTimeout(() => passwordInput.focus(), 100);
+      setTimeout(() => pinInput.focus(), 100);
     }
-
-    // ============================================================
-    // VOLVER A PERFILES
-    // ============================================================
 
     backBtn.addEventListener('click', () => {
       haptic(10);
-      perfilSeleccionado = null;
-      viewPassword.classList.add('hidden');
+      perfilActual = null;
+      pinInput.value = '';
+      pinError.textContent = '';
+      viewPin.classList.add('hidden');
       viewPerfiles.classList.remove('hidden');
     });
 
-    // ============================================================
-    // SUBMIT LOGIN
-    // ============================================================
+    togglePin.addEventListener('click', () => {
+      haptic(8);
+      if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+        togglePin.innerHTML = '<i class="fas fa-eye-slash"></i>';
+      } else {
+        pinInput.type = 'password';
+        togglePin.innerHTML = '<i class="fas fa-eye"></i>';
+      }
+      pinInput.focus();
+    });
 
-    loginForm.addEventListener('submit', async (e) => {
+    pinForm.addEventListener('submit', (e) => {
       e.preventDefault();
+      verificarPin();
+    });
 
-      if (!perfilSeleccionado) return;
+    function verificarPin() {
+      if (!perfilActual) return;
 
-      const password = passwordInput.value;
-      if (!password) {
-        mostrarError('Ingresa tu contraseña');
+      const pin = pinInput.value;
+      if (!pin) {
+        pinError.textContent = 'Ingresa tu clave';
         return;
       }
 
-      // UI: loading
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<div class="spinner" style="width: 18px; height: 18px; border-width: 2px;"></div> Ingresando...';
-      loginError.classList.add('hidden');
+      submitBtn.innerHTML = '<div class="spinner" style="width: 18px; height: 18px; border-width: 2px;"></div> Verificando...';
+      pinError.textContent = '';
 
-      haptic(10);
+      const resultado = login(perfilActual.id, pin);
 
-      // Login
-      const result = await login(perfilSeleccionado.email, password);
-
-      if (result.success) {
-        // Éxito
-        haptic([10, 50, 10]);
-        toast(`¡Bienvenido, ${perfilSeleccionado.nombreVisible}!`, 'success', 1500);
+      if (resultado.success) {
+        haptic([15, 50, 15]);
+        toast(`¡Bienvenido, ${perfilActual.nombre}!`, 'success', 1200);
 
         setTimeout(() => {
           redirigirSegunRol();
-        }, 600);
+        }, 800);
       } else {
-        // Error
         haptic([50, 30, 50]);
-        mostrarError(result.error);
+        pinError.textContent = resultado.error || 'Clave incorrecta';
+
+        pinForm.style.animation = 'shake 0.4s';
+        setTimeout(() => pinForm.style.animation = '', 400);
 
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Ingresar';
 
-        // Shake animation
-        loginForm.style.animation = 'shake 0.4s';
-        setTimeout(() => loginForm.style.animation = '', 400);
-
-        passwordInput.select();
+        pinInput.select();
       }
-    });
-
-    function mostrarError(mensaje) {
-      loginError.textContent = mensaje;
-      loginError.classList.remove('hidden');
     }
 
-    // ============================================================
-    // ARRANCAR
-    // ============================================================
-
-    cargarPerfiles();
-
-    // Añadir animación shake
     const style = document.createElement('style');
     style.textContent = `
       @keyframes shake {
@@ -296,8 +235,16 @@
         60%      { transform: translateX(-6px); }
         80%      { transform: translateX(6px); }
       }
+      #pinInput:focus {
+        outline: none;
+        border-color: var(--brand-500) !important;
+        box-shadow: 0 0 0 3px rgba(255, 105, 0, 0.15);
+      }
+      #togglePin:hover { color: var(--text-1); background: var(--bg-elev-2); }
     `;
     document.head.appendChild(style);
+
+    cargarPerfiles();
   </script>
 
 </body>
