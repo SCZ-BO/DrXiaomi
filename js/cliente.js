@@ -4,7 +4,7 @@
    Descripción: Wizard, validación, PDF profesional, WhatsApp
    ============================================================ */
 
-import { requireAuth, logout, getSesion } from '/js/app-auth.js';
+import { requireAuth, logout } from '/js/app-auth.js';
 import { 
   toast, haptic, initTheme, 
   escapeHtml, formatBs, showLoading, hideLoading 
@@ -29,8 +29,7 @@ const CONFIG = {
     'La fecha de entrega está sujeta a disponibilidad de repuestos.',
     'El retiro debe hacerse dentro de los 10 días posteriores al aviso.',
     'Pasados 20 días sin retiro, el equipo se considera abandonado.',
-    'Garantía: 30 días en repuestos / 60 días en mano de obra.',
-    'El cliente acepta el diagnóstico y presupuesto al firmar.'
+    'Garantía: 30 días en repuestos / 60 días en mano de obra.'
   ]
 };
 
@@ -41,34 +40,24 @@ let sesion = null;
 let pasoActual = 1;
 const TOTAL_PASOS = 7;
 
-// Datos del formulario
 const datos = {
-  // Cliente
   nombre: '',
   telefono: '',
-  // Equipo
   marca: '',
   modelo: '',
   imei: '',
   enciende: '',
-  // Falla
   estado: '',
   falla: '',
-  // Seguridad
   tipoSeguridad: 'patron',
   pin: '',
   patronSecuencia: '',
-  // Fotos
-  fotos: [],       // array de { file, dataUrl }
-  // Costos
+  fotos: [],
   servicios: [],
   total: 0,
   adelanto: 0,
   saldo: 0
 };
-
-// Pattern lock
-let patternLock = null;
 
 /* ============================================================
    INICIALIZACIÓN
@@ -81,11 +70,9 @@ requireAuth((s) => {
 });
 
 function iniciar() {
-  // Mostrar usuario
   document.getElementById('userInfo').textContent = 
     `${sesion.icono || ''} ${sesion.nombre}`;
 
-  // Configurar eventos
   configurarHeader();
   configurarWizard();
   configurarMarca();
@@ -118,7 +105,7 @@ function configurarHeader() {
 }
 
 /* ============================================================
-   WIZARD (Navegación por pasos)
+   WIZARD
    ============================================================ */
 function configurarWizard() {
   document.getElementById('btnPrev').addEventListener('click', irPasoAnterior);
@@ -128,49 +115,32 @@ function configurarWizard() {
 function irPasoSiguiente() {
   if (!validarPaso(pasoActual)) return;
   guardarDatosPaso(pasoActual);
-  if (pasoActual < TOTAL_PASOS) {
-    irAPaso(pasoActual + 1);
-  }
+  if (pasoActual < TOTAL_PASOS) irAPaso(pasoActual + 1);
 }
 
 function irPasoAnterior() {
   guardarDatosPaso(pasoActual);
-  if (pasoActual > 1) {
-    irAPaso(pasoActual - 1);
-  }
+  if (pasoActual > 1) irAPaso(pasoActual - 1);
 }
 
 function irAPaso(nuevoPaso) {
   haptic(10);
   pasoActual = nuevoPaso;
 
-  // Ocultar todos los paneles
-  document.querySelectorAll('.wizard-panel').forEach(p => {
-    p.classList.add('hidden');
-  });
-
-  // Mostrar el panel actual
+  document.querySelectorAll('.wizard-panel').forEach(p => p.classList.add('hidden'));
   const panelActual = document.querySelector(`[data-panel="${pasoActual}"]`);
   if (panelActual) {
     panelActual.classList.remove('hidden');
-    // Scroll al top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Actualizar barra de progreso
   actualizarBarraProgreso();
-
-  // Actualizar botones
   actualizarBotones();
 
-  // Generar resumen si estamos en el paso 7
-  if (pasoActual === 7) {
-    generarResumen();
-  }
+  if (pasoActual === 7) generarResumen();
 }
 
 function actualizarBarraProgreso() {
-  // Actualizar círculos
   document.querySelectorAll('.wizard-step').forEach(el => {
     const step = parseInt(el.dataset.step);
     el.classList.remove('active', 'done');
@@ -178,7 +148,6 @@ function actualizarBarraProgreso() {
     else if (step === pasoActual) el.classList.add('active');
   });
 
-  // Actualizar barra
   const porcentaje = (pasoActual / TOTAL_PASOS) * 100;
   document.getElementById('wizardBarFill').style.width = `${porcentaje}%`;
 }
@@ -188,14 +157,8 @@ function actualizarBotones() {
   const btnNext = document.getElementById('btnNext');
   const btnGenerate = document.getElementById('btnGenerate');
 
-  // Botón Atrás
-  if (pasoActual === 1) {
-    btnPrev.style.display = 'none';
-  } else {
-    btnPrev.style.display = 'flex';
-  }
+  btnPrev.style.display = pasoActual === 1 ? 'none' : 'flex';
 
-  // Botón Siguiente o Generar
   if (pasoActual === TOTAL_PASOS) {
     btnNext.style.display = 'none';
     btnGenerate.style.display = 'flex';
@@ -206,15 +169,15 @@ function actualizarBotones() {
 }
 
 /* ============================================================
-   VALIDACIÓN POR PASO
+   VALIDACIÓN
    ============================================================ */
 function validarPaso(paso) {
   switch (paso) {
     case 1: return validarCliente();
     case 2: return validarEquipo();
-    case 3: return true; // Estado y falla son opcionales
+    case 3: return true;
     case 4: return validarSeguridad();
-    case 5: return true; // Fotos son opcionales
+    case 5: return true;
     case 6: return validarCostos();
     default: return true;
   }
@@ -229,13 +192,11 @@ function validarCliente() {
     document.getElementById('nombre').focus();
     return false;
   }
-
   if (!telefono || telefono.length < 7) {
-    toast('Ingresa un teléfono válido (7-8 dígitos)', 'error');
+    toast('Ingresa un teléfono válido', 'error');
     document.getElementById('telefono').focus();
     return false;
   }
-
   return true;
 }
 
@@ -244,22 +205,9 @@ function validarEquipo() {
   const modelo = document.getElementById('modelo').value.trim();
   const enciende = document.getElementById('enciende').value;
 
-  if (!marca) {
-    toast('Selecciona la marca del equipo', 'error');
-    return false;
-  }
-
-  if (!modelo) {
-    toast('Ingresa el modelo del equipo', 'error');
-    document.getElementById('modelo').focus();
-    return false;
-  }
-
-  if (!enciende) {
-    toast('Indica si el equipo enciende', 'error');
-    return false;
-  }
-
+  if (!marca) { toast('Selecciona la marca', 'error'); return false; }
+  if (!modelo) { toast('Ingresa el modelo', 'error'); document.getElementById('modelo').focus(); return false; }
+  if (!enciende) { toast('Indica si el equipo enciende', 'error'); return false; }
   return true;
 }
 
@@ -268,38 +216,28 @@ function validarSeguridad() {
 
   if (tipo === 'pin') {
     const pin = document.getElementById('pinInput').value.trim();
-    if (!pin) {
-      toast('Ingresa el PIN del equipo', 'error');
-      return false;
-    }
+    if (!pin) { toast('Ingresa el PIN del equipo', 'error'); return false; }
   }
 
   if (tipo === 'patron') {
     const patron = document.getElementById('patronSecuencia')?.value || '';
-    if (!patron) {
-      toast('Dibuja el patrón del equipo', 'error');
-      return false;
-    }
+    if (!patron) { toast('Dibuja el patrón del equipo', 'error'); return false; }
   }
-
   return true;
 }
 
 function validarCostos() {
   const servicios = document.querySelectorAll('.servicio-item');
   let hayValido = false;
-
   servicios.forEach(item => {
     const desc = item.querySelector('.servicio-desc').value.trim();
     const costo = parseFloat(item.querySelector('.servicio-costo').value) || 0;
     if (desc && costo > 0) hayValido = true;
   });
-
   if (!hayValido) {
     toast('Agrega al menos un servicio con descripción y costo', 'error');
     return false;
   }
-
   return true;
 }
 
@@ -328,7 +266,6 @@ function guardarDatosPaso(paso) {
       datos.patronSecuencia = document.getElementById('patronSecuencia')?.value || '';
       break;
     case 5:
-      // fotos ya se manejan en tiempo real
       break;
     case 6:
       recolectarServicios();
@@ -340,14 +277,13 @@ function guardarDatosPaso(paso) {
 }
 
 /* ============================================================
-   MARCA (chips seleccionables)
+   MARCA
    ============================================================ */
 function configurarMarca() {
   const grid = document.getElementById('marcasGrid');
   grid.addEventListener('click', (e) => {
     const btn = e.target.closest('.marca-btn');
     if (!btn) return;
-
     haptic(8);
     grid.querySelectorAll('.marca-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -356,10 +292,9 @@ function configurarMarca() {
 }
 
 /* ============================================================
-   RADIO GROUPS (enciende, tipoSeguridad)
+   RADIO GROUPS
    ============================================================ */
 function configurarRadioGroups() {
-  // Enciende
   const enciendeGroup = document.getElementById('enciendeGroup');
   enciendeGroup.addEventListener('click', (e) => {
     const btn = e.target.closest('.radio-option');
@@ -370,7 +305,6 @@ function configurarRadioGroups() {
     document.getElementById('enciende').value = btn.dataset.value;
   });
 
-  // Tipo seguridad
   const tipoGroup = document.getElementById('tipoSeguridadGroup');
   tipoGroup.addEventListener('click', (e) => {
     const btn = e.target.closest('.radio-option');
@@ -381,7 +315,6 @@ function configurarRadioGroups() {
     const tipo = btn.dataset.value;
     document.getElementById('tipoSeguridad').value = tipo;
 
-    // Mostrar/ocultar contenedores
     document.getElementById('pinContainer').classList.toggle('hidden', tipo !== 'pin');
     document.getElementById('patronContainer').classList.toggle('hidden', tipo !== 'patron');
   });
@@ -442,7 +375,6 @@ function configurarPattern() {
     if (drawing && current) lnc.lineTo(current.x, current.y);
     lnc.stroke();
 
-    // Puntos seleccionados
     path.forEach((p, i) => {
       lnc.beginPath();
       lnc.arc(p.x, p.y, 10, 0, 2 * Math.PI);
@@ -513,7 +445,6 @@ function configurarPattern() {
     }
   }
 
-  // Crear input hidden para el patrón
   if (!document.getElementById('patronSecuencia')) {
     const input = document.createElement('input');
     input.type = 'hidden';
@@ -553,7 +484,6 @@ function configurarFotos() {
     const slot = e.target.closest('.foto-slot');
     if (!slot) return;
 
-    // Si tiene foto y tocan el botón de eliminar
     const removeBtn = e.target.closest('.foto-remove');
     if (removeBtn) {
       e.stopPropagation();
@@ -564,10 +494,8 @@ function configurarFotos() {
       return;
     }
 
-    // Si ya tiene foto, no hace nada al tocar
     if (datos.fotos[parseInt(slot.dataset.slot)]) return;
 
-    // Abrir selector
     slotActual = parseInt(slot.dataset.slot);
     input.click();
   });
@@ -650,20 +578,18 @@ async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
 }
 
 /* ============================================================
-   SERVICIOS Y COSTOS
+   SERVICIOS
    ============================================================ */
 function configurarServicios() {
   const list = document.getElementById('serviciosList');
   const btnAdd = document.getElementById('addServicio');
 
-  // Listener del primer item
   const firstItem = list.querySelector('.servicio-item');
   const firstCosto = firstItem.querySelector('.servicio-costo');
   const firstRemove = firstItem.querySelector('.removeServicio');
   firstCosto.addEventListener('input', calcularTotal);
   firstRemove.addEventListener('click', () => eliminarServicio(firstItem));
 
-  // Botón añadir
   btnAdd.addEventListener('click', () => {
     haptic(10);
     const item = crearServicioItem();
@@ -738,7 +664,6 @@ function actualizarSaldo() {
   const total = parseFloat(document.getElementById('costoTotal').value) || 0;
   const adelanto = parseFloat(document.getElementById('adelanto').value) || 0;
   const saldo = Math.max(0, total - adelanto);
-
   document.getElementById('saldoDisplay').textContent = formatBs(saldo);
 }
 
@@ -750,7 +675,6 @@ function configurarCharCounters() {
     const id = counter.dataset.for;
     const input = document.getElementById(id);
     if (!input) return;
-
     const max = input.maxLength;
     const update = () => {
       counter.textContent = `${input.value.length}/${max}`;
@@ -761,11 +685,10 @@ function configurarCharCounters() {
 }
 
 /* ============================================================
-   RESUMEN (paso 7)
+   RESUMEN
    ============================================================ */
 function generarResumen() {
   guardarDatosPaso(6);
-
   const cont = document.getElementById('resumenContenido');
 
   const serviciosHtml = datos.servicios.map(s => `
@@ -789,11 +712,7 @@ function generarResumen() {
       <div style="font-size: 15px; font-weight: 700; color: var(--text-1);">
         ${escapeHtml(datos.marca)} ${escapeHtml(datos.modelo)}
       </div>
-      ${datos.imei ? `
-        <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
-          <i class="fas fa-barcode"></i> IMEI: ${escapeHtml(datos.imei)}
-        </div>
-      ` : ''}
+      ${datos.imei ? `<div style="font-size: 13px; color: var(--text-3); margin-top: 4px;"><i class="fas fa-barcode"></i> ${escapeHtml(datos.imei)}</div>` : ''}
       <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
         <i class="fas fa-power-off"></i> Enciende: ${escapeHtml(datos.enciende)}
       </div>
@@ -844,6 +763,9 @@ function generarResumen() {
    ============================================================ */
 function configurarPDF() {
   document.getElementById('btnGenerate').addEventListener('click', generarPDF);
+  document.getElementById('backToPanelBtn2').addEventListener('click', () => {
+    window.location.href = '/app/';
+  });
 }
 
 function generarNumeroRecibo() {
@@ -859,7 +781,6 @@ function generarNumeroRecibo() {
 
 async function generarPDF() {
   guardarDatosPaso(6);
-
   const numeroRecibo = generarNumeroRecibo();
   showLoading('Generando PDF...');
   haptic(20);
@@ -867,29 +788,23 @@ async function generarPDF() {
   try {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-    const W = 210;
-    const H = 297;
-    const M = 15;
-    const CW = W - M * 2; // ancho útil
-
+    const W = 210, H = 297, M = 15;
+    const CW = W - M * 2;
     let y = 0;
 
-    /* ========== HEADER NARANJA ========== */
+    /* HEADER NARANJA */
     pdf.setFillColor(255, 105, 0);
     pdf.rect(0, 0, W, 38, 'F');
-
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(20);
-    pdf.text('DR. XIAOMI SCZ', M, 15);
-
+    pdf.text(CONFIG.nombreTienda, M, 15);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(9);
     pdf.text(CONFIG.eslogan, M, 21);
     pdf.setFontSize(8);
     pdf.text(`${CONFIG.direccion}  ·  Tel: ${CONFIG.telefono}`, M, 26);
     pdf.text(`${CONFIG.horario}  ·  ${CONFIG.web}`, M, 30);
-
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(11);
     pdf.text('RECIBO DE INGRESO', W - M, 15, { align: 'right' });
@@ -897,24 +812,60 @@ async function generarPDF() {
     pdf.text(numeroRecibo, W - M, 21, { align: 'right' });
 
     y = 45;
-
-    /* ========== FECHA Y RECIBIDO POR ========== */
     const fecha = new Date();
     const fechaStr = `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')}/${fecha.getFullYear()} · ${String(fecha.getHours()).padStart(2,'0')}:${String(fecha.getMinutes()).padStart(2,'0')}`;
 
     pdf.setFillColor(248, 248, 248);
     pdf.roundedRect(M, y, CW, 12, 2, 2, 'F');
-
     pdf.setTextColor(80, 80, 80);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(9);
-    pdf.text(`Fecha de ingreso: ${fechaStr}`, M + 4, y + 7.5);
-
+    pdf.text(`Fecha: ${fechaStr}`, M + 4, y + 7.5);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(50, 50, 50);
     pdf.text(`Recibido por: ${sesion.nombre}`, W - M - 4, y + 7.5, { align: 'right' });
 
     y += 18;
 
-    /* ========== CLIENTE Y EQUIPO (2 columnas) ========== */
-    const colW
+    /* CLIENTE Y EQUIPO */
+    const colW = (CW - 4) / 2;
+    pdf.setFillColor(255, 244, 235);
+    pdf.roundedRect(M, y, colW, 26, 2, 2, 'F');
+    pdf.roundedRect(M + colW + 4, y, colW, 26, 2, 2, 'F');
+
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('CLIENTE', M + 4, y + 6);
+    pdf.text('EQUIPO', M + colW + 8, y + 6);
+
+    pdf.setTextColor(30, 30, 30);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.text(datos.nombre.slice(0, 22), M + 4, y + 13);
+    pdf.text(`${datos.marca} ${datos.modelo}`.slice(0, 22), M + colW + 8, y + 13);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(80, 80, 80);
+    pdf.text(`Tel: ${datos.telefono}`, M + 4, y + 20);
+    if (datos.imei) pdf.text(`IMEI: ${datos.imei}`, M + colW + 8, y + 20);
+    else pdf.text(`Enciende: ${datos.enciende}`, M + colW + 8, y + 20);
+
+    y += 32;
+
+    /* ESTADO Y FALLA */
+    if (datos.estado || datos.falla) {
+      pdf.setFillColor(248, 248, 248);
+      const boxH = (datos.estado ? 12 : 0) + (datos.falla ? 12 : 0) + 12;
+      pdf.roundedRect(M, y, CW, boxH, 2, 2, 'F');
+
+      pdf.setTextColor(255, 105, 0);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8);
+      pdf.text('ESTADO Y FALLA', M + 4, y + 6);
+
+      let yy = y + 12;
+      pdf.setTextColor(50, 50, 50);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFont
