@@ -13,18 +13,264 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <link rel="stylesheet" href="/css/app-theme.css">
   <link rel="stylesheet" href="/css/app-components.css">
   <link rel="stylesheet" href="/css/app-layouts.css">
-
-  <!-- CSS ESPECÍFICO DEL WIZARD (parte 2) -->
   <link rel="stylesheet" href="/css/cliente.css">
+
+  <style>
+    /* ---------- VISTA PREVIA DEL RECIBO (paso 7) ---------- */
+    .preview-recibo {
+      background: white;
+      color: #1a1a1a;
+      border-radius: 12px;
+      padding: 20px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+    }
+
+    .preview-header {
+      background: linear-gradient(135deg, #FF6900, #FF8A3C);
+      color: white;
+      margin: -20px -20px 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .preview-header img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+    }
+
+    .preview-header-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .preview-header-text h3 {
+      font-size: 16px;
+      font-weight: 800;
+      color: white;
+      margin: 0;
+      letter-spacing: -0.3px;
+    }
+
+    .preview-header-text p {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.85);
+      margin: 2px 0 0;
+      font-weight: 500;
+    }
+
+    .preview-header-recibo {
+      text-align: right;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .preview-header-recibo strong {
+      display: block;
+      font-size: 12px;
+      color: white;
+      margin-bottom: 2px;
+    }
+
+    .preview-fecha {
+      background: #f5f5f5;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 10px;
+      color: #666;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .preview-fecha strong {
+      color: #333;
+      font-weight: 700;
+    }
+
+    .preview-section {
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+
+    .preview-section-title {
+      font-size: 9px;
+      font-weight: 800;
+      color: #FF6900;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .preview-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 3px;
+    }
+
+    .preview-row span:first-child {
+      color: #666;
+      font-weight: 500;
+    }
+
+    .preview-row span:last-child,
+    .preview-row strong {
+      color: #1a1a1a;
+      font-weight: 700;
+    }
+
+    .preview-servicios-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .preview-servicios-table th {
+      background: #FF6900;
+      color: white;
+      padding: 6px 8px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .preview-servicios-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .preview-servicios-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .preview-servicios-table .costo {
+      text-align: right;
+      font-weight: 700;
+    }
+
+    .preview-totales {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 2px solid #FF6900;
+    }
+
+    .preview-totales .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .preview-totales .saldo-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 800;
+      color: #FF6900;
+      padding-top: 6px;
+      border-top: 1px solid #ddd;
+      margin-top: 4px;
+    }
+
+    .preview-fotos-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .preview-fotos-grid img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+
+    .preview-qr-block {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: linear-gradient(135deg, #FFF4EB, #FFE8D1);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+
+    .preview-qr-img {
+      width: 70px;
+      height: 70px;
+      background: white;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .preview-qr-info h4 {
+      font-size: 11px;
+      color: #FF6900;
+      font-weight: 800;
+      margin: 0 0 4px;
+    }
+
+    .preview-qr-info p {
+      font-size: 10px;
+      color: #555;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .preview-qr-info strong {
+      color: #FF6900;
+      font-weight: 800;
+    }
+
+    /* ---------- FOOTER CON BOTONES ---------- */
+    .preview-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    /* ---------- SIGUE SIENDO VÁLIDO EL RESTO ---------- */
+    .field-title {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      margin-bottom: 10px;
+      margin-top: 4px;
+    }
+
+    .field-title.required-field::after {
+      content: " *";
+      color: var(--brand-500);
+    }
+  </style>
 </head>
 <body>
 
   <!-- ============================================================
-       HEADER SUPERIOR
+       HEADER
        ============================================================ -->
   <header class="app-header">
     <div class="brand">
@@ -77,7 +323,7 @@
       </div>
       <div class="wizard-step" data-step="7">
         <div class="step-circle">7</div>
-        <div class="step-label">Confirmar</div>
+        <div class="step-label">Vista previa</div>
       </div>
     </div>
     <div class="wizard-bar">
@@ -99,23 +345,12 @@
 
       <div class="card">
         <div class="field">
-          <input type="text" 
-                 id="nombre" 
-                 placeholder=" "
-                 required
-                 autocomplete="name"
-                 maxlength="80">
+          <input type="text" id="nombre" placeholder=" " required autocomplete="name" maxlength="80">
           <label for="nombre">Nombre completo *</label>
         </div>
 
         <div class="field">
-          <input type="tel" 
-                 id="telefono" 
-                 placeholder=" "
-                 required
-                 autocomplete="tel"
-                 inputmode="numeric"
-                 maxlength="8">
+          <input type="tel" id="telefono" placeholder=" " required autocomplete="tel" inputmode="numeric" maxlength="8">
           <label for="telefono">Teléfono / WhatsApp *</label>
         </div>
       </div>
@@ -143,20 +378,12 @@
         <input type="hidden" id="marca" required>
 
         <div class="field">
-          <input type="text" 
-                 id="modelo" 
-                 placeholder=" "
-                 required
-                 maxlength="60">
+          <input type="text" id="modelo" placeholder=" " required maxlength="60">
           <label for="modelo">Modelo *</label>
         </div>
 
         <div class="field">
-          <input type="text" 
-                 id="imei" 
-                 placeholder=" "
-                 inputmode="numeric"
-                 maxlength="20">
+          <input type="text" id="imei" placeholder=" " inputmode="numeric" maxlength="20">
           <label for="imei">IMEI / Serial (opcional)</label>
         </div>
 
@@ -188,19 +415,13 @@
 
       <div class="card">
         <div class="field">
-          <textarea id="estado" 
-                    placeholder=" " 
-                    rows="3"
-                    maxlength="500"></textarea>
+          <textarea id="estado" placeholder=" " rows="3" maxlength="500"></textarea>
           <label for="estado">Estado físico del equipo</label>
           <div class="char-counter" data-for="estado">0/500</div>
         </div>
 
         <div class="field">
-          <textarea id="falla" 
-                    placeholder=" " 
-                    rows="3"
-                    maxlength="500"></textarea>
+          <textarea id="falla" placeholder=" " rows="3" maxlength="500"></textarea>
           <label for="falla">Falla reportada por el cliente</label>
           <div class="char-counter" data-for="falla">0/500</div>
         </div>
@@ -231,19 +452,13 @@
         </div>
         <input type="hidden" id="tipoSeguridad" value="patron">
 
-        <!-- Contenedor del PIN -->
         <div id="pinContainer" class="hidden" style="margin-top: 16px;">
           <div class="field">
-            <input type="text" 
-                   id="pinInput" 
-                   placeholder=" "
-                   maxlength="12"
-                   inputmode="numeric">
+            <input type="text" id="pinInput" placeholder=" " maxlength="12" inputmode="numeric">
             <label for="pinInput">PIN de acceso</label>
           </div>
         </div>
 
-        <!-- Contenedor del patrón -->
         <div id="patronContainer" style="margin-top: 16px;">
           <label class="field-title">Dibuja el patrón de desbloqueo</label>
           <div id="pattern-container">
@@ -321,13 +536,7 @@
         </div>
 
         <div class="field" style="margin-top: 12px;">
-          <input type="number" 
-                 id="adelanto" 
-                 placeholder=" "
-                 step="0.01"
-                 min="0"
-                 inputmode="decimal"
-                 value="0">
+          <input type="number" id="adelanto" placeholder=" " step="0.01" min="0" inputmode="decimal" value="0">
           <label for="adelanto">Adelanto / Pago inicial</label>
         </div>
 
@@ -340,22 +549,21 @@
       <input type="hidden" id="costoTotal" value="0">
     </section>
 
-    <!-- ========== PASO 7: CONFIRMAR ========== -->
+    <!-- ========== PASO 7: VISTA PREVIA ========== -->
     <section class="wizard-panel hidden" data-panel="7">
       <div class="panel-header">
-        <h2>Confirmar y generar</h2>
-        <p>Revisa los datos antes de generar el recibo</p>
+        <h2>Vista previa del recibo</h2>
+        <p>Así se verá el recibo que se entregará al cliente</p>
       </div>
 
-      <div id="resumenContenido">
-        <!-- Se genera dinámicamente -->
-      </div>
+      <!-- Aquí se inyecta la vista previa -->
+      <div id="previewContainer"></div>
     </section>
 
   </main>
 
   <!-- ============================================================
-       FOOTER STICKY CON BOTONES DE NAVEGACIÓN
+       FOOTER STICKY CON BOTONES
        ============================================================ -->
   <footer class="wizard-footer" id="wizardFooter">
     <button type="button" class="btn btn-secondary" id="btnPrev" style="display: none;">
@@ -370,7 +578,7 @@
   </footer>
 
   <!-- ============================================================
-       MODAL DE ÉXITO (después de generar PDF)
+       MODAL DE ÉXITO
        ============================================================ -->
   <div class="modal-backdrop" id="successModal">
     <div class="modal">
@@ -392,7 +600,7 @@
   </div>
 
   <!-- ============================================================
-       SCRIPTS (parte 3)
+       SCRIPTS
        ============================================================ -->
   <script type="module" src="/js/cliente.js"></script>
 
