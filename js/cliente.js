@@ -914,4 +914,335 @@ async function generarPDF() {
     pdf.setFontSize(8);
     pdf.text(`Fecha: ${fechaStr}`, M + 3, y + 5.5);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(`Recibido por: ${sesion.nombre}`, W -
+    pdf.text(`Recibido por: ${sesion.nombre}`, W - M - 3, y + 5.5, { align: 'right' });
+    y += 12;
+
+    /* CLIENTE Y EQUIPO (2 columnas) */
+    const colW = (CW - 3) / 2;
+    pdf.setFillColor(255, 244, 235);
+    pdf.roundedRect(M, y, colW, 22, 1.5, 1.5, 'F');
+    pdf.roundedRect(M + colW + 3, y, colW, 22, 1.5, 1.5, 'F');
+
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7);
+    pdf.text('CLIENTE', M + 3, y + 5);
+    pdf.text('EQUIPO', M + colW + 6, y + 5);
+
+    pdf.setTextColor(30, 30, 30);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.text(datos.nombre.slice(0, 24), M + 3, y + 11);
+    pdf.text(`${datos.marca} ${datos.modelo}`.slice(0, 24), M + colW + 6, y + 11);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.setTextColor(80, 80, 80);
+    pdf.text(`Tel: ${datos.telefono}`, M + 3, y + 16);
+    if (datos.imei) {
+      pdf.text(`IMEI: ${datos.imei}`, M + colW + 6, y + 16);
+    } else {
+      pdf.text(`Enciende: ${datos.enciende}`, M + colW + 6, y + 16);
+    }
+    if (datos.imei) {
+      pdf.text(`Enciende: ${datos.enciende}`, M + colW + 6, y + 20);
+    }
+    y += 26;
+
+    /* ESTADO Y FALLA (compacto) */
+    if (datos.estado || datos.falla) {
+      const lineasEstado = datos.estado ? pdf.splitTextToSize(`Estado: ${datos.estado}`, CW - 6) : [];
+      const lineasFalla = datos.falla ? pdf.splitTextToSize(`Falla: ${datos.falla}`, CW - 6) : [];
+      const boxH = 8 + (lineasEstado.length * 3.5) + (lineasFalla.length * 3.5) + 2;
+
+      pdf.setFillColor(248, 248, 248);
+      pdf.roundedRect(M, y, CW, boxH, 1.5, 1.5, 'F');
+      pdf.setTextColor(255, 105, 0);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(7);
+      pdf.text('ESTADO Y FALLA', M + 3, y + 5);
+
+      pdf.setTextColor(50, 50, 50);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      let yy = y + 9;
+      if (lineasEstado.length) {
+        pdf.text(lineasEstado, M + 3, yy);
+        yy += lineasEstado.length * 3.5;
+      }
+      if (lineasFalla.length) {
+        pdf.text(lineasFalla, M + 3, yy);
+      }
+      y += boxH + 3;
+    }
+
+    /* SEGURIDAD (compacto) */
+    let patronTexto = '';
+    if (datos.tipoSeguridad === 'patron' && datos.patronSecuencia) {
+      patronTexto = datos.patronSecuencia.split(',').join('-');
+    }
+    const segInfo = datos.tipoSeguridad === 'pin' 
+      ? `PIN: ${datos.pin}` 
+      : datos.tipoSeguridad === 'patron' 
+        ? `Patrón: ${patronTexto}` 
+        : 'Sin clave de acceso';
+
+    pdf.setFillColor(248, 248, 248);
+    pdf.roundedRect(M, y, CW, 14, 1.5, 1.5, 'F');
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7);
+    pdf.text('CLAVE DE ACCESO', M + 3, y + 5);
+    pdf.setTextColor(50, 50, 50);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.text(segInfo, M + 3, y + 11);
+    y += 18;
+
+    /* SERVICIOS Y COSTOS (tabla compacta) */
+    if (y > 220) { pdf.addPage(); y = 20; }
+
+    pdf.setFillColor(255, 244, 235);
+    pdf.roundedRect(M, y, CW, 8, 1.5, 1.5, 'F');
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('SERVICIOS Y COSTOS', M + 3, y + 5.5);
+    y += 11;
+
+    const serviciosData = datos.servicios.map(s => [s.desc, formatBs(s.costo)]);
+    pdf.autoTable({
+      startY: y,
+      head: [['Descripción', 'Costo']],
+      body: serviciosData,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [255, 105, 0], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      columnStyles: { 
+        0: { cellWidth: CW - 35 }, 
+        1: { halign: 'right', cellWidth: 35, fontStyle: 'bold' } 
+      },
+      margin: { left: M, right: M },
+      theme: 'grid'
+    });
+
+    y = pdf.lastAutoTable.finalY + 3;
+
+    /* TOTALES COMPACTOS */
+    const boxAlto = datos.adelanto > 0 ? 22 : 14;
+    pdf.setFillColor(248, 248, 248);
+    pdf.roundedRect(M + CW - 70, y, 70, boxAlto, 1.5, 1.5, 'F');
+
+    pdf.setTextColor(80, 80, 80);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.text('Total:', M + CW - 66, y + 5);
+    pdf.setTextColor(50, 50, 50);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9);
+    pdf.text(formatBs(datos.total), M + CW - 4, y + 5, { align: 'right' });
+
+    let rowY = y + 5;
+    if (datos.adelanto > 0) {
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      pdf.setTextColor(80, 80, 80);
+      pdf.text('Adelanto:', M + CW - 66, y + 11);
+      pdf.setTextColor(50, 50, 50);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`- ${formatBs(datos.adelanto)}`, M + CW - 4, y + 11, { align: 'right' });
+      rowY = y + 11;
+    }
+
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('SALDO A PAGAR:', M + CW - 66, rowY + 7);
+    pdf.setFontSize(11);
+    pdf.text(formatBs(datos.saldo), M + CW - 4, rowY + 7, { align: 'right' });
+
+    y += boxAlto + 4;
+
+    /* FOTOS (4 en una fila) */
+    const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
+    if (fotosValidas.length > 0) {
+      if (y > 240) { pdf.addPage(); y = 20; }
+
+      pdf.setFillColor(255, 244, 235);
+      pdf.roundedRect(M, y, CW, 7, 1.5, 1.5, 'F');
+      pdf.setTextColor(255, 105, 0);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(7);
+      pdf.text('FOTOS DEL EQUIPO', M + 3, y + 5);
+      y += 10;
+
+      const fotoW = (CW - 6) / 4;
+      const fotoH = fotoW * 0.75;
+      let x = M;
+      for (let i = 0; i < Math.min(fotosValidas.length, 4); i++) {
+        try {
+          pdf.addImage(fotosValidas[i].dataUrl, 'JPEG', x, y, fotoW - 1, fotoH, undefined, 'FAST');
+        } catch (e) { console.error('Error foto:', e); }
+        x += fotoW + 1;
+      }
+      y += fotoH + 4;
+    }
+
+    /* QR + URL */
+    if (y > 220) { pdf.addPage(); y = 20; }
+    pdf.setFillColor(255, 244, 235);
+    pdf.roundedRect(M, y, CW, 28, 1.5, 1.5, 'F');
+
+    if (qrDataUrl) {
+      try {
+        pdf.addImage(qrDataUrl, 'PNG', M + 3, y + 4, 20, 20);
+      } catch (e) { console.error('Error QR:', e); }
+    }
+
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9);
+    pdf.text('Consulta tu reparación online', M + 27, y + 9);
+
+    pdf.setTextColor(60, 60, 60);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.text(CONFIG.web, M + 27, y + 15);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text('Escanea el código QR o visita el enlace desde tu celular', M + 27, y + 20);
+
+    y += 32;
+
+    /* CONDICIONES (fuente muy pequeña) */
+    if (y > 245) { pdf.addPage(); y = 20; }
+    pdf.setFillColor(248, 248, 248);
+    pdf.roundedRect(M, y, CW, 26, 1.5, 1.5, 'F');
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7);
+    pdf.text('CONDICIONES DEL SERVICIO', M + 3, y + 5);
+    pdf.setTextColor(80, 80, 80);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(6);
+    CONFIG.condiciones.forEach((txt, i) => {
+      pdf.text(`${i + 1}. ${txt}`, M + 3, y + 10 + i * 3);
+    });
+    y += 30;
+
+    /* FIRMAS */
+    if (y > 260) { pdf.addPage(); y = 20; }
+    pdf.setDrawColor(150, 150, 150);
+    pdf.line(M, y + 10, M + 55, y + 10);
+    pdf.line(W - M - 55, y + 10, W - M, y + 10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7);
+    pdf.setTextColor(80, 80, 80);
+    pdf.text('Firma del Cliente', M + 27.5, y + 14, { align: 'center' });
+    pdf.text('Firma del Taller', W - M - 27.5, y + 14, { align: 'center' });
+
+    /* FOOTER */
+    pdf.setDrawColor(255, 105, 0);
+    pdf.setLineWidth(0.5);
+    pdf.line(M, H - 12, W - M, H - 12);
+    pdf.setFontSize(6);
+    pdf.setTextColor(120, 120, 120);
+    pdf.text(`© ${new Date().getFullYear()} ${CONFIG.nombreTienda} · Todos los derechos reservados`, W / 2, H - 7, { align: 'center' });
+
+    /* GUARDAR */
+    const nombreArchivo = `Recibo_${numeroRecibo}_${datos.nombre.split(' ')[0]}.pdf`;
+    pdf.save(nombreArchivo);
+
+    /* GUARDAR EN FIRESTORE */
+    try {
+      await addDoc(collection(db, 'recibos'), {
+        numeroRecibo,
+        cliente: datos.nombre,
+        telefono: datos.telefono,
+        marca: datos.marca,
+        modelo: datos.modelo,
+        imei: datos.imei || null,
+        enciende: datos.enciende,
+        estado: datos.estado || '-',
+        falla: datos.falla || '-',
+        tipoSeguridad: datos.tipoSeguridad,
+        pin: datos.tipoSeguridad === 'pin' ? datos.pin : null,
+        patron: datos.tipoSeguridad === 'patron' ? datos.patronSecuencia : null,
+        servicios: datos.servicios,
+        total: datos.total,
+        adelanto: datos.adelanto,
+        saldo: datos.saldo,
+        fotos: datos.fotos.filter(f => f && f.dataUrl).map(f => f.dataUrl),
+        estadoOrden: 'recibido',
+        creadoPor: sesion.nombre,
+        creadoPorRol: sesion.rol,
+        fecha: serverTimestamp()
+      });
+      console.log('✅ Recibo guardado en Firestore');
+    } catch (err) {
+      console.error('❌ Error guardando en Firestore:', err);
+      toast('Recibo generado pero no se pudo guardar en la nube', 'warning', 4000);
+    }
+
+    /* MODAL DE ÉXITO */
+    document.getElementById('successNumero').textContent = numeroRecibo;
+    document.getElementById('successModal').classList.add('show');
+
+    window._ultimoRecibo = {
+      numeroRecibo,
+      cliente: datos.nombre,
+      telefono: datos.telefono,
+      marca: datos.marca,
+      modelo: datos.modelo,
+      total: datos.total,
+      saldo: datos.saldo
+    };
+
+    configurarWhatsApp();
+
+  } catch (err) {
+    console.error('Error generando PDF:', err);
+    toast('Error al generar el PDF: ' + err.message, 'error', 5000);
+  } finally {
+    hideLoading();
+  }
+}
+
+/* ============================================================
+   WHATSAPP (sin emojis)
+   ============================================================ */
+function configurarWhatsApp() {
+  const btn = document.getElementById('sendWhatsappBtn');
+  if (!btn) return;
+
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+
+  newBtn.addEventListener('click', () => {
+    const recibo = window._ultimoRecibo;
+    if (!recibo) return;
+    haptic(15);
+
+    const mensaje = `Hola ${recibo.cliente.split(' ')[0]},
+
+Recibo de ingreso generado.
+
+N Recibo: ${recibo.numeroRecibo}
+Equipo: ${recibo.marca} ${recibo.modelo}
+Total: ${formatBs(recibo.total)}
+${recibo.saldo > 0 ? `Saldo pendiente: ${formatBs(recibo.saldo)}` : ''}
+
+Su equipo fue recibido en nuestro taller.
+Le avisaremos cuando este listo.
+
+${CONFIG.nombreTienda}
+${CONFIG.direccion}
+Tel: ${CONFIG.telefono}
+${CONFIG.web}`;
+
+    const tel = recibo.telefono.replace(/\D/g, '');
+    const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
+  });
+}
