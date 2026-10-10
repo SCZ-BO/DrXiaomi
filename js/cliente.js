@@ -1,7 +1,7 @@
 /* ============================================================
    DR. XIAOMI · CLIENTE (Wizard de nuevo recibo)
    Archivo: js/cliente.js
-   Descripción: Wizard, validación, PDF profesional, WhatsApp
+   Descripción: Wizard, vista previa, PDF compacto con QR, WhatsApp
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -15,7 +15,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ============================================================
-   CONFIGURACIÓN DEL TALLER
+   CONFIGURACIÓN
    ============================================================ */
 const CONFIG = {
   nombreTienda: 'DR. XIAOMI SCZ',
@@ -24,6 +24,8 @@ const CONFIG = {
   telefono: '75959450',
   horario: 'Lunes a Sábado 9:00 - 20:00',
   web: 'xiaomi.scz.red',
+  urlApp: 'https://xiaomi.scz.red',
+  logoUrl: 'https://xiaomi.scz.red/img/logo1.png',
   condiciones: [
     'Conserve este recibo. Solo con él puede retirar su equipo.',
     'La fecha de entrega está sujeta a disponibilidad de repuestos.',
@@ -124,7 +126,7 @@ function irAPaso(nuevoPaso) {
 
   actualizarBarraProgreso();
   actualizarBotones();
-  if (pasoActual === 7) generarResumen();
+  if (pasoActual === 7) generarVistaPrevia();
 }
 
 function actualizarBarraProgreso() {
@@ -213,7 +215,7 @@ function validarCostos() {
 }
 
 /* ============================================================
-   GUARDAR DATOS POR PASO
+   GUARDAR DATOS
    ============================================================ */
 function guardarDatosPaso(paso) {
   switch (paso) {
@@ -246,7 +248,7 @@ function guardarDatosPaso(paso) {
 }
 
 /* ============================================================
-   MARCA (chips)
+   MARCA
    ============================================================ */
 function configurarMarca() {
   const grid = document.getElementById('marcasGrid');
@@ -629,73 +631,144 @@ function configurarCharCounters() {
 }
 
 /* ============================================================
-   RESUMEN (paso 7)
+   VISTA PREVIA (paso 7)
    ============================================================ */
-function generarResumen() {
+function generarVistaPrevia() {
   guardarDatosPaso(6);
-  const cont = document.getElementById('resumenContenido');
+  const cont = document.getElementById('previewContainer');
 
+  // Formatear patrón
+  let patronTexto = '';
+  if (datos.tipoSeguridad === 'patron' && datos.patronSecuencia) {
+    patronTexto = datos.patronSecuencia.split(',').join('-');
+  }
+
+  // Servicios
   const serviciosHtml = datos.servicios.map(s => `
-    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-1);">
-      <span style="color: var(--text-2); font-size: 14px;">${escapeHtml(s.desc)}</span>
-      <strong style="color: var(--text-1); font-size: 14px;">${formatBs(s.costo)}</strong>
-    </div>
+    <tr>
+      <td>${escapeHtml(s.desc)}</td>
+      <td class="costo">${formatBs(s.costo)}</td>
+    </tr>
   `).join('');
 
+  // Fotos
+  const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
+  const fotosHtml = fotosValidas.length > 0 
+    ? `<div class="preview-section">
+         <div class="preview-section-title">Fotos del equipo</div>
+         <div class="preview-fotos-grid">
+           ${fotosValidas.map(f => `<img src="${f.dataUrl}" alt="foto">`).join('')}
+         </div>
+       </div>`
+    : '';
+
   cont.innerHTML = `
-    <div class="card">
-      <h3 class="card-section-title">👤 Cliente</h3>
-      <div style="font-size: 15px; font-weight: 700; color: var(--text-1);">${escapeHtml(datos.nombre)}</div>
-      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
-        <i class="fas fa-phone"></i> ${escapeHtml(datos.telefono)}
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 class="card-section-title">📱 Equipo</h3>
-      <div style="font-size: 15px; font-weight: 700; color: var(--text-1);">
-        ${escapeHtml(datos.marca)} ${escapeHtml(datos.modelo)}
-      </div>
-      ${datos.imei ? `<div style="font-size: 13px; color: var(--text-3); margin-top: 4px;"><i class="fas fa-barcode"></i> ${escapeHtml(datos.imei)}</div>` : ''}
-      <div style="font-size: 13px; color: var(--text-3); margin-top: 4px;">
-        <i class="fas fa-power-off"></i> Enciende: ${escapeHtml(datos.enciende)}
-      </div>
-    </div>
-
-    ${datos.estado || datos.falla ? `
-      <div class="card">
-        <h3 class="card-section-title">🔍 Estado y falla</h3>
-        ${datos.estado ? `<div style="font-size: 13px; color: var(--text-2); margin-bottom: 8px;"><strong style="color: var(--text-1);">Estado:</strong> ${escapeHtml(datos.estado)}</div>` : ''}
-        ${datos.falla ? `<div style="font-size: 13px; color: var(--text-2);"><strong style="color: var(--text-1);">Falla:</strong> ${escapeHtml(datos.falla)}</div>` : ''}
-      </div>
-    ` : ''}
-
-    <div class="card">
-      <h3 class="card-section-title">🔐 Seguridad</h3>
-      <div style="font-size: 13px; color: var(--text-2);">
-        <strong style="color: var(--text-1);">Tipo:</strong> ${datos.tipoSeguridad}
-      </div>
-      ${datos.tipoSeguridad === 'pin' ? `<div style="font-size: 13px; color: var(--text-2); margin-top: 4px;"><strong style="color: var(--text-1);">PIN:</strong> ${escapeHtml(datos.pin)}</div>` : ''}
-      ${datos.tipoSeguridad === 'patron' && datos.patronSecuencia ? `<div style="font-size: 13px; color: var(--text-2); margin-top: 4px;"><strong style="color: var(--text-1);">Patrón:</strong> ${escapeHtml(datos.patronSecuencia)}</div>` : ''}
-    </div>
-
-    <div class="card">
-      <h3 class="card-section-title">🔧 Servicios</h3>
-      ${serviciosHtml}
-      <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--border-2);">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-          <span style="color: var(--text-2); font-size: 14px;">Total</span>
-          <strong style="color: var(--text-1); font-size: 15px;">${formatBs(datos.total)}</strong>
+    <div class="preview-recibo">
+      <!-- Header naranja -->
+      <div class="preview-header">
+        <img src="${CONFIG.logoUrl}" alt="logo" onerror="this.style.display='none'">
+        <div class="preview-header-text">
+          <h3>${CONFIG.nombreTienda}</h3>
+          <p>${CONFIG.eslogan}</p>
         </div>
-        ${datos.adelanto > 0 ? `
-          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-            <span style="color: var(--text-2); font-size: 14px;">Adelanto</span>
-            <strong style="color: var(--text-1); font-size: 14px;">${formatBs(datos.adelanto)}</strong>
+        <div class="preview-header-recibo">
+          <strong>RECIBO</strong>
+          DE INGRESO
+        </div>
+      </div>
+
+      <!-- Fecha -->
+      <div class="preview-fecha">
+        <span>Fecha: <strong>${new Date().toLocaleString('es-BO')}</strong></span>
+        <span>Por: <strong>${escapeHtml(sesion.nombre)}</strong></span>
+      </div>
+
+      <!-- Cliente y Equipo -->
+      <div class="preview-section">
+        <div class="preview-section-title">Cliente</div>
+        <div class="preview-row">
+          <span>Nombre:</span>
+          <span>${escapeHtml(datos.nombre)}</span>
+        </div>
+        <div class="preview-row">
+          <span>Teléfono:</span>
+          <span>${escapeHtml(datos.telefono)}</span>
+        </div>
+      </div>
+
+      <div class="preview-section">
+        <div class="preview-section-title">Equipo</div>
+        <div class="preview-row">
+          <span>Marca / Modelo:</span>
+          <span>${escapeHtml(datos.marca)} ${escapeHtml(datos.modelo)}</span>
+        </div>
+        ${datos.imei ? `<div class="preview-row"><span>IMEI:</span><span>${escapeHtml(datos.imei)}</span></div>` : ''}
+        <div class="preview-row">
+          <span>Enciende:</span>
+          <span>${escapeHtml(datos.enciende)}</span>
+        </div>
+      </div>
+
+      ${datos.estado || datos.falla ? `
+        <div class="preview-section">
+          <div class="preview-section-title">Estado y falla</div>
+          ${datos.estado ? `<div class="preview-row"><span>Estado:</span><span>${escapeHtml(datos.estado)}</span></div>` : ''}
+          ${datos.falla ? `<div class="preview-row"><span>Falla:</span><span>${escapeHtml(datos.falla)}</span></div>` : ''}
+        </div>
+      ` : ''}
+
+      <div class="preview-section">
+        <div class="preview-section-title">Clave de acceso</div>
+        <div class="preview-row">
+          <span>Tipo:</span>
+          <span>${escapeHtml(datos.tipoSeguridad)}</span>
+        </div>
+        ${datos.tipoSeguridad === 'pin' ? `<div class="preview-row"><span>PIN:</span><span>${escapeHtml(datos.pin)}</span></div>` : ''}
+        ${patronTexto ? `<div class="preview-row"><span>Patrón:</span><span>${patronTexto}</span></div>` : ''}
+      </div>
+
+      <!-- Servicios -->
+      <div class="preview-section">
+        <div class="preview-section-title">Servicios y costos</div>
+        <table class="preview-servicios-table">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th style="text-align:right;">Costo</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${serviciosHtml}
+          </tbody>
+        </table>
+        <div class="preview-totales">
+          <div class="total-row">
+            <span>Total:</span>
+            <strong>${formatBs(datos.total)}</strong>
           </div>
-        ` : ''}
-        <div style="display: flex; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-2);">
-          <span style="color: var(--brand-500); font-size: 14px; font-weight: 700;">Saldo a pagar</span>
-          <strong style="color: var(--brand-500); font-size: 18px;">${formatBs(datos.saldo)}</strong>
+          ${datos.adelanto > 0 ? `
+            <div class="total-row">
+              <span>Adelanto:</span>
+              <strong>${formatBs(datos.adelanto)}</strong>
+            </div>
+          ` : ''}
+          <div class="saldo-row">
+            <span>SALDO A PAGAR:</span>
+            <span>${formatBs(datos.saldo)}</span>
+          </div>
+        </div>
+      </div>
+
+      ${fotosHtml}
+
+      <!-- QR -->
+      <div class="preview-qr-block">
+        <div class="preview-qr-img">
+          <i class="fas fa-qrcode" style="font-size: 40px; color: #FF6900;"></i>
+        </div>
+        <div class="preview-qr-info">
+          <h4>Consulta tu reparación online</h4>
+          <p>Escanea el código o visita:<br><strong>${CONFIG.web}</strong></p>
         </div>
       </div>
     </div>
@@ -703,7 +776,7 @@ function generarResumen() {
 }
 
 /* ============================================================
-   PDF PROFESIONAL
+   PDF COMPACTO
    ============================================================ */
 function configurarPDF() {
   document.getElementById('btnGenerate').addEventListener('click', generarPDF);
@@ -723,6 +796,62 @@ function generarNumeroRecibo() {
   return `REC-${dd}${mm}${yy}-${hh}${mi}${ss}`;
 }
 
+async function generarQRDataUrl(texto) {
+  return new Promise((resolve) => {
+    const div = document.createElement('div');
+    div.style.position = 'absolute';
+    div.style.left = '-9999px';
+    document.body.appendChild(div);
+
+    try {
+      new QRCode(div, {
+        text: texto,
+        width: 256,
+        height: 256,
+        colorDark: '#000000',
+        colorLight: '#FFFFFF',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      setTimeout(() => {
+        const canvas = div.querySelector('canvas');
+        const img = div.querySelector('img');
+        let dataUrl = '';
+        if (canvas) dataUrl = canvas.toDataURL('image/png');
+        else if (img && img.src) dataUrl = img.src;
+        div.remove();
+        resolve(dataUrl);
+      }, 200);
+    } catch (e) {
+      console.error('Error generando QR:', e);
+      div.remove();
+      resolve('');
+    }
+  });
+}
+
+async function cargarLogoDataUrl() {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (e) {
+        console.error('Error procesando logo:', e);
+        resolve('');
+      }
+    };
+    img.onerror = () => resolve('');
+    img.src = CONFIG.logoUrl;
+  });
+}
+
 async function generarPDF() {
   guardarDatosPaso(6);
   const numeroRecibo = generarNumeroRecibo();
@@ -730,348 +859,59 @@ async function generarPDF() {
   haptic(20);
 
   try {
+    // Cargar logo y QR en paralelo
+    const [logoDataUrl, qrDataUrl] = await Promise.all([
+      cargarLogoDataUrl(),
+      generarQRDataUrl(`${CONFIG.urlApp}/?recibo=${numeroRecibo}`)
+    ]);
+
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-    const W = 210, H = 297, M = 15;
+    const W = 210, H = 297, M = 12;
     const CW = W - M * 2;
     let y = 0;
 
-    /* HEADER NARANJA */
+    /* HEADER NARANJA (28mm) */
     pdf.setFillColor(255, 105, 0);
-    pdf.rect(0, 0, W, 38, 'F');
+    pdf.rect(0, 0, W, 28, 'F');
+
+    // Logo
+    if (logoDataUrl) {
+      try {
+        pdf.addImage(logoDataUrl, 'PNG', M, 4, 20, 20);
+      } catch (e) { console.error('Error logo:', e); }
+    }
+
+    // Nombre
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(20);
-    pdf.text(CONFIG.nombreTienda, M, 15);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(9);
-    pdf.text(CONFIG.eslogan, M, 21);
-    pdf.setFontSize(8);
-    pdf.text(`${CONFIG.direccion}  ·  Tel: ${CONFIG.telefono}`, M, 26);
-    pdf.text(`${CONFIG.horario}  ·  ${CONFIG.web}`, M, 30);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(11);
-    pdf.text('RECIBO DE INGRESO', W - M, 15, { align: 'right' });
-    pdf.setFontSize(9);
-    pdf.text(numeroRecibo, W - M, 21, { align: 'right' });
+    pdf.setFontSize(15);
+    pdf.text(CONFIG.nombreTienda, M + 24, 12);
 
-    y = 45;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.text(CONFIG.eslogan, M + 24, 17);
+    pdf.setFontSize(7);
+    pdf.text(`${CONFIG.direccion}  ·  Tel: ${CONFIG.telefono}`, M + 24, 22);
+
+    // Número de recibo
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9);
+    pdf.text('RECIBO DE INGRESO', W - M, 12, { align: 'right' });
+    pdf.setFontSize(8);
+    pdf.text(numeroRecibo, W - M, 17, { align: 'right' });
+
+    y = 33;
+
+    /* FECHA Y RECIBIDO POR (una sola línea gris) */
     const fecha = new Date();
-    const fechaStr = `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')}/${fecha.getFullYear()} · ${String(fecha.getHours()).padStart(2,'0')}:${String(fecha.getMinutes()).padStart(2,'0')}`;
+    const fechaStr = `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')}/${fecha.getFullYear()} ${String(fecha.getHours()).padStart(2,'0')}:${String(fecha.getMinutes()).padStart(2,'0')}`;
 
     pdf.setFillColor(248, 248, 248);
-    pdf.roundedRect(M, y, CW, 12, 2, 2, 'F');
+    pdf.roundedRect(M, y, CW, 8, 1.5, 1.5, 'F');
     pdf.setTextColor(80, 80, 80);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(9);
-    pdf.text(`Fecha: ${fechaStr}`, M + 4, y + 7.5);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(50, 50, 50);
-    pdf.text(`Recibido por: ${sesion.nombre}`, W - M - 4, y + 7.5, { align: 'right' });
-
-    y += 18;
-
-    /* CLIENTE Y EQUIPO */
-    const colW = (CW - 4) / 2;
-    pdf.setFillColor(255, 244, 235);
-    pdf.roundedRect(M, y, colW, 26, 2, 2, 'F');
-    pdf.roundedRect(M + colW + 4, y, colW, 26, 2, 2, 'F');
-    pdf.setTextColor(255, 105, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('CLIENTE', M + 4, y + 6);
-    pdf.text('EQUIPO', M + colW + 8, y + 6);
-    pdf.setTextColor(30, 30, 30);
-    pdf.setFontSize(11);
-    pdf.text(datos.nombre.slice(0, 22), M + 4, y + 13);
-    pdf.text(`${datos.marca} ${datos.modelo}`.slice(0, 22), M + colW + 8, y + 13);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(9);
-    pdf.setTextColor(80, 80, 80);
-    pdf.text(`Tel: ${datos.telefono}`, M + 4, y + 20);
-    if (datos.imei) pdf.text(`IMEI: ${datos.imei}`, M + colW + 8, y + 20);
-    else pdf.text(`Enciende: ${datos.enciende}`, M + colW + 8, y + 20);
-
-    y += 32;
-
-    /* ESTADO Y FALLA */
-    if (datos.estado || datos.falla) {
-      pdf.setFillColor(248, 248, 248);
-      const boxH = (datos.estado ? 12 : 0) + (datos.falla ? 12 : 0) + 12;
-      pdf.roundedRect(M, y, CW, boxH, 2, 2, 'F');
-      pdf.setTextColor(255, 105, 0);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(8);
-      pdf.text('ESTADO Y FALLA', M + 4, y + 6);
-
-      let yy = y + 12;
-      pdf.setTextColor(50, 50, 50);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(9);
-      if (datos.estado) {
-        const lineas = pdf.splitTextToSize(`Estado: ${datos.estado}`, CW - 8);
-        pdf.text(lineas, M + 4, yy);
-        yy += lineas.length * 4 + 2;
-      }
-      if (datos.falla) {
-        const lineas = pdf.splitTextToSize(`Falla: ${datos.falla}`, CW - 8);
-        pdf.text(lineas, M + 4, yy);
-      }
-      y += boxH + 6;
-    }
-
-    /* SEGURIDAD */
-    pdf.setFillColor(248, 248, 248);
-    pdf.roundedRect(M, y, CW, 22, 2, 2, 'F');
-    pdf.setTextColor(255, 105, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('CLAVE DE ACCESO DEL EQUIPO', M + 4, y + 6);
-    pdf.setTextColor(50, 50, 50);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(10);
-    pdf.text(`Tipo: ${datos.tipoSeguridad}`, M + 4, y + 14);
-    if (datos.tipoSeguridad === 'pin') {
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(12);
-      pdf.text(`PIN: ${datos.pin}`, M + 4, y + 20);
-    } else if (datos.tipoSeguridad === 'patron') {
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(12);
-      const secuencia = datos.patronSecuencia.split(',').join(' → ');
-      pdf.text(`Secuencia: ${secuencia}`, M + 4, y + 20);
-    } else {
-      pdf.setFont('helvetica', 'italic');
-      pdf.setFontSize(10);
-      pdf.text('Sin clave de acceso', M + 4, y + 20);
-    }
-    y += 28;
-
-    /* SERVICIOS Y COSTOS */
-    if (y > 200) { pdf.addPage(); y = 20; }
-    pdf.setFillColor(255, 244, 235);
-    pdf.roundedRect(M, y, CW, 12, 2, 2, 'F');
-    pdf.setTextColor(255, 105, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
-    pdf.text('SERVICIOS Y COSTOS', M + 4, y + 8);
-    y += 16;
-
-    const serviciosData = datos.servicios.map(s => [s.desc, formatBs(s.costo)]);
-    pdf.autoTable({
-      startY: y,
-      head: [['Descripción', 'Costo']],
-      body: serviciosData,
-      styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [255, 105, 0], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-      columnStyles: { 
-        0: { cellWidth: CW - 40 }, 
-        1: { halign: 'right', cellWidth: 40, fontStyle: 'bold' } 
-      },
-      margin: { left: M, right: M },
-      theme: 'grid'
-    });
-
-    y = pdf.lastAutoTable.finalY + 6;
-
-    /* RESUMEN DE PAGO */
-    pdf.setFillColor(248, 248, 248);
-    pdf.roundedRect(M + CW - 80, y, 80, datos.adelanto > 0 ? 26 : 16, 2, 2, 'F');
-    pdf.setTextColor(80, 80, 80);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(9);
-    pdf.text('Total:', M + CW - 75, y + 6);
-    pdf.setTextColor(50, 50, 50);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
-    pdf.text(formatBs(datos.total), M + CW - 5, y + 6, { align: 'right' });
-
-    if (datos.adelanto > 0) {
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(9);
-      pdf.setTextColor(80, 80, 80);
-      pdf.text('Adelanto:', M + CW - 75, y + 13);
-      pdf.setTextColor(50, 50, 50);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`- ${formatBs(datos.adelanto)}`, M + CW - 5, y + 13, { align: 'right' });
-      pdf.setDrawColor(255, 105, 0);
-      pdf.line(M + CW - 75, y + 16, M + CW - 5, y + 16);
-    }
-
-    pdf.setTextColor(255, 105, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.text('SALDO A PAGAR:', M + CW - 75, y + (datos.adelanto > 0 ? 23 : 13));
-    pdf.setFontSize(12);
-    pdf.text(formatBs(datos.saldo), M + CW - 5, y + (datos.adelanto > 0 ? 23 : 13), { align: 'right' });
-
-    y += datos.adelanto > 0 ? 34 : 24;
-
-    /* FOTOS */
-    const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
-    if (fotosValidas.length > 0) {
-      if (y > 200) { pdf.addPage(); y = 20; }
-      pdf.setFillColor(255, 244, 235);
-      pdf.roundedRect(M, y, CW, 10, 2, 2, 'F');
-      pdf.setTextColor(255, 105, 0);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(9);
-      pdf.text('FOTOS DEL EQUIPO', M + 4, y + 7);
-      y += 14;
-
-      const fotosPorFila = 3;
-      const fotoW = (CW - 8) / fotosPorFila;
-      const fotoH = fotoW * 0.75;
-      let x = M;
-      let col = 0;
-
-      for (let i = 0; i < fotosValidas.length; i++) {
-        if (y + fotoH > 275) { pdf.addPage(); y = 20; x = M; col = 0; }
-        try {
-          pdf.addImage(fotosValidas[i].dataUrl, 'JPEG', x, y, fotoW - 2, fotoH, undefined, 'FAST');
-        } catch (e) {
-          console.error('Error agregando foto:', e);
-        }
-        x += fotoW;
-        col++;
-        if (col === fotosPorFila) { x = M; y += fotoH + 2; col = 0; }
-      }
-      if (col !== 0) y += fotoH + 2;
-      pdf.setFont('helvetica', 'italic');
-      pdf.setFontSize(8);
-      pdf.setTextColor(120, 120, 120);
-      pdf.text('Estas fotos son el respaldo del estado del equipo al ser recibido.', M, y + 4);
-      y += 12;
-    }
-
-    /* CONDICIONES */
-    if (y > 220) { pdf.addPage(); y = 20; }
-    pdf.setFillColor(248, 248, 248);
-    pdf.roundedRect(M, y, CW, 32, 2, 2, 'F');
-    pdf.setTextColor(255, 105, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('CONDICIONES DEL SERVICIO', M + 4, y + 6);
-    pdf.setTextColor(80, 80, 80);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7);
-    CONFIG.condiciones.forEach((txt, i) => {
-      pdf.text(`${i + 1}. ${txt}`, M + 4, y + 12 + i * 3.5);
-    });
-    y += 38;
-
-    /* FIRMAS */
-    if (y > 240) { pdf.addPage(); y = 20; }
-    pdf.setDrawColor(150, 150, 150);
-    pdf.line(M, y + 15, M + 60, y + 15);
-    pdf.line(W - M - 60, y + 15, W - M, y + 15);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
-    pdf.setTextColor(80, 80, 80);
-    pdf.text('Firma del Cliente', M + 30, y + 19, { align: 'center' });
-    pdf.text('Firma del Taller', W - M - 30, y + 19, { align: 'center' });
-
-    /* FOOTER */
-    pdf.setDrawColor(255, 105, 0);
-    pdf.setLineWidth(0.5);
-    pdf.line(M, H - 15, W - M, H - 15);
-    pdf.setFontSize(7);
-    pdf.setTextColor(120, 120, 120);
-    pdf.text(`© ${new Date().getFullYear()} ${CONFIG.nombreTienda} · Todos los derechos reservados`, W / 2, H - 9, { align: 'center' });
-    pdf.text(CONFIG.web, W / 2, H - 5, { align: 'center' });
-
-    /* GUARDAR PDF */
-    const nombreArchivo = `Recibo_${numeroRecibo}_${datos.nombre.split(' ')[0]}.pdf`;
-    pdf.save(nombreArchivo);
-
-    /* GUARDAR EN FIRESTORE */
-    try {
-      await addDoc(collection(db, 'recibos'), {
-        numeroRecibo,
-        cliente: datos.nombre,
-        telefono: datos.telefono,
-        marca: datos.marca,
-        modelo: datos.modelo,
-        imei: datos.imei || null,
-        enciende: datos.enciende,
-        estado: datos.estado || '-',
-        falla: datos.falla || '-',
-        tipoSeguridad: datos.tipoSeguridad,
-        pin: datos.tipoSeguridad === 'pin' ? datos.pin : null,
-        patron: datos.tipoSeguridad === 'patron' ? datos.patronSecuencia : null,
-        servicios: datos.servicios,
-        total: datos.total,
-        adelanto: datos.adelanto,
-        saldo: datos.saldo,
-        fotos: datos.fotos.filter(f => f && f.dataUrl).map(f => f.dataUrl),
-        estadoOrden: 'recibido',
-        creadoPor: sesion.nombre,
-        creadoPorRol: sesion.rol,
-        fecha: serverTimestamp()
-      });
-      console.log('✅ Recibo guardado en Firestore');
-    } catch (err) {
-      console.error('❌ Error guardando en Firestore:', err);
-      toast('Recibo generado pero no se pudo guardar en la nube', 'warning', 4000);
-    }
-
-    /* MOSTRAR MODAL DE ÉXITO */
-    document.getElementById('successNumero').textContent = numeroRecibo;
-    const modal = document.getElementById('successModal');
-    modal.classList.add('show');
-
-    window._ultimoRecibo = {
-      numeroRecibo,
-      cliente: datos.nombre,
-      telefono: datos.telefono,
-      marca: datos.marca,
-      modelo: datos.modelo,
-      total: datos.total,
-      saldo: datos.saldo
-    };
-
-    configurarWhatsApp();
-
-  } catch (err) {
-    console.error('Error generando PDF:', err);
-    toast('Error al generar el PDF: ' + err.message, 'error', 5000);
-  } finally {
-    hideLoading();
-  }
-}
-
-/* ============================================================
-   WHATSAPP
-   ============================================================ */
-function configurarWhatsApp() {
-  const btn = document.getElementById('sendWhatsappBtn');
-  if (!btn) return;
-
-  const newBtn = btn.cloneNode(true);
-  btn.parentNode.replaceChild(newBtn, btn);
-
-  newBtn.addEventListener('click', () => {
-    const recibo = window._ultimoRecibo;
-    if (!recibo) return;
-    haptic(15);
-
-    const mensaje = `Hola ${recibo.cliente.split(' ')[0]} 👋
-
-✅ *Recibo de ingreso generado*
-
-📄 N° Recibo: ${recibo.numeroRecibo}
-📱 Equipo: ${recibo.marca} ${recibo.modelo}
-
-💰 Total: ${formatBs(recibo.total)}
-${recibo.saldo > 0 ? `💵 Saldo pendiente: ${formatBs(recibo.saldo)}\n` : ''}Su equipo ha sido recibido en nuestro taller. Le avisaremos cuando esté listo.
-
-🔧 *${CONFIG.nombreTienda}*
-📍 ${CONFIG.direccion}
-📞 ${CONFIG.telefono}
-🌐 ${CONFIG.web}`;
-
-    const tel = recibo.telefono.replace(/\D/g, '');
-    const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, '_blank');
-  });
-}
+    pdf.text(`Fecha: ${fechaStr}`, M + 3, y + 5.5);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`Recibido por: ${sesion.nombre}`, W -
