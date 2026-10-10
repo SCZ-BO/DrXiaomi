@@ -126,7 +126,7 @@ function irAPaso(nuevoPaso) {
 
   actualizarBarraProgreso();
   actualizarBotones();
-  if (pasoActual === 7) generarVistaPrevia();
+ if (pasoActual === 7) generarVistaPrevia();
 }
 
 function actualizarBarraProgreso() {
