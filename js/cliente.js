@@ -1133,17 +1133,6 @@ async function generarPDF() {
     });
     y += 30;
 
-    /* FIRMAS */
-    if (y > 260) { pdf.addPage(); y = 20; }
-    pdf.setDrawColor(150, 150, 150);
-    pdf.line(M, y + 10, M + 55, y + 10);
-    pdf.line(W - M - 55, y + 10, W - M, y + 10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7);
-    pdf.setTextColor(80, 80, 80);
-    pdf.text('Firma del Cliente', M + 27.5, y + 14, { align: 'center' });
-    pdf.text('Firma del Taller', W - M - 27.5, y + 14, { align: 'center' });
-
     /* FOOTER */
     pdf.setDrawColor(255, 105, 0);
     pdf.setLineWidth(0.5);
