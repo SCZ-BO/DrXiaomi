@@ -126,7 +126,7 @@ function irAPaso(nuevoPaso) {
 
   actualizarBarraProgreso();
   actualizarBotones();
- if (pasoActual === 7) generarVistaPrevia();
+  if (pasoActual === 7) generarVistaPrevia();
 }
 
 function actualizarBarraProgreso() {
@@ -393,14 +393,18 @@ function configurarPattern() {
 
   function updateSequence() {
     const seq = path.map(p => p.id).join(',');
-    document.getElementById('patronSecuencia').value = seq;
+    const inputPatron = document.getElementById('patronSecuencia');
+    if (inputPatron) inputPatron.value = seq;
+    
     const display = document.getElementById('pattern-sequence');
-    if (seq) {
-      display.textContent = 'Patrón: ' + path.map(p => p.id).join(' → ');
-      display.style.color = 'var(--brand-500)';
-    } else {
-      display.textContent = 'Sin patrón';
-      display.style.color = 'var(--text-3)';
+    if (display) {
+      if (seq) {
+        display.textContent = 'Patrón: ' + path.map(p => p.id).join(' → ');
+        display.style.color = 'var(--brand-500)';
+      } else {
+        display.textContent = 'Sin patrón';
+        display.style.color = 'var(--text-3)';
+      }
     }
   }
 
@@ -419,14 +423,17 @@ function configurarPattern() {
   lineCanvas.addEventListener('touchmove', move, { passive: false });
   lineCanvas.addEventListener('touchend', end);
 
-  document.getElementById('clearPattern').addEventListener('click', () => {
-    haptic(10);
-    path = [];
-    pts.forEach(p => p.sel = false);
-    drawBase();
-    lnc.clearRect(0, 0, size, size);
-    updateSequence();
-  });
+  const clearBtn = document.getElementById('clearPattern');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      haptic(10);
+      path = [];
+      pts.forEach(p => p.sel = false);
+      drawBase();
+      lnc.clearRect(0, 0, size, size);
+      updateSequence();
+    });
+  }
 
   drawBase();
 }
@@ -636,6 +643,7 @@ function configurarCharCounters() {
 function generarVistaPrevia() {
   guardarDatosPaso(6);
   const cont = document.getElementById('previewContainer');
+  if (!cont) return;
 
   // Formatear patrón
   let patronTexto = '';
@@ -859,7 +867,6 @@ async function generarPDF() {
   haptic(20);
 
   try {
-    // Cargar logo y QR en paralelo
     const [logoDataUrl, qrDataUrl] = await Promise.all([
       cargarLogoDataUrl(),
       generarQRDataUrl(`${CONFIG.urlApp}/?recibo=${numeroRecibo}`)
@@ -875,14 +882,12 @@ async function generarPDF() {
     pdf.setFillColor(255, 105, 0);
     pdf.rect(0, 0, W, 28, 'F');
 
-    // Logo
     if (logoDataUrl) {
       try {
         pdf.addImage(logoDataUrl, 'PNG', M, 4, 20, 20);
       } catch (e) { console.error('Error logo:', e); }
     }
 
-    // Nombre
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(15);
@@ -894,7 +899,6 @@ async function generarPDF() {
     pdf.setFontSize(7);
     pdf.text(`${CONFIG.direccion}  ·  Tel: ${CONFIG.telefono}`, M + 24, 22);
 
-    // Número de recibo
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(9);
     pdf.text('RECIBO DE INGRESO', W - M, 12, { align: 'right' });
@@ -903,7 +907,7 @@ async function generarPDF() {
 
     y = 33;
 
-    /* FECHA Y RECIBIDO POR (una sola línea gris) */
+    /* FECHA Y RECIBIDO POR */
     const fecha = new Date();
     const fechaStr = `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')}/${fecha.getFullYear()} ${String(fecha.getHours()).padStart(2,'0')}:${String(fecha.getMinutes()).padStart(2,'0')}`;
 
@@ -917,7 +921,7 @@ async function generarPDF() {
     pdf.text(`Recibido por: ${sesion.nombre}`, W - M - 3, y + 5.5, { align: 'right' });
     y += 12;
 
-    /* CLIENTE Y EQUIPO (2 columnas) */
+    /* CLIENTE Y EQUIPO */
     const colW = (CW - 3) / 2;
     pdf.setFillColor(255, 244, 235);
     pdf.roundedRect(M, y, colW, 22, 1.5, 1.5, 'F');
@@ -941,15 +945,13 @@ async function generarPDF() {
     pdf.text(`Tel: ${datos.telefono}`, M + 3, y + 16);
     if (datos.imei) {
       pdf.text(`IMEI: ${datos.imei}`, M + colW + 6, y + 16);
+      pdf.text(`Enciende: ${datos.enciende}`, M + colW + 6, y + 20);
     } else {
       pdf.text(`Enciende: ${datos.enciende}`, M + colW + 6, y + 16);
     }
-    if (datos.imei) {
-      pdf.text(`Enciende: ${datos.enciende}`, M + colW + 6, y + 20);
-    }
     y += 26;
 
-    /* ESTADO Y FALLA (compacto) */
+    /* ESTADO Y FALLA */
     if (datos.estado || datos.falla) {
       const lineasEstado = datos.estado ? pdf.splitTextToSize(`Estado: ${datos.estado}`, CW - 6) : [];
       const lineasFalla = datos.falla ? pdf.splitTextToSize(`Falla: ${datos.falla}`, CW - 6) : [];
@@ -976,7 +978,7 @@ async function generarPDF() {
       y += boxH + 3;
     }
 
-    /* SEGURIDAD (compacto) */
+    /* SEGURIDAD */
     let patronTexto = '';
     if (datos.tipoSeguridad === 'patron' && datos.patronSecuencia) {
       patronTexto = datos.patronSecuencia.split(',').join('-');
@@ -999,7 +1001,7 @@ async function generarPDF() {
     pdf.text(segInfo, M + 3, y + 11);
     y += 18;
 
-    /* SERVICIOS Y COSTOS (tabla compacta) */
+    /* SERVICIOS */
     if (y > 220) { pdf.addPage(); y = 20; }
 
     pdf.setFillColor(255, 244, 235);
@@ -1027,7 +1029,7 @@ async function generarPDF() {
 
     y = pdf.lastAutoTable.finalY + 3;
 
-    /* TOTALES COMPACTOS */
+    /* TOTALES */
     const boxAlto = datos.adelanto > 0 ? 22 : 14;
     pdf.setFillColor(248, 248, 248);
     pdf.roundedRect(M + CW - 70, y, 70, boxAlto, 1.5, 1.5, 'F');
@@ -1062,7 +1064,7 @@ async function generarPDF() {
 
     y += boxAlto + 4;
 
-    /* FOTOS (4 en una fila) */
+    /* FOTOS */
     const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
     if (fotosValidas.length > 0) {
       if (y > 240) { pdf.addPage(); y = 20; }
@@ -1115,7 +1117,7 @@ async function generarPDF() {
 
     y += 32;
 
-    /* CONDICIONES (fuente muy pequeña) */
+    /* CONDICIONES */
     if (y > 245) { pdf.addPage(); y = 20; }
     pdf.setFillColor(248, 248, 248);
     pdf.roundedRect(M, y, CW, 26, 1.5, 1.5, 'F');
