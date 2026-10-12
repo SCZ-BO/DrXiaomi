@@ -1,17 +1,19 @@
 /* ============================================================
    DR. XIAOMI · ORDEN (Detalle + Bitácora + WhatsApp + Cobro)
    Archivo: app/orden.js
+   Versión corregida: timeout de seguridad, manejo de errores
+                      robusto, debug en consola
    ============================================================ */
 
 import { requireAuth, logout, getSesion } from '/js/app-auth.js';
-import { 
-  toast, haptic, initTheme, escapeHtml, 
-  formatBs, tiempoRelativo, showLoading, hideLoading 
+import {
+  toast, haptic, initTheme, escapeHtml,
+  formatBs, tiempoRelativo, showLoading, hideLoading
 } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
-import { 
-  doc, getDoc, updateDoc, deleteDoc, 
-  serverTimestamp, arrayUnion 
+import {
+  doc, getDoc, updateDoc, deleteDoc,
+  serverTimestamp, arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // Módulo de dictado por voz (se autoinicializa)
@@ -20,6 +22,9 @@ import './dictado.js';
 /* ============================================================
    CONFIGURACIÓN
    ============================================================ */
+const DEBUG = true; // ← cambia a false en producción
+const TIMEOUT_MS = 10000; // 10 segundos máximo esperando Firestore
+
 const CONFIG = {
   nombreTienda: 'DR. XIAOMI SCZ',
   direccion: 'Centro Comercial Cañoto #K1, Santa Cruz',
@@ -59,40 +64,71 @@ async function iniciar() {
   const params = new URLSearchParams(window.location.search);
   ordenId = params.get('id');
 
+  if (DEBUG) console.log('🆔 Orden ID:', ordenId);
+
   if (!ordenId) {
     toast('Orden no encontrada', 'error');
     setTimeout(() => window.location.href = '/app/', 1500);
     return;
   }
 
-  await cargarOrden();
-
-  document.getElementById('backBtn').addEventListener('click', () => {
+  // Configurar botón volver ANTES de cargar la orden
+  document.getElementById('backBtn')?.addEventListener('click', () => {
     haptic(10);
     window.location.href = '/app/';
   });
+
+  await cargarOrden();
 }
 
 /* ============================================================
-   CARGAR ORDEN
+   CARGAR ORDEN (con timeout y manejo robusto)
    ============================================================ */
 async function cargarOrden() {
+  showLoading('Cargando orden...');
+
   try {
     const ref = doc(db, 'recibos', ordenId);
-    const snap = await getDoc(ref);
+
+    // Race entre getDoc y timeout
+    const snap = await Promise.race([
+      getDoc(ref),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('TIMEOUT: Firestore no respondió en ' + (TIMEOUT_MS/1000) + 's')), TIMEOUT_MS)
+      )
+    ]);
 
     if (!snap.exists()) {
-      toast('Orden no encontrada', 'error');
-      setTimeout(() => window.location.href = '/app/', 1500);
+      if (DEBUG) console.warn('⚠️ La orden no existe en Firestore:', ordenId);
+      toast('Esta orden no existe o fue eliminada', 'error', 3000);
+      setTimeout(() => window.location.href = '/app/', 2000);
       return;
     }
 
     orden = { id: snap.id, ...snap.data() };
+
+    if (DEBUG) console.log('✅ Orden cargada:', orden);
+
     renderOrden();
 
   } catch (err) {
-    console.error('Error cargando orden:', err);
-    toast('Error al cargar la orden', 'error');
+    console.error('❌ Error cargando orden:', err);
+
+    let mensaje = 'Error al cargar la orden';
+    if (err.message?.includes('TIMEOUT')) {
+      mensaje = 'Firestore no responde. Verifica tu conexión.';
+    } else if (err.code === 'permission-denied') {
+      mensaje = 'Sin permisos para ver esta orden.';
+    } else if (err.code === 'unavailable') {
+      mensaje = 'Sin conexión. Revisa tu internet.';
+    }
+
+    toast(mensaje, 'error', 4000);
+    setTimeout(() => window.location.href = '/app/', 2500);
+
+  } finally {
+    // ✅ SIEMPRE quitar el spinner, pase lo que pase
+    hideLoading();
   }
 }
 
@@ -103,11 +139,16 @@ function renderOrden() {
   const estadoActual = orden.estadoOrden || 'recibido';
   const estadoInfo = ESTADOS[estadoActual] || ESTADOS.recibido;
 
-  document.getElementById('headerTitle').textContent = orden.numeroRecibo || 'ORDEN';
-  document.getElementById('headerSubtitle').textContent = 
-    `${estadoInfo.texto} · ${tiempoRelativo(orden.fecha)}`;
+  const titleEl = document.getElementById('headerTitle');
+  const subtitleEl = document.getElementById('headerSubtitle');
+  if (titleEl) titleEl.textContent = orden.numeroRecibo || 'ORDEN';
+  if (subtitleEl) {
+    subtitleEl.textContent = `${estadoInfo.texto} · ${tiempoRelativo(orden.fecha)}`;
+  }
 
   const cont = document.getElementById('contenido');
+  if (!cont) return;
+
   cont.innerHTML = `
     <!-- ESTADO ACTUAL -->
     <div class="section-block">
@@ -294,8 +335,8 @@ function renderOrden() {
 
       <div style="margin-bottom:16px;">
         <div class="dictado-wrap textarea">
-          <textarea 
-            id="nuevaNota" 
+          <textarea
+            id="nuevaNota"
             placeholder="Escribe o dicta una nota sobre el proceso..."
             maxlength="500"
             data-dictado
@@ -333,7 +374,6 @@ function renderOrden() {
 
   configurarEventosOrden();
 
-  // Reactivar dictado en el nuevo DOM
   if (window.__dictadoIniciar) {
     setTimeout(() => window.__dictadoIniciar(), 100);
   }
@@ -351,7 +391,7 @@ function getTextoClave(o) {
 
 function renderBitacora() {
   const bitacora = Array.isArray(orden.bitacora) ? orden.bitacora : [];
-  
+
   const ordenada = [...bitacora].sort((a, b) => {
     const fa = a.fecha ? new Date(a.fecha) : 0;
     const fb = b.fecha ? new Date(b.fecha) : 0;
@@ -408,8 +448,8 @@ function configurarEventosOrden() {
 
   const btnAddFoto = document.getElementById('btnAddFoto');
   const fotoInput = document.getElementById('fotoInput');
-  
-  if (btnAddFoto) {
+
+  if (btnAddFoto && fotoInput) {
     btnAddFoto.addEventListener('click', () => {
       haptic(10);
       fotoInput.click();
@@ -433,20 +473,11 @@ function configurarEventosOrden() {
     });
   }
 
-  const btnGuardarNota = document.getElementById('btnGuardarNota');
-  if (btnGuardarNota) btnGuardarNota.addEventListener('click', guardarNota);
-
-  const btnWspListo = document.getElementById('btnWhatsappListo');
-  if (btnWspListo) btnWspListo.addEventListener('click', enviarWhatsappListo);
-
-  const btnWspEntrega = document.getElementById('btnWhatsappEntrega');
-  if (btnWspEntrega) btnWspEntrega.addEventListener('click', enviarWhatsappEntrega);
-
-  const btnContactar = document.getElementById('btnContactar');
-  if (btnContactar) btnContactar.addEventListener('click', contactarCliente);
-
-  const btnEliminar = document.getElementById('btnEliminar');
-  if (btnEliminar) btnEliminar.addEventListener('click', eliminarOrden);
+  document.getElementById('btnGuardarNota')?.addEventListener('click', guardarNota);
+  document.getElementById('btnWhatsappListo')?.addEventListener('click', enviarWhatsappListo);
+  document.getElementById('btnWhatsappEntrega')?.addEventListener('click', enviarWhatsappEntrega);
+  document.getElementById('btnContactar')?.addEventListener('click', contactarCliente);
+  document.getElementById('btnEliminar')?.addEventListener('click', eliminarOrden);
 }
 
 /* ============================================================
@@ -461,7 +492,6 @@ async function cambiarEstado(nuevoEstado) {
     return;
   }
 
-  // Si es "entregado" → pedir monto y método
   if (nuevoEstado === 'entregado') {
     abrirModalCobro();
     return;
@@ -525,9 +555,9 @@ function abrirModalCobro() {
         <label style="display:block; font-size:12px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">
           Monto cobrado
         </label>
-        <input type="number" 
-               id="inputMonto" 
-               step="0.01" 
+        <input type="number"
+               id="inputMonto"
+               step="0.01"
                min="0"
                value="${montoSugerido.toFixed(2)}"
                inputmode="decimal"
@@ -554,8 +584,8 @@ function abrirModalCobro() {
         </div>
 
         <div id="detalleMixtoContainer" style="display:none; margin-top:10px;">
-          <input type="text" 
-                 id="detalleMixto" 
+          <input type="text"
+                 id="detalleMixto"
                  placeholder="Ej: 200 efectivo + 150 QR"
                  maxlength="100"
                  style="width:100%; padding:12px; background:var(--input-bg); color:var(--text-1); border:1.5px solid var(--border-2); border-radius:12px; font-family:inherit; font-size:13px;">
@@ -615,7 +645,7 @@ function abrirModalCobro() {
       modal.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('activo'));
       btn.classList.add('activo');
       metodoSeleccionado = btn.dataset.metodo;
-      
+
       const detalle = document.getElementById('detalleMixtoContainer');
       detalle.style.display = metodoSeleccionado === 'Mixto' ? 'block' : 'none';
       document.getElementById('errorMetodo').style.display = 'none';
@@ -790,11 +820,11 @@ async function enviarWhatsappEntrega() {
 
   haptic(15);
 
-  const fechaEntrega = orden.fechaEntrega 
+  const fechaEntrega = orden.fechaEntrega
     ? formatFecha(orden.fechaEntrega)
     : formatFecha(new Date());
 
-  const montoTexto = orden.montoCobrado 
+  const montoTexto = orden.montoCobrado
     ? `💰 Total cobrado: ${formatBs(orden.montoCobrado)}\n💳 Método: ${orden.metodoPago}\n`
     : '';
 
@@ -946,9 +976,9 @@ function formatFecha(fecha) {
   if (fecha.toDate) d = fecha.toDate();
   else if (fecha instanceof Date) d = fecha;
   else d = new Date(fecha);
-  
+
   if (isNaN(d.getTime())) return '-';
-  
+
   return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
