@@ -17,7 +17,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // Módulo de dictado por voz (se autoinicializa)
-import './dictado.js';
+import '/js/dictado.js';
 
 /* ============================================================
    CONFIGURACIÓN
