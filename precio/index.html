@@ -354,4 +354,672 @@
   }
   function escapeHtml(str) {
     if (str == null) return "";
-    const d = document.createElement('div'); d.textContent
+    const d = document.createElement('div'); d.textContent = String(str); return d.innerHTML;
+  }
+  function normalizeText(str) {
+    return String(str || "").toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+  }
+  function getTokens(str) { return normalizeText(str).split(" ").filter(t => t.length > 0); }
+  function haptic(ms = 15) { if (navigator.vibrate) navigator.vibrate(ms); }
+  const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  function attachRipple(el) {
+    if (!isTouch) return;
+    el.addEventListener('pointerdown', (e) => {
+      const rect = el.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      const size = Math.max(rect.width, rect.height);
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+      ripple.style.top  = (e.clientY - rect.top  - size/2) + 'px';
+      el.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    }, { passive: true });
+  }
+
+  // ============================================================
+  // PARSERS
+  // ============================================================
+  function parsePrice(priceStr) {
+    if (priceStr == null) return 0;
+    let s = String(priceStr).trim().replace(/[^\d.,-]/g, '');
+    if (!s) return 0;
+    const lc = s.lastIndexOf(','), ld = s.lastIndexOf('.');
+    if (lc > -1 && ld > -1) {
+      if (lc > ld) s = s.replace(/\./g, '').replace(',', '.');
+      else         s = s.replace(/,/g, '');
+    } else if (lc > -1) {
+      const parts = s.split(',');
+      if (parts.length === 2 && parts[1].length <= 2) s = parts[0] + '.' + parts[1];
+      else s = s.replace(/,/g, '');
+    } else if (ld > -1) {
+      const parts = s.split('.');
+      if (parts.length > 2) s = parts.join('');
+      else if (parts[1] && parts[1].length === 3) s = parts.join('');
+    }
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : Math.round(n);
+  }
+  function cleanText(t) { return t ? String(t).trim().replace(/^"|"$/g, "") : ""; }
+  function parseCSVLine(line) {
+    const r = []; let cur = "", q = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') q = !q;
+      else if ((c === "," || c === ";") && !q) { r.push(cur.trim()); cur = ""; }
+      else cur += c;
+    }
+    r.push(cur.trim());
+    return r.map(f => f.replace(/^"|"$/g, ""));
+  }
+  function normalizeTipo(raw) {
+    const t = String(raw || "").toUpperCase().trim();
+    if (!t) return "LCD";
+    if (/\b(ORIG|ORIGINAL|ORI|ORG|GENUINE|OEM|SERVICE\s*PACK|\bSP\b)\b/.test(t)) return "ORIG";
+    if (/(AMOLED|OLED|SUPER\s*AMOLED|SUPERAMOLED|RETINA)/.test(t)) return "OLED";
+    return "LCD";
+  }
+  function parseCSV(text, provider) {
+    const lines = String(text || "").split(/\r?\n/).filter(l => l.trim() !== "");
+    if (lines.length < 2) return [];
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cols = parseCSVLine(lines[i]);
+      if (cols.length >= 6) {
+        const marca = cleanText(cols[0]) || "N/A";
+        const modelo = cleanText(cols[1]);
+        const tipo = normalizeTipo(cleanText(cols[2]));
+        const prov = cleanText(cols[3]) || provider;
+        const compra = parsePrice(cols[4]);
+        const venta = parsePrice(cols[5]);
+        if (modelo && modelo.toLowerCase() !== "modelo") {
+          data.push({ id: uid(), marca, modelo, tipo, proveedor: prov, compra, venta });
+        }
+      } else if (cols.length >= 5) {
+        const marca = cleanText(cols[0]) || "N/A";
+        const modelo = cleanText(cols[1]);
+        const tipo = normalizeTipo(cleanText(cols[2]));
+        const compra = parsePrice(cols[3]);
+        const venta = parsePrice(cols[4]);
+        if (modelo && modelo.toLowerCase() !== "modelo") {
+          data.push({ id: uid(), marca, modelo, tipo, proveedor: provider, compra, venta });
+        }
+      }
+    }
+    return data;
+  }
+
+  // ============================================================
+  // BÚSQUEDA
+  // ============================================================
+  function performPreciseSearch(data, term) {
+    if (!term.trim()) return data;
+    const tokens = getTokens(term);
+    if (!tokens.length) return data;
+    const results = [];
+    for (const item of data) {
+      const mn = normalizeText(item.modelo), mk = normalizeText(item.marca);
+      const combined = mn + " " + mk;
+      if (!tokens.every(t => combined.includes(t))) continue;
+      let score = 0;
+      const joined = tokens.join(" ");
+      if (mn === joined) score = 100;
+      else if (mn.startsWith(joined)) score = 90;
+      else {
+        let pos = 0, ord = true;
+        for (const t of tokens) {
+          const idx = mn.indexOf(t, pos);
+          if (idx === -1) { ord = false; break; }
+          pos = idx + t.length;
+        }
+        score = ord ? 80 : 50;
+      }
+      score += tokens.length * 5;
+      results.push({ item, score });
+    }
+    results.sort((a, b) => b.score - a.score);
+    return results.map(r => r.item);
+  }
+  function generateSuggestions(term) {
+    if (!term.trim() || term.trim().length < 2) return [];
+    const tokens = getTokens(term);
+    const map = new Map();
+    for (const p of allData) {
+      const mn = normalizeText(p.modelo), mk = normalizeText(p.marca);
+      const combined = mn + " " + mk;
+      if (!tokens.every(t => combined.includes(t))) continue;
+      let score = 0;
+      const joined = tokens.join(" ");
+      if (mn === joined) score = 100;
+      else if (mn.startsWith(joined)) score = 90;
+      else {
+        let pos = 0, ord = true;
+        for (const t of tokens) {
+          const idx = mn.indexOf(t, pos);
+          if (idx === -1) { ord = false; break; }
+          pos = idx + t.length;
+        }
+        score = ord ? 80 : 50;
+      }
+      const key = `${p.marca}|${p.modelo}`;
+      if (!map.has(key) || map.get(key).score < score) map.set(key, { ...p, score });
+    }
+    return Array.from(map.values()).sort((a, b) => b.score - a.score).slice(0, 8);
+  }
+  function highlight(text, term) {
+    if (!term.trim()) return escapeHtml(text);
+    const tokens = getTokens(term);
+    let r = escapeHtml(text);
+    tokens.forEach(t => {
+      const rx = new RegExp(`(${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+      r = r.replace(rx, '<span class="suggestion-highlight">$1</span>');
+    });
+    return r;
+  }
+
+  // ============================================================
+  // FAVORITOS / RECIENTES
+  // ============================================================
+  function loadFavorites() {
+    try { favorites = new Set(JSON.parse(localStorage.getItem(CONFIG.favoritesKey) || "[]")); }
+    catch { favorites = new Set(); }
+  }
+  function saveFavorites() {
+    try { localStorage.setItem(CONFIG.favoritesKey, JSON.stringify([...favorites])); } catch {}
+  }
+  function toggleFavorite(id) {
+    if (favorites.has(id)) { favorites.delete(id); showToast("⭐ Quitado de favoritos"); }
+    else { favorites.add(id); showToast("⭐ Agregado a favoritos"); haptic(30); }
+    saveFavorites();
+    render(true);
+  }
+  window.toggleFavorite = toggleFavorite;
+
+  function loadRecent() {
+    try { recentSearches = JSON.parse(localStorage.getItem(CONFIG.recentKey) || "[]"); }
+    catch { recentSearches = []; }
+  }
+  function addRecent(term) {
+    if (!term.trim()) return;
+    recentSearches = [term, ...recentSearches.filter(t => t.toLowerCase() !== term.toLowerCase())].slice(0, 5);
+    try { localStorage.setItem(CONFIG.recentKey, JSON.stringify(recentSearches)); } catch {}
+  }
+
+  // ============================================================
+  // CACHE
+  // ============================================================
+  function readCachedCSV(name) {
+    try {
+      const raw = localStorage.getItem(CONFIG.cachePrefix + name);
+      if (!raw) return null;
+      const p = JSON.parse(raw);
+      return p && typeof p.text === 'string' ? p : null;
+    } catch { return null; }
+  }
+  function writeCachedCSV(name, text, etag, lm) {
+    try {
+      localStorage.setItem(CONFIG.cachePrefix + name, JSON.stringify({ text, etag: etag||"", lastModified: lm||"", savedAt: Date.now() }));
+    } catch { try { localStorage.removeItem(CONFIG.cachePrefix + name); } catch {} }
+  }
+  function readCacheMeta() {
+    try { return JSON.parse(localStorage.getItem(CONFIG.cacheMetaKey) || "{}"); } catch { return {}; }
+  }
+  function writeCacheMeta(m) {
+    try { localStorage.setItem(CONFIG.cacheMetaKey, JSON.stringify(m)); } catch {}
+  }
+  async function fetchTimeout(url, opts = {}, ms = CONFIG.fetchTimeoutMs) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    try { return await fetch(url, { ...opts, signal: ctrl.signal }); }
+    finally { clearTimeout(t); }
+  }
+
+  // ============================================================
+  // CARGA
+  // ============================================================
+  async function loadAllData({ silent = false } = {}) {
+    const cached = [];
+    for (const s of CONFIG.dataSources) {
+      const c = readCachedCSV(s.name);
+      if (c) cached.push(...parseCSV(c.text, s.name));
+    }
+    if (cached.length) {
+      allData = cached;
+      lastSyncInfo = { time: Date.now(), fromCache: true };
+      applyFiltersAndSearch(true);
+    } else {
+      showSkeleton();
+    }
+    if (!navigator.onLine) {
+      if (!cached.length) showOfflineEmpty();
+      else if (!silent) showToast("📴 Sin conexión - datos guardados");
+      return;
+    }
+    if (!silent && cached.length) showToast("🔄 Actualizando listas...");
+    const meta = readCacheMeta();
+    const fresh = [];
+    let updated = false;
+    for (const s of CONFIG.dataSources) {
+      try {
+        const headers = {};
+        const prev = readCachedCSV(s.name);
+        if (prev?.etag) headers["If-None-Match"] = prev.etag;
+        if (prev?.lastModified) headers["If-Modified-Since"] = prev.lastModified;
+        const res = await fetchTimeout(s.url, { headers, cache: "no-store" });
+        if (res.status === 304 && prev) { fresh.push(...parseCSV(prev.text, s.name)); continue; }
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const text = await res.text();
+        const etag = res.headers.get("ETag") || "";
+        const lm = res.headers.get("Last-Modified") || "";
+        if ((prev?.text || "") !== text) {
+          writeCachedCSV(s.name, text, etag, lm);
+          meta[s.name] = { savedAt: Date.now(), etag, lastModified: lm };
+          updated = true;
+        }
+        fresh.push(...parseCSV(text, s.name));
+      } catch {
+        const c = readCachedCSV(s.name);
+        if (c) fresh.push(...parseCSV(c.text, s.name));
+      }
+    }
+    writeCacheMeta(meta);
+    if (fresh.length) {
+      allData = fresh;
+      lastSyncInfo = { time: Date.now(), fromCache: false };
+      applyFiltersAndSearch(true);
+    }
+    if (updated && !silent) showToast("✅ Listas actualizadas");
+  }
+
+  // ============================================================
+  // FILTROS / RENDER
+  // ============================================================
+  const TIPO_PESO = { ORIG: 0, OLED: 1, LCD: 2 };
+  const PAGE_SIZE = 30;
+  let renderedCount = 0;
+
+  function applyFiltersAndSearch(immediate = false) {
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    const run = () => {
+      let data = [...allData];
+      if (currentFilter === "FAV") data = data.filter(i => favorites.has(i.id));
+      else if (currentFilter !== "all") data = data.filter(i => i.tipo === currentFilter);
+      const term = searchInput.value.trim();
+      if (term) {
+        data = performPreciseSearch(data, term);
+        clearSearchBtn.style.display = 'block';
+      } else {
+        clearSearchBtn.style.display = 'none';
+      }
+      data.sort((a, b) => {
+        const pa = TIPO_PESO[a.tipo] ?? 3;
+        const pb = TIPO_PESO[b.tipo] ?? 3;
+        if (pa !== pb) return pa - pb;
+        return a.venta - b.venta;
+      });
+      filteredData = data;
+      updateResultsCount();
+      render(true);
+    };
+    if (immediate) run();
+    else {
+      showSearchLoader();
+      searchDebounceTimer = setTimeout(() => { run(); hideSearchLoader(); scrollToTop(); }, 200);
+    }
+  }
+  function updateSuggestions() {
+    const term = searchInput.value.trim();
+    if (!term || term.length < 2) {
+      if (recentSearches.length) {
+        suggestionsPanel.innerHTML = `
+          <div class="recent-header">🕐 Búsquedas recientes</div>
+          ${recentSearches.map(r => `<div class="recent-item" data-term="${escapeHtml(r)}"><i class="fas fa-history"></i><span>${escapeHtml(r)}</span></div>`).join('')}
+        `;
+        suggestionsPanel.querySelectorAll('.recent-item').forEach(el => {
+          el.addEventListener('click', () => {
+            searchInput.value = el.dataset.term;
+            suggestionsPanel.classList.remove('active');
+            applyFiltersAndSearch();
+          });
+        });
+        suggestionsPanel.classList.add('active');
+      } else suggestionsPanel.classList.remove('active');
+      return;
+    }
+    const sug = generateSuggestions(term);
+    if (!sug.length) { suggestionsPanel.classList.remove('active'); return; }
+    suggestionsPanel.innerHTML = `
+      <div class="suggestion-header">🎯 COINCIDENCIAS (${sug.length})</div>
+      ${sug.map(s => `
+        <div class="suggestion-item" data-modelo="${escapeHtml(s.modelo)}">
+          <i class="fas fa-mobile-alt"></i>
+          <div style="flex:1;min-width:0;">
+            <div>${highlight(s.modelo, term)}</div>
+            <div style="font-size:11px;color:var(--text-tertiary);">${escapeHtml(s.marca)} · ${s.venta.toLocaleString()} Bs</div>
+          </div>
+          <span class="suggestion-price-tag">${s.tipo}</span>
+        </div>
+      `).join('')}
+    `;
+    suggestionsPanel.querySelectorAll('.suggestion-item').forEach(el => {
+      el.addEventListener('click', () => {
+        searchInput.value = el.dataset.modelo;
+        addRecent(el.dataset.modelo);
+        suggestionsPanel.classList.remove('active');
+        applyFiltersAndSearch();
+        haptic(20);
+      });
+    });
+    suggestionsPanel.classList.add('active');
+  }
+  function updateResultsCount() {
+    if (!resultsCount) return;
+    const n = filteredData.length;
+    const tag = lastSyncInfo.fromCache
+      ? `<span class="offline-tag on"><span class="dot"></span>Offline</span>`
+      : `<span class="offline-tag"><span class="dot"></span>Online</span>`;
+    resultsCount.innerHTML = `<span>${n} producto${n !== 1 ? 's' : ''}</span>${tag}`;
+  }
+  function render(reset = true) {
+    if (!container) return;
+    if (currentTab === "compare") { showCompareModal(); return; }
+
+    if (reset) {
+      renderedCount = 0;
+      if (!filteredData.length) {
+        const term = searchInput.value.trim();
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><p style="font-weight:600;margin-bottom:8px;">Sin resultados</p>${term ? `<p style="font-size:13px;">No se encontró "${escapeHtml(term)}"</p>` : ''}</div>`;
+        return;
+      }
+      container.innerHTML = `<div class="cards-view" id="cardsView"></div>`;
+    }
+
+    const view = document.getElementById("cardsView");
+    if (!view) return;
+
+    const slice = filteredData.slice(renderedCount, renderedCount + PAGE_SIZE);
+    const html = slice.map((item, idx) => {
+      const i = renderedCount + idx;
+      const isOrig = item.tipo === 'ORIG';
+      const isOled = item.tipo === 'OLED';
+      const typeClass = isOrig ? 'orig' : isOled ? 'oled' : '';
+      const animStyle = i < 20
+        ? `animation-delay:${i * 15}ms`
+        : `animation:none;opacity:1;transform:none`;
+      return `
+      <div class="product-card ${isOrig ? 'is-orig' : ''}" style="${animStyle}">
+        <div class="card-header">
+          <div style="min-width:0;flex:1;">
+            <div class="card-brand">${escapeHtml(item.marca)}</div>
+            <div class="card-model">${escapeHtml(item.modelo)}</div>
+          </div>
+          <button class="fav-btn ${favorites.has(item.id) ? 'active' : ''}" onclick="window.toggleFavorite('${item.id}')" aria-label="Favorito">
+            <i class="fa${favorites.has(item.id) ? 's' : 'r'} fa-star"></i>
+          </button>
+        </div>
+        <div class="card-specs">
+          <span class="card-type ${typeClass}">${item.tipo}</span>
+          ${techMode ? `<span class="supplier-badge">🏷️ ${escapeHtml(item.proveedor)}</span>` : ''}
+        </div>
+        <div class="card-price-row">
+          <span class="card-price" onclick="window.copyPrice('${item.id}')">${item.venta.toLocaleString()} Bs</span>
+          <div class="card-actions-group">
+            <button class="image-btn" onclick="window.openGoogle('${item.id}')"><i class="fab fa-google"></i> LCD</button>
+            <button class="whatsapp-btn" onclick="window.shareWA('${item.id}')"><i class="fab fa-whatsapp"></i></button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    view.insertAdjacentHTML('beforeend', html);
+    renderedCount += slice.length;
+  }
+  function scrollToTop() { mainScrollContainer?.scrollTo({ top: 0, behavior: 'smooth' }); }
+  function showSearchLoader() { if (searchLoaderIndicator) searchLoaderIndicator.style.display = "inline-flex"; }
+  function hideSearchLoader() { if (searchLoaderIndicator) searchLoaderIndicator.style.display = "none"; }
+
+  // ============================================================
+  // ACCIONES
+  // ============================================================
+  window.copyPrice = function(id) {
+    const p = filteredData.find(x => x.id === id) || allData.find(x => x.id === id);
+    if (!p) return showToast("❌ No encontrado");
+    const msg = `📱 ${p.marca} ${p.modelo}\n💰 Precio Pantalla: ${p.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
+    const fallback = () => {
+      const ta = document.createElement('textarea');
+      ta.value = msg; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); showToast("✅ Precio copiado"); } catch { showToast("❌ Error"); }
+      document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(msg).then(() => { showToast("✅ Precio copiado"); haptic(30); }).catch(fallback);
+    } else fallback();
+  };
+  window.shareWA = function(id) {
+    const p = filteredData.find(x => x.id === id) || allData.find(x => x.id === id);
+    if (!p) return;
+    const msg = `📱 *${p.marca} ${p.modelo}*\n💰 Precio Pantalla: ${p.venta.toLocaleString()} Bs\n✅ INCLUYE INSTALACIÓN`;
+    if (navigator.share) {
+      navigator.share({ text: msg }).catch(() => {});
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+    }
+    haptic(30);
+  };
+  window.openGoogle = function(id) {
+    const p = filteredData.find(x => x.id === id) || allData.find(x => x.id === id);
+    if (!p) return;
+    const q = `LCD ${p.modelo} ${p.marca} pantalla`;
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}&tbm=isch`, "_blank", "width=450,height=650");
+    haptic(20);
+  };
+
+  // ============================================================
+  // COMPARE / MODALES
+  // ============================================================
+  function showCompareModal() {
+    const data = filteredData.slice(0, 4);
+    if (!data.length) { showToast("Nada para comparar"); return; }
+    let html = '<div style="display:flex;flex-direction:column;gap:12px;max-height:60vh;overflow-y:auto;">';
+    data.forEach(p => {
+      const accent = p.tipo === 'ORIG' ? 'var(--gold-2)' : 'var(--xiaomi-orange)';
+      html += `<div style="background:var(--bg-secondary);padding:14px;border-radius:16px;border-left:4px solid ${accent};">
+        <div style="font-size:12px;color:${accent};font-weight:700;">${escapeHtml(p.marca)}</div>
+        <div style="font-size:15px;font-weight:600;margin:4px 0;">${escapeHtml(p.modelo)}</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">${p.tipo}${techMode ? ' · ' + escapeHtml(p.proveedor) : ''}</div>
+        <div style="font-size:22px;font-weight:800;">${p.venta.toLocaleString()} Bs</div>
+      </div>`;
+    });
+    html += '</div><div class="modal-buttons" style="margin-top:16px;"><button onclick="window.closeCompare()" style="flex:1;padding:12px;background:var(--xiaomi-orange);border:none;border-radius:30px;color:white;font-weight:600;cursor:pointer;">Cerrar</button></div>';
+    document.getElementById("compareModal")?.remove();
+    document.body.insertAdjacentHTML("beforeend",
+      `<div id="compareModal" class="modal active"><div class="modal-content"><div class="sheet-handle"></div><h3>📊 Comparar</h3>${html}</div></div>`);
+  }
+  window.closeCompare = () => document.getElementById("compareModal")?.remove();
+
+  // ============================================================
+  // TEMA
+  // ============================================================
+  function applyTheme(t) {
+    currentTheme = t;
+    document.documentElement.setAttribute("data-theme", t);
+    const icon = document.querySelector("#themeToggle i");
+    if (icon) icon.className = t === "dark" ? "fas fa-sun" : "fas fa-moon";
+    const meta = document.getElementById("metaThemeColor");
+    if (meta) meta.setAttribute("content", t === "dark" ? "#000000" : "#FF6900");
+    localStorage.setItem("theme", t);
+  }
+  function toggleTheme() { applyTheme(currentTheme === "light" ? "dark" : "light"); haptic(15); }
+  function loadTheme() {
+    applyTheme(localStorage.getItem("theme") === "dark" ? "dark" : "light");
+  }
+
+  // ============================================================
+  // PULL TO REFRESH
+  // ============================================================
+  function setupPullToRefresh() {
+    let startY = 0, pulling = false, triggered = false;
+    const threshold = 80;
+    mainScrollContainer.addEventListener('touchstart', (e) => {
+      if (mainScrollContainer.scrollTop <= 0) { startY = e.touches[0].clientY; pulling = true; triggered = false; }
+      else pulling = false;
+    }, { passive: true });
+    mainScrollContainer.addEventListener('touchmove', (e) => {
+      if (!pulling) return;
+      const dy = e.touches[0].clientY - startY;
+      if (dy > 10 && mainScrollContainer.scrollTop <= 0) {
+        const clamped = Math.min(dy, 120);
+        ptrIndicator.style.transform = `translateX(-50%) translateY(${clamped - 20}px)`;
+        ptrIndicator.classList.add('visible');
+        if (clamped >= threshold && !triggered) {
+          triggered = true;
+          ptrIndicator.classList.add('spinning');
+          haptic(20);
+        }
+      }
+    }, { passive: true });
+    mainScrollContainer.addEventListener('touchend', async () => {
+      if (!pulling) return;
+      pulling = false;
+      if (ptrIndicator.classList.contains('spinning')) {
+        await loadAllData({ silent: false });
+      }
+      ptrIndicator.classList.remove('visible', 'spinning');
+      ptrIndicator.style.transform = 'translateX(-50%) translateY(-60px)';
+    }, { passive: true });
+  }
+
+  // ============================================================
+  // INFINITE SCROLL
+  // ============================================================
+  function setupInfiniteScroll() {
+    let ticking = false;
+    mainScrollContainer.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        if (renderedCount >= filteredData.length) return;
+        const { scrollTop, scrollHeight, clientHeight } = mainScrollContainer;
+        if (scrollTop + clientHeight >= scrollHeight - 500) {
+          render(false);
+        }
+      });
+    }, { passive: true });
+  }
+
+  // ============================================================
+  // SKELETON / ERROR
+  // ============================================================
+  function showSkeleton() {
+    if (!container) return;
+    container.innerHTML = `<div class="cards-view">${Array(6).fill().map(() => `<div class="product-card" style="height:120px;animation:none;opacity:1;transform:none;"><div style="background:linear-gradient(90deg, var(--border) 25%, transparent 50%, var(--border) 75%); background-size:200% 100%; animation:loading 1.5s infinite; border-radius:12px; height:100%;"></div></div>`).join('')}</div>`;
+    if (!document.getElementById("skeletonKeyframes")) {
+      const s = document.createElement("style");
+      s.id = "skeletonKeyframes";
+      s.textContent = `@keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`;
+      document.head.appendChild(s);
+    }
+  }
+  function showOfflineEmpty() {
+    container.innerHTML = `<div class="empty-state"><i class="fas fa-wifi"></i><p style="font-weight:600;margin-bottom:8px;">Sin conexión</p><p style="font-size:13px;">Conéctate una vez para descargar el catálogo.</p><button onclick="location.reload()" style="margin-top:16px;padding:12px 24px;background:var(--xiaomi-orange);border:none;border-radius:30px;color:white;font-weight:600;cursor:pointer;">Reintentar</button></div>`;
+  }
+
+  // ============================================================
+  // EVENTOS
+  // ============================================================
+  function setupEventListeners() {
+    searchInput.addEventListener("input", () => { updateSuggestions(); applyFiltersAndSearch(); });
+    searchInput.addEventListener("focus", () => { if (!searchInput.value && recentSearches.length) updateSuggestions(); });
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === 'Enter') { addRecent(searchInput.value); suggestionsPanel.classList.remove('active'); applyFiltersAndSearch(); }
+      if (e.key === 'Escape') suggestionsPanel.classList.remove('active');
+    });
+    clearSearchBtn.addEventListener("click", () => {
+      searchInput.value = ""; suggestionsPanel.classList.remove('active');
+      clearSearchBtn.style.display = 'none'; applyFiltersAndSearch(); searchInput.focus();
+    });
+
+    $("themeToggle").addEventListener("click", toggleTheme);
+
+    // 🔧 Modo Técnico — TOGGLE simple (sin PIN)
+    techModeBtn.addEventListener("click", () => {
+      techMode = !techMode;
+      haptic(30);
+      techModeBtn.classList.toggle('tech-active', techMode);
+      showToast(techMode ? "🔧 Modo técnico ACTIVADO" : "Modo técnico desactivado");
+      render(true);
+    });
+
+    $("shuffleBtn").addEventListener("click", () => {
+      if (!allData.length) return;
+      filteredData = [...allData].sort(() => Math.random() - 0.5);
+      updateResultsCount(); render(true); scrollToTop(); showToast("🔄 Mezclado"); haptic(20);
+    });
+    $("receiptBtn").addEventListener("click", () => window.open("http://xiaomi.scz.red/1/", "_blank"));
+
+    // 🔒 Botón cerrar sesión
+    $("lockBtn").addEventListener("click", () => {
+      haptic(30);
+      if (confirm('¿Cerrar sesión y volver al login?')) {
+        localStorage.removeItem('drx_sesion');
+        window.location.href = '/app/';
+      }
+    });
+
+    document.querySelectorAll(".filter-chip").forEach(c => c.addEventListener("click", () => {
+      document.querySelectorAll(".filter-chip").forEach(x => x.classList.remove("active"));
+      c.classList.add("active"); currentFilter = c.dataset.filter;
+      applyFiltersAndSearch(); haptic(15);
+    }));
+
+    document.querySelectorAll(".nav-item").forEach(n => n.addEventListener("click", () => {
+      currentTab = n.dataset.tab;
+      document.querySelectorAll(".nav-item").forEach(x => x.classList.remove("active"));
+      n.classList.add("active"); render(true); haptic(15);
+    }));
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".search-wrapper")) suggestionsPanel.classList.remove('active');
+    });
+
+    window.addEventListener("online", () => { showToast("🌐 Conectado, actualizando..."); loadAllData({ silent: true }); });
+    window.addEventListener("offline", () => {
+      lastSyncInfo.fromCache = true; updateResultsCount();
+      showToast("📴 Modo offline");
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && navigator.onLine) loadAllData({ silent: true });
+    });
+
+    document.querySelectorAll(".icon-btn, .filter-chip, .nav-item, .image-btn, .whatsapp-btn").forEach(attachRipple);
+
+    setupPullToRefresh();
+    setupInfiniteScroll();
+  }
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  async function init() {
+    loadTheme();
+    loadFavorites();
+    loadRecent();
+    setupEventListeners();
+
+    setTimeout(() => {
+      splash.classList.add('hidden');
+      setTimeout(() => splash.remove(), 600);
+    }, 800);
+
+    appRoot.style.opacity = "1";
+    loadAllData({ silent: true });
+  }
+
+  init();
+</script>
+</body>
+</html>
