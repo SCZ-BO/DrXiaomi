@@ -1,0 +1,50 @@
+{
+  "id": "/app/?source=pwa",
+  "name": "DR. Xiaomi · Panel",
+  "short_name": "DR. Xiaomi Panel",
+  "description": "Panel de gestión de reparaciones",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "theme_color": "#0A0A0B",
+  "background_color": "#0A0A0B",
+  "lang": "es-BO",
+  "categories": ["business", "productivity"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/imagenes/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/imagenes/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/imagenes/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nuevo Recibo",
+      "short_name": "Nuevo Recibo",
+      "url": "/cliente/",
+      "icons": [{ "src": "/imagenes/web-app-manifest-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Reportes",
+      "short_name": "Reportes",
+      "url": "/app/reportes/",
+      "icons": [{ "src": "/imagenes/web-app-manifest-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}
