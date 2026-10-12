@@ -516,8 +516,18 @@
       transition: var(--transition-fast);
       position: relative;
     }
-    .nav-item.active { color: var(--xiaomi-orange); }
-    .nav-item i { font-size: 17px; transition: var(--transition-fast); }
+    .nav-item.active { 
+  color: var(--xiaomi-orange); 
+  /* Sin fondo */
+}
+    .nav-item i { 
+  font-size: 17px; 
+  transition: var(--transition-fast);
+}
+.nav-item.active i {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 6px rgba(255, 105, 0, 0.5));
+}
     .nav-item.active i { transform: scale(1.05); }
     .nav-item:active i { transform: scale(0.85); }
 
