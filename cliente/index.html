@@ -31,482 +31,181 @@
   <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
 
   <style>
-    /* ============================================================ */
-    /* MINIMALISTA - OVERRIDES                                      */
-    /* ============================================================ */
-
-    /* Header minimalista */
-    .app-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border-1);
-      background: var(--bg-elev-1);
-    }
-    .app-header .brand-logo {
-      width: 34px !important;
-      height: 34px !important;
-      box-shadow: none !important;
-      border-radius: 50%;
+    /* ---------- VISTA PREVIA DEL RECIBO (paso 7) ---------- */
+    .preview-recibo {
+      background: white;
+      color: #1a1a1a;
+      border-radius: 12px;
+      padding: 20px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       overflow: hidden;
     }
-    .app-header .brand-logo i { font-size: 15px; }
-    .app-header h1 {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
+    .preview-header {
+      background: linear-gradient(135deg, #FF6900, #FF8A3C);
+      color: white;
+      margin: -20px -20px 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .app-header p {
-      font-size: 11px;
-      color: var(--text-3);
-      margin-top: 1px;
+    .preview-header img { width: 48px; height: 48px; object-fit: contain; }
+    .preview-header-text { flex: 1; min-width: 0; }
+    .preview-header-text h3 { font-size: 16px; font-weight: 800; color: white; margin: 0; letter-spacing: -0.3px; }
+    .preview-header-text p { font-size: 10px; color: rgba(255, 255, 255, 0.85); margin: 2px 0 0; font-weight: 500; }
+    .preview-header-recibo { text-align: right; font-size: 10px; color: rgba(255, 255, 255, 0.9); }
+    .preview-header-recibo strong { display: block; font-size: 12px; color: white; margin-bottom: 2px; }
+
+    .preview-fecha {
+      background: #f5f5f5;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 10px;
+      color: #666;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .app-header .icon-btn {
-      width: 34px;
-      height: 34px;
-      background: transparent;
-      border: none;
-      border-radius: 10px;
-      color: var(--text-3);
-      font-size: 15px;
+    .preview-fecha strong { color: #333; font-weight: 700; }
+
+    .preview-section { background: #fafafa; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+    .preview-section-title {
+      font-size: 9px; font-weight: 800; color: #FF6900;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
     }
-    .app-header .icon-btn:hover {
-      background: var(--bg-elev-2);
-      color: var(--text-1);
+    .preview-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; gap: 12px; }
+    .preview-row span:first-child { color: #666; font-weight: 500; flex-shrink: 0; }
+    .preview-row span:last-child, .preview-row strong { color: #1a1a1a; font-weight: 700; text-align: right; }
+
+    .preview-servicios-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 4px; }
+    .preview-servicios-table th { background: #FF6900; color: white; padding: 6px 8px; text-align: left; font-size: 10px; font-weight: 700; }
+    .preview-servicios-table td { padding: 6px 8px; border-bottom: 1px solid #eee; }
+    .preview-servicios-table tr:last-child td { border-bottom: none; }
+    .preview-servicios-table .costo { text-align: right; font-weight: 700; }
+
+    .preview-totales { margin-top: 8px; padding-top: 8px; border-top: 2px solid #FF6900; }
+    .preview-totales .total-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; }
+    .preview-totales .saldo-row {
+      display: flex; justify-content: space-between; font-size: 13px;
+      font-weight: 800; color: #FF6900; padding-top: 6px;
+      border-top: 1px solid #ddd; margin-top: 4px;
     }
 
-    /* 🟠 Logo redondo minimalista */
-    .brand-logo-limpio {
-      width: 34px;
-      height: 34px;
+    .preview-fotos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; }
+    .preview-fotos-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+
+    .preview-qr-block {
+      display: flex; gap: 12px; align-items: center;
+      background: linear-gradient(135deg, #FFF4EB, #FFE8D1);
+      border-radius: 10px; padding: 12px; margin-top: 12px;
+    }
+    .preview-qr-img {
+      width: 70px; height: 70px; background: white; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .preview-qr-info h4 { font-size: 11px; color: #FF6900; font-weight: 800; margin: 0 0 4px; }
+    .preview-qr-info p { font-size: 10px; color: #555; margin: 0; line-height: 1.4; }
+    .preview-qr-info strong { color: #FF6900; font-weight: 800; }
+
+    .field-title {
+      display: block; font-size: 13px; font-weight: 600;
+      color: var(--text-2); margin-bottom: 10px; margin-top: 4px;
+    }
+    .field-title.required-field::after { content: " *"; color: var(--brand-500); }
+
+    /* ---------- BOTÓN DE DICTADO ---------- */
+    .dictado-wrap { position: relative; }
+    .dictado-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg-elev-2);
+      border: 1.5px solid var(--border-2);
+      color: var(--text-3);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      z-index: 5;
+    }
+    .dictado-btn:hover {
+      background: var(--bg-elev-3);
+      color: var(--text-1);
+    }
+    .dictado-btn.activo {
+      background: #EF4444;
+      border-color: #EF4444;
+      color: white;
+      animation: dictadoPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes dictadoPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    }
+
+    .dictado-wrap.textarea .dictado-btn {
+      top: 12px;
+      transform: none;
+    }
+
+    .dictado-wrap input { padding-right: 52px !important; }
+    .dictado-wrap textarea { padding-right: 52px !important; }
+
+    .dictado-indicador {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #EF4444;
+      margin-top: 6px;
+      padding-left: 4px;
+    }
+    .dictado-indicador.show { display: flex; }
+    .dictado-indicador .punto {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #EF4444;
+      animation: parpadeo 1s ease-in-out infinite;
+    }
+    @keyframes parpadeo {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ============================================================ */
+    /* 🟠 LOGO REDONDO EN EL HEADER                                 */
+    /* ============================================================ */
+    .brand-logo-orden {
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      margin-right: 10px;
+      box-shadow: 0 3px 10px rgba(255, 105, 0, 0.35);
+      margin: 0 10px;
     }
-    .brand-logo-limpio img {
+    .brand-logo-orden img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       border-radius: 50%;
       display: block;
-    }
-
-    /* WIZARD PROGRESS */
-    .wizard-progress {
-      padding: 12px 16px 8px;
-      background: var(--bg-elev-1);
-      border-bottom: 1px solid var(--border-1);
-    }
-    .wizard-steps {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      gap: 4px;
-    }
-    .wizard-step {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      position: relative;
-    }
-    .step-circle {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 700;
-      background: transparent;
-      color: var(--text-3);
-      border: 1.5px solid var(--border-2);
-      transition: all 0.2s ease;
-    }
-    .wizard-step.active .step-circle {
-      background: var(--brand-500);
-      color: white;
-      border-color: var(--brand-500);
-    }
-    .wizard-step.done .step-circle {
-      background: var(--brand-100);
-      color: var(--brand-500);
-      border-color: var(--brand-500);
-    }
-    .step-label {
-      font-size: 9px;
-      font-weight: 600;
-      color: var(--text-3);
-      text-align: center;
-      white-space: nowrap;
-    }
-    .wizard-step.active .step-label { color: var(--brand-500); }
-    .wizard-step.done .step-label { color: var(--brand-500); }
-
-    .wizard-bar {
-      height: 2px;
-      background: var(--border-1);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    .wizard-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--brand-500), var(--brand-400));
-      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* WIZARD CONTENT */
-    .wizard-content {
-      padding: 16px 16px 100px;
-      max-width: 500px;
-      margin: 0 auto;
-      min-height: calc(100vh - 180px);
-    }
-    .wizard-panel { animation: panelFadeIn 0.25s ease; }
-    .wizard-panel.hidden { display: none !important; }
-    @keyframes panelFadeIn {
-      from { opacity: 0; transform: translateX(12px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    .panel-header {
-      margin-bottom: 16px;
-    }
-    .panel-header h2 {
-      font-size: 19px;
-      font-weight: 700;
-      color: var(--text-1);
-      letter-spacing: -0.4px;
-      margin-bottom: 3px;
-    }
-    .panel-header p {
-      font-size: 12px;
-      color: var(--text-3);
-      font-weight: 400;
-    }
-
-    /* CARDS minimalistas */
-    .card {
-      background: var(--bg-elev-1);
-      border: 1px solid var(--border-1);
-      border-radius: 14px;
-      padding: 14px 16px;
-      margin-bottom: 12px;
-    }
-    .card-section-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-3);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 10px;
-    }
-
-    /* FIELD TITLE */
-    .field-title {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-2);
-      margin-bottom: 8px;
-      margin-top: 4px;
-    }
-    .field-title.required-field::after {
-      content: " *";
-      color: var(--brand-500);
-    }
-
-    /* INPUTS minimalistas */
-    .field input,
-    .field select,
-    .field textarea {
-      padding: 10px 12px;
-      font-size: 14px;
-      border: 1px solid var(--border-2);
-      border-radius: 10px;
-      background: var(--input-bg);
-      color: var(--text-1);
-      transition: all 0.18s ease;
-    }
-    .field input:focus,
-    .field select:focus,
-    .field textarea:focus {
-      border-color: var(--brand-500);
-      box-shadow: 0 0 0 3px rgba(255, 105, 0, 0.12);
-    }
-    .field label {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }
-    .field input:focus + label,
-    .field input:not(:placeholder-shown) + label,
-    .field textarea:focus + label,
-    .field textarea:not(:placeholder-shown) + label,
-    .field select:focus + label,
-    .field select:valid + label {
-      top: 4px;
-      font-size: 10px;
-    }
-
-    .char-counter {
-      font-size: 9px;
-      bottom: 4px;
-      right: 10px;
-    }
-
-    /* MARCAS GRID minimalista */
-    .marcas-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      margin-bottom: 16px;
-    }
-    .marca-btn {
-      padding: 8px 4px;
-      background: transparent;
-      border: 1px solid var(--border-2);
-      border-radius: 10px;
-      color: var(--text-2);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      font-family: inherit;
-    }
-    .marca-btn:hover {
-      border-color: var(--text-3);
-    }
-    .marca-btn.active {
-      background: var(--brand-500);
-      color: white;
-      border-color: var(--brand-500);
-    }
-    .marca-btn:active { transform: scale(0.96); }
-
-    /* RADIO OPTIONS minimalistas */
-    .radio-group {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-    .radio-option {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      padding: 10px 6px;
-      background: transparent;
-      border: 1px solid var(--border-2);
-      border-radius: 10px;
-      color: var(--text-3);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      font-family: inherit;
-    }
-    .radio-option i { font-size: 16px; }
-    .radio-option:hover {
-      border-color: var(--text-3);
-      color: var(--text-2);
-    }
-    .radio-option.active {
-      background: rgba(255, 105, 0, 0.1);
-      color: var(--brand-500);
-      border-color: var(--brand-500);
-    }
-    .radio-option.active i { color: var(--brand-500); }
-    .radio-option:active { transform: scale(0.96); }
-
-    /* PATTERN */
-    #pattern-container {
-      border-radius: 14px;
-      border: 1px solid var(--border-2);
-      background: var(--bg-elev-2);
-      overflow: hidden;
-    }
-    .pattern-seq-display {
-      background: transparent;
-      border: 1px solid var(--border-2);
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 12px;
-      margin-top: 8px;
-      min-height: auto;
-    }
-
-    /* FOTOS minimalista */
-    .fotos-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-    .foto-slot {
-      aspect-ratio: 1;
-      background: var(--bg-elev-2);
-      border: 1.5px dashed var(--border-3);
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      color: var(--text-3);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.18s ease;
-      font-family: inherit;
-      padding: 0;
-    }
-    .foto-slot i { font-size: 20px; }
-    .foto-slot:hover {
-      border-color: var(--brand-500);
-      color: var(--brand-500);
-    }
-
-    /* HINT TEXT */
-    .hint-text {
-      font-size: 11px;
-      padding: 8px 10px;
-      border-left-width: 2px;
-      border-radius: 8px;
-      margin-top: 10px;
-    }
-
-    /* SERVICIOS minimalista */
-    .servicios-container {
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .servicio-item {
-      grid-template-columns: 1fr 90px 32px;
-      gap: 6px;
-    }
-    .servicio-item input {
-      padding: 10px 12px;
-      font-size: 13px;
-      border-radius: 10px;
-      border-width: 1px;
-    }
-    .servicio-item .removeServicio {
-      width: 32px;
-      height: 32px;
-      font-size: 12px;
-    }
-
-    /* PAGO CARD minimalista */
-    .pago-card {
-      background: var(--bg-elev-1);
-      border-color: var(--border-1);
-    }
-    .resumen-row {
-      padding: 6px 0;
-      font-size: 13px;
-    }
-    .resumen-row strong {
-      font-size: 15px;
-    }
-    .resumen-saldo {
-      border-top-width: 1px;
-      padding-top: 12px;
-      margin-top: 6px;
-    }
-    .resumen-saldo strong {
-      font-size: 18px;
-    }
-
-    /* WIZARD FOOTER minimalista */
-    .wizard-footer {
-      padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-      gap: 8px;
-      border-top: 1px solid var(--border-1);
-    }
-    .wizard-footer .btn {
-      padding: 12px 18px;
-      font-size: 13px;
-      border-radius: 12px;
-    }
-    .wizard-footer .btn-secondary {
-      padding-left: 16px;
-      padding-right: 16px;
-    }
-
-    /* SUCCESS MODAL minimalista */
-    .success-icon {
-      width: 60px;
-      height: 60px;
-      font-size: 32px;
-      margin-bottom: 14px;
-    }
-    #successNumero {
-      font-size: 13px;
-      padding: 8px 12px;
-      margin: 10px 0 16px;
-    }
-
-    /* BOTÓN DE DICTADO minimalista */
-    .dictado-btn {
-      width: 30px;
-      height: 30px;
-      font-size: 12px;
-      right: 8px;
-      border: 1px solid var(--border-2);
-    }
-    .dictado-wrap input { padding-right: 42px !important; }
-    .dictado-wrap textarea { padding-right: 42px !important; }
-    .dictado-indicador {
-      font-size: 10px;
-      margin-top: 4px;
-    }
-    .dictado-indicador .punto {
-      width: 6px;
-      height: 6px;
-    }
-
-    /* PREVIEW RECIBO */
-    .preview-recibo {
-      font-size: 11px;
-      padding: 16px;
-      border-radius: 12px;
-    }
-    .preview-header {
-      margin: -16px -16px 12px;
-      padding: 12px 16px;
-    }
-    .preview-header img { width: 40px; height: 40px; }
-    .preview-header-text h3 { font-size: 14px; }
-    .preview-header-text p { font-size: 9px; }
-    .preview-header-recibo strong { font-size: 11px; }
-
-    .preview-fecha {
-      padding: 6px 10px;
-      font-size: 9px;
-      margin-bottom: 10px;
-    }
-    .preview-section {
-      padding: 8px 10px;
-      margin-bottom: 8px;
-    }
-    .preview-section-title { font-size: 8px; }
-    .preview-row { font-size: 10px; }
-
-    @media (max-width: 380px) {
-      .wizard-content {
-        padding: 12px 12px 100px;
-      }
-      .step-label { font-size: 8px; }
-      .step-circle { width: 22px; height: 22px; font-size: 10px; }
-      .marcas-grid { grid-template-columns: repeat(3, 1fr); }
     }
   </style>
 </head>
@@ -519,9 +218,9 @@
       </button>
 
       <!-- 🟠 Logo redondo -->
-      <div class="brand-logo-limpio">
+      <div class="brand-logo-orden">
         <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi"
-             onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:16px;&quot;></i>';">
+             onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:18px;&quot;></i>';">
       </div>
 
       <div class="brand-text">
@@ -688,21 +387,21 @@
         </div>
         <input type="hidden" id="tipoSeguridad" value="patron">
 
-        <div id="pinContainer" class="hidden" style="margin-top: 14px;">
+        <div id="pinContainer" class="hidden" style="margin-top: 16px;">
           <div class="field">
             <input type="text" id="pinInput" placeholder=" " maxlength="12" inputmode="numeric">
             <label for="pinInput">PIN de acceso</label>
           </div>
         </div>
 
-        <div id="patronContainer" style="margin-top: 14px;">
+        <div id="patronContainer" style="margin-top: 16px;">
           <label class="field-title">Dibuja el patrón de desbloqueo</label>
           <div id="pattern-container">
             <canvas id="bgCanvas" width="300" height="300"></canvas>
             <canvas id="lineCanvas" width="300" height="300"></canvas>
           </div>
           <div id="pattern-sequence" class="pattern-seq-display">Sin patrón</div>
-          <button type="button" id="clearPattern" class="btn btn-secondary btn-sm" style="width: auto; margin: 8px auto 0; padding: 8px 16px;">
+          <button type="button" id="clearPattern" class="btn btn-secondary btn-sm" style="width: auto; margin: 8px auto 0;">
             <i class="fas fa-eraser"></i> Limpiar patrón
           </button>
         </div>
@@ -746,7 +445,7 @@
             <button type="button" class="removeServicio" style="display:none">✕</button>
           </div>
         </div>
-        <button type="button" id="addServicio" class="btn btn-secondary" style="padding: 10px; font-size: 12px; margin-top: 8px;">
+        <button type="button" id="addServicio" class="btn btn-secondary">
           <i class="fas fa-plus"></i> Añadir otro servicio
         </button>
       </div>
@@ -757,7 +456,7 @@
           <span>Total</span>
           <strong id="costoTotalDisplay">Bs. 0.00</strong>
         </div>
-        <div class="field" style="margin-top: 10px;">
+        <div class="field" style="margin-top: 12px;">
           <input type="number" id="adelanto" placeholder=" " step="0.01" min="0" inputmode="decimal" value="0">
           <label for="adelanto">Adelanto / Pago inicial</label>
         </div>
