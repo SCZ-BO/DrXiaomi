@@ -184,7 +184,7 @@
       50% { opacity: 0.3; }
     }
 
-    /* 🟠 LOGO REDONDO */
+    /* 🟠 LOGO REDONDO EN EL HEADER */
     .brand-logo-orden {
       width: 38px;
       height: 38px;
@@ -204,6 +204,23 @@
       border-radius: 50%;
       display: block;
     }
+
+    /* 🖼️ ICONOS PNG en botones del header */
+    .icon-png {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      display: block;
+      pointer-events: none;
+      filter: brightness(0) invert(1);
+      opacity: 0.85;
+      transition: opacity 0.2s ease, transform 0.15s ease;
+    }
+    [data-theme="light"] .icon-png {
+      filter: brightness(0);
+    }
+    .icon-btn:hover .icon-png { opacity: 1; }
+    .icon-btn:active .icon-png { transform: scale(0.9); }
   </style>
 </head>
 <body>
@@ -226,10 +243,10 @@
     </div>
     <div class="header-actions">
       <button class="icon-btn" id="preciosBtn" title="Buscar precios" aria-label="Buscar precios">
-        <i class="fas fa-tags"></i>
+        <img src="/imagenes/icon-precio.png" alt="Precios" class="icon-png">
       </button>
-      <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
-        <i class="fas fa-right-from-bracket"></i>
+      <button class="icon-btn" id="logoutBtn" title="Cerrar sesión" aria-label="Cerrar sesión">
+        <img src="/imagenes/icon-salir.png" alt="Salir" class="icon-png">
       </button>
     </div>
   </header>
