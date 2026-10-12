@@ -9,12 +9,38 @@
   <meta name="description" content="Catálogo de pantallas y repuestos - Búsqueda precisa">
   <title>DR. XIAOMI | Pantallas y Repuestos</title>
 
+  <!-- ============================================================ -->
+  <!-- 🔒 PROTECCIÓN CON LOGIN (mismo sistema que el panel /app/)   -->
+  <!-- ============================================================ -->
+  <script>
+    (function() {
+      const SESION_KEY = 'drx_sesion';
+      let sesion = null;
+
+      try {
+        const raw = localStorage.getItem(SESION_KEY);
+        sesion = raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        sesion = null;
+      }
+
+      // Si no hay sesión válida → redirigir al login del panel
+      if (!sesion || !sesion.rol) {
+        console.log('🔒 Catálogo protegido → redirigiendo al login');
+        window.location.replace('/app/');
+        return;
+      }
+
+      console.log('✅ Acceso permitido al catálogo:', sesion.nombre, '(' + sesion.rol + ')');
+    })();
+  </script>
+
   <!-- Favicon -->
   <link rel="icon" type="image/png" sizes="32x32" href="https://xiaomi.scz.red/imagenes/favicon-32x32.png">
   <link rel="icon" type="image/svg+xml" href="https://xiaomi.scz.red/imagenes/favicon.svg">
   <link rel="icon" type="image/x-icon" href="https://xiaomi.scz.red/imagenes/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="https://xiaomi.scz.red/imagenes/apple-touch-icon.png">
-  <link rel="manifest" href="https://xiaomi.scz.red/imagenes/site.webmanifest">
+  <link rel="manifest" href="https://xiaomi.scz.red/app/manifest.json">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -426,49 +452,6 @@
   </div>
 </div>
 
-<!-- LOCK SCREEN -->
-<div class="lock-screen hidden" id="lockScreen">
-  <div class="lock-bg">
-    <div class="lock-blob b1"></div>
-    <div class="lock-blob b2"></div>
-    <div class="lock-blob b3"></div>
-  </div>
-  <div class="lock-grid"></div>
-
-  <div class="lock-card" id="lockCard">
-    <div class="lock-logo-wrap">
-      <div class="lock-logo-halo"></div>
-      <div class="lock-logo">MI</div>
-    </div>
-
-    <div class="lock-title">DR XIAOMI</div>
-    <div class="lock-subtitle">Ingresá tu clave de acceso para ver el catálogo</div>
-
-    <div class="lock-pin-wrap">
-      <div class="lock-pin" id="lockPin">
-        <div class="lock-pin-slot" data-index="0"></div>
-        <div class="lock-pin-slot" data-index="1"></div>
-        <div class="lock-pin-slot" data-index="2"></div>
-        <div class="lock-pin-slot" data-index="3"></div>
-      </div>
-      <input type="password" id="appPassword" class="lock-input-real" inputmode="numeric" autocomplete="off" maxlength="4" aria-label="Clave de acceso">
-    </div>
-
-    <button class="lock-btn" id="unlockBtn">
-      <span class="btn-shine"></span>
-      <i class="fas fa-lock-open"></i>
-      <span>Desbloquear</span>
-    </button>
-
-    <div class="lock-error" id="lockError"></div>
-
-    <div class="lock-hint">
-      <i class="fas fa-shield-halved"></i>
-      <span>Acceso seguro · 30 días en este dispositivo</span>
-    </div>
-  </div>
-</div>
-
 <!-- APP -->
 <div class="app" id="appRoot" style="opacity:0;">
   <header class="header">
@@ -479,7 +462,7 @@
         <button class="icon-btn" id="techModeBtn" title="Modo Técnico" aria-label="Modo técnico"><i class="fas fa-microchip"></i></button>
         <button class="icon-btn" id="receiptBtn" title="Recibo" aria-label="Recibo"><i class="fas fa-receipt"></i></button>
         <button class="icon-btn" id="shuffleBtn" title="Mezclar" aria-label="Mezclar"><i class="fas fa-random"></i></button>
-        <button class="icon-btn" id="lockBtn" title="Bloquear" aria-label="Bloquear app"><i class="fas fa-lock"></i></button>
+        <button class="icon-btn" id="lockBtn" title="Cerrar sesión" aria-label="Cerrar sesión"><i class="fas fa-right-from-bracket"></i></button>
       </div>
     </div>
     <div class="search-wrapper">
@@ -539,16 +522,12 @@
       { name: "BITE",         url: "https://xiaomi.scz.red/precio/data/boe.csv" },
       { name: "MR PANTALLA",  url: "https://xiaomi.scz.red/precio/data/mrpantalla.csv" }
     ],
-    // 🔑 CLAVES EN TEXTO PLANO - cambialas cuando quieras
     passwords: {
-      app:  "2011",
       tech: "123456"
     },
     fetchTimeoutMs: 12000,
     cachePrefix: "drxiaomi_csv_",
     cacheMetaKey: "drxiaomi_cache_meta_v1",
-    unlockKey: "drxiaomi_unlocked_v1",
-    unlockDays: 30,
     favoritesKey: "drxiaomi_favs_v1",
     recentKey: "drxiaomi_recent_v1"
   };
@@ -566,7 +545,6 @@
   let lastSyncInfo = { time: 0, fromCache: true };
   let favorites = new Set();
   let recentSearches = [];
-  let isUnlocked = false;
 
   const $ = id => document.getElementById(id);
   const container = $("resultsContainer");
@@ -576,7 +554,6 @@
   const clearSearchBtn = $("clearSearchBtn");
   const searchLoaderIndicator = $("searchLoaderIndicator");
   const mainScrollContainer = $("mainScrollContainer");
-  const lockScreen = $("lockScreen");
   const appRoot = $("appRoot");
   const splash = $("splash");
   const ptrIndicator = $("ptrIndicator");
@@ -1010,7 +987,7 @@
         </div>
         <div class="card-specs">
           <span class="card-type ${typeClass}">${item.tipo}</span>
-          ${techMode ? `<span class="supplier-badge">🏷️ ${escapeHtml(item.proveedor)}</span><span class="price-badge">Compra: ${item.compra.toLocaleString()} Bs</span>` : ''}
+          ${techMode ? `<span class="supplier-badge">🏷️ ${escapeHtml(item.proveedor)}</span>` : ''}
         </div>
         <div class="card-price-row">
           <span class="card-price" onclick="window.copyPrice('${item.id}')">${item.venta.toLocaleString()} Bs</span>
@@ -1112,94 +1089,6 @@
   }
 
   // ============================================================
-  // LOCK SCREEN
-  // ============================================================
-  function isUnlockValid() {
-    try {
-      const data = JSON.parse(localStorage.getItem(CONFIG.unlockKey) || "null");
-      if (!data || !data.until) return false;
-      return Date.now() < data.until;
-    } catch { return false; }
-  }
-  function saveUnlock() {
-    const until = Date.now() + CONFIG.unlockDays * 24 * 60 * 60 * 1000;
-    try { localStorage.setItem(CONFIG.unlockKey, JSON.stringify({ until })); } catch {}
-  }
-  function lockApp() {
-    isUnlocked = false;
-    try { localStorage.removeItem(CONFIG.unlockKey); } catch {}
-    lockScreen.classList.remove('hidden');
-    appRoot.style.opacity = "0";
-    const inp = document.getElementById("appPassword");
-    if (inp) inp.value = "";
-    renderPinDots();
-    setLockError("");
-    setTimeout(() => inp && inp.focus(), 300);
-  }
-  function unlockApp() {
-    isUnlocked = true;
-    const card = document.getElementById("lockCard");
-    if (card) card.classList.add("success");
-    setTimeout(() => {
-      lockScreen.classList.add('hidden');
-      appRoot.style.opacity = "1";
-      if (card) card.classList.remove("success");
-    }, 450);
-    const inp = document.getElementById("appPassword");
-    if (inp) inp.value = "";
-    renderPinDots();
-    setLockError("");
-    saveUnlock();
-  }
-  function setLockError(msg) {
-    const el = document.getElementById("lockError");
-    if (!el) return;
-    el.textContent = msg;
-    el.classList.toggle("show", !!msg);
-  }
-  function renderPinDots() {
-    const inp = document.getElementById("appPassword");
-    const slots = document.querySelectorAll(".lock-pin-slot");
-    const val = inp ? inp.value : "";
-    slots.forEach((slot, i) => {
-      slot.innerHTML = "";
-      slot.classList.toggle("filled", i < val.length);
-      slot.classList.toggle("focused", i === val.length && document.activeElement === inp);
-      if (i < val.length) {
-        const dot = document.createElement("span");
-        dot.className = "lock-dot-pin";
-        slot.appendChild(dot);
-      }
-    });
-  }
-  function tryUnlock() {
-    const input = document.getElementById("appPassword");
-    const val = input.value.trim();
-    if (!val) {
-      setLockError("Ingresá tu clave");
-      lockScreen.classList.remove('lock-shake');
-      void lockScreen.offsetWidth;
-      lockScreen.classList.add('lock-shake');
-      return;
-    }
-    if (val === CONFIG.passwords.app) {
-      haptic([30, 50, 30]);
-      setLockError("");
-      unlockApp();
-      showToast("✅ Bienvenido");
-    } else {
-      setLockError("Clave incorrecta, intentá de nuevo");
-      haptic(200);
-      lockScreen.classList.remove('lock-shake');
-      void lockScreen.offsetWidth;
-      lockScreen.classList.add('lock-shake');
-      input.value = "";
-      renderPinDots();
-      input.focus();
-    }
-  }
-
-  // ============================================================
   // PULL TO REFRESH
   // ============================================================
   function setupPullToRefresh() {
@@ -1296,7 +1185,15 @@
       updateResultsCount(); render(true); scrollToTop(); showToast("🔄 Mezclado"); haptic(20);
     });
     $("receiptBtn").addEventListener("click", () => window.open("http://xiaomi.scz.red/1/", "_blank"));
-    $("lockBtn").addEventListener("click", () => { haptic(30); lockApp(); });
+
+    // 🔒 Botón cerrar sesión
+    $("lockBtn").addEventListener("click", () => {
+      haptic(30);
+      if (confirm('¿Cerrar sesión y volver al login?')) {
+        localStorage.removeItem('drx_sesion');
+        window.location.href = '/app/';
+      }
+    });
 
     $("confirmTechBtn").addEventListener("click", () => {
       const v = document.getElementById("techPassword").value.trim();
@@ -1325,31 +1222,16 @@
       if (!e.target.closest(".search-wrapper")) suggestionsPanel.classList.remove('active');
     });
 
-    const appPwdInput = document.getElementById("appPassword");
-    $("unlockBtn").addEventListener("click", tryUnlock);
-    appPwdInput.addEventListener("input", renderPinDots);
-    appPwdInput.addEventListener("focus", renderPinDots);
-    appPwdInput.addEventListener("blur", () => {
-      document.querySelectorAll(".lock-pin-slot").forEach(s => s.classList.remove("focused"));
-    });
-    appPwdInput.addEventListener("keydown", (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); tryUnlock(); }
-    });
-    document.querySelectorAll(".lock-pin-slot").forEach(slot => {
-      slot.addEventListener("click", () => appPwdInput.focus());
-    });
-    renderPinDots();
-
     window.addEventListener("online", () => { showToast("🌐 Conectado, actualizando..."); loadAllData({ silent: true }); });
     window.addEventListener("offline", () => {
       lastSyncInfo.fromCache = true; updateResultsCount();
       showToast("📴 Modo offline");
     });
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && navigator.onLine && isUnlocked) loadAllData({ silent: true });
+      if (!document.hidden && navigator.onLine) loadAllData({ silent: true });
     });
 
-    document.querySelectorAll(".icon-btn, .filter-chip, .nav-item, .image-btn, .whatsapp-btn, .modal-buttons button, .lock-btn").forEach(attachRipple);
+    document.querySelectorAll(".icon-btn, .filter-chip, .nav-item, .image-btn, .whatsapp-btn, .modal-buttons button").forEach(attachRipple);
 
     setupPullToRefresh();
     setupInfiniteScroll();
@@ -1362,7 +1244,6 @@
     loadTheme();
     loadFavorites();
     loadRecent();
-    renderPinDots();
     setupEventListeners();
 
     setTimeout(() => {
@@ -1370,17 +1251,8 @@
       setTimeout(() => splash.remove(), 600);
     }, 800);
 
-    if (isUnlockValid()) {
-      isUnlocked = true;
-      lockScreen.classList.add('hidden');
-      appRoot.style.opacity = "1";
-      loadAllData({ silent: true });
-    } else {
-      setTimeout(() => {
-        lockScreen.classList.remove('hidden');
-        setTimeout(() => document.getElementById("appPassword").focus(), 300);
-      }, 400);
-    }
+    appRoot.style.opacity = "1";
+    loadAllData({ silent: true });
   }
 
   init();
