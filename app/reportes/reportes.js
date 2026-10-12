@@ -16,8 +16,8 @@ import {
    ESTADO
    ============================================================ */
 let sesion = null;
-let todasLasOrdenes = [];  // Todas las órdenes cargadas
-let ordenesFiltradas = []; // Las que aplican al filtro actual
+let todasLasOrdenes = [];
+let ordenesFiltradas = [];
 let rangoActual = 'hoy';
 let fechaCustomDesde = null;
 let fechaCustomHasta = null;
@@ -28,7 +28,6 @@ let fechaCustomHasta = null;
 initTheme();
 
 requireAuth(async (s) => {
-  // Solo admin puede ver reportes
   if (s.rol !== 'admin') {
     toast('Solo el administrador puede ver reportes', 'error');
     setTimeout(() => window.location.href = '/app/', 1500);
@@ -62,7 +61,6 @@ function configurarEventos() {
     toast('Datos actualizados', 'success', 1500);
   });
 
-  // Filtros de fecha
   document.querySelectorAll('.fecha-btn[data-rango]').forEach(btn => {
     btn.addEventListener('click', () => {
       haptic(8);
@@ -82,7 +80,6 @@ function configurarEventos() {
     });
   });
 
-  // Aplicar fechas personalizadas
   const btnAplicar = document.getElementById('btnAplicarCustom');
   if (btnAplicar) {
     btnAplicar.addEventListener('click', () => {
@@ -102,7 +99,6 @@ function configurarEventos() {
     });
   }
 
-  // Exportar CSV
   document.getElementById('btnExportar').addEventListener('click', exportarCSV);
 }
 
@@ -149,9 +145,8 @@ function aplicarFiltro() {
       break;
 
     case 'semana': {
-      // Lunes a hoy
-      const diaSemana = ahora.getDay(); // 0=Dom, 1=Lun, ...
-      const diff = diaSemana === 0 ? 6 : diaSemana - 1; // Lunes como inicio
+      const diaSemana = ahora.getDay();
+      const diff = diaSemana === 0 ? 6 : diaSemana - 1;
       desde = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - diff);
       hasta = ahora;
       break;
@@ -172,15 +167,12 @@ function aplicarFiltro() {
       hasta = new Date(desde.getTime() + 24 * 60 * 60 * 1000 - 1);
   }
 
-  // Filtrar: solo entregados (y devueltos con montoCobrado)
   ordenesFiltradas = todasLasOrdenes.filter(o => {
-    // Debe estar entregado o devuelto CON montoCobrado
     const esEntregado = o.estadoOrden === 'entregado';
     const esDevueltoConCobro = o.estadoOrden === 'devuelto' && Number(o.montoCobrado) > 0;
 
     if (!esEntregado && !esDevueltoConCobro) return false;
 
-    // Debe tener fecha de entrega (o actualización)
     const fecha = getFecha(o);
     if (!fecha) return false;
 
@@ -191,7 +183,6 @@ function aplicarFiltro() {
 }
 
 function getFecha(orden) {
-  // Preferimos fechaEntrega; si no, la fecha de actualización
   const f = orden.fechaEntrega || orden.actualizadoEn || orden.fecha;
   if (!f) return null;
   if (f.toDate) return f.toDate();
@@ -203,7 +194,6 @@ function getFecha(orden) {
    RENDERIZAR REPORTE
    ============================================================ */
 function renderizarReporte() {
-  // Calcular totales
   let total = 0;
   const porMetodo = {
     Efectivo: 0,
@@ -218,7 +208,6 @@ function renderizarReporte() {
     total += monto;
 
     const metodo = o.metodoPago || 'Otro';
-    // Detectar método (puede venir como "Mixto (200 ef + 150 qr)")
     if (metodo.toLowerCase().includes('efectivo')) porMetodo.Efectivo += monto;
     else if (metodo.toLowerCase().includes('qr')) porMetodo.QR += monto;
     else if (metodo.toLowerCase().includes('transf')) porMetodo.Transferencia += monto;
@@ -226,12 +215,10 @@ function renderizarReporte() {
     else porMetodo.Otro += monto;
   });
 
-  // Total
   document.getElementById('totalMonto').textContent = formatBs(total);
   document.getElementById('totalEntregas').textContent = 
     `${ordenesFiltradas.length} entrega${ordenesFiltradas.length === 1 ? '' : 's'}`;
 
-  // Mini stats
   const promedio = ordenesFiltradas.length > 0 ? total / ordenesFiltradas.length : 0;
   const maximo = ordenesFiltradas.length > 0 
     ? Math.max(...ordenesFiltradas.map(o => Number(o.montoCobrado) || 0))
@@ -240,7 +227,6 @@ function renderizarReporte() {
   document.getElementById('statPromedio').textContent = formatBs(promedio);
   document.getElementById('statMaximo').textContent = formatBs(maximo);
 
-  // Desglose por método
   const metodosGrid = document.getElementById('metodosGrid');
   const metodosItems = [
     { key: 'Efectivo', icono: 'fa-money-bill-wave', clase: 'efectivo' },
@@ -259,7 +245,6 @@ function renderizarReporte() {
     </div>
   `).join('');
 
-  // Movimientos
   const listaMov = document.getElementById('listaMovimientos');
   
   if (ordenesFiltradas.length === 0) {
@@ -299,7 +284,7 @@ function renderizarReporte() {
 }
 
 /* ============================================================
-   EXPORTAR CSV
+   EXPORTAR CSV (compatible con Excel español)
    ============================================================ */
 function exportarCSV() {
   if (ordenesFiltradas.length === 0) {
@@ -344,22 +329,27 @@ function exportarCSV() {
     ];
   });
 
-  // Construir CSV
+  // Escape de valores (usando ; como separador)
   const escapeCSV = (val) => {
     const str = String(val);
-    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    // Si contiene el separador, comillas, o salto de línea → escapar
+    if (str.includes(';') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
       return `"${str.replace(/"/g, '""')}"`;
     }
     return str;
   };
 
-  const csv = [
-    headers.map(escapeCSV).join(','),
-    ...filas.map(fila => fila.map(escapeCSV).join(','))
-  ].join('\n');
+  // Separador: punto y coma (Excel español)
+  const SEPARADOR = ';';
 
-  // Añadir BOM para Excel
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const csv = [
+    headers.map(escapeCSV).join(SEPARADOR),
+    ...filas.map(fila => fila.map(escapeCSV).join(SEPARADOR))
+  ].join('\r\n');
+
+  // BOM UTF-8 para que Excel muestre tildes y ñ correctamente
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   
   // Nombre del archivo
