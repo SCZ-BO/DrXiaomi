@@ -7,6 +7,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>DR. Xiaomi · Nuevo Recibo</title>
 
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32x32.png">
+  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/imagenes/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,10 +25,11 @@
   <link rel="stylesheet" href="/css/app-components.css">
   <link rel="stylesheet" href="/css/app-layouts.css">
   <link rel="stylesheet" href="/css/cliente.css">
-<!-- PWA -->
-<link rel="manifest" href="/app/manifest.json">
-<meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
-<link rel="apple-touch-icon" href="/imagenes/apple-touch-icon.png">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/app/manifest.json">
+  <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
+
   <style>
     /* ---------- VISTA PREVIA DEL RECIBO (paso 7) ---------- */
     .preview-recibo {
@@ -147,17 +154,14 @@
       50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
     }
 
-    /* El botón va arriba en textareas */
     .dictado-wrap.textarea .dictado-btn {
       top: 12px;
       transform: none;
     }
 
-    /* Ajustar padding de inputs/textarea para que no choque con el botón */
     .dictado-wrap input { padding-right: 52px !important; }
     .dictado-wrap textarea { padding-right: 52px !important; }
 
-    /* Indicador "escuchando" */
     .dictado-indicador {
       display: none;
       align-items: center;
@@ -180,6 +184,29 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.3; }
     }
+
+    /* ============================================================ */
+    /* 🟠 LOGO REDONDO EN EL HEADER                                 */
+    /* ============================================================ */
+    .brand-logo-orden {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 3px 10px rgba(255, 105, 0, 0.35);
+      margin: 0 10px;
+    }
+    .brand-logo-orden img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -189,9 +216,13 @@
       <button class="icon-btn" id="backToPanelBtn" aria-label="Volver al panel">
         <i class="fas fa-arrow-left"></i>
       </button>
-      <div class="brand-logo" style="width: 38px; height: 38px; font-size: 17px;">
-        <i class="fas fa-tools"></i>
+
+      <!-- 🟠 Logo redondo -->
+      <div class="brand-logo-orden">
+        <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi"
+             onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:18px;&quot;></i>';">
       </div>
+
       <div class="brand-text">
         <h1>NUEVO RECIBO</h1>
         <p id="userInfo">Cargando...</p>
