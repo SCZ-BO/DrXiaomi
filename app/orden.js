@@ -2,7 +2,8 @@
    DR. XIAOMI · ORDEN (Detalle + Bitácora + WhatsApp + Cobro)
    Archivo: app/orden.js
    Versión: timeout de seguridad, manejo de errores robusto,
-            debug en consola, visor de imágenes (modal)
+            debug en consola, visor de imágenes (modal),
+            mensajes de WhatsApp SIN emojis
    ============================================================ */
 
 import { requireAuth, logout, getSesion } from '/js/app-auth.js';
@@ -72,7 +73,6 @@ async function iniciar() {
     return;
   }
 
-  // Configurar botón volver ANTES de cargar la orden
   document.getElementById('backBtn')?.addEventListener('click', () => {
     haptic(10);
     window.location.href = '/app/';
@@ -90,7 +90,6 @@ async function cargarOrden() {
   try {
     const ref = doc(db, 'recibos', ordenId);
 
-    // Race entre getDoc y timeout
     const snap = await Promise.race([
       getDoc(ref),
       new Promise((_, reject) =>
@@ -492,12 +491,10 @@ function configurarEventosOrden() {
     });
   });
 
-  // Botón cerrar + clic fuera + ESC
   const viewer = document.getElementById('imgViewer');
   const viewerCerrar = document.getElementById('imgViewerCerrar');
 
   if (viewer && viewerCerrar) {
-    // Evitar añadir múltiples listeners si se llama varias veces
     if (!viewer.dataset.listenersAdded) {
       viewer.dataset.listenersAdded = 'true';
 
@@ -793,266 +790,4 @@ function contactarCliente() {
 
   haptic(15);
 
-  const mensaje = `Hola ${(orden.cliente || '').split(' ')[0]}, le escribimos de ${CONFIG.nombreTienda} en relación a su ${orden.marca || ''} ${orden.modelo || ''} (Recibo ${orden.numeroRecibo || '-'}).`;
-
-  const tel = orden.telefono.replace(/\D/g, '');
-  const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
-  window.open(url, '_blank');
-}
-
-/* ============================================================
-   WHATSAPP - AVISAR LISTO
-   ============================================================ */
-async function enviarWhatsappListo() {
-  if (!orden.telefono) {
-    toast('La orden no tiene teléfono', 'error');
-    return;
-  }
-
-  haptic(15);
-
-  const serviciosTexto = Array.isArray(orden.servicios) && orden.servicios.length > 0
-    ? orden.servicios.map(s => `- ${s.desc}`).join('\n')
-    : '- Reparación realizada';
-
-  const mensaje = `Hola ${(orden.cliente || '').split(' ')[0]},
-
-Buenas noticias: su ${orden.marca || ''} ${orden.modelo || ''} ya está LISTO para retirar.
-
-🔧 Servicios realizados:
-${serviciosTexto}
-
-💰 Total: ${formatBs(orden.total || 0)}
-${Number(orden.saldo) > 0 ? `💵 Saldo pendiente: ${formatBs(orden.saldo)}` : ''}
-
-📍 ${CONFIG.nombreTienda}
-   ${CONFIG.direccion}
-   ${CONFIG.horario}
-   Tel: ${CONFIG.telefono}
-
-¡Le esperamos!`;
-
-  const tel = orden.telefono.replace(/\D/g, '');
-  const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
-  window.open(url, '_blank');
-
-  try {
-    const entrada = {
-      tipo: 'whatsapp',
-      texto: `WhatsApp enviado: Aviso de equipo listo`,
-      autor: sesion.nombre,
-      fecha: new Date().toISOString()
-    };
-    await updateDoc(doc(db, 'recibos', ordenId), {
-      bitacora: arrayUnion(entrada),
-      actualizadoEn: serverTimestamp()
-    });
-    orden.bitacora = [...(orden.bitacora || []), entrada];
-    renderOrden();
-    toast('WhatsApp enviado y registrado', 'success', 2000);
-  } catch (err) {
-    console.error('Error registrando WhatsApp:', err);
-  }
-}
-
-/* ============================================================
-   WHATSAPP - CONFIRMAR ENTREGA
-   ============================================================ */
-async function enviarWhatsappEntrega() {
-  if (!orden.telefono) {
-    toast('La orden no tiene teléfono', 'error');
-    return;
-  }
-
-  haptic(15);
-
-  const fechaEntrega = orden.fechaEntrega
-    ? formatFecha(orden.fechaEntrega)
-    : formatFecha(new Date());
-
-  const montoTexto = orden.montoCobrado
-    ? `💰 Total cobrado: ${formatBs(orden.montoCobrado)}\n💳 Método: ${orden.metodoPago}\n`
-    : '';
-
-  const mensaje = `Hola ${(orden.cliente || '').split(' ')[0]},
-
-Confirmamos la entrega de su ${orden.marca || ''} ${orden.modelo || ''}.
-
-📄 N° Recibo: ${orden.numeroRecibo || '-'}
-📅 Fecha de entrega: ${fechaEntrega}
-
-${montoTexto}
-Gracias por confiar en nosotros.
-Cualquier consulta:
-Tel: ${CONFIG.telefono}
-
-${CONFIG.nombreTienda}
-${CONFIG.web}`;
-
-  const tel = orden.telefono.replace(/\D/g, '');
-  const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
-  window.open(url, '_blank');
-
-  try {
-    const entrada = {
-      tipo: 'whatsapp',
-      texto: `WhatsApp enviado: Confirmación de entrega`,
-      autor: sesion.nombre,
-      fecha: new Date().toISOString()
-    };
-    await updateDoc(doc(db, 'recibos', ordenId), {
-      bitacora: arrayUnion(entrada),
-      actualizadoEn: serverTimestamp()
-    });
-    orden.bitacora = [...(orden.bitacora || []), entrada];
-    renderOrden();
-    toast('Confirmación enviada y registrada', 'success', 2000);
-  } catch (err) {
-    console.error('Error registrando WhatsApp:', err);
-  }
-}
-
-/* ============================================================
-   GUARDAR NOTA
-   ============================================================ */
-async function guardarNota() {
-  const notaInput = document.getElementById('nuevaNota');
-  const texto = (notaInput.value || '').trim();
-
-  if (!texto && fotosNuevas.length === 0) {
-    toast('Escribe una nota o añade una foto', 'error');
-    return;
-  }
-
-  haptic(15);
-  showLoading('Guardando...');
-
-  try {
-    const entrada = {
-      tipo: fotosNuevas.length > 0 && !texto ? 'foto' : 'nota',
-      texto: texto || '📷 Foto añadida',
-      fotos: fotosNuevas.slice(),
-      autor: sesion.nombre,
-      fecha: new Date().toISOString()
-    };
-
-    await updateDoc(doc(db, 'recibos', ordenId), {
-      bitacora: arrayUnion(entrada),
-      actualizadoEn: serverTimestamp()
-    });
-
-    orden.bitacora = [...(orden.bitacora || []), entrada];
-    fotosNuevas = [];
-
-    toast('Entrada añadida a la bitácora', 'success', 2000);
-    renderOrden();
-
-  } catch (err) {
-    console.error('Error guardando nota:', err);
-    toast('Error al guardar la nota', 'error');
-  } finally {
-    hideLoading();
-  }
-}
-
-/* ============================================================
-   RENDER FOTOS NUEVAS
-   ============================================================ */
-function renderFotosNuevas() {
-  const cont = document.getElementById('fotoUploader');
-  if (!cont) return;
-
-  const btnAdd = cont.querySelector('#btnAddFoto');
-  cont.querySelectorAll('.foto-preview').forEach(el => el.remove());
-
-  fotosNuevas.forEach((dataUrl, i) => {
-    const div = document.createElement('div');
-    div.className = 'foto-preview';
-    div.innerHTML = `
-      <img src="${dataUrl}" alt="preview">
-      <button type="button" class="btn-remove" data-idx="${i}">
-        <i class="fas fa-times"></i>
-      </button>
-    `;
-    cont.insertBefore(div, btnAdd);
-  });
-
-  cont.querySelectorAll('.btn-remove').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = parseInt(btn.dataset.idx);
-      fotosNuevas.splice(idx, 1);
-      renderFotosNuevas();
-      haptic(10);
-    });
-  });
-}
-
-/* ============================================================
-   ELIMINAR
-   ============================================================ */
-async function eliminarOrden() {
-  if (sesion.rol !== 'admin') return;
-
-  const confirmar = confirm(
-    '¿Estás seguro que quieres eliminar esta orden?\n\nEsta acción NO se puede deshacer.'
-  );
-
-  if (!confirmar) return;
-
-  haptic([50, 30, 50]);
-  showLoading('Eliminando...');
-
-  try {
-    await deleteDoc(doc(db, 'recibos', ordenId));
-    toast('Orden eliminada', 'success', 2000);
-    setTimeout(() => window.location.href = '/app/', 1000);
-  } catch (err) {
-    console.error('Error eliminando:', err);
-    toast('Error al eliminar', 'error');
-    hideLoading();
-  }
-}
-
-/* ============================================================
-   UTILIDADES
-   ============================================================ */
-function formatFecha(fecha) {
-  if (!fecha) return '-';
-  let d;
-  if (fecha.toDate) d = fecha.toDate();
-  else if (fecha instanceof Date) d = fecha;
-  else d = new Date(fecha);
-
-  if (isNaN(d.getTime())) return '-';
-
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-}
-
-async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > height && width > maxSize) {
-          height = (height * maxSize) / width;
-          width = maxSize;
-        } else if (height > maxSize) {
-          width = (width * maxSize) / height;
-          height = maxSize;
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.onerror = reject;
-      img.src = e.target.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+  const mensaje = `Hola ${(orden.cliente || '').split(' ')[0]}, le escribimos de ${CONFIG
