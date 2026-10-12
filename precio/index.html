@@ -103,26 +103,24 @@
     .header-actions { display: flex; gap: 6px; }
     .icon-btn { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 8px 10px; color: var(--text-secondary); cursor: pointer; font-size: 15px; transition: var(--transition-fast); display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; position: relative; overflow: hidden; }
     .icon-btn:active { transform: scale(0.9); color: var(--xiaomi-orange); border-color: var(--xiaomi-orange); }
-    .icon-btn.syncing i { animation: spinLoader 1s linear infinite; }
     .icon-btn.tech-active { background: var(--xiaomi-orange) !important; color: white !important; border-color: var(--xiaomi-orange) !important; box-shadow: 0 4px 12px var(--xiaomi-orange-glow); }
-    .icon-btn .badge-fav {
-      position: absolute;
-      top: -4px;
-      right: -4px;
-      background: #FFB800;
-      color: #000;
-      font-size: 10px;
-      font-weight: 800;
-      min-width: 18px;
-      height: 18px;
-      border-radius: 9px;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 0 5px;
-      border: 2px solid var(--bg-primary);
+
+    /* Iconos PNG dentro de los botones */
+    .icon-btn .icon-img {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      display: block;
+      pointer-events: none;
+      opacity: 0.85;
+      transition: opacity 0.2s ease, transform 0.15s ease;
+      filter: brightness(0) invert(1);
     }
-    .icon-btn .badge-fav.show { display: flex; }
+    [data-theme="light"] .icon-btn .icon-img {
+      filter: brightness(0);
+    }
+    .icon-btn:hover .icon-img { opacity: 1; }
+    .icon-btn:active .icon-img { transform: scale(0.9); }
 
     .search-wrapper { position: relative; }
     .search-container { position: relative; }
@@ -155,41 +153,6 @@
     .filter-chip.active { background: var(--xiaomi-orange); color: white; border-color: var(--xiaomi-orange); box-shadow: 0 4px 12px var(--xiaomi-orange-glow); }
     .filter-chip[data-filter="ORIG"].active { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); border-color: var(--gold-2); box-shadow: 0 4px 12px var(--gold-glow); color: #4A2800; }
     .filter-chip:active { transform: scale(0.95); }
-
-    /* Barra de ordenamiento */
-    .sort-bar {
-      padding: 8px 18px;
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      background: var(--bg-primary);
-      border-bottom: 1px solid var(--border);
-      align-items: center;
-    }
-    .sort-bar::-webkit-scrollbar { display: none; }
-    .sort-label { font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; margin-right: 4px; }
-    .sort-btn {
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      background: transparent;
-      color: var(--text-tertiary);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: var(--transition-fast);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .sort-btn.active {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      border-color: var(--xiaomi-orange);
-    }
-    .sort-btn:active { transform: scale(0.95); }
 
     .main-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; position: relative; }
     .cards-view { display: flex; flex-direction: column; gap: 14px; padding: 18px; padding-bottom: calc(100px + var(--safe-bottom)); }
@@ -371,14 +334,22 @@
         <h1>DR XIAOMI <span>Catálogo</span></h1>
       </div>
       <div class="header-actions">
-        <button class="icon-btn" id="themeToggle" title="Tema" aria-label="Cambiar tema"><i class="fas fa-moon"></i></button>
-        <button class="icon-btn" id="techModeBtn" title="Modo Técnico" aria-label="Modo técnico"><i class="fas fa-microchip"></i></button>
-        <button class="icon-btn" id="favBtn" title="Favoritos" aria-label="Favoritos">
-          <i class="fas fa-star"></i>
-          <span class="badge-fav" id="favBadge">0</span>
+        <!-- 🌙 Tema -->
+        <button class="icon-btn" id="themeToggle" title="Tema" aria-label="Cambiar tema">
+          <i class="fas fa-moon"></i>
         </button>
-        <button class="icon-btn" id="shuffleBtn" title="Mezclar" aria-label="Mezclar"><i class="fas fa-random"></i></button>
-        <button class="icon-btn" id="backBtn" title="Volver al panel" aria-label="Volver al panel"><i class="fas fa-arrow-left"></i></button>
+        <!-- 🔧 Modo Técnico -->
+        <button class="icon-btn" id="techModeBtn" title="Modo Técnico" aria-label="Modo técnico">
+          <i class="fas fa-microchip"></i>
+        </button>
+        <!-- 📄 Recibo -->
+        <button class="icon-btn" id="receiptBtn" title="Nuevo Recibo" aria-label="Nuevo Recibo">
+          <i class="fas fa-receipt"></i>
+        </button>
+        <!-- ← Volver al panel -->
+        <button class="icon-btn" id="backBtn" title="Volver al panel" aria-label="Volver al panel">
+          <i class="fas fa-arrow-left"></i>
+        </button>
       </div>
     </div>
     <div class="search-wrapper">
@@ -393,29 +364,13 @@
       <div class="suggestions-panel" id="suggestionsPanel"></div>
     </div>
   </header>
+
   <div class="quick-filters" id="quickFilters">
     <button class="filter-chip active" data-filter="all">📱 Todos</button>
     <button class="filter-chip" data-filter="ORIG">👑 ORIG</button>
     <button class="filter-chip" data-filter="OLED">✨ OLED</button>
     <button class="filter-chip" data-filter="LCD">📟 LCD</button>
     <button class="filter-chip" data-filter="FAV">⭐ Favoritos</button>
-  </div>
-
-  <!-- Barra de ordenamiento -->
-  <div class="sort-bar" id="sortBar">
-    <span class="sort-label">Ordenar:</span>
-    <button class="sort-btn active" data-sort="relevancia">
-      <i class="fas fa-fire"></i> Relevancia
-    </button>
-    <button class="sort-btn" data-sort="precio-asc">
-      <i class="fas fa-arrow-up"></i> Precio ↑
-    </button>
-    <button class="sort-btn" data-sort="precio-desc">
-      <i class="fas fa-arrow-down"></i> Precio ↓
-    </button>
-    <button class="sort-btn" data-sort="modelo">
-      <i class="fas fa-sort-alpha-down"></i> A-Z
-    </button>
   </div>
 
   <div class="main-content" id="mainScrollContainer">
@@ -451,8 +406,7 @@
     cachePrefix: "drxiaomi_csv_",
     cacheMetaKey: "drxiaomi_cache_meta_v1",
     favoritesKey: "drxiaomi_favs_v1",
-    recentKey: "drxiaomi_recent_v1",
-    sortKey: "drxiaomi_sort_v1"
+    recentKey: "drxiaomi_recent_v1"
   };
 
   // ============================================================
@@ -463,7 +417,6 @@
   let techMode = false;
   let currentTab = "home";
   let currentFilter = "all";
-  let currentSort = "relevancia";
   let currentTheme = "light";
   let searchDebounceTimer = null;
   let lastSyncInfo = { time: 0, fromCache: true };
@@ -483,7 +436,6 @@
   const ptrIndicator = $("ptrIndicator");
   const techModeBtn = $("techModeBtn");
   const scrollTopBtn = $("scrollTopBtn");
-  const favBadge = $("favBadge");
 
   // ============================================================
   // UTILS
@@ -683,21 +635,9 @@
   function loadFavorites() {
     try { favorites = new Set(JSON.parse(localStorage.getItem(CONFIG.favoritesKey) || "[]")); }
     catch { favorites = new Set(); }
-    updateFavBadge();
   }
   function saveFavorites() {
     try { localStorage.setItem(CONFIG.favoritesKey, JSON.stringify([...favorites])); } catch {}
-    updateFavBadge();
-  }
-  function updateFavBadge() {
-    if (!favBadge) return;
-    const n = favorites.size;
-    if (n > 0) {
-      favBadge.textContent = n > 99 ? '99+' : n;
-      favBadge.classList.add('show');
-    } else {
-      favBadge.classList.remove('show');
-    }
   }
   function toggleFavorite(id) {
     if (favorites.has(id)) { favorites.delete(id); showToast("⭐ Quitado de favoritos"); }
@@ -715,46 +655,6 @@
     if (!term.trim()) return;
     recentSearches = [term, ...recentSearches.filter(t => t.toLowerCase() !== term.toLowerCase())].slice(0, 5);
     try { localStorage.setItem(CONFIG.recentKey, JSON.stringify(recentSearches)); } catch {}
-  }
-
-  // ============================================================
-  // ORDENAMIENTO
-  // ============================================================
-  function loadSort() {
-    const saved = localStorage.getItem(CONFIG.sortKey);
-    if (saved) {
-      currentSort = saved;
-      document.querySelectorAll('.sort-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.sort === saved);
-      });
-    }
-  }
-  function saveSort() {
-    try { localStorage.setItem(CONFIG.sortKey, currentSort); } catch {}
-  }
-  function applySort(data) {
-    const sorted = [...data];
-    const TIPO_PESO = { ORIG: 0, OLED: 1, LCD: 2 };
-    switch (currentSort) {
-      case 'precio-asc':
-        sorted.sort((a, b) => a.venta - b.venta);
-        break;
-      case 'precio-desc':
-        sorted.sort((a, b) => b.venta - a.venta);
-        break;
-      case 'modelo':
-        sorted.sort((a, b) => a.modelo.localeCompare(b.modelo, 'es'));
-        break;
-      case 'relevancia':
-      default:
-        sorted.sort((a, b) => {
-          const pa = TIPO_PESO[a.tipo] ?? 3;
-          const pb = TIPO_PESO[b.tipo] ?? 3;
-          if (pa !== pb) return pa - pb;
-          return a.venta - b.venta;
-        });
-    }
-    return sorted;
   }
 
   // ============================================================
@@ -846,6 +746,7 @@
   // ============================================================
   // FILTROS / RENDER
   // ============================================================
+  const TIPO_PESO = { ORIG: 0, OLED: 1, LCD: 2 };
   const PAGE_SIZE = 30;
   let renderedCount = 0;
 
@@ -862,7 +763,12 @@
       } else {
         clearSearchBtn.style.display = 'none';
       }
-      data = applySort(data);
+      data.sort((a, b) => {
+        const pa = TIPO_PESO[a.tipo] ?? 3;
+        const pb = TIPO_PESO[b.tipo] ?? 3;
+        if (pa !== pb) return pa - pb;
+        return a.venta - b.venta;
+      });
       filteredData = data;
       updateResultsCount();
       render(true);
@@ -989,7 +895,6 @@
     view.insertAdjacentHTML('beforeend', html);
     renderedCount += slice.length;
 
-    // Vibración al cargar más items (infinite scroll)
     if (!reset && slice.length > 0) haptic(8);
   }
   function scrollToTop() { mainScrollContainer?.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -1163,14 +1068,12 @@
       requestAnimationFrame(() => {
         ticking = false;
 
-        // Mostrar/ocultar botón scroll to top
         if (mainScrollContainer.scrollTop > 600) {
           scrollTopBtn.classList.add('show');
         } else {
           scrollTopBtn.classList.remove('show');
         }
 
-        // Infinite scroll
         if (renderedCount >= filteredData.length) return;
         const { scrollTop, scrollHeight, clientHeight } = mainScrollContainer;
         if (scrollTop + clientHeight >= scrollHeight - 500) {
@@ -1179,7 +1082,6 @@
       });
     }, { passive: true });
 
-    // Click scroll to top
     scrollTopBtn.addEventListener('click', () => {
       haptic(15);
       scrollToTop();
@@ -1220,16 +1122,6 @@
 
     $("themeToggle").addEventListener("click", toggleTheme);
 
-    // 🏷️ Botón de Favoritos — activa filtro FAV
-    $("favBtn").addEventListener("click", () => {
-      haptic(15);
-      document.querySelectorAll(".filter-chip").forEach(x => x.classList.remove("active"));
-      const favChip = document.querySelector('.filter-chip[data-filter="FAV"]');
-      if (favChip) favChip.classList.add("active");
-      currentFilter = "FAV";
-      applyFiltersAndSearch();
-    });
-
     // 🔧 Modo Técnico — Con confirmación
     techModeBtn.addEventListener("click", () => {
       haptic(30);
@@ -1243,13 +1135,13 @@
       abrirModalTecnico();
     });
 
-    $("shuffleBtn").addEventListener("click", () => {
-      if (!allData.length) return;
-      filteredData = [...allData].sort(() => Math.random() - 0.5);
-      updateResultsCount(); render(true); scrollToTop(); showToast("🔄 Mezclado"); haptic(20);
+    // 📄 Botón de Recibo
+    $("receiptBtn").addEventListener("click", () => {
+      haptic(15);
+      window.location.href = '/cliente/';
     });
 
-    // 🔙 Volver al panel
+    // ← Volver al panel
     $("backBtn").addEventListener("click", () => {
       haptic(15);
       window.location.href = '/app/';
@@ -1259,16 +1151,6 @@
       document.querySelectorAll(".filter-chip").forEach(x => x.classList.remove("active"));
       c.classList.add("active"); currentFilter = c.dataset.filter;
       applyFiltersAndSearch(); haptic(15);
-    }));
-
-    // Botones de ordenamiento
-    document.querySelectorAll(".sort-btn").forEach(b => b.addEventListener("click", () => {
-      document.querySelectorAll(".sort-btn").forEach(x => x.classList.remove("active"));
-      b.classList.add("active");
-      currentSort = b.dataset.sort;
-      saveSort();
-      applyFiltersAndSearch();
-      haptic(10);
     }));
 
     document.querySelectorAll(".nav-item").forEach(n => n.addEventListener("click", () => {
@@ -1290,7 +1172,7 @@
       if (!document.hidden && navigator.onLine) loadAllData({ silent: true });
     });
 
-    document.querySelectorAll(".icon-btn, .filter-chip, .nav-item, .image-btn, .whatsapp-btn, .sort-btn").forEach(attachRipple);
+    document.querySelectorAll(".icon-btn, .filter-chip, .nav-item, .image-btn, .whatsapp-btn").forEach(attachRipple);
 
     setupPullToRefresh();
     setupInfiniteScroll();
@@ -1303,7 +1185,6 @@
     loadTheme();
     loadFavorites();
     loadRecent();
-    loadSort();
     setupEventListeners();
 
     setTimeout(() => {
