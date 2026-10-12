@@ -49,7 +49,6 @@
     }
     .app.ready { opacity: 1; }
 
-    /* HEADER */
     .header {
       padding: 1.4rem 1.4rem 1rem;
       text-align: center;
@@ -70,13 +69,7 @@
       background-clip: text;
       color: transparent;
     }
-    .subtitle {
-      font-size: 0.65rem;
-      color: var(--text-2);
-      letter-spacing: 2px;
-      margin-top: 0.35rem;
-      font-weight: 500;
-    }
+    .subtitle { font-size: 0.65rem; color: var(--text-2); letter-spacing: 2px; margin-top: 0.35rem; font-weight: 500; }
     .section-title {
       font-size: 0.75rem;
       font-weight: 800;
@@ -88,15 +81,8 @@
       letter-spacing: 0.8px;
       text-transform: uppercase;
     }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 1.2rem;
-      padding: 1.1rem;
-      margin: 0 1.2rem 1rem;
-    }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 1.2rem; padding: 1.1rem; margin: 0 1.2rem 1rem; }
 
-    /* DIAGNÓSTICO */
     .diag-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.55rem; }
     .diag-card {
       background: rgba(18, 25, 40, 0.7);
@@ -125,7 +111,6 @@
     .diag-stat-label { font-size: 0.58rem; color: var(--text-2); letter-spacing: 0.5px; font-weight: 700; }
     .diag-stat-value { color: var(--accent); font-weight: 800; font-size: 0.85rem; margin-top: 0.25rem; }
 
-    /* BOTONES */
     .btn {
       display: flex;
       align-items: center;
@@ -148,7 +133,6 @@
     .btn-ghost { background: rgba(0, 255, 200, 0.1); color: var(--accent); border: 1px solid var(--border); }
     .btn-danger { background: linear-gradient(135deg, var(--danger), #FF8C42); color: white; }
 
-    /* TEST GRID */
     .test-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.55rem; padding: 0 1.2rem; margin-bottom: 1rem; }
     .test-card {
       background: var(--card);
@@ -166,17 +150,14 @@
     .test-card i { font-size: 1.35rem; color: var(--accent); }
     .test-card span { font-size: 0.63rem; font-weight: 600; text-align: center; line-height: 1.15; }
 
-    /* CONFIANZA */
     .trust-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 0; border-bottom: 1px solid rgba(0, 255, 200, 0.08); }
     .trust-item:last-child { border-bottom: none; }
     .trust-item i { color: var(--accent); font-size: 1.3rem; flex-shrink: 0; width: 1.5rem; text-align: center; }
     .trust-item strong { display: block; font-size: 0.85rem; font-weight: 700; }
     .trust-item p { font-size: 0.7rem; color: var(--text-2); margin-top: 0.15rem; }
 
-    /* FOOTER */
     .footer { text-align: center; padding: 1.5rem 1rem 0.5rem; font-size: 0.65rem; color: #6B7F8F; line-height: 1.7; }
 
-    /* WSP FLOTANTE */
     .float-wsp {
       position: fixed;
       bottom: calc(1.2rem + var(--safe-bottom));
@@ -195,7 +176,6 @@
     .float-wsp:active { transform: scale(0.9); }
     .float-wsp i { font-size: 1.7rem; color: white; }
 
-    /* MODALES */
     .modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: 2000; display: none; flex-direction: column; }
     .modal.active { display: flex; }
     .modal-header {
@@ -231,16 +211,17 @@
       margin-bottom: 1rem;
       line-height: 1.5;
     }
-    .selector-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .selector-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
     .selector-btn {
       flex: 1;
+      min-width: 90px;
       padding: 0.7rem 0.5rem;
       background: rgba(0, 255, 200, 0.1);
       border: 1.5px solid var(--border);
       border-radius: 0.9rem;
       color: var(--accent);
       font-family: inherit;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.15s ease;
@@ -248,7 +229,6 @@
     .selector-btn.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0A0C12; border-color: transparent; }
     .selector-btn:active { transform: scale(0.96); }
 
-    /* CANVAS / VIDEO / METERS */
     .test-canvas { width: 100%; background: #000; border-radius: 1rem; border: 1px solid var(--border); display: block; touch-action: none; }
     .test-video { width: 100%; max-height: 55vh; background: #000; border-radius: 1rem; border: 1px solid var(--border); object-fit: cover; display: block; }
     .meter { height: 8px; background: #1A2538; border-radius: 4px; overflow: hidden; margin: 0.8rem 0; }
@@ -269,7 +249,87 @@
       word-break: break-word;
     }
 
-    /* PANTALLA COMPLETA COLOR */
+    /* ============ TEST TÁCTIL PRO (SAMSUNG STYLE) ============ */
+    .touch-pro-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 4000;
+      display: flex;
+      flex-direction: column;
+    }
+    .touch-pro-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 1rem;
+      padding-top: calc(0.8rem + env(safe-area-inset-top, 0px));
+      background: rgba(0, 0, 0, 0.85);
+      border-bottom: 1px solid var(--accent);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .touch-pro-title {
+      color: var(--accent);
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+    .touch-pro-counter {
+      color: #FFF;
+      font-size: 0.75rem;
+      font-weight: 700;
+      font-family: monospace;
+      background: rgba(0, 255, 200, 0.15);
+      padding: 0.3rem 0.8rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(0, 255, 200, 0.4);
+    }
+    .touch-pro-canvas-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    .touch-pro-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+    .touch-pro-footer {
+      padding: 0.8rem 1rem;
+      padding-bottom: calc(0.8rem + env(safe-area-inset-bottom, 0px));
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      gap: 0.6rem;
+      border-top: 1px solid rgba(0, 255, 200, 0.2);
+      flex-shrink: 0;
+    }
+    .touch-pro-btn {
+      flex: 1;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 1.2rem;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    .touch-pro-btn.reset {
+      background: rgba(255, 77, 109, 0.2);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+    .touch-pro-btn.check {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #0A0C12;
+    }
+    .touch-pro-btn.close {
+      background: rgba(255, 255, 255, 0.1);
+      color: #FFF;
+    }
+
     .fullscreen-color { position: fixed; inset: 0; z-index: 3000; display: none; align-items: center; justify-content: center; }
     .fullscreen-color.active { display: flex; }
     .fullscreen-color-text {
@@ -283,7 +343,6 @@
       letter-spacing: 0.5px;
     }
 
-    /* TOAST */
     .toast {
       position: fixed;
       bottom: calc(90px + var(--safe-bottom));
@@ -305,7 +364,6 @@
     .toast.show { transform: translateX(-50%) translateY(0); }
     .toast.error { background: var(--danger); color: white; }
 
-    /* SPLASH */
     .splash {
       position: fixed;
       inset: 0;
@@ -368,15 +426,18 @@
 
   <div class="section-title"><i class="fas fa-vial"></i> Probar mi celular</div>
   <div class="test-grid">
-    <div class="test-card" id="testTouch"><i class="fas fa-hand-pointer"></i><span>Táctil</span></div>
+    <div class="test-card" id="testTouch"><i class="fas fa-hand-pointer"></i><span>Táctil PRO</span></div>
     <div class="test-card" id="testPixels"><i class="fas fa-tv"></i><span>Píxeles</span></div>
     <div class="test-card" id="testSpeaker"><i class="fas fa-volume-up"></i><span>Parlante</span></div>
-    <div class="test-card" id="testMic"><i class="fas fa-microphone"></i><span>Micrófono</span></div>
-    <div class="test-card" id="testCamera"><i class="fas fa-camera"></i><span>Cámara</span></div>
+    <div class="test-card" id="testMic"><i class="fas fa-microphone"></i><span>Micrófonos</span></div>
+    <div class="test-card" id="testCamera"><i class="fas fa-camera"></i><span>Cámaras</span></div>
     <div class="test-card" id="testVibration"><i class="fas fa-mobile-alt"></i><span>Vibración</span></div>
     <div class="test-card" id="testBattery"><i class="fas fa-battery-full"></i><span>Batería</span></div>
+    <div class="test-card" id="testProximity"><i class="fas fa-hand-paper"></i><span>Proximidad</span></div>
     <div class="test-card" id="testSensors"><i class="fas fa-compass"></i><span>Sensores</span></div>
     <div class="test-card" id="testNetwork"><i class="fas fa-wifi"></i><span>Red</span></div>
+    <div class="test-card" id="testFlashlight"><i class="fas fa-lightbulb"></i><span>Linterna</span></div>
+    <div class="test-card" id="testMultiTouch"><i class="fas fa-fingerprint"></i><span>Multitáctil</span></div>
   </div>
 
   <div class="section-title"><i class="fas fa-shield-alt"></i> Por qué confiar</div>
@@ -399,9 +460,6 @@
 <script>
 'use strict';
 
-/* ============================================================
-   UTILIDADES
-   ============================================================ */
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
 
@@ -409,12 +467,8 @@ function vibrate(p = 15) { if (navigator.vibrate) try { navigator.vibrate(p); } 
 
 let toastTimer;
 function toast(msg, isError = false, dur = 2400) {
-  let el = document.querySelector('.toast');
-  if (!el) {
-    el = document.createElement('div');
-    el.className = 'toast';
-    document.body.appendChild(el);
-  }
+  let el = $('.toast');
+  if (!el) { el = document.createElement('div'); el.className = 'toast'; document.body.appendChild(el); }
   el.textContent = msg;
   el.classList.toggle('error', isError);
   el.classList.add('show');
@@ -438,16 +492,11 @@ function createModal(title, icon) {
     <div class="modal-body"></div>
   `;
   document.body.appendChild(modal);
-  modal.querySelector('.modal-close').onclick = () => {
-    vibrate(10);
-    modal.remove();
-  };
+  modal.querySelector('.modal-close').onclick = () => { vibrate(10); modal.remove(); };
   return modal;
 }
 
-/* ============================================================
-   DIAGNÓSTICO GUIADO
-   ============================================================ */
+/* DIAGNÓSTICO */
 const DIAGNOSTICOS = {
   'no-enciende': { titulo:'No enciende', causas:['Batería agotada o dañada','Falla en placa lógica','Problema de software (bootloop)'], precio:'Bs. 150 - 450', tiempo:'2 - 24 h' },
   'pantalla-rota': { titulo:'Pantalla rota', causas:['Cristal exterior dañado','Display LCD/OLED dañado','Táctil no responde'], precio:'Bs. 250 - 1,200', tiempo:'1 - 3 h' },
@@ -463,8 +512,7 @@ const DIAGNOSTICOS = {
 
 $$('.diag-card').forEach(c => c.addEventListener('click', () => {
   vibrate();
-  const p = c.dataset.problem;
-  const d = DIAGNOSTICOS[p];
+  const d = DIAGNOSTICOS[c.dataset.problem];
   if (!d) return;
   const cont = $('#diagResult');
   cont.innerHTML = `
@@ -474,433 +522,43 @@ $$('.diag-card').forEach(c => c.addEventListener('click', () => {
       ${d.causas.map(x => `<div>• ${x}</div>`).join('')}
     </div>
     <div class="diag-stats">
-      <div class="diag-stat">
-        <div class="diag-stat-label">PRECIO ESTIMADO</div>
-        <div class="diag-stat-value">${d.precio}</div>
-      </div>
-      <div class="diag-stat">
-        <div class="diag-stat-label">TIEMPO</div>
-        <div class="diag-stat-value">${d.tiempo}</div>
-      </div>
+      <div class="diag-stat"><div class="diag-stat-label">PRECIO</div><div class="diag-stat-value">${d.precio}</div></div>
+      <div class="diag-stat"><div class="diag-stat-label">TIEMPO</div><div class="diag-stat-value">${d.tiempo}</div></div>
     </div>
-    <button class="btn btn-wsp" id="diagWspBtn">
-      <i class="fab fa-whatsapp"></i> SOLICITAR REPARACIÓN
-    </button>
+    <button class="btn btn-wsp" id="diagWspBtn"><i class="fab fa-whatsapp"></i> SOLICITAR REPARACIÓN</button>
   `;
   cont.style.display = 'block';
-  document.getElementById('diagWspBtn').onclick = () => {
-    openWhatsApp(`Hola DR XIAOMI, tengo un problema con mi celular: ${d.titulo}. ¿Me dan más info?`);
-  };
+  document.getElementById('diagWspBtn').onclick = () => openWhatsApp(`Hola DR XIAOMI, tengo un problema con mi celular: ${d.titulo}.`);
   cont.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }));
 
 /* ============================================================
-   TEST DE PANTALLA TÁCTIL
+   🖐️ TEST TÁCTIL PRO (estilo Samsung)
    ============================================================ */
 function testTouch() {
   vibrate();
-  const modal = createModal('Test de Pantalla Táctil', 'fa-hand-pointer');
-  const body = modal.querySelector('.modal-body');
-  body.innerHTML = `
-    <div class="modal-info">Pasa el dedo por TODA la pantalla. Si alguna zona no pinta, está rota.</div>
-    <canvas class="test-canvas" id="touchCanvas" style="height:60vh;"></canvas>
-    <button class="btn btn-ghost" id="resetTouch" style="margin-top:0.8rem;">
-      <i class="fas fa-rotate"></i> Reiniciar
-    </button>
+  const overlay = document.createElement('div');
+  overlay.className = 'touch-pro-overlay';
+  overlay.innerHTML = `
+    <div class="touch-pro-header">
+      <div class="touch-pro-title">TEST TÁCTIL PRO</div>
+      <div class="touch-pro-counter" id="touchCounter">0 / 0</div>
+    </div>
+    <div class="touch-pro-canvas-wrap">
+      <canvas class="touch-pro-canvas" id="touchProCanvas"></canvas>
+    </div>
+    <div class="touch-pro-footer">
+      <button class="touch-pro-btn reset" id="touchReset">Reiniciar</button>
+      <button class="touch-pro-btn check" id="touchCheck">Verificar</button>
+      <button class="touch-pro-btn close" id="touchClose">Salir</button>
+    </div>
   `;
-  const canvas = body.querySelector('#touchCanvas');
+  document.body.appendChild(overlay);
+  vibrate(20);
+
+  const canvas = overlay.querySelector('#touchProCanvas');
   const ctx = canvas.getContext('2d');
-  function resize() {
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-    ctx.fillStyle = '#111';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
-  setTimeout(resize, 50);
-  let drawing = false;
-  function paint(e) {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const t = e.touches ? e.touches[0] : e;
-    const x = t.clientX - rect.left;
-    const y = t.clientY - rect.top;
-    ctx.fillStyle = '#00FFCC';
-    ctx.beginPath();
-    ctx.arc(x, y, 22, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  canvas.addEventListener('touchstart', e => { drawing = true; paint(e); }, { passive: false });
-  canvas.addEventListener('touchmove', e => { if (drawing) paint(e); }, { passive: false });
-  canvas.addEventListener('touchend', () => drawing = false);
-  canvas.addEventListener('mousedown', e => { drawing = true; paint(e); });
-  canvas.addEventListener('mousemove', e => { if (drawing) paint(e); });
-  canvas.addEventListener('mouseup', () => drawing = false);
-  body.querySelector('#resetTouch').onclick = () => {
-    ctx.fillStyle = '#111';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    vibrate();
-  };
-}
-
-/* ============================================================
-   TEST DE PÍXELES MUERTOS
-   ============================================================ */
-function testPixels() {
-  vibrate();
-  const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFFFF', '#000000', '#FF00FF', '#FFFF00', '#00FFFF'];
-  let i = 0;
-  const el = document.createElement('div');
-  el.className = 'fullscreen-color active';
-  el.style.background = colors[0];
-  el.innerHTML = `<div class="fullscreen-color-text">Toca para cambiar color · 1/${colors.length}</div>`;
-  document.body.appendChild(el);
-  el.addEventListener('click', () => {
-    i++;
-    if (i >= colors.length) { el.remove(); return; }
-    el.style.background = colors[i];
-    el.querySelector('.fullscreen-color-text').textContent = `Toca para cambiar color · ${i+1}/${colors.length}`;
-  });
-}
-
-/* ============================================================
-   TEST DE PARLANTES
-   ============================================================ */
-let audioCtx = null;
-function playTone(freq, dur = 1.5, wave = 'sine') {
-  try {
-    if (audioCtx) try { audioCtx.close(); } catch(e){}
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.type = wave;
-    osc.frequency.value = freq;
-    gain.gain.value = 0.3;
-    osc.start();
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
-    setTimeout(() => { try { osc.stop(); } catch(e){} }, dur * 1000);
-    toast(`Reproduciendo ${freq}Hz`);
-  } catch(e) { toast('Error de audio', true); }
-}
-function testSpeaker() {
-  vibrate();
-  const modal = createModal('Test de Parlantes', 'fa-volume-up');
-  const body = modal.querySelector('.modal-body');
-  body.innerHTML = `
-    <div class="modal-info">Sube el VOLUMEN al máximo y toca cada botón.</div>
-    <div style="display:flex;flex-direction:column;gap:0.7rem;">
-      <button class="btn btn-primary" id="spkSup"><i class="fas fa-volume-up"></i> Parlante SUPERIOR (1800 Hz)</button>
-      <button class="btn btn-primary" id="spkInf"><i class="fas fa-music"></i> Parlante INFERIOR (400 Hz)</button>
-      <button class="btn btn-ghost" id="spkMed"><i class="fas fa-wave-square"></i> Prueba MEDIA (1000 Hz)</button>
-    </div>
-    <div class="test-status" style="margin-top:1rem;">El sonido durará 1.5 segundos</div>
-  `;
-  body.querySelector('#spkSup').onclick = () => playTone(1800, 1.5);
-  body.querySelector('#spkInf').onclick = () => playTone(400, 1.8);
-  body.querySelector('#spkMed').onclick = () => playTone(1000, 1.5);
-}
-
-/* ============================================================
-   TEST DE MICRÓFONO
-   ============================================================ */
-async function testMic() {
-  vibrate();
-  const modal = createModal('Test de Micrófono', 'fa-microphone');
-  const body = modal.querySelector('.modal-body');
-  body.innerHTML = `
-    <div class="modal-info">Habla cerca del micrófono. La barra debe moverse si funciona.</div>
-    <canvas class="test-canvas" id="micCanvas" style="height:120px;"></canvas>
-    <div class="meter"><div class="meter-fill" id="micVol"></div></div>
-    <div class="test-status" id="micStatus"><i class="fas fa-spinner fa-spin"></i> Pidiendo permiso...</div>
-  `;
-  let stream, ctx, analyser, anim;
-  function stop() {
-    if (anim) cancelAnimationFrame(anim);
-    if (analyser) try { analyser.disconnect(); } catch(e){}
-    if (ctx) try { ctx.close(); } catch(e){}
-    if (stream) stream.getTracks().forEach(t => t.stop());
-  }
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    body.querySelector('#micStatus').innerHTML = '<i class="fas fa-circle" style="color:#00FFCC;"></i> Micrófono activo · Habla ahora';
-    body.querySelector('#micStatus').classList.add('ok');
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
-    analyser = ctx.createAnalyser();
-    analyser.fftSize = 256;
-    const src = ctx.createMediaStreamSource(stream);
-    src.connect(analyser);
-    const canvas = body.querySelector('#micCanvas');
-    const cctx = canvas.getContext('2d');
-    setTimeout(() => {
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
-    }, 50);
-    const bufLen = analyser.frequencyBinCount;
-    const data = new Uint8Array(bufLen);
-    function draw() {
-      if (!analyser) return;
-      analyser.getByteTimeDomainData(data);
-      let sum = 0;
-      for (let i = 0; i < bufLen; i++) { const v = (data[i] - 128) / 128; sum += v * v; }
-      const vol = Math.min(100, Math.sqrt(sum / bufLen) * 200);
-      body.querySelector('#micVol').style.width = vol + '%';
-      cctx.fillStyle = '#000';
-      cctx.fillRect(0, 0, canvas.width, canvas.height);
-      cctx.beginPath();
-      cctx.strokeStyle = '#00FFCC';
-      cctx.lineWidth = 2;
-      const sw = canvas.width / bufLen;
-      let x = 0;
-      for (let i = 0; i < bufLen; i++) {
-        const v = data[i] / 128;
-        const y = v * canvas.height / 2;
-        if (i === 0) cctx.moveTo(x, y);
-        else cctx.lineTo(x, y);
-        x += sw;
-      }
-      cctx.stroke();
-      anim = requestAnimationFrame(draw);
-    }
-    ctx.resume().then(draw);
-  } catch(e) {
-    body.querySelector('#micStatus').innerHTML = '<i class="fas fa-circle" style="color:#FF4D6D;"></i> Permiso denegado';
-    body.querySelector('#micStatus').classList.add('err');
-  }
-  const closeBtn = modal.querySelector('.modal-close');
-  closeBtn.addEventListener('click', stop, { once: true });
-}
-
-/* ============================================================
-   TEST DE CÁMARA
-   ============================================================ */
-async function testCamera() {
-  vibrate();
-  const modal = createModal('Test de Cámara', 'fa-camera');
-  const body = modal.querySelector('.modal-body');
-  body.innerHTML = `
-    <div class="selector-group">
-      <button class="selector-btn active" id="camBack">Trasera</button>
-      <button class="selector-btn" id="camFront">Frontal</button>
-    </div>
-    <video class="test-video" id="camVideo" autoplay playsinline muted></video>
-    <div class="test-status" id="camStatus"><i class="fas fa-spinner fa-spin"></i> Iniciando cámara...</div>
-  `;
-  let stream = null;
-  function stop() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
-  async function start(facing) {
-    stop();
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: facing } } });
-      const v = body.querySelector('#camVideo');
-      v.srcObject = stream;
-      await v.play();
-      body.querySelector('#camStatus').innerHTML = `<i class="fas fa-circle" style="color:#00FFCC;"></i> Cámara ${facing === 'user' ? 'FRONTAL' : 'TRASERA'} funcionando`;
-      body.querySelector('#camStatus').classList.add('ok');
-    } catch(e) {
-      body.querySelector('#camStatus').innerHTML = '<i class="fas fa-circle" style="color:#FF4D6D;"></i> No se pudo acceder';
-      body.querySelector('#camStatus').classList.add('err');
-    }
-  }
-  body.querySelector('#camBack').onclick = () => {
-    body.querySelector('#camBack').classList.add('active');
-    body.querySelector('#camFront').classList.remove('active');
-    start('environment');
-  };
-  body.querySelector('#camFront').onclick = () => {
-    body.querySelector('#camFront').classList.add('active');
-    body.querySelector('#camBack').classList.remove('active');
-    start('user');
-  };
-  modal.querySelector('.modal-close').addEventListener('click', stop, { once: true });
-  await start('environment');
-}
-
-/* ============================================================
-   TEST DE VIBRACIÓN
-   ============================================================ */
-function testVibration() {
-  vibrate();
-  const modal = createModal('Test de Vibración', 'fa-mobile-alt');
-  const body = modal.querySelector('.modal-body');
-  body.innerHTML = `
-    <div class="modal-info">Toca cada patrón para probar la vibración.</div>
-    <div style="display:flex;flex-direction:column;gap:0.7rem;">
-      <button class="btn btn-primary" data-pat="200">Vibración corta</button>
-      <button class="btn btn-primary" data-pat="500">Vibración media</button>
-      <button class="btn btn-primary" data-pat="1500">Vibración larga</button>
-      <button class="btn btn-ghost" data-pat="100,50,100,50,100">Patrón SOS</button>
-    </div>
-    <div class="test-status" id="vibStatus" style="margin-top:1rem;">¿Sentiste la vibración?</div>
-  `;
-  body.querySelectorAll('[data-pat]').forEach(btn => {
-    btn.onclick = () => {
-      const pat = btn.dataset.pat;
-      const arr = pat.includes(',') ? pat.split(',').map(Number) : Number(pat);
-      if (navigator.vibrate) {
-        navigator.vibrate(arr);
-        body.querySelector('#vibStatus').textContent = '✅ Vibración enviada';
-        body.querySelector('#vibStatus').classList.add('ok');
-      } else {
-        body.querySelector('#vibStatus').textContent = '❌ No soportado en este dispositivo';
-        body.querySelector('#vibStatus').classList.add('err');
-      }
-    };
-  });
-}
-
-/* ============================================================
-   TEST DE BATERÍA (REAL)
-   ============================================================ */
-async function testBattery() {
-  vibrate();
-  const modal = createModal('Estado de Batería', 'fa-battery-full');
-  const body = modal.querySelector('.modal-body');
-  body.innerHTML = `<div class="test-status"><i class="fas fa-spinner fa-spin"></i> Leyendo batería...</div>`;
-  if (!('getBattery' in navigator)) {
-    body.innerHTML = `<div class="modal-info">Tu navegador no permite leer la batería. En Android con Chrome normalmente sí funciona.</div>`;
-    return;
-  }
-  try {
-    const b = await navigator.getBattery();
-    const level = Math.round(b.level * 100);
-    const charging = b.charging ? 'Sí' : 'No';
-    const chTime = b.chargingTime && b.chargingTime !== Infinity ? formatTime(b.chargingTime) : '—';
-    const disTime = b.dischargingTime && b.dischargingTime !== Infinity ? formatTime(b.dischargingTime) : '—';
-    body.innerHTML = `
-      <div class="modal-info">Datos leídos directamente del sistema</div>
-      <div class="result-box">
-        Nivel: ${level}%<br>
-        Cargando: ${charging}<br>
-        Tiempo para carga completa: ${chTime}<br>
-        Tiempo restante de uso: ${disTime}
-      </div>
-      <div class="meter" style="margin-top:1rem;">
-        <div class="meter-fill" style="width:${level}%;background:${level < 20 ? '#FF4D6D' : level < 50 ? '#FFAA44' : '#00FFCC'};"></div>
-      </div>
-    `;
-    b.addEventListener('levelchange', () => {});
-  } catch(e) {
-    body.innerHTML = `<div class="test-status err">No se pudo leer la batería</div>`;
-  }
-}
-function formatTime(seconds) {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  return `${h}h ${m}min`;
-}
-
-/* ============================================================
-   TEST DE SENSORES
-   ============================================================ */
-function testSensors() {
-  vibrate();
-  const modal = createModal('Test de Sensores', 'fa-compass');
-  const body = modal.querySelector('.modal-body');
-  body.innerHTML = `
-    <div class="modal-info">Mueve el teléfono. Los valores deben cambiar.</div>
-    <div class="result-box" id="sensData">
-      Acelerómetro: esperando...<br>
-      Giroscopio: esperando...
-    </div>
-    <div class="test-status" id="sensStatus">Mueve el teléfono para activar</div>
-  `;
-  let count = 0;
-  function onMotion(e) {
-    const acc = e.accelerationIncludingGravity || e.acceleration;
-    if (acc && acc.x !== null) {
-      count++;
-      const el = body.querySelector('#sensData');
-      if (el) {
-        const cur = el.innerHTML;
-        const lines = cur.split('<br>');
-        lines[0] = `Acelerómetro: X=${acc.x?.toFixed(1)} Y=${acc.y?.toFixed(1)} Z=${acc.z?.toFixed(1)}`;
-        el.innerHTML = lines.join('<br>');
-      }
-      body.querySelector('#sensStatus').textContent = '✅ Sensores activos';
-      body.querySelector('#sensStatus').classList.add('ok');
-    }
-  }
-  function onOrient(e) {
-    if (e.beta !== null) {
-      const el = body.querySelector('#sensData');
-      if (el) {
-        const lines = el.innerHTML.split('<br>');
-        lines[1] = `Giroscopio: α=${e.alpha?.toFixed(1)} β=${e.beta?.toFixed(1)} γ=${e.gamma?.toFixed(1)}`;
-        el.innerHTML = lines.join('<br>');
-      }
-    }
-  }
-  window.addEventListener('devicemotion', onMotion);
-  window.addEventListener('deviceorientation', onOrient);
-  modal.querySelector('.modal-close').addEventListener('click', () => {
-    window.removeEventListener('devicemotion', onMotion);
-    window.removeEventListener('deviceorientation', onOrient);
-  }, { once: true });
-}
-
-/* ============================================================
-   TEST DE RED
-   ============================================================ */
-async function testNetwork() {
-  vibrate();
-  const modal = createModal('Test de Red', 'fa-wifi');
-  const body = modal.querySelector('.modal-body');
-  body.innerHTML = `<div class="test-status"><i class="fas fa-spinner fa-spin"></i> Midiendo conexión...</div>`;
-  const start = Date.now();
-  try {
-    await fetch('https://www.google.com/generate_204', { mode: 'no-cors', cache: 'no-store' });
-    const ping = Date.now() - start;
-    const online = navigator.onLine ? 'Sí' : 'No';
-    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    let extra = '';
-    if (conn) {
-      if (conn.effectiveType) extra += `Tipo: ${conn.effectiveType}<br>`;
-      if (conn.downlink) extra += `Bajada estimada: ${conn.downlink} Mbps<br>`;
-      if (conn.rtt) extra += `Latencia: ${conn.rtt} ms<br>`;
-    }
-    body.innerHTML = `
-      <div class="modal-info">Resultado de la prueba de conexión</div>
-      <div class="result-box">
-        En línea: ${online}<br>
-        Ping a Google: ${ping} ms<br>
-        ${extra}
-      </div>
-      <div class="test-status ok">${ping < 200 ? '✅ Conexión buena' : '⚠️ Conexión lenta'}</div>
-    `;
-  } catch(e) {
-    body.innerHTML = `<div class="test-status err">❌ Sin conexión a internet</div>`;
-  }
-}
-
-/* ============================================================
-   CONECTAR BOTONES
-   ============================================================ */
-document.getElementById('testTouch').onclick = testTouch;
-document.getElementById('testPixels').onclick = testPixels;
-document.getElementById('testSpeaker').onclick = testSpeaker;
-document.getElementById('testMic').onclick = testMic;
-document.getElementById('testCamera').onclick = testCamera;
-document.getElementById('testVibration').onclick = testVibration;
-document.getElementById('testBattery').onclick = testBattery;
-document.getElementById('testSensors').onclick = testSensors;
-document.getElementById('testNetwork').onclick = testNetwork;
-
-document.getElementById('wspFloat').onclick = () => {
-  vibrate();
-  openWhatsApp('Hola DR XIAOMI, necesito información sobre reparación.');
-};
-
-/* ============================================================
-   SPLASH + INIT
-   ============================================================ */
-setTimeout(() => {
-  const splash = document.getElementById('splash');
-  if (splash) splash.classList.add('hidden');
-  document.getElementById('appRoot').classList.add('ready');
-  setTimeout(() => splash && splash.remove(), 500);
-}, 600);
-</script>
-</body>
-</html>
+  const counter = overlay.querySelector('#touchCounter');
+  let cols = 8, rows = 14;
+  let grid = [];
+  let cellW = 0, cellH =
