@@ -15,14 +15,22 @@
   <link rel="stylesheet" href="/css/app-theme.css">
   <link rel="stylesheet" href="/css/app-components.css">
   <link rel="stylesheet" href="/css/app-layouts.css">
+
+  <style>
+    /* Estilos específicos del panel */
+    .orden-card .chip-recibido    { background: rgba(245, 158, 11, 0.18); color: #F59E0B; }
+    .orden-card .chip-reparacion  { background: rgba(59, 130, 246, 0.18); color: #3B82F6; }
+    .orden-card .chip-listo       { background: rgba(16, 185, 129, 0.18); color: #10B981; }
+    .orden-card .chip-entregado   { background: rgba(139, 92, 246, 0.18); color: #8B5CF6; }
+    .orden-card .chip-devuelto    { background: rgba(239, 68, 68, 0.18); color: #EF4444; }
+    .orden-card .chip-cancelado   { background: rgba(115, 115, 115, 0.18); color: #9CA3AF; }
+  </style>
 </head>
 <body>
 
   <div class="app-container">
 
-    <!-- ============================================================
-         HEADER
-         ============================================================ -->
+    <!-- HEADER -->
     <header class="app-header">
       <div class="brand">
         <div class="brand-logo">
@@ -41,9 +49,7 @@
       </div>
     </header>
 
-    <!-- ============================================================
-         CONTENIDO
-         ============================================================ -->
+    <!-- CONTENIDO -->
     <main class="app-content">
 
       <!-- Stats -->
@@ -75,12 +81,13 @@
       <div class="filters-row" id="filtros">
         <button class="chip chip-interactive active" data-filtro="todos">Todas</button>
         <button class="chip chip-interactive" data-filtro="recibido">Recibidas</button>
+        <button class="chip chip-interactive" data-filtro="reparacion">En reparación</button>
         <button class="chip chip-interactive" data-filtro="listo">Listas</button>
         <button class="chip chip-interactive" data-filtro="entregado">Entregadas</button>
         <button class="chip chip-interactive" data-filtro="devuelto">Devueltas</button>
       </div>
 
-      <!-- Lista de órdenes -->
+      <!-- Lista -->
       <div class="cards-list" id="listaOrdenes">
         <div class="empty-state">
           <div class="spinner" style="margin: 20px auto;"></div>
@@ -90,29 +97,20 @@
 
     </main>
 
-    <!-- ============================================================
-         BOTÓN FLOTANTE - NUEVO RECIBO
-         ============================================================ -->
+    <!-- FAB -->
     <button class="btn-fab" id="nuevoReciboBtn" title="Nuevo recibo">
       <i class="fas fa-plus"></i>
     </button>
 
   </div>
 
-  <!-- ============================================================
-       SCRIPTS
-       ============================================================ -->
   <script type="module">
-    import { requireAuth, logout, getSesion } from '/js/app-auth.js';
+    import { requireAuth, logout } from '/js/app-auth.js';
     import { toast, haptic, initTheme, toggleTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
     import { db } from '/js/firebase.js';
     import { 
       collection, query, orderBy, onSnapshot, limit 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    // ============================================================
-    // INICIALIZACIÓN
-    // ============================================================
 
     initTheme();
 
@@ -122,48 +120,32 @@
     let busquedaActual = '';
     let unsubscribe = null;
 
-    // Proteger la página
     requireAuth((s) => {
       sesion = s;
       iniciarApp();
     });
 
-    // ============================================================
-    // INICIAR APP
-    // ============================================================
-
     function iniciarApp() {
-      // Mostrar info del usuario
       document.getElementById('userInfo').textContent = 
         `${sesion.icono || ''} ${sesion.nombre}`;
 
-      // Configurar UI
       configurarEventos();
-
-      // Cargar órdenes en tiempo real
       cargarOrdenes();
 
       toast(`Bienvenido, ${sesion.nombre}`, 'success', 2000);
     }
 
-    // ============================================================
-    // EVENTOS
-    // ============================================================
-
     function configurarEventos() {
-      // Logout
       document.getElementById('logoutBtn').addEventListener('click', () => {
         haptic(20);
         logout();
       });
 
-      // Nuevo recibo
       document.getElementById('nuevoReciboBtn').addEventListener('click', () => {
         haptic(15);
         window.location.href = '/cliente/';
       });
 
-      // Filtros
       document.getElementById('filtros').addEventListener('click', (e) => {
         const btn = e.target.closest('[data-filtro]');
         if (!btn) return;
@@ -177,16 +159,11 @@
         renderizarOrdenes();
       });
 
-      // Buscador
       document.getElementById('buscador').addEventListener('input', (e) => {
         busquedaActual = e.target.value.toLowerCase().trim();
         renderizarOrdenes();
       });
     }
-
-    // ============================================================
-    // CARGAR ÓRDENES (tiempo real)
-    // ============================================================
 
     function cargarOrdenes() {
       const q = query(
@@ -209,7 +186,6 @@
         (error) => {
           console.error('❌ Error cargando órdenes:', error);
           
-          // Posible error de índice
           if (error.message && error.message.includes('index')) {
             document.getElementById('listaOrdenes').innerHTML = `
               <div class="empty-state">
@@ -231,18 +207,13 @@
       );
     }
 
-    // ============================================================
-    // RENDERIZAR ORDENES
-    // ============================================================
-
     function renderizarOrdenes() {
       const lista = document.getElementById('listaOrdenes');
 
-      // Filtrar
       let filtradas = ordenes;
 
       if (filtroActual !== 'todos') {
-        filtradas = filtradas.filter(o => o.estado === filtroActual);
+        filtradas = filtradas.filter(o => (o.estadoOrden || 'recibido') === filtroActual);
       }
 
       if (busquedaActual) {
@@ -258,7 +229,6 @@
         });
       }
 
-      // Vacío
       if (filtradas.length === 0) {
         lista.innerHTML = `
           <div class="empty-state">
@@ -270,29 +240,27 @@
         return;
       }
 
-      // Render
       lista.innerHTML = filtradas.map(o => renderCard(o)).join('');
 
-      // Listeners
       lista.querySelectorAll('.orden-card').forEach(card => {
         card.addEventListener('click', () => {
           const id = card.dataset.id;
           haptic(10);
-          // Próximamente: ir al detalle
           toast(`Abriendo ${id}... (próximamente)`, 'info', 2000);
         });
       });
     }
 
     function renderCard(o) {
+      const estadoActual = o.estadoOrden || 'recibido';
       const estadoInfo = {
         recibido:   { clase: 'recibido',   texto: 'Recibido' },
-        diagnostico:{ clase: 'diagnostico',texto: 'Diagnóstico' },
-        listo:      { clase: 'listo',      texto: 'Listo' },
+        reparacion: { clase: 'reparacion', texto: 'En reparación' },
+        listo:      { clase: 'listo',      texto: 'Listo para entregar' },
         entregado:  { clase: 'entregado',  texto: 'Entregado' },
         devuelto:   { clase: 'devuelto',   texto: 'Devuelto' },
         cancelado:  { clase: 'cancelado',  texto: 'Cancelado' }
-      }[o.estado] || { clase: 'recibido', texto: o.estado || 'Sin estado' };
+      }[estadoActual] || { clase: 'recibido', texto: estadoActual };
 
       const total = Number(o.total) || 0;
 
@@ -300,7 +268,7 @@
         <div class="card card-interactive orden-card" data-id="${o.id}">
           <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
             <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
                 <span class="chip chip-${estadoInfo.clase}">${estadoInfo.texto}</span>
                 <span style="font-size: 11px; color: var(--text-3); font-weight: 600;">
                   ${o.numeroRecibo || '—'}
@@ -327,16 +295,13 @@
       `;
     }
 
-    // ============================================================
-    // ACTUALIZAR STATS
-    // ============================================================
-
     function actualizarStats() {
-      const activas = ordenes.filter(o => 
-        ['recibido', 'diagnostico'].includes(o.estado)
-      ).length;
+      const activas = ordenes.filter(o => {
+        const e = o.estadoOrden || 'recibido';
+        return ['recibido', 'reparacion'].includes(e);
+      }).length;
 
-      const listas = ordenes.filter(o => o.estado === 'listo').length;
+      const listas = ordenes.filter(o => o.estadoOrden === 'listo').length;
 
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
