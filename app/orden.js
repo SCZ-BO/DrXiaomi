@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (Detalle + Bitácora + WhatsApp)
+   DR. XIAOMI · ORDEN (Detalle + Bitácora + WhatsApp + Cobro)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -132,6 +132,12 @@ function renderOrden() {
           <span class="valor" style="color:#10B981;">${formatFecha(orden.fechaEntrega)}</span>
         </div>
       ` : ''}
+      ${orden.montoCobrado ? `
+        <div class="fila-info" style="background:rgba(255,105,0,0.08); padding:8px; border-radius:8px; margin-top:6px;">
+          <span class="label" style="color:var(--brand-500); font-weight:700;">💰 Cobrado</span>
+          <span class="valor" style="color:var(--brand-500);">${formatBs(orden.montoCobrado)} · ${escapeHtml(orden.metodoPago || '-')}</span>
+        </div>
+      ` : ''}
     </div>
 
     <!-- CLIENTE -->
@@ -145,6 +151,14 @@ function renderOrden() {
         <span class="label">Teléfono</span>
         <a href="tel:${orden.telefono}" style="color:var(--brand-500); font-weight:700; font-size:13px; text-decoration:none;">
           ${escapeHtml(orden.telefono || '-')}
+        </a>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <button class="btn btn-whatsapp btn-sm" id="btnContactar" style="flex:1;">
+          <i class="fab fa-whatsapp"></i> Contactar
+        </button>
+        <a href="tel:${orden.telefono}" class="btn btn-secondary btn-sm" style="flex:0 0 auto; padding:10px 16px; text-decoration:none;">
+          <i class="fas fa-phone"></i> Llamar
         </a>
       </div>
     </div>
@@ -230,7 +244,7 @@ function renderOrden() {
       </div>
     ` : ''}
 
-    <!-- BOTONES DE WHATSAPP -->
+    <!-- BOTÓN WHATSAPP LISTO -->
     ${estadoActual === 'listo' ? `
       <div class="section-block" style="border-color:rgba(37,211,102,0.4); background: rgba(37,211,102,0.05);">
         <h3 style="color:#25D366;">📱 Avisar al cliente</h3>
@@ -244,11 +258,12 @@ function renderOrden() {
       </div>
     ` : ''}
 
+    <!-- BOTÓN WHATSAPP ENTREGA -->
     ${estadoActual === 'entregado' ? `
       <div class="section-block" style="border-color:rgba(37,211,102,0.4); background: rgba(37,211,102,0.05);">
         <h3 style="color:#25D366;">✅ Confirmar entrega</h3>
         <p style="font-size:12px; color:var(--text-3); margin-bottom:0;">
-          Envía un WhatsApp al cliente confirmando que retiró su equipo. Queda constancia con fecha.
+          Envía un WhatsApp al cliente confirmando que retiró su equipo.
         </p>
         <button class="btn-whatsapp-grande" id="btnWhatsappEntrega">
           <i class="fab fa-whatsapp"></i>
@@ -348,6 +363,7 @@ function renderBitacora() {
     if (entry.tipo === 'estado') { clase = 'estado'; icono = 'fa-exchange-alt'; }
     else if (entry.tipo === 'foto') { clase = 'foto'; icono = 'fa-camera'; }
     else if (entry.tipo === 'whatsapp') { clase = 'whatsapp'; icono = 'fa-brands fa-whatsapp'; }
+    else if (entry.tipo === 'cobro') { clase = 'estado'; icono = 'fa-money-bill-wave'; }
 
     return `
       <div class="bitacora-item">
@@ -375,12 +391,10 @@ function renderBitacora() {
    EVENTOS
    ============================================================ */
 function configurarEventosOrden() {
-  // Botones de estado
   document.querySelectorAll('.estado-btn').forEach(btn => {
     btn.addEventListener('click', () => cambiarEstado(btn.dataset.estado));
   });
 
-  // Foto uploader
   const btnAddFoto = document.getElementById('btnAddFoto');
   const fotoInput = document.getElementById('fotoInput');
   
@@ -408,19 +422,18 @@ function configurarEventosOrden() {
     });
   }
 
-  // Guardar nota
   const btnGuardarNota = document.getElementById('btnGuardarNota');
   if (btnGuardarNota) btnGuardarNota.addEventListener('click', guardarNota);
 
-  // WhatsApp: Avisar listo
   const btnWspListo = document.getElementById('btnWhatsappListo');
   if (btnWspListo) btnWspListo.addEventListener('click', enviarWhatsappListo);
 
-  // WhatsApp: Confirmar entrega
   const btnWspEntrega = document.getElementById('btnWhatsappEntrega');
   if (btnWspEntrega) btnWspEntrega.addEventListener('click', enviarWhatsappEntrega);
 
-  // Eliminar
+  const btnContactar = document.getElementById('btnContactar');
+  if (btnContactar) btnContactar.addEventListener('click', contactarCliente);
+
   const btnEliminar = document.getElementById('btnEliminar');
   if (btnEliminar) btnEliminar.addEventListener('click', eliminarOrden);
 }
@@ -437,6 +450,12 @@ async function cambiarEstado(nuevoEstado) {
     return;
   }
 
+  // Si es "entregado" → pedir monto y método
+  if (nuevoEstado === 'entregado') {
+    abrirModalCobro();
+    return;
+  }
+
   haptic(20);
   showLoading('Actualizando estado...');
 
@@ -448,24 +467,14 @@ async function cambiarEstado(nuevoEstado) {
       fecha: new Date().toISOString()
     };
 
-    const updateData = {
+    await updateDoc(doc(db, 'recibos', ordenId), {
       estadoOrden: nuevoEstado,
       bitacora: arrayUnion(entrada),
       actualizadoEn: serverTimestamp()
-    };
-
-    // Si es la primera vez que se entrega, guardar fecha
-    if (nuevoEstado === 'entregado' && !orden.fechaEntrega) {
-      updateData.fechaEntrega = serverTimestamp();
-    }
-
-    await updateDoc(doc(db, 'recibos', ordenId), updateData);
+    });
 
     orden.estadoOrden = nuevoEstado;
     orden.bitacora = [...(orden.bitacora || []), entrada];
-    if (nuevoEstado === 'entregado' && !orden.fechaEntrega) {
-      orden.fechaEntrega = new Date();
-    }
 
     toast(`Estado: ${ESTADOS[nuevoEstado].texto}`, 'success', 2000);
     renderOrden();
@@ -476,6 +485,237 @@ async function cambiarEstado(nuevoEstado) {
   } finally {
     hideLoading();
   }
+}
+
+/* ============================================================
+   MODAL DE COBRO (al marcar como entregado)
+   ============================================================ */
+function abrirModalCobro() {
+  haptic(15);
+
+  const total = Number(orden.total) || 0;
+  const saldo = Number(orden.saldo) || 0;
+  const montoSugerido = saldo > 0 ? saldo : total;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop';
+  modal.id = 'modalCobro';
+  modal.innerHTML = `
+    <div class="modal" style="max-width: 420px;">
+      <h3 class="modal-title" style="color: var(--brand-500);">✅ Confirmar entrega</h3>
+      <p class="modal-text" style="margin-bottom: 20px;">
+        <strong>${escapeHtml(orden.cliente)}</strong><br>
+        <span style="font-size: 12px; color: var(--text-3);">
+          Total: ${formatBs(total)}${saldo > 0 && saldo !== total ? ` · Saldo: ${formatBs(saldo)}` : ''}
+        </span>
+      </p>
+
+      <div style="margin-bottom: 16px;">
+        <label style="display:block; font-size:12px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">
+          Monto cobrado
+        </label>
+        <input type="number" 
+               id="inputMonto" 
+               step="0.01" 
+               min="0"
+               value="${montoSugerido.toFixed(2)}"
+               inputmode="decimal"
+               style="width:100%; padding:14px; font-size:18px; font-weight:700; text-align:center; background:var(--input-bg); color:var(--text-1); border:1.5px solid var(--border-2); border-radius:12px; font-family:inherit;">
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display:block; font-size:12px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px;">
+          Método de pago
+        </label>
+        <div id="metodosPago" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <button type="button" class="metodo-btn" data-metodo="Efectivo">
+            <i class="fas fa-money-bill-wave"></i><span>Efectivo</span>
+          </button>
+          <button type="button" class="metodo-btn" data-metodo="QR">
+            <i class="fas fa-qrcode"></i><span>QR</span>
+          </button>
+          <button type="button" class="metodo-btn" data-metodo="Transferencia">
+            <i class="fas fa-building-columns"></i><span>Transferencia</span>
+          </button>
+          <button type="button" class="metodo-btn" data-metodo="Mixto">
+            <i class="fas fa-shuffle"></i><span>Mixto</span>
+          </button>
+        </div>
+
+        <div id="detalleMixtoContainer" style="display:none; margin-top:10px;">
+          <input type="text" 
+                 id="detalleMixto" 
+                 placeholder="Ej: 200 efectivo + 150 QR"
+                 maxlength="100"
+                 style="width:100%; padding:12px; background:var(--input-bg); color:var(--text-1); border:1.5px solid var(--border-2); border-radius:12px; font-family:inherit; font-size:13px;">
+        </div>
+
+        <div id="errorMetodo" style="color:#EF4444; font-size:12px; margin-top:8px; display:none;"></div>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn btn-secondary" id="btnCancelarCobro" style="flex:1;">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" id="btnConfirmarCobro" style="flex:1;">
+          <i class="fas fa-check"></i> Confirmar
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => modal.classList.add('show'));
+
+  // Estilos de los métodos de pago
+  const style = document.createElement('style');
+  style.textContent = `
+    .metodo-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 8px;
+      background: var(--bg-elev-2);
+      border: 2px solid var(--border-2);
+      border-radius: 12px;
+      color: var(--text-2);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+    .metodo-btn i { font-size: 20px; }
+    .metodo-btn:active { transform: scale(0.95); }
+    .metodo-btn.activo {
+      background: var(--brand-500);
+      border-color: var(--brand-500);
+      color: white;
+      box-shadow: 0 4px 12px rgba(255,105,0,0.4);
+    }
+  `;
+  document.head.appendChild(style);
+
+  let metodoSeleccionado = null;
+
+  // Selección de método
+  modal.querySelectorAll('.metodo-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      haptic(8);
+      modal.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('activo'));
+      btn.classList.add('activo');
+      metodoSeleccionado = btn.dataset.metodo;
+      
+      const detalle = document.getElementById('detalleMixtoContainer');
+      detalle.style.display = metodoSeleccionado === 'Mixto' ? 'block' : 'none';
+      document.getElementById('errorMetodo').style.display = 'none';
+    });
+  });
+
+  // Cancelar
+  document.getElementById('btnCancelarCobro').addEventListener('click', () => {
+    cerrarModalCobro();
+  });
+
+  // Confirmar
+  document.getElementById('btnConfirmarCobro').addEventListener('click', async () => {
+    const monto = parseFloat(document.getElementById('inputMonto').value) || 0;
+
+    if (!metodoSeleccionado) {
+      document.getElementById('errorMetodo').textContent = 'Selecciona un método de pago';
+      document.getElementById('errorMetodo').style.display = 'block';
+      return;
+    }
+
+    if (monto <= 0) {
+      document.getElementById('errorMetodo').textContent = 'Ingresa un monto válido';
+      document.getElementById('errorMetodo').style.display = 'block';
+      return;
+    }
+
+    let metodoFinal = metodoSeleccionado;
+    if (metodoSeleccionado === 'Mixto') {
+      const detalle = document.getElementById('detalleMixto').value.trim();
+      if (!detalle) {
+        document.getElementById('errorMetodo').textContent = 'Especifica el detalle del pago mixto';
+        document.getElementById('errorMetodo').style.display = 'block';
+        return;
+      }
+      metodoFinal = `Mixto (${detalle})`;
+    }
+
+    await confirmarCobro(monto, metodoFinal);
+  });
+
+  // Cerrar al hacer click fuera
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) cerrarModalCobro();
+  });
+}
+
+function cerrarModalCobro() {
+  const modal = document.getElementById('modalCobro');
+  if (!modal) return;
+  modal.classList.remove('show');
+  setTimeout(() => modal.remove(), 300);
+}
+
+async function confirmarCobro(monto, metodo) {
+  cerrarModalCobro();
+  haptic(20);
+  showLoading('Registrando entrega...');
+
+  try {
+    const entrada = {
+      tipo: 'estado',
+      texto: `Estado cambiado a: Entregado · Cobrado: ${formatBs(monto)} (${metodo})`,
+      autor: sesion.nombre,
+      fecha: new Date().toISOString()
+    };
+
+    await updateDoc(doc(db, 'recibos', ordenId), {
+      estadoOrden: 'entregado',
+      fechaEntrega: serverTimestamp(),
+      montoCobrado: monto,
+      metodoPago: metodo,
+      bitacora: arrayUnion(entrada),
+      actualizadoEn: serverTimestamp()
+    });
+
+    orden.estadoOrden = 'entregado';
+    orden.fechaEntrega = new Date();
+    orden.montoCobrado = monto;
+    orden.metodoPago = metodo;
+    orden.bitacora = [...(orden.bitacora || []), entrada];
+
+    toast(`Entregado · ${formatBs(monto)} (${metodo})`, 'success', 2500);
+    renderOrden();
+
+  } catch (err) {
+    console.error('Error:', err);
+    toast('Error al registrar entrega', 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+/* ============================================================
+   WHATSAPP - CONTACTAR (general)
+   ============================================================ */
+function contactarCliente() {
+  if (!orden.telefono) {
+    toast('La orden no tiene teléfono', 'error');
+    return;
+  }
+
+  haptic(15);
+
+  const mensaje = `Hola ${(orden.cliente || '').split(' ')[0]}, le escribimos de ${CONFIG.nombreTienda} en relación a su ${orden.marca || ''} ${orden.modelo || ''} (Recibo ${orden.numeroRecibo || '-'}).`;
+
+  const tel = orden.telefono.replace(/\D/g, '');
+  const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
+  window.open(url, '_blank');
 }
 
 /* ============================================================
@@ -514,7 +754,6 @@ ${Number(orden.saldo) > 0 ? `💵 Saldo pendiente: ${formatBs(orden.saldo)}` : '
   const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
   window.open(url, '_blank');
 
-  // Registrar en bitácora
   try {
     const entrada = {
       tipo: 'whatsapp',
@@ -549,6 +788,10 @@ async function enviarWhatsappEntrega() {
     ? formatFecha(orden.fechaEntrega)
     : formatFecha(new Date());
 
+  const montoTexto = orden.montoCobrado 
+    ? `💰 Total cobrado: ${formatBs(orden.montoCobrado)}\n💳 Método: ${orden.metodoPago}\n`
+    : '';
+
   const mensaje = `Hola ${(orden.cliente || '').split(' ')[0]},
 
 Confirmamos la entrega de su ${orden.marca || ''} ${orden.modelo || ''}.
@@ -556,7 +799,7 @@ Confirmamos la entrega de su ${orden.marca || ''} ${orden.modelo || ''}.
 📄 N° Recibo: ${orden.numeroRecibo || '-'}
 📅 Fecha de entrega: ${fechaEntrega}
 
-${Number(orden.saldo) === 0 && Number(orden.total) > 0 ? `💰 Total pagado: ${formatBs(orden.total)}\n` : ''}
+${montoTexto}
 Gracias por confiar en nosotros.
 Cualquier consulta:
 Tel: ${CONFIG.telefono}
@@ -568,7 +811,6 @@ ${CONFIG.web}`;
   const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
   window.open(url, '_blank');
 
-  // Registrar en bitácora
   try {
     const entrada = {
       tipo: 'whatsapp',
