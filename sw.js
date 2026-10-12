@@ -16,6 +16,17 @@ const ASSETS = [
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'
 ];
 
+// Rutas que NO debe manejar el service worker
+// (así no interfiere con /app/, /login/, /cliente/)
+const EXCLUDED_PATHS = ['/app/', '/login/', '/cliente/', '/api/'];
+
+function isExcluded(url) {
+  return EXCLUDED_PATHS.some(p => url.pathname.startsWith(p));
+}
+
+/* ============================================================
+   INSTALL
+   ============================================================ */
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE)
@@ -24,60 +35,97 @@ self.addEventListener('install', (event) => {
   );
 });
 
+/* ============================================================
+   ACTIVATE
+   ============================================================ */
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(
+        keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))
+      ))
       .then(() => self.clients.claim())
   );
 });
 
+/* ============================================================
+   FETCH
+   ============================================================ */
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+
+  // Solo manejar GET
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
 
-  const isImage = req.destination === 'image' || /\.(jpg|jpeg|png|webp|svg|gif|ico)$/i.test(url.pathname);
+  // No interceptar rutas de la app (dejar que pasen directo a la red)
+  if (isExcluded(url)) return;
+
+  // No interceptar peticiones a otros dominios (Firebase, CDNs, etc.)
+  if (url.origin !== self.location.origin) return;
+
+  // Imágenes: cache-first
+  const isImage = req.destination === 'image' || 
+                  /\.(jpg|jpeg|png|webp|svg|gif|ico)$/i.test(url.pathname);
   if (isImage) {
     event.respondWith(
       caches.match(req).then((cached) => {
         if (cached) return cached;
         return fetch(req).then((res) => {
-          if (res && res.status === 200) {
+          // Solo cachear respuestas válidas
+          if (res && res.status === 200 && res.type === 'basic') {
             const clone = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, clone));
+            caches.open(CACHE).then((c) => c.put(req, clone)).catch(() => {});
           }
           return res;
-        }).catch(() => cached);
+        }).catch(() => {
+          // Fallback: devolver una respuesta vacía en vez de undefined
+          return new Response('', { status: 404, statusText: 'Not Found' });
+        });
       })
     );
     return;
   }
 
+  // Navegación (HTML): network-first, fallback a caché
   if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          const clone = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, clone));
+          if (res && res.status === 200) {
+            const clone = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, clone)).catch(() => {});
+          }
           return res;
         })
-        .catch(() => caches.match('./index.html'))
+        .catch(() => {
+          // Fallback: index.html de la caché
+          return caches.match('./index.html').then((cached) => {
+            if (cached) return cached;
+            return new Response(
+              '<html><body><h1>Sin conexión</h1></body></html>',
+              { status: 503, headers: { 'Content-Type': 'text/html' } }
+            );
+          });
+        })
     );
     return;
   }
 
+  // Resto: cache-first con fallback a network
   event.respondWith(
     caches.match(req).then((cached) => {
-      const network = fetch(req).then((res) => {
+      if (cached) return cached;
+      return fetch(req).then((res) => {
         if (res && res.status === 200 && res.type === 'basic') {
           const clone = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, clone));
+          caches.open(CACHE).then((c) => c.put(req, clone)).catch(() => {});
         }
         return res;
-      }).catch(() => cached);
-      return cached || network;
+      }).catch(() => {
+        return new Response('', { status: 404, statusText: 'Not Found' });
+      });
     })
   );
 });
