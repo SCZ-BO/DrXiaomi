@@ -7,6 +7,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>DR. Xiaomi · Ingresar</title>
 
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32x32.png">
+  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/imagenes/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -15,10 +21,48 @@
   <link rel="stylesheet" href="/css/app-theme.css">
   <link rel="stylesheet" href="/css/app-components.css">
   <link rel="stylesheet" href="/css/app-layouts.css">
+
   <!-- PWA -->
-<link rel="manifest" href="/app/manifest.json">
-<meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
-<link rel="apple-touch-icon" href="/imagenes/apple-touch-icon.png">
+  <link rel="manifest" href="/app/manifest.json">
+  <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
+
+  <style>
+    /* ============================================================ */
+    /* 🟠 LOGO REDONDO GRANDE EN EL LOGIN                          */
+    /* ============================================================ */
+    .login-logo-limpio {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-bottom: 16px;
+      box-shadow: 0 12px 32px rgba(255, 105, 0, 0.45);
+      animation: logoPulse 3s ease-in-out infinite;
+    }
+    .login-logo-limpio img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
+    @keyframes logoPulse {
+      0%, 100% { box-shadow: 0 12px 32px rgba(255, 105, 0, 0.45); }
+      50%      { box-shadow: 0 16px 44px rgba(255, 105, 0, 0.7); }
+    }
+
+    /* Para la vista del PIN (más chico) */
+    .login-logo-limpio.small {
+      width: 76px;
+      height: 76px;
+      margin-bottom: 16px;
+    }
+  </style>
 </head>
 <body>
 
@@ -26,8 +70,9 @@
        VISTA 1: SELECCIÓN DE PERFIL
        ============================================================ -->
   <div class="login-container" id="viewPerfiles">
-    <div class="login-logo">
-      <i class="fas fa-tools"></i>
+    <div class="login-logo-limpio">
+      <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi"
+           onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:white; font-size:36px;&quot;></i>';">
     </div>
 
     <h1 class="login-title">DR. XIAOMI</h1>
@@ -44,9 +89,9 @@
     </button>
   </div>
 
-  <!-- ============================================================
-       VISTA 2: INGRESAR CLAVE
-       ============================================================ -->
+  <!-- ============================================================ -->
+  <!-- VISTA 2: INGRESAR CLAVE                                      -->
+  <!-- ============================================================ -->
   <div class="login-container hidden" id="viewPin">
     <button id="backBtn" 
             style="position: fixed; top: 20px; left: 20px; width: 44px; height: 44px; background: var(--bg-elev-1); border: 1px solid var(--border-2); border-radius: 12px; color: var(--text-2); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;"
@@ -54,7 +99,7 @@
       <i class="fas fa-arrow-left"></i>
     </button>
 
-    <div class="login-logo" id="profileIconView" style="margin-bottom: 16px;">
+    <div class="login-logo-limpio small" id="profileIconView">
       <span style="font-size: 40px;">👑</span>
     </div>
 
@@ -91,9 +136,9 @@
     </button>
   </div>
 
-  <!-- ============================================================
-       SCRIPTS
-       ============================================================ -->
+  <!-- ============================================================ -->
+  <!-- SCRIPTS                                                      -->
+  <!-- ============================================================ -->
   <script type="module">
     import { getPerfiles, login, getSesion, redirigirSegunRol } from '/js/app-auth.js';
     import { toast, haptic, initTheme, toggleTheme } from '/js/app-ui.js';
