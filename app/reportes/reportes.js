@@ -2,7 +2,7 @@
    DR. XIAOMI · REPORTES DE INGRESOS
    Archivo: app/reportes/reportes.js
    Versión corregida: filtro robusto, fechas normalizadas,
-                      debug en consola
+                      debug en consola, botones header (home, precios, logout)
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -57,17 +57,38 @@ async function iniciar() {
    EVENTOS
    ============================================================ */
 function configurarEventos() {
+  // 🏠 Botón Home → ir al panel principal
+  document.getElementById('homeBtn')?.addEventListener('click', () => {
+    haptic(15);
+    window.location.href = '/app/';
+  });
+
+  // 🏷️ Botón Precios → ir a la página de precios
+  document.getElementById('preciosBtn')?.addEventListener('click', () => {
+    haptic(15);
+    window.location.href = '/precio/';
+  });
+
+  // 🚪 Botón Salir → cerrar sesión
+  document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    haptic(20);
+    if (confirm('¿Cerrar sesión?')) logout();
+  });
+
+  // ← Botón Volver (flecha izquierda)
   document.getElementById('backBtn')?.addEventListener('click', () => {
     haptic(10);
     window.location.href = '/app/';
   });
 
+  // 🔄 Botón Refrescar
   document.getElementById('refreshBtn')?.addEventListener('click', async () => {
     haptic(10);
     await cargarOrdenes();
     toast('Datos actualizados', 'success', 1500);
   });
 
+  // Filtros de fecha
   document.querySelectorAll('.fecha-btn[data-rango]').forEach(btn => {
     btn.addEventListener('click', () => {
       haptic(8);
@@ -87,6 +108,7 @@ function configurarEventos() {
     });
   });
 
+  // Botón Aplicar fecha personalizada
   const btnAplicar = document.getElementById('btnAplicarCustom');
   if (btnAplicar) {
     btnAplicar.addEventListener('click', () => {
@@ -106,6 +128,7 @@ function configurarEventos() {
     });
   }
 
+  // Botón exportar CSV
   document.getElementById('btnExportar')?.addEventListener('click', exportarCSV);
 }
 
