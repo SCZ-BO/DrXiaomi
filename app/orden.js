@@ -14,6 +14,9 @@ import {
   serverTimestamp, arrayUnion 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// Módulo de dictado por voz (se autoinicializa)
+import './dictado.js';
+
 /* ============================================================
    CONFIGURACIÓN
    ============================================================ */
@@ -290,11 +293,14 @@ function renderOrden() {
       <h3>📋 Bitácora de la reparación</h3>
 
       <div style="margin-bottom:16px;">
-        <textarea 
-          id="nuevaNota" 
-          placeholder="Escribe una nota sobre el proceso..."
-          maxlength="500"
-          style="width:100%; padding:12px; background:var(--input-bg); color:var(--text-1); border:1.5px solid var(--border-2); border-radius:12px; font-family:inherit; font-size:13px; resize:vertical; min-height:80px;"></textarea>
+        <div class="dictado-wrap textarea">
+          <textarea 
+            id="nuevaNota" 
+            placeholder="Escribe o dicta una nota sobre el proceso..."
+            maxlength="500"
+            data-dictado
+            style="width:100%; padding:12px; padding-right:52px; background:var(--input-bg); color:var(--text-1); border:1.5px solid var(--border-2); border-radius:12px; font-family:inherit; font-size:13px; resize:vertical; min-height:80px;"></textarea>
+        </div>
 
         <div class="foto-uploader" id="fotoUploader">
           <button type="button" class="btn-add-foto" id="btnAddFoto">
@@ -326,6 +332,11 @@ function renderOrden() {
   `;
 
   configurarEventosOrden();
+
+  // Reactivar dictado en el nuevo DOM
+  if (window.__dictadoIniciar) {
+    setTimeout(() => window.__dictadoIniciar(), 100);
+  }
 }
 
 function getTextoClave(o) {
@@ -488,7 +499,7 @@ async function cambiarEstado(nuevoEstado) {
 }
 
 /* ============================================================
-   MODAL DE COBRO (al marcar como entregado)
+   MODAL DE COBRO
    ============================================================ */
 function abrirModalCobro() {
   haptic(15);
@@ -567,7 +578,6 @@ function abrirModalCobro() {
   document.body.appendChild(modal);
   requestAnimationFrame(() => modal.classList.add('show'));
 
-  // Estilos de los métodos de pago
   const style = document.createElement('style');
   style.textContent = `
     .metodo-btn {
@@ -599,7 +609,6 @@ function abrirModalCobro() {
 
   let metodoSeleccionado = null;
 
-  // Selección de método
   modal.querySelectorAll('.metodo-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       haptic(8);
@@ -613,12 +622,10 @@ function abrirModalCobro() {
     });
   });
 
-  // Cancelar
   document.getElementById('btnCancelarCobro').addEventListener('click', () => {
     cerrarModalCobro();
   });
 
-  // Confirmar
   document.getElementById('btnConfirmarCobro').addEventListener('click', async () => {
     const monto = parseFloat(document.getElementById('inputMonto').value) || 0;
 
@@ -648,7 +655,6 @@ function abrirModalCobro() {
     await confirmarCobro(monto, metodoFinal);
   });
 
-  // Cerrar al hacer click fuera
   modal.addEventListener('click', (e) => {
     if (e.target === modal) cerrarModalCobro();
   });
@@ -701,7 +707,7 @@ async function confirmarCobro(monto, metodo) {
 }
 
 /* ============================================================
-   WHATSAPP - CONTACTAR (general)
+   WHATSAPP - CONTACTAR
    ============================================================ */
 function contactarCliente() {
   if (!orden.telefono) {
