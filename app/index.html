@@ -246,7 +246,7 @@
         card.addEventListener('click', () => {
           const id = card.dataset.id;
           haptic(10);
-          toast(`Abriendo ${id}... (próximamente)`, 'info', 2000);
+          window.location.href = `/app/orden.html?id=${id}`;
         });
       });
     }
