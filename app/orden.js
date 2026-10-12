@@ -1,8 +1,8 @@
 /* ============================================================
    DR. XIAOMI · ORDEN (Detalle + Bitácora + WhatsApp + Cobro)
    Archivo: app/orden.js
-   Versión corregida: timeout de seguridad, manejo de errores
-                      robusto, debug en consola
+   Versión: timeout de seguridad, manejo de errores robusto,
+            debug en consola, visor de imágenes (modal)
    ============================================================ */
 
 import { requireAuth, logout, getSesion } from '/js/app-auth.js';
@@ -127,7 +127,6 @@ async function cargarOrden() {
     setTimeout(() => window.location.href = '/app/', 2500);
 
   } finally {
-    // ✅ SIEMPRE quitar el spinner, pase lo que pase
     hideLoading();
   }
 }
@@ -283,7 +282,7 @@ function renderOrden() {
       <div class="section-block">
         <h3>📸 Fotos del ingreso</h3>
         <div class="bitacora-fotos">
-          ${orden.fotos.map(f => `<img src="${f}" alt="foto" onclick="window.open('${f}', '_blank')">`).join('')}
+          ${orden.fotos.map(f => `<img src="${f}" alt="foto" data-ver-img="${f}">`).join('')}
         </div>
       </div>
     ` : ''}
@@ -429,7 +428,7 @@ function renderBitacora() {
           <div class="bitacora-texto">${escapeHtml(entry.texto || '')}</div>
           ${Array.isArray(entry.fotos) && entry.fotos.length > 0 ? `
             <div class="bitacora-fotos">
-              ${entry.fotos.map(f => `<img src="${f}" alt="foto" onclick="window.open('${f}', '_blank')">`).join('')}
+              ${entry.fotos.map(f => `<img src="${f}" alt="foto" data-ver-img="${f}">`).join('')}
             </div>
           ` : ''}
         </div>
@@ -478,6 +477,53 @@ function configurarEventosOrden() {
   document.getElementById('btnWhatsappEntrega')?.addEventListener('click', enviarWhatsappEntrega);
   document.getElementById('btnContactar')?.addEventListener('click', contactarCliente);
   document.getElementById('btnEliminar')?.addEventListener('click', eliminarOrden);
+
+  // ============================================================
+  // 🖼️ VISOR DE IMÁGENES
+  // ============================================================
+  document.querySelectorAll('[data-ver-img]').forEach(img => {
+    img.addEventListener('click', () => {
+      haptic(10);
+      const viewer = document.getElementById('imgViewer');
+      const viewerImg = document.getElementById('imgViewerImg');
+      if (!viewer || !viewerImg) return;
+      viewerImg.src = img.dataset.verImg;
+      viewer.classList.add('show');
+    });
+  });
+
+  // Botón cerrar + clic fuera + ESC
+  const viewer = document.getElementById('imgViewer');
+  const viewerCerrar = document.getElementById('imgViewerCerrar');
+
+  if (viewer && viewerCerrar) {
+    // Evitar añadir múltiples listeners si se llama varias veces
+    if (!viewer.dataset.listenersAdded) {
+      viewer.dataset.listenersAdded = 'true';
+
+      viewerCerrar.addEventListener('click', () => {
+        viewer.classList.remove('show');
+        const vImg = document.getElementById('imgViewerImg');
+        if (vImg) vImg.src = '';
+      });
+
+      viewer.addEventListener('click', (e) => {
+        if (e.target === viewer) {
+          viewer.classList.remove('show');
+          const vImg = document.getElementById('imgViewerImg');
+          if (vImg) vImg.src = '';
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && viewer.classList.contains('show')) {
+          viewer.classList.remove('show');
+          const vImg = document.getElementById('imgViewerImg');
+          if (vImg) vImg.src = '';
+        }
+      });
+    }
+  }
 }
 
 /* ============================================================
