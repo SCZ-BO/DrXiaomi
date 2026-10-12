@@ -7,6 +7,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>DR. Xiaomi · Panel</title>
 
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32x32.png">
+  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/imagenes/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,7 +25,6 @@
   <!-- PWA -->
   <link rel="manifest" href="/app/manifest.json">
   <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
-  <link rel="apple-touch-icon" href="/imagenes/apple-touch-icon.png">
 
   <style>
     /* Estilos específicos del panel */
@@ -29,6 +34,29 @@
     .orden-card .chip-entregado   { background: rgba(139, 92, 246, 0.18); color: #8B5CF6; }
     .orden-card .chip-devuelto    { background: rgba(239, 68, 68, 0.18); color: #EF4444; }
     .orden-card .chip-cancelado   { background: rgba(115, 115, 115, 0.18); color: #9CA3AF; }
+
+    /* ============================================================ */
+    /* LOGO EN EL HEADER                                            */
+    /* ============================================================ */
+    .brand-logo-limpio {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: transparent;
+      box-shadow: 0 4px 12px rgba(255, 105, 0, 0.35);
+    }
+    .brand-logo-limpio img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
 
     /* ============================================================ */
     /* ICONOS PNG EN EL HEADER                                      */
@@ -42,19 +70,11 @@
       opacity: 0.85;
       transition: opacity 0.2s ease, transform 0.15s ease;
     }
-
-    /* Filtro para que se vean blancos en el header (ajusta según tus imágenes) */
     .icon-btn .icon-img.blanco {
       filter: brightness(0) invert(1);
     }
-
-    .icon-btn:hover .icon-img {
-      opacity: 1;
-    }
-
-    .icon-btn:active .icon-img {
-      transform: scale(0.9);
-    }
+    .icon-btn:hover .icon-img { opacity: 1; }
+    .icon-btn:active .icon-img { transform: scale(0.9); }
   </style>
 </head>
 <body>
@@ -64,8 +84,10 @@
     <!-- HEADER -->
     <header class="app-header">
       <div class="brand">
-        <div class="brand-logo">
-          <i class="fas fa-tools"></i>
+        <!-- 🟠 Logo DR. XIAOMI -->
+        <div class="brand-logo-limpio">
+          <img src="/img/logo1.png" alt="DR. Xiaomi"
+               onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:22px; width:46px; height:46px; display:flex; align-items:center; justify-content:center;&quot;></i>';">
         </div>
         <div class="brand-text">
           <h1>DR. XIAOMI</h1>
@@ -174,7 +196,6 @@
       document.getElementById('userInfo').textContent = 
         `${sesion.icono || ''} ${sesion.nombre}`;
 
-      // Mostrar botón de reportes solo para admin
       if (sesion.rol === 'admin') {
         const btnRep = document.getElementById('reportesBtn');
         if (btnRep) btnRep.style.display = 'flex';
