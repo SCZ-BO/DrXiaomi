@@ -88,10 +88,24 @@ function configurarHeader() {
     }
   });
 
-  document.getElementById('logoutBtn').addEventListener('click', () => {
-    haptic(20);
-    if (confirm('¿Cerrar sesión?')) logout();
-  });
+  // 🏷️ Botón de Precios → ir a /precio/
+  const btnPrecios = document.getElementById('preciosBtn');
+  if (btnPrecios) {
+    btnPrecios.addEventListener('click', () => {
+      console.log('🏷️ Click en precios');
+      haptic(15);
+      window.location.href = '/precio/';
+    });
+  }
+
+  // 🚪 Botón de Salir
+  const btnLogout = document.getElementById('logoutBtn');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      haptic(20);
+      if (confirm('¿Cerrar sesión?')) logout();
+    });
+  }
 }
 
 /* ============================================================
