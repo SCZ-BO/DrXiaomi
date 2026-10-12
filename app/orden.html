@@ -90,8 +90,11 @@
     .bitacora-fotos img {
       width: 70px; height: 70px;
       object-fit: cover; border-radius: 8px;
-      border: 1px solid var(--border-2); cursor: pointer;
+      border: 1px solid var(--border-2);
+      cursor: zoom-in;
+      transition: transform 0.15s ease;
     }
+    .bitacora-fotos img:active { transform: scale(0.95); }
 
     .foto-uploader { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
     .foto-preview { position: relative; width: 70px; height: 70px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-2); }
@@ -199,6 +202,51 @@
       border-radius: 50%;
       display: block;
     }
+
+    /* ============================================================ */
+    /* 🖼️ VISOR DE IMÁGENES (MODAL)                                 */
+    /* ============================================================ */
+    .img-viewer {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .img-viewer.show {
+      display: flex;
+    }
+    .img-viewer img {
+      max-width: 100%;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    .img-viewer .cerrar {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .img-viewer .cerrar:active {
+      transform: scale(0.92);
+    }
   </style>
 </head>
 <body>
@@ -233,6 +281,14 @@
       </div>
     </main>
 
+  </div>
+
+  <!-- 🖼️ VISOR DE IMÁGENES -->
+  <div class="img-viewer" id="imgViewer">
+    <button class="cerrar" id="imgViewerCerrar" aria-label="Cerrar">
+      <i class="fas fa-times"></i>
+    </button>
+    <img src="" alt="Vista previa" id="imgViewerImg">
   </div>
 
   <script type="module" src="./orden.js"></script>
