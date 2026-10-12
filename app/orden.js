@@ -1,9 +1,7 @@
 /* ============================================================
    DR. XIAOMI · ORDEN (Detalle + Bitácora + WhatsApp + Cobro)
    Archivo: app/orden.js
-   Versión: timeout de seguridad, manejo de errores robusto,
-            debug en consola, visor de imágenes (modal),
-            mensajes de WhatsApp SIN emojis
+ 
    ============================================================ */
 
 import { requireAuth, logout, getSesion } from '/js/app-auth.js';
