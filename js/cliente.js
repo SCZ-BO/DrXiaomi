@@ -645,13 +645,11 @@ function generarVistaPrevia() {
   const cont = document.getElementById('previewContainer');
   if (!cont) return;
 
-  // Formatear patrón
   let patronTexto = '';
   if (datos.tipoSeguridad === 'patron' && datos.patronSecuencia) {
     patronTexto = datos.patronSecuencia.split(',').join('-');
   }
 
-  // Servicios
   const serviciosHtml = datos.servicios.map(s => `
     <tr>
       <td>${escapeHtml(s.desc)}</td>
@@ -659,7 +657,6 @@ function generarVistaPrevia() {
     </tr>
   `).join('');
 
-  // Fotos
   const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
   const fotosHtml = fotosValidas.length > 0 
     ? `<div class="preview-section">
@@ -672,7 +669,6 @@ function generarVistaPrevia() {
 
   cont.innerHTML = `
     <div class="preview-recibo">
-      <!-- Header naranja -->
       <div class="preview-header">
         <img src="${CONFIG.logoUrl}" alt="logo" onerror="this.style.display='none'">
         <div class="preview-header-text">
@@ -685,13 +681,11 @@ function generarVistaPrevia() {
         </div>
       </div>
 
-      <!-- Fecha -->
       <div class="preview-fecha">
         <span>Fecha: <strong>${new Date().toLocaleString('es-BO')}</strong></span>
         <span>Por: <strong>${escapeHtml(sesion.nombre)}</strong></span>
       </div>
 
-      <!-- Cliente y Equipo -->
       <div class="preview-section">
         <div class="preview-section-title">Cliente</div>
         <div class="preview-row">
@@ -735,7 +729,6 @@ function generarVistaPrevia() {
         ${patronTexto ? `<div class="preview-row"><span>Patrón:</span><span>${patronTexto}</span></div>` : ''}
       </div>
 
-      <!-- Servicios -->
       <div class="preview-section">
         <div class="preview-section-title">Servicios y costos</div>
         <table class="preview-servicios-table">
@@ -769,7 +762,6 @@ function generarVistaPrevia() {
 
       ${fotosHtml}
 
-      <!-- QR -->
       <div class="preview-qr-block">
         <div class="preview-qr-img">
           <i class="fas fa-qrcode" style="font-size: 40px; color: #FF6900;"></i>
@@ -878,7 +870,7 @@ async function generarPDF() {
     const CW = W - M * 2;
     let y = 0;
 
-    /* HEADER NARANJA (28mm) */
+    /* HEADER NARANJA */
     pdf.setFillColor(255, 105, 0);
     pdf.rect(0, 0, W, 28, 'F');
 
@@ -907,7 +899,7 @@ async function generarPDF() {
 
     y = 33;
 
-    /* FECHA Y RECIBIDO POR */
+    /* FECHA */
     const fecha = new Date();
     const fechaStr = `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')}/${fecha.getFullYear()} ${String(fecha.getHours()).padStart(2,'0')}:${String(fecha.getMinutes()).padStart(2,'0')}`;
 
@@ -1155,7 +1147,7 @@ async function generarPDF() {
         modelo: datos.modelo,
         imei: datos.imei || null,
         enciende: datos.enciende,
-        estado: datos.estado || '-',
+        estadoEquipo: datos.estado || '-',
         falla: datos.falla || '-',
         tipoSeguridad: datos.tipoSeguridad,
         pin: datos.tipoSeguridad === 'pin' ? datos.pin : null,
