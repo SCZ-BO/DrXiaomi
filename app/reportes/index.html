@@ -277,11 +277,11 @@
     }
 
     /* ============================================================ */
-    /* 🟠 BOTONES DEL HEADER (iconos PNG + refresh)                 */
+    /* 🟠 BOTONES DEL HEADER (Font Awesome)                         */
     /* ============================================================ */
     .header-actions {
       display: flex;
-      gap: 4px;
+      gap: 6px;
       align-items: center;
     }
     .icon-btn {
@@ -294,21 +294,14 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: var(--text-1);
-      font-size: 16px;
+      color: #FFFFFF;
+      font-size: 18px;
       transition: background 0.15s ease, transform 0.15s ease;
       -webkit-tap-highlight-color: transparent;
     }
     .icon-btn:active {
       transform: scale(0.92);
       background: rgba(255, 105, 0, 0.12);
-    }
-    .icon-png {
-      width: 22px;
-      height: 22px;
-      object-fit: contain;
-      display: block;
-      pointer-events: none;
     }
   </style>
 </head>
@@ -338,16 +331,16 @@
       <!-- 🔘 BOTONES DEL HEADER -->
       <div class="header-actions">
         <button class="icon-btn" id="homeBtn" title="Ir al panel" aria-label="Ir al panel">
-          <img src="/imagenes/home.png" alt="Panel" class="icon-png">
+          <i class="fas fa-home"></i>
         </button>
         <button class="icon-btn" id="preciosBtn" title="Buscar precios" aria-label="Buscar precios">
-          <img src="/imagenes/icon-precio.png" alt="Precios" class="icon-png">
+          <i class="fas fa-tags"></i>
         </button>
         <button class="icon-btn" id="refreshBtn" title="Actualizar" aria-label="Actualizar">
           <i class="fas fa-rotate"></i>
         </button>
         <button class="icon-btn" id="logoutBtn" title="Cerrar sesión" aria-label="Cerrar sesión">
-          <img src="/imagenes/icon-salir.png" alt="Salir" class="icon-png">
+          <i class="fas fa-right-from-bracket"></i>
         </button>
       </div>
     </header>
