@@ -1,1 +1,337 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0B">
+  <title>DR. Xiaomi · Reportes</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <link rel="stylesheet" href="/css/app-theme.css">
+  <link rel="stylesheet" href="/css/app-components.css">
+  <link rel="stylesheet" href="/css/app-layouts.css">
+
+  <style>
+    /* Tarjeta grande de total */
+    .total-card {
+      background: linear-gradient(135deg, #FF6900, #FF8A3C);
+      border-radius: 20px;
+      padding: 24px;
+      color: white;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 24px rgba(255, 105, 0, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+    .total-card::after {
+      content: '';
+      position: absolute;
+      top: -50px;
+      right: -50px;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+    }
+    .total-card .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.9;
+      font-weight: 700;
+    }
+    .total-card .valor {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin: 6px 0 4px;
+      line-height: 1;
+    }
+    .total-card .sub {
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    /* Filtros de fecha */
+    .fecha-filtros {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: none;
+    }
+    .fecha-filtros::-webkit-scrollbar { display: none; }
+    .fecha-btn {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      background: var(--bg-elev-2);
+      border: 1.5px solid var(--border-2);
+      border-radius: 999px;
+      color: var(--text-2);
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .fecha-btn:active { transform: scale(0.95); }
+    .fecha-btn.active {
+      background: var(--brand-500);
+      border-color: var(--brand-500);
+      color: white;
+    }
+
+    /* Desglose por método */
+    .metodos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .metodo-card {
+      background: var(--bg-elev-1);
+      border: 1px solid var(--border-1);
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .metodo-card .icono {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+    .metodo-card .icono.efectivo { background: rgba(16,185,129,0.15); color: #10B981; }
+    .metodo-card .icono.qr { background: rgba(59,130,246,0.15); color: #3B82F6; }
+    .metodo-card .icono.transf { background: rgba(139,92,246,0.15); color: #8B5CF6; }
+    .metodo-card .icono.mixto { background: rgba(255,105,0,0.15); color: #FF6900; }
+    .metodo-card .nombre {
+      font-size: 11px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+    .metodo-card .monto {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-1);
+    }
+
+    /* Lista de movimientos */
+    .movimiento {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-elev-1);
+      border: 1px solid var(--border-1);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+    .movimiento .hora {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-3);
+      flex-shrink: 0;
+      min-width: 50px;
+    }
+    .movimiento .info { flex: 1; min-width: 0; }
+    .movimiento .cliente {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-1);
+    }
+    .movimiento .detalle {
+      font-size: 12px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+    .movimiento .monto {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--brand-500);
+      flex-shrink: 0;
+    }
+
+    /* Stats mini */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .mini-stat {
+      background: var(--bg-elev-1);
+      border: 1px solid var(--border-1);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+    }
+    .mini-stat .valor {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-1);
+      line-height: 1;
+    }
+    .mini-stat .label {
+      font-size: 11px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    /* Empty state */
+    .empty-reporte {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-3);
+    }
+    .empty-reporte i {
+      font-size: 48px;
+      opacity: 0.3;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    /* Botón exportar */
+    .btn-export {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      background: var(--bg-elev-2);
+      border: 1.5px solid var(--border-2);
+      border-radius: 14px;
+      color: var(--text-1);
+      font-size: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .btn-export:active { transform: scale(0.97); }
+
+    /* Fecha personalizada */
+    .fecha-custom {
+      display: none;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .fecha-custom.show { display: flex; }
+    .fecha-custom input {
+      flex: 1;
+      padding: 10px 12px;
+      background: var(--input-bg);
+      color: var(--text-1);
+      border: 1.5px solid var(--border-2);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="brand">
+        <button class="icon-btn" id="backBtn" aria-label="Volver">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="brand-text">
+          <h1>REPORTES</h1>
+          <p id="headerSubtitle">Cargando...</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="refreshBtn" title="Actualizar">
+          <i class="fas fa-rotate"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENIDO -->
+    <main class="app-content">
+
+      <!-- Filtros de fecha -->
+      <div class="fecha-filtros">
+        <button class="fecha-btn active" data-rango="hoy">Hoy</button>
+        <button class="fecha-btn" data-rango="ayer">Ayer</button>
+        <button class="fecha-btn" data-rango="semana">Esta semana</button>
+        <button class="fecha-btn" data-rango="mes">Este mes</button>
+        <button class="fecha-btn" data-rango="custom">📅 Personalizado</button>
+      </div>
+
+      <!-- Fechas personalizadas -->
+      <div class="fecha-custom" id="fechaCustom">
+        <input type="date" id="fechaDesde">
+        <input type="date" id="fechaHasta">
+        <button class="fecha-btn active" id="btnAplicarCustom" style="padding: 10px 16px;">
+          Aplicar
+        </button>
+      </div>
+
+      <!-- Total -->
+      <div class="total-card">
+        <div class="label">Total cobrado</div>
+        <div class="valor" id="totalMonto">Bs. 0.00</div>
+        <div class="sub" id="totalEntregas">0 entregas</div>
+      </div>
+
+      <!-- Mini stats -->
+      <div class="mini-stats">
+        <div class="mini-stat">
+          <div class="valor" id="statPromedio">Bs. 0</div>
+          <div class="label">Promedio</div>
+        </div>
+        <div class="mini-stat">
+          <div class="valor" id="statMaximo">Bs. 0</div>
+          <div class="label">Mayor venta</div>
+        </div>
+      </div>
+
+      <!-- Desglose por método -->
+      <h3 style="font-size:12px; font-weight:800; color:var(--brand-500); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px;">
+        Por método de pago
+      </h3>
+      <div class="metodos-grid" id="metodosGrid">
+        <!-- Dinámico -->
+      </div>
+
+      <!-- Movimientos -->
+      <h3 style="font-size:12px; font-weight:800; color:var(--brand-500); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px;">
+        Movimientos
+      </h3>
+      <div id="listaMovimientos">
+        <!-- Dinámico -->
+      </div>
+
+      <!-- Exportar -->
+      <button class="btn-export" id="btnExportar">
+        <i class="fas fa-download"></i> Exportar a CSV
+      </button>
+
+    </main>
+
+  </div>
+
+  <script type="module" src="./reportes.js"></script>
+
+</body>
+</html>
