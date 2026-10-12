@@ -6,6 +6,12 @@
   <meta name="theme-color" content="#0A0A0B">
   <title>DR. Xiaomi · Orden</title>
 
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32x32.png">
+  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/imagenes/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -14,10 +20,10 @@
   <link rel="stylesheet" href="/css/app-theme.css">
   <link rel="stylesheet" href="/css/app-components.css">
   <link rel="stylesheet" href="/css/app-layouts.css">
+
   <!-- PWA -->
-<link rel="manifest" href="/app/manifest.json">
-<meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
-<link rel="apple-touch-icon" href="/imagenes/apple-touch-icon.png">
+  <link rel="manifest" href="/app/manifest.json">
+  <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
 
   <style>
     .chip-recibido    { background: rgba(245, 158, 11, 0.18); color: #F59E0B; }
@@ -170,6 +176,29 @@
     }
     .btn-whatsapp-grande:active { transform: scale(0.97); }
     .btn-whatsapp-grande i { font-size: 20px; }
+
+    /* ============================================================ */
+    /* 🟠 LOGO REDONDO EN EL HEADER                                 */
+    /* ============================================================ */
+    .brand-logo-orden {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 3px 10px rgba(255, 105, 0, 0.35);
+      margin: 0 10px;
+    }
+    .brand-logo-orden img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -182,6 +211,13 @@
         <button class="icon-btn" id="backBtn" aria-label="Volver">
           <i class="fas fa-arrow-left"></i>
         </button>
+
+        <!-- 🟠 Logo redondo -->
+        <div class="brand-logo-orden">
+          <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi"
+               onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:18px;&quot;></i>';">
+        </div>
+
         <div class="brand-text">
           <h1 id="headerTitle">ORDEN</h1>
           <p id="headerSubtitle">Cargando...</p>
