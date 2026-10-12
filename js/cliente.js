@@ -2,16 +2,17 @@
    DR. XIAOMI · CLIENTE (Wizard de nuevo recibo)
    Archivo: js/cliente.js
    Descripción: Wizard, vista previa, PDF compacto con QR, WhatsApp
+   Versión corregida — sin errores de sintaxis ni accesos inseguros
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
-import { 
-  toast, haptic, initTheme, 
-  escapeHtml, formatBs, showLoading, hideLoading 
+import {
+  toast, haptic, initTheme,
+  escapeHtml, formatBs, showLoading, hideLoading
 } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
-import { 
-  collection, addDoc, serverTimestamp 
+import {
+  collection, addDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ============================================================
@@ -41,13 +42,14 @@ const CONFIG = {
 let sesion = null;
 let pasoActual = 1;
 const TOTAL_PASOS = 7;
+const MAX_FOTOS = 4;
 
 const datos = {
   nombre: '', telefono: '',
   marca: '', modelo: '', imei: '', enciende: '',
   estado: '', falla: '',
   tipoSeguridad: 'patron', pin: '', patronSecuencia: '',
-  fotos: [],
+  fotos: [null, null, null, null],   // ← inicializado para evitar huecos
   servicios: [], total: 0, adelanto: 0, saldo: 0
 };
 
@@ -62,8 +64,10 @@ requireAuth((s) => {
 });
 
 function iniciar() {
-  document.getElementById('userInfo').textContent = 
-    `${sesion.icono || ''} ${sesion.nombre}`;
+  const userInfo = document.getElementById('userInfo');
+  if (userInfo) {
+    userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
+  }
 
   configurarHeader();
   configurarWizard();
@@ -75,24 +79,30 @@ function iniciar() {
   configurarAdelanto();
   configurarCharCounters();
   configurarPDF();
+  actualizarBotonesRemove();
+  actualizarBarraProgreso();
+  actualizarBotones();
 }
 
 /* ============================================================
    HEADER
    ============================================================ */
 function configurarHeader() {
-  document.getElementById('backToPanelBtn').addEventListener('click', () => {
-    haptic(10);
-    if (confirm('¿Salir? Los datos no guardados se perderán.')) {
-      window.location.href = '/app/';
-    }
-  });
+  // ← Botón Volver al panel (con confirmación si hay datos)
+  const backBtn = document.getElementById('backToPanelBtn');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      haptic(10);
+      if (confirm('¿Salir? Los datos no guardados se perderán.')) {
+        window.location.href = '/app/';
+      }
+    });
+  }
 
   // 🏠 Botón Home → ir directo al panel
   const btnHome = document.getElementById('homeBtn');
   if (btnHome) {
     btnHome.addEventListener('click', () => {
-      console.log('🏠 Click en home');
       haptic(15);
       window.location.href = '/app/';
     });
@@ -102,27 +112,6 @@ function configurarHeader() {
   const btnPrecios = document.getElementById('preciosBtn');
   if (btnPrecios) {
     btnPrecios.addEventListener('click', () => {
-      console.log('🏷️ Click en precios');
-      haptic(15);
-      window.location.href = '/precio/';
-    });
-  }
-
-  // 🚪 Botón de Salir
-  const btnLogout = document.getElementById('logoutBtn');
-  if (btnLogout) {
-    btnLogout.addEventListener('click', () => {
-      haptic(20);
-      if (confirm('¿Cerrar sesión?')) logout();
-    });
-  }
-}
-
-  // 🏷️ Botón de Precios → ir a /precio/
-  const btnPrecios = document.getElementById('preciosBtn');
-  if (btnPrecios) {
-    btnPrecios.addEventListener('click', () => {
-      console.log('🏷️ Click en precios');
       haptic(15);
       window.location.href = '/precio/';
     });
@@ -142,8 +131,8 @@ function configurarHeader() {
    WIZARD
    ============================================================ */
 function configurarWizard() {
-  document.getElementById('btnPrev').addEventListener('click', irPasoAnterior);
-  document.getElementById('btnNext').addEventListener('click', irPasoSiguiente);
+  document.getElementById('btnPrev')?.addEventListener('click', irPasoAnterior);
+  document.getElementById('btnNext')?.addEventListener('click', irPasoSiguiente);
 }
 
 function irPasoSiguiente() {
@@ -170,7 +159,7 @@ function irAPaso(nuevoPaso) {
 
   actualizarBarraProgreso();
   actualizarBotones();
-  if (pasoActual === 7) generarVistaPrevia();
+  if (pasoActual === TOTAL_PASOS) generarVistaPrevia();
 }
 
 function actualizarBarraProgreso() {
@@ -180,14 +169,19 @@ function actualizarBarraProgreso() {
     if (step < pasoActual) el.classList.add('done');
     else if (step === pasoActual) el.classList.add('active');
   });
-  const porcentaje = (pasoActual / TOTAL_PASOS) * 100;
-  document.getElementById('wizardBarFill').style.width = `${porcentaje}%`;
+  const fill = document.getElementById('wizardBarFill');
+  if (fill) {
+    const porcentaje = (pasoActual / TOTAL_PASOS) * 100;
+    fill.style.width = `${porcentaje}%`;
+  }
 }
 
 function actualizarBotones() {
   const btnPrev = document.getElementById('btnPrev');
   const btnNext = document.getElementById('btnNext');
   const btnGenerate = document.getElementById('btnGenerate');
+
+  if (!btnPrev || !btnNext || !btnGenerate) return;
 
   btnPrev.style.display = pasoActual === 1 ? 'none' : 'flex';
 
@@ -216,27 +210,39 @@ function validarPaso(paso) {
 }
 
 function validarCliente() {
-  const nombre = document.getElementById('nombre').value.trim();
-  const telefono = document.getElementById('telefono').value.trim();
-  if (!nombre) { toast('Ingresa el nombre del cliente', 'error'); document.getElementById('nombre').focus(); return false; }
-  if (!telefono || telefono.length < 7) { toast('Ingresa un teléfono válido', 'error'); document.getElementById('telefono').focus(); return false; }
+  const nombreEl = document.getElementById('nombre');
+  const telefonoEl = document.getElementById('telefono');
+  const nombre = nombreEl?.value.trim() || '';
+  const telefono = telefonoEl?.value.trim() || '';
+
+  if (!nombre) {
+    toast('Ingresa el nombre del cliente', 'error');
+    nombreEl?.focus();
+    return false;
+  }
+  if (!telefono || telefono.length < 7) {
+    toast('Ingresa un teléfono válido', 'error');
+    telefonoEl?.focus();
+    return false;
+  }
   return true;
 }
 
 function validarEquipo() {
-  const marca = document.getElementById('marca').value;
-  const modelo = document.getElementById('modelo').value.trim();
-  const enciende = document.getElementById('enciende').value;
+  const marca = document.getElementById('marca')?.value || '';
+  const modelo = document.getElementById('modelo')?.value.trim() || '';
+  const enciende = document.getElementById('enciende')?.value || '';
+
   if (!marca) { toast('Selecciona la marca', 'error'); return false; }
-  if (!modelo) { toast('Ingresa el modelo', 'error'); document.getElementById('modelo').focus(); return false; }
+  if (!modelo) { toast('Ingresa el modelo', 'error'); document.getElementById('modelo')?.focus(); return false; }
   if (!enciende) { toast('Indica si el equipo enciende', 'error'); return false; }
   return true;
 }
 
 function validarSeguridad() {
-  const tipo = document.getElementById('tipoSeguridad').value;
+  const tipo = document.getElementById('tipoSeguridad')?.value || 'patron';
   if (tipo === 'pin') {
-    const pin = document.getElementById('pinInput').value.trim();
+    const pin = document.getElementById('pinInput')?.value.trim() || '';
     if (!pin) { toast('Ingresa el PIN del equipo', 'error'); return false; }
   }
   if (tipo === 'patron') {
@@ -250,11 +256,14 @@ function validarCostos() {
   const servicios = document.querySelectorAll('.servicio-item');
   let hayValido = false;
   servicios.forEach(item => {
-    const desc = item.querySelector('.servicio-desc').value.trim();
-    const costo = parseFloat(item.querySelector('.servicio-costo').value) || 0;
+    const desc = item.querySelector('.servicio-desc')?.value.trim() || '';
+    const costo = parseFloat(item.querySelector('.servicio-costo')?.value) || 0;
     if (desc && costo > 0) hayValido = true;
   });
-  if (!hayValido) { toast('Agrega al menos un servicio con descripción y costo', 'error'); return false; }
+  if (!hayValido) {
+    toast('Agrega al menos un servicio con descripción y costo', 'error');
+    return false;
+  }
   return true;
 }
 
@@ -264,28 +273,28 @@ function validarCostos() {
 function guardarDatosPaso(paso) {
   switch (paso) {
     case 1:
-      datos.nombre = document.getElementById('nombre').value.trim();
-      datos.telefono = document.getElementById('telefono').value.trim();
+      datos.nombre = document.getElementById('nombre')?.value.trim() || '';
+      datos.telefono = document.getElementById('telefono')?.value.trim() || '';
       break;
     case 2:
-      datos.marca = document.getElementById('marca').value;
-      datos.modelo = document.getElementById('modelo').value.trim();
-      datos.imei = document.getElementById('imei').value.trim();
-      datos.enciende = document.getElementById('enciende').value;
+      datos.marca = document.getElementById('marca')?.value || '';
+      datos.modelo = document.getElementById('modelo')?.value.trim() || '';
+      datos.imei = document.getElementById('imei')?.value.trim() || '';
+      datos.enciende = document.getElementById('enciende')?.value || '';
       break;
     case 3:
-      datos.estado = document.getElementById('estado').value.trim();
-      datos.falla = document.getElementById('falla').value.trim();
+      datos.estado = document.getElementById('estado')?.value.trim() || '';
+      datos.falla = document.getElementById('falla')?.value.trim() || '';
       break;
     case 4:
-      datos.tipoSeguridad = document.getElementById('tipoSeguridad').value;
-      datos.pin = document.getElementById('pinInput').value.trim();
+      datos.tipoSeguridad = document.getElementById('tipoSeguridad')?.value || 'patron';
+      datos.pin = document.getElementById('pinInput')?.value.trim() || '';
       datos.patronSecuencia = document.getElementById('patronSecuencia')?.value || '';
       break;
     case 6:
       recolectarServicios();
-      datos.total = parseFloat(document.getElementById('costoTotal').value) || 0;
-      datos.adelanto = parseFloat(document.getElementById('adelanto').value) || 0;
+      datos.total = parseFloat(document.getElementById('costoTotal')?.value) || 0;
+      datos.adelanto = parseFloat(document.getElementById('adelanto')?.value) || 0;
       datos.saldo = Math.max(0, datos.total - datos.adelanto);
       break;
   }
@@ -296,13 +305,15 @@ function guardarDatosPaso(paso) {
    ============================================================ */
 function configurarMarca() {
   const grid = document.getElementById('marcasGrid');
+  if (!grid) return;
   grid.addEventListener('click', (e) => {
     const btn = e.target.closest('.marca-btn');
     if (!btn) return;
     haptic(8);
     grid.querySelectorAll('.marca-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('marca').value = btn.dataset.marca;
+    const inputMarca = document.getElementById('marca');
+    if (inputMarca) inputMarca.value = btn.dataset.marca;
   });
 }
 
@@ -311,27 +322,34 @@ function configurarMarca() {
    ============================================================ */
 function configurarRadioGroups() {
   const enciendeGroup = document.getElementById('enciendeGroup');
-  enciendeGroup.addEventListener('click', (e) => {
-    const btn = e.target.closest('.radio-option');
-    if (!btn) return;
-    haptic(8);
-    enciendeGroup.querySelectorAll('.radio-option').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('enciende').value = btn.dataset.value;
-  });
+  if (enciendeGroup) {
+    enciendeGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.radio-option');
+      if (!btn) return;
+      haptic(8);
+      enciendeGroup.querySelectorAll('.radio-option').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const inputEnciende = document.getElementById('enciende');
+      if (inputEnciende) inputEnciende.value = btn.dataset.value;
+    });
+  }
 
   const tipoGroup = document.getElementById('tipoSeguridadGroup');
-  tipoGroup.addEventListener('click', (e) => {
-    const btn = e.target.closest('.radio-option');
-    if (!btn) return;
-    haptic(8);
-    tipoGroup.querySelectorAll('.radio-option').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const tipo = btn.dataset.value;
-    document.getElementById('tipoSeguridad').value = tipo;
-    document.getElementById('pinContainer').classList.toggle('hidden', tipo !== 'pin');
-    document.getElementById('patronContainer').classList.toggle('hidden', tipo !== 'patron');
-  });
+  if (tipoGroup) {
+    tipoGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.radio-option');
+      if (!btn) return;
+      haptic(8);
+      tipoGroup.querySelectorAll('.radio-option').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tipo = btn.dataset.value;
+      const inputTipo = document.getElementById('tipoSeguridad');
+      if (inputTipo) inputTipo.value = tipo;
+
+      document.getElementById('pinContainer')?.classList.toggle('hidden', tipo !== 'pin');
+      document.getElementById('patronContainer')?.classList.toggle('hidden', tipo !== 'patron');
+    });
+  }
 }
 
 /* ============================================================
@@ -341,6 +359,14 @@ function configurarPattern() {
   const bgCanvas = document.getElementById('bgCanvas');
   const lineCanvas = document.getElementById('lineCanvas');
   if (!bgCanvas || !lineCanvas) return;
+
+  // Crear input oculto para el patrón si no existe
+  if (!document.getElementById('patronSecuencia')) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.id = 'patronSecuencia';
+    document.body.appendChild(input);
+  }
 
   const bgc = bgCanvas.getContext('2d');
   const lnc = lineCanvas.getContext('2d');
@@ -439,7 +465,7 @@ function configurarPattern() {
     const seq = path.map(p => p.id).join(',');
     const inputPatron = document.getElementById('patronSecuencia');
     if (inputPatron) inputPatron.value = seq;
-    
+
     const display = document.getElementById('pattern-sequence');
     if (display) {
       if (seq) {
@@ -450,13 +476,6 @@ function configurarPattern() {
         display.style.color = 'var(--text-3)';
       }
     }
-  }
-
-  if (!document.getElementById('patronSecuencia')) {
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.id = 'patronSecuencia';
-    document.body.appendChild(input);
   }
 
   lineCanvas.addEventListener('mousedown', start);
@@ -488,6 +507,8 @@ function configurarPattern() {
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
   const input = document.getElementById('fotosInput');
+  if (!grid || !input) return;
+
   let slotActual = null;
 
   grid.addEventListener('click', (e) => {
@@ -504,8 +525,9 @@ function configurarFotos() {
       return;
     }
 
-    if (datos.fotos[parseInt(slot.dataset.slot)]) return;
-    slotActual = parseInt(slot.dataset.slot);
+    const idx = parseInt(slot.dataset.slot);
+    if (datos.fotos[idx]) return;
+    slotActual = idx;
     input.click();
   });
 
@@ -528,7 +550,7 @@ function configurarFotos() {
     const slots = grid.querySelectorAll('.foto-slot');
     slots.forEach((slot, i) => {
       const foto = datos.fotos[i];
-      if (foto) {
+      if (foto && foto.dataUrl) {
         slot.classList.add('filled');
         slot.innerHTML = `
           <img src="${foto.dataUrl}" alt="Foto ${i + 1}">
@@ -584,19 +606,22 @@ async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
 function configurarServicios() {
   const list = document.getElementById('serviciosList');
   const btnAdd = document.getElementById('addServicio');
+  if (!list || !btnAdd) return;
 
   const firstItem = list.querySelector('.servicio-item');
-  const firstCosto = firstItem.querySelector('.servicio-costo');
-  const firstRemove = firstItem.querySelector('.removeServicio');
-  firstCosto.addEventListener('input', calcularTotal);
-  firstRemove.addEventListener('click', () => eliminarServicio(firstItem));
+  if (firstItem) {
+    const firstCosto = firstItem.querySelector('.servicio-costo');
+    const firstRemove = firstItem.querySelector('.removeServicio');
+    firstCosto?.addEventListener('input', calcularTotal);
+    firstRemove?.addEventListener('click', () => eliminarServicio(firstItem));
+  }
 
   btnAdd.addEventListener('click', () => {
     haptic(10);
     const item = crearServicioItem();
     list.appendChild(item);
     actualizarBotonesRemove();
-    item.querySelector('.servicio-desc').focus();
+    item.querySelector('.servicio-desc')?.focus();
   });
 }
 
@@ -608,14 +633,15 @@ function crearServicioItem() {
     <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0" inputmode="decimal">
     <button type="button" class="removeServicio">✕</button>
   `;
-  div.querySelector('.servicio-costo').addEventListener('input', calcularTotal);
-  div.querySelector('.removeServicio').addEventListener('click', () => eliminarServicio(div));
+  div.querySelector('.servicio-costo')?.addEventListener('input', calcularTotal);
+  div.querySelector('.removeServicio')?.addEventListener('click', () => eliminarServicio(div));
   return div;
 }
 
 function eliminarServicio(item) {
   haptic(15);
   const list = document.getElementById('serviciosList');
+  if (!list) return;
   if (list.querySelectorAll('.servicio-item').length <= 1) return;
   item.remove();
   calcularTotal();
@@ -635,16 +661,18 @@ function calcularTotal() {
   document.querySelectorAll('.servicio-costo').forEach(input => {
     total += parseFloat(input.value) || 0;
   });
-  document.getElementById('costoTotal').value = total.toFixed(2);
-  document.getElementById('costoTotalDisplay').textContent = formatBs(total);
+  const costoTotal = document.getElementById('costoTotal');
+  if (costoTotal) costoTotal.value = total.toFixed(2);
+  const display = document.getElementById('costoTotalDisplay');
+  if (display) display.textContent = formatBs(total);
   actualizarSaldo();
 }
 
 function recolectarServicios() {
   datos.servicios = [];
   document.querySelectorAll('.servicio-item').forEach(item => {
-    const desc = item.querySelector('.servicio-desc').value.trim();
-    const costo = parseFloat(item.querySelector('.servicio-costo').value) || 0;
+    const desc = item.querySelector('.servicio-desc')?.value.trim() || '';
+    const costo = parseFloat(item.querySelector('.servicio-costo')?.value) || 0;
     if (desc || costo > 0) {
       datos.servicios.push({ desc: desc || 'Sin descripción', costo });
     }
@@ -656,14 +684,16 @@ function recolectarServicios() {
    ============================================================ */
 function configurarAdelanto() {
   const input = document.getElementById('adelanto');
+  if (!input) return;
   input.addEventListener('input', actualizarSaldo);
 }
 
 function actualizarSaldo() {
-  const total = parseFloat(document.getElementById('costoTotal').value) || 0;
-  const adelanto = parseFloat(document.getElementById('adelanto').value) || 0;
+  const total = parseFloat(document.getElementById('costoTotal')?.value) || 0;
+  const adelanto = parseFloat(document.getElementById('adelanto')?.value) || 0;
   const saldo = Math.max(0, total - adelanto);
-  document.getElementById('saldoDisplay').textContent = formatBs(saldo);
+  const display = document.getElementById('saldoDisplay');
+  if (display) display.textContent = formatBs(saldo);
 }
 
 /* ============================================================
@@ -702,7 +732,7 @@ function generarVistaPrevia() {
   `).join('');
 
   const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
-  const fotosHtml = fotosValidas.length > 0 
+  const fotosHtml = fotosValidas.length > 0
     ? `<div class="preview-section">
          <div class="preview-section-title">Fotos del equipo</div>
          <div class="preview-fotos-grid">
@@ -823,8 +853,8 @@ function generarVistaPrevia() {
    PDF COMPACTO
    ============================================================ */
 function configurarPDF() {
-  document.getElementById('btnGenerate').addEventListener('click', generarPDF);
-  document.getElementById('backToPanelBtn2').addEventListener('click', () => {
+  document.getElementById('btnGenerate')?.addEventListener('click', generarPDF);
+  document.getElementById('backToPanelBtn2')?.addEventListener('click', () => {
     window.location.href = '/app/';
   });
 }
@@ -842,6 +872,13 @@ function generarNumeroRecibo() {
 
 async function generarQRDataUrl(texto) {
   return new Promise((resolve) => {
+    // Verificar que QRCode esté disponible
+    if (typeof QRCode === 'undefined') {
+      console.warn('QRCode no está cargado. El PDF saldrá sin QR.');
+      resolve('');
+      return;
+    }
+
     const div = document.createElement('div');
     div.style.position = 'absolute';
     div.style.left = '-9999px';
@@ -1019,10 +1056,10 @@ async function generarPDF() {
     if (datos.tipoSeguridad === 'patron' && datos.patronSecuencia) {
       patronTexto = datos.patronSecuencia.split(',').join('-');
     }
-    const segInfo = datos.tipoSeguridad === 'pin' 
-      ? `PIN: ${datos.pin}` 
-      : datos.tipoSeguridad === 'patron' 
-        ? `Patrón: ${patronTexto}` 
+    const segInfo = datos.tipoSeguridad === 'pin'
+      ? `PIN: ${datos.pin}`
+      : datos.tipoSeguridad === 'patron'
+        ? `Patrón: ${patronTexto}`
         : 'Sin clave de acceso';
 
     pdf.setFillColor(248, 248, 248);
@@ -1055,9 +1092,9 @@ async function generarPDF() {
       body: serviciosData,
       styles: { fontSize: 8, cellPadding: 2 },
       headStyles: { fillColor: [255, 105, 0], textColor: 255, fontStyle: 'bold', fontSize: 8 },
-      columnStyles: { 
-        0: { cellWidth: CW - 35 }, 
-        1: { halign: 'right', cellWidth: 35, fontStyle: 'bold' } 
+      columnStyles: {
+        0: { cellWidth: CW - 35 },
+        1: { halign: 'right', cellWidth: 35, fontStyle: 'bold' }
       },
       margin: { left: M, right: M },
       theme: 'grid'
@@ -1213,8 +1250,10 @@ async function generarPDF() {
     }
 
     /* MODAL DE ÉXITO */
-    document.getElementById('successNumero').textContent = numeroRecibo;
-    document.getElementById('successModal').classList.add('show');
+    const successNumero = document.getElementById('successNumero');
+    if (successNumero) successNumero.textContent = numeroRecibo;
+    const successModal = document.getElementById('successModal');
+    if (successModal) successModal.classList.add('show');
 
     window._ultimoRecibo = {
       numeroRecibo,
@@ -1237,7 +1276,7 @@ async function generarPDF() {
 }
 
 /* ============================================================
-   WHATSAPP (sin emojis)
+   WHATSAPP
    ============================================================ */
 function configurarWhatsApp() {
   const btn = document.getElementById('sendWhatsappBtn');
