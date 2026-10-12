@@ -876,7 +876,12 @@
       .replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
   }
   function getTokens(str) { return normalizeText(str).split(" ").filter(t => t.length > 0); }
-  function haptic(ms = 15) { if (navigator.vibrate) navigator.vibrate(ms); }
+  function haptic(ms = 15) { 
+  // Solo vibrar si el usuario ya interactuó con la página
+  if (navigator.vibrate && navigator.userActivation?.hasBeenActive) {
+    try { navigator.vibrate(ms); } catch(e) {}
+  }
+}
   const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   function attachRipple(el) {
     if (!isTouch) return;
