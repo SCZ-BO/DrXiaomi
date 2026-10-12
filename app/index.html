@@ -15,10 +15,12 @@
   <link rel="stylesheet" href="/css/app-theme.css">
   <link rel="stylesheet" href="/css/app-components.css">
   <link rel="stylesheet" href="/css/app-layouts.css">
-<!-- PWA -->
-<link rel="manifest" href="/app/manifest.json">
-<meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
-<link rel="apple-touch-icon" href="/imagenes/apple-touch-icon.png">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/app/manifest.json">
+  <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
+  <link rel="apple-touch-icon" href="/imagenes/apple-touch-icon.png">
+
   <style>
     /* Estilos específicos del panel */
     .orden-card .chip-recibido    { background: rgba(245, 158, 11, 0.18); color: #F59E0B; }
@@ -46,6 +48,9 @@
       </div>
 
       <div class="header-actions">
+        <button class="icon-btn" id="preciosBtn" title="Buscar precio" aria-label="Buscar precio">
+          <i class="fas fa-tags"></i>
+        </button>
         <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;">
           <i class="fas fa-chart-line"></i>
         </button>
@@ -148,7 +153,13 @@
     }
 
     function configurarEventos() {
-      // Botón de Reportes (solo admin)
+      // 🏷️ Botón de Precios — Buscar precio
+      document.getElementById('preciosBtn')?.addEventListener('click', () => {
+        haptic(15);
+        window.location.href = '/precio/';
+      });
+
+      // 📊 Botón de Reportes (solo admin)
       document.getElementById('reportesBtn')?.addEventListener('click', () => {
         haptic(15);
         window.location.href = '/app/reportes/';
@@ -282,7 +293,6 @@
 
       const total = Number(o.total) || 0;
 
-      // Armar el texto de los servicios
       let serviciosTexto = '';
       if (Array.isArray(o.servicios) && o.servicios.length > 0) {
         serviciosTexto = o.servicios
