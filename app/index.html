@@ -43,6 +43,9 @@
       </div>
 
       <div class="header-actions">
+        <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;">
+          <i class="fas fa-chart-line"></i>
+        </button>
         <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
           <i class="fas fa-right-from-bracket"></i>
         </button>
@@ -129,6 +132,12 @@
       document.getElementById('userInfo').textContent = 
         `${sesion.icono || ''} ${sesion.nombre}`;
 
+      // Mostrar botón de reportes solo para admin
+      if (sesion.rol === 'admin') {
+        const btnRep = document.getElementById('reportesBtn');
+        if (btnRep) btnRep.style.display = 'flex';
+      }
+
       configurarEventos();
       cargarOrdenes();
 
@@ -136,6 +145,12 @@
     }
 
     function configurarEventos() {
+      // Botón de Reportes (solo admin)
+      document.getElementById('reportesBtn')?.addEventListener('click', () => {
+        haptic(15);
+        window.location.href = '/app/reportes/';
+      });
+
       document.getElementById('logoutBtn').addEventListener('click', () => {
         haptic(20);
         logout();
