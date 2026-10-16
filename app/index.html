@@ -145,6 +145,19 @@
     .orden-card[data-estado="entregado"] { border-left: 4px solid #22C55E !important; }
     .orden-card[data-estado="devuelto"] { border-left: 4px solid #EF4444 !important; }
     .orden-card[data-estado="cancelado"] { border-left: 4px solid #9CA3AF !important; }
+
+    /* ============================================================ */
+    /* MÉTODO DE PAGO                                               */
+    /* ============================================================ */
+    .metodo-pago {
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -399,6 +412,15 @@
       });
     }
 
+    function getIconoMetodo(metodo) {
+      const m = String(metodo || '').toLowerCase();
+      if (m.includes('efectivo')) return '💵';
+      if (m.includes('qr')) return '📱';
+      if (m.includes('transf')) return '🏦';
+      if (m.includes('mixto')) return '🔀';
+      return '💳';
+    }
+
     function renderCard(o) {
       const estadoActual = o.estadoOrden || 'recibido';
       const estadoInfo = {
@@ -412,6 +434,7 @@
       }[estadoActual] || { clase: 'recibido', texto: estadoActual.toUpperCase(), emoji: '📋' };
 
       const total = Number(o.total) || 0;
+      const metodoPago = o.metodoPago ? o.metodoPago.replace(/\(.*\)/, '').trim() : '';
 
       let serviciosTexto = '';
       if (Array.isArray(o.servicios) && o.servicios.length > 0) {
@@ -456,15 +479,15 @@
               <div style="font-size: 20px; font-weight: 900; color: var(--brand-500); letter-spacing: -0.5px;">
                 ${formatBs(total)}
               </div>
-              ${Number(o.saldo) > 0 ? `
-                <div style="font-size: 10px; color: #F59E0B; font-weight: 700;">
-                  Saldo: ${formatBs(o.saldo)}
+              ${metodoPago ? `
+                <div class="metodo-pago" style="color: #22C55E;">
+                  ${getIconoMetodo(metodoPago)} ${escapeHtml(metodoPago)}
                 </div>
-              ` : `
-                <div style="font-size: 10px; color: #22C55E; font-weight: 700;">
+              ` : (estadoActual === 'entregado' ? `
+                <div class="metodo-pago" style="color: #22C55E;">
                   ✓ Pagado
                 </div>
-              `}
+              ` : '')}
             </div>
           </div>
         </div>
