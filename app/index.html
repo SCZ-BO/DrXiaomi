@@ -75,6 +75,22 @@
     }
     .icon-btn:hover .icon-img { opacity: 1; }
     .icon-btn:active .icon-img { transform: scale(0.9); }
+
+    /* ============================================================ */
+    /* 🎨 TARJETAS DE ORDEN MEJORADAS                               */
+    /* ============================================================ */
+    .orden-card {
+      position: relative;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .orden-card:active {
+      transform: scale(0.99);
+      background: var(--bg-elev-2) !important;
+    }
+    .orden-card:hover {
+      background: var(--bg-elev-2);
+    }
   </style>
 </head>
 <body>
@@ -208,13 +224,11 @@
     }
 
     function configurarEventos() {
-      // 🏷️ Botón de Precios — Buscar precio
       document.getElementById('preciosBtn')?.addEventListener('click', () => {
         haptic(15);
         window.location.href = '/precio/';
       });
 
-      // 📊 Botón de Reportes (solo admin)
       document.getElementById('reportesBtn')?.addEventListener('click', () => {
         haptic(15);
         window.location.href = '/app/reportes/';
@@ -338,13 +352,14 @@
     function renderCard(o) {
       const estadoActual = o.estadoOrden || 'recibido';
       const estadoInfo = {
-        recibido:   { clase: 'recibido',   texto: 'En proceso' },
-        reparacion: { clase: 'reparacion', texto: 'En reparación' },
-        listo:      { clase: 'listo',      texto: 'Listo para entregar' },
-        entregado:  { clase: 'entregado',  texto: 'Entregado' },
-        devuelto:   { clase: 'devuelto',   texto: 'Devuelto' },
-        cancelado:  { clase: 'cancelado',  texto: 'Cancelado' }
-      }[estadoActual] || { clase: 'recibido', texto: estadoActual };
+        recibido:          { clase: 'recibido',  texto: 'EN PROCESO',     emoji: '📦', color: '#F59E0B' },
+        reparacion:        { clase: 'reparacion',texto: 'EN REPARACIÓN',  emoji: '🔧', color: '#3B82F6' },
+        'espera-repuesto': { clase: 'espera',    texto: 'ESPERANDO',      emoji: '⏳', color: '#FF6900' },
+        listo:             { clase: 'listo',     texto: 'LISTO',          emoji: '✅', color: '#10B981' },
+        entregado:         { clase: 'entregado', texto: 'ENTREGADO',      emoji: '🤝', color: '#8B5CF6' },
+        devuelto:          { clase: 'devuelto',  texto: 'DEVUELTO',       emoji: '↩️', color: '#EF4444' },
+        cancelado:         { clase: 'cancelado', texto: 'CANCELADO',      emoji: '⛔', color: '#9CA3AF' }
+      }[estadoActual] || { clase: 'recibido', texto: estadoActual.toUpperCase(), emoji: '📋', color: '#FF6900' };
 
       const total = Number(o.total) || 0;
 
@@ -357,38 +372,49 @@
       }
 
       return `
-        <div class="card card-interactive orden-card" data-id="${o.id}">
+        <div class="card card-interactive orden-card" data-id="${o.id}" style="border-left: 4px solid ${estadoInfo.color}; padding-left: 16px;">
           <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
             <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
-                <span class="chip chip-${estadoInfo.clase}">${estadoInfo.texto}</span>
-                <span style="font-size: 11px; color: var(--text-3); font-weight: 600;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; background: ${estadoInfo.color}; color: white; box-shadow: 0 2px 8px ${estadoInfo.color}40;">
+                  ${estadoInfo.emoji} ${estadoInfo.texto}
+                </span>
+                <span style="font-size: 10px; color: var(--text-3); font-weight: 700; font-family: monospace;">
                   ${o.numeroRecibo || '—'}
                 </span>
               </div>
-              <div style="font-size: 15px; font-weight: 700; color: var(--text-1); margin-bottom: 4px;">
+              <div style="font-size: 17px; font-weight: 800; color: var(--text-1); margin-bottom: 6px; letter-spacing: -0.3px;">
                 ${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}
               </div>
               ${o.cliente ? `
-                <div style="font-size: 12px; color: var(--text-2); margin-bottom: 4px;">
-                  <i class="fas fa-user" style="font-size: 10px; color: var(--text-3);"></i>
-                  ${escapeHtml(o.cliente)}
+                <div style="font-size: 12px; color: var(--text-2); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 13px;">👤</span>
+                  <span>${escapeHtml(o.cliente)}</span>
                 </div>
               ` : ''}
               ${serviciosTexto ? `
-                <div style="font-size: 12px; color: var(--text-3); margin-bottom: 4px; line-height: 1.4;">
-                  <i class="fas fa-wrench" style="font-size: 10px;"></i>
-                  ${escapeHtml(serviciosTexto)}
+                <div style="font-size: 11px; color: var(--text-3); margin-bottom: 4px; line-height: 1.4; display: flex; align-items: start; gap: 6px;">
+                  <span style="font-size: 12px; flex-shrink: 0;">🔧</span>
+                  <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">${escapeHtml(serviciosTexto)}</span>
                 </div>
               ` : ''}
-              <div style="font-size: 11px; color: var(--text-3); margin-top: 6px;">
+              <div style="font-size: 10px; color: var(--text-3); margin-top: 8px; display: flex; align-items: center; gap: 4px;">
                 <i class="far fa-clock"></i> ${tiempoRelativo(o.fecha)}
               </div>
             </div>
-            <div style="text-align: right; flex-shrink: 0;">
-              <div style="font-size: 18px; font-weight: 800; color: var(--brand-500);">
+            <div style="text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: end; gap: 4px;">
+              <div style="font-size: 20px; font-weight: 900; color: var(--brand-500); letter-spacing: -0.5px;">
                 ${formatBs(total)}
               </div>
+              ${Number(o.saldo) > 0 ? `
+                <div style="font-size: 10px; color: #F59E0B; font-weight: 700;">
+                  Saldo: ${formatBs(o.saldo)}
+                </div>
+              ` : `
+                <div style="font-size: 10px; color: #10B981; font-weight: 700;">
+                  ✓ Pagado
+                </div>
+              `}
             </div>
           </div>
         </div>
@@ -398,7 +424,7 @@
     function actualizarStats() {
       const activas = ordenes.filter(o => {
         const e = o.estadoOrden || 'recibido';
-        return ['recibido', 'reparacion'].includes(e);
+        return ['recibido', 'reparacion', 'espera-repuesto'].includes(e);
       }).length;
 
       const listas = ordenes.filter(o => o.estadoOrden === 'listo').length;
