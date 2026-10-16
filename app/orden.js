@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (minimalista)
+   DR. XIAOMI · ORDEN (minimalista + PDF premium)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -522,7 +522,6 @@ function configurarEventosOrden() {
     regenerarYEnviarPDF();
   });
 
-  // Visor de imágenes
   document.querySelectorAll('[data-ver-img]').forEach(img => {
     img.addEventListener('click', () => {
       haptic(10);
@@ -986,7 +985,7 @@ function contactarCliente() {
 }
 
 /* ============================================================
-   REGENERAR PDF Y ENVIAR POR WHATSAPP
+   REGENERAR PDF PREMIUM (1 SOLA PÁGINA)
    ============================================================ */
 async function regenerarYEnviarPDF() {
   if (!orden.telefono) {
@@ -1004,138 +1003,218 @@ async function regenerarYEnviarPDF() {
 
   try {
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-    const W = 210, H = 297, M = 12;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const W = 210, H = 297, M = 10;
     const CW = W - M * 2;
-    let y = 0;
 
-    /* HEADER */
+    /* 1. FONDO BLANCO CON MARCA DE AGUA */
+    pdf.setFillColor(253, 250, 247);
+    pdf.rect(0, 0, W, H, 'F');
+
+    pdf.saveGraphicsState();
+    pdf.setGState(new pdf.GState({ opacity: 0.04 }));
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(55);
+    for (let i = 0; i < 6; i++) {
+      pdf.text('DR. XIAOMI', 10, 50 + (i * 50), { angle: 25 });
+    }
+    pdf.restoreGraphicsState();
+
+    /* 2. HEADER CON GRADIENTE NARANJA */
+    const headerGradSteps = 40;
+    for (let i = 0; i < headerGradSteps; i++) {
+      const ratio = i / headerGradSteps;
+      pdf.setFillColor(255, 105 + (ratio * 30), ratio * 50);
+      pdf.rect((W / headerGradSteps) * i, 0, W / headerGradSteps + 0.5, 32, 'F');
+    }
+
+    // Círculos decorativos
+    pdf.setFillColor(255, 255, 255);
+    pdf.setGState(new pdf.GState({ opacity: 0.08 }));
+    pdf.circle(190, 8, 22, 'F');
+    pdf.circle(12, 32, 15, 'F');
+    pdf.setGState(new pdf.GState({ opacity: 1 }));
+
+    // Logo
+    const logoDataUrl = await cargarLogoOrden();
+    if (logoDataUrl) {
+      try {
+        pdf.addImage(logoDataUrl, 'PNG', M + 3, 5, 24, 24);
+      } catch (e) {}
+    }
+
+    // Datos tienda
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(18);
+    pdf.text(CONFIG.nombreTienda, M + 31, 13);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.text('Servicio Técnico Especializado', M + 31, 18);
+    pdf.setFontSize(7);
+    pdf.text(CONFIG.direccion, M + 31, 22);
+    pdf.text(`Tel: ${CONFIG.telefono}  ·  ${CONFIG.web}`, M + 31, 26);
+
+    // Número de recibo
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('RECIBO N°', W - M - 3, 12, { align: 'right' });
+    pdf.setFontSize(11);
+    pdf.text(orden.numeroRecibo || '-', W - M - 3, 17, { align: 'right' });
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(formatFecha(orden.fecha), W - M - 3, 22, { align: 'right' });
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`Atendió: ${(orden.creadoPor || '-').slice(0, 15)}`, W - M - 3, 27, { align: 'right' });
+
+    let y = 37;
+
+    /* 3. BARRA DE ESTADO */
+    const estadoActual = orden.estadoOrden || 'recibido';
+    const estadosInfo = {
+      'recibido': { texto: 'EN PROCESO', color: [245, 158, 11] },
+      'reparacion': { texto: 'EN REPARACIÓN', color: [59, 130, 246] },
+      'espera-repuesto': { texto: 'ESPERANDO REPUESTO', color: [255, 105, 0] },
+      'listo': { texto: 'LISTO PARA ENTREGAR', color: [16, 185, 129] },
+      'entregado': { texto: 'ENTREGADO', color: [139, 92, 246] },
+      'devuelto': { texto: 'DEVUELTO', color: [239, 68, 68] }
+    };
+    const estadoInfo = estadosInfo[estadoActual] || estadosInfo.recibido;
+
+    pdf.setFillColor(...estadoInfo.color);
+    pdf.roundedRect(M, y, CW, 10, 2.5, 2.5, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.text(estadoInfo.texto, M + 4, y + 6.8);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Recibo de servicio técnico', W - M - 4, y + 6.8, { align: 'right' });
+    y += 14;
+
+    /* 4. TARJETAS CLIENTE Y EQUIPO */
+    const colW = (CW - 3) / 2;
+
+    // TARJETA CLIENTE
+    pdf.setFillColor(255, 255, 255);
+    pdf.roundedRect(M, y, colW, 28, 2.5, 2.5, 'F');
+    pdf.setDrawColor(255, 105, 0);
+    pdf.setLineWidth(0.4);
+    pdf.roundedRect(M, y, colW, 28, 2.5, 2.5, 'S');
+
     pdf.setFillColor(255, 105, 0);
-    pdf.rect(0, 0, W, 28, 'F');
+    pdf.roundedRect(M, y, colW, 7, 2.5, 2.5, 'F');
+    pdf.rect(M, y + 3, colW, 4, 'F');
 
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(15);
-    pdf.text(CONFIG.nombreTienda, M + 4, 12);
-
-    pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
-    pdf.text('Servicio Técnico Especializado', M + 4, 17);
-    pdf.setFontSize(7);
-    pdf.text(`${CONFIG.direccion}  ·  Tel: ${CONFIG.telefono}`, M + 4, 22);
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.text('RECIBO DE INGRESO', W - M, 12, { align: 'right' });
-    pdf.setFontSize(8);
-    pdf.text(orden.numeroRecibo || '-', W - M, 17, { align: 'right' });
-
-    y = 33;
-
-    /* FECHA */
-    const fecha = new Date();
-    const fechaStr = `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')}/${fecha.getFullYear()} ${String(fecha.getHours()).padStart(2,'0')}:${String(fecha.getMinutes()).padStart(2,'0')}`;
-
-    pdf.setFillColor(248, 248, 248);
-    pdf.roundedRect(M, y, CW, 8, 1.5, 1.5, 'F');
-    pdf.setTextColor(80, 80, 80);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.text(`Fecha: ${fechaStr}`, M + 3, y + 5.5);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(`Recibido por: ${orden.creadoPor || '-'}`, W - M - 3, y + 5.5, { align: 'right' });
-    y += 12;
-
-    /* CLIENTE Y EQUIPO */
-    const colW = (CW - 3) / 2;
-    pdf.setFillColor(255, 244, 235);
-    pdf.roundedRect(M, y, colW, 22, 1.5, 1.5, 'F');
-    pdf.roundedRect(M + colW + 3, y, colW, 22, 1.5, 1.5, 'F');
-
-    pdf.setTextColor(255, 105, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7);
     pdf.text('CLIENTE', M + 3, y + 5);
-    pdf.text('EQUIPO', M + colW + 6, y + 5);
 
     pdf.setTextColor(30, 30, 30);
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
-    pdf.text((orden.cliente || '').slice(0, 24), M + 3, y + 11);
-    pdf.text(`${orden.marca || ''} ${orden.modelo || ''}`.slice(0, 24), M + colW + 6, y + 11);
+    pdf.setFontSize(11);
+    pdf.text((orden.cliente || '-').slice(0, 22), M + 3, y + 14);
 
     pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
     pdf.setTextColor(80, 80, 80);
-    pdf.text(`Tel: ${orden.telefono || '-'}`, M + 3, y + 16);
+    pdf.setFontSize(9);
+    pdf.text(`Tel: ${orden.telefono || '-'}`, M + 3, y + 21);
+    pdf.setFontSize(8);
+    pdf.text('Cliente', M + 3, y + 25.5);
+
+    // TARJETA EQUIPO
+    const x2 = M + colW + 3;
+    pdf.setFillColor(255, 255, 255);
+    pdf.roundedRect(x2, y, colW, 28, 2.5, 2.5, 'F');
+    pdf.setDrawColor(255, 105, 0);
+    pdf.roundedRect(x2, y, colW, 28, 2.5, 2.5, 'S');
+
+    pdf.setFillColor(255, 105, 0);
+    pdf.roundedRect(x2, y, colW, 7, 2.5, 2.5, 'F');
+    pdf.rect(x2, y + 3, colW, 4, 'F');
+
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('EQUIPO', x2 + 3, y + 5);
+
+    pdf.setTextColor(30, 30, 30);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.text(`${orden.marca || ''} ${orden.modelo || ''}`.slice(0, 22), x2 + 3, y + 14);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(80, 80, 80);
+    pdf.setFontSize(9);
+    pdf.text(`Enciende: ${orden.enciende || '-'}`, x2 + 3, y + 21);
     if (orden.imei) {
-      pdf.text(`IMEI: ${orden.imei}`, M + colW + 6, y + 16);
-      pdf.text(`Enciende: ${orden.enciende || '-'}`, M + colW + 6, y + 20);
-    } else {
-      pdf.text(`Enciende: ${orden.enciende || '-'}`, M + colW + 6, y + 16);
-    }
-    y += 26;
-
-    /* ESTADO Y FALLA */
-    if (orden.estadoEquipo || orden.falla) {
-      const lineasEstado = orden.estadoEquipo ? pdf.splitTextToSize(`Estado: ${orden.estadoEquipo}`, CW - 6) : [];
-      const lineasFalla = orden.falla ? pdf.splitTextToSize(`Falla: ${orden.falla}`, CW - 6) : [];
-      const boxH = 8 + (lineasEstado.length * 3.5) + (lineasFalla.length * 3.5) + 2;
-
-      pdf.setFillColor(248, 248, 248);
-      pdf.roundedRect(M, y, CW, boxH, 1.5, 1.5, 'F');
-      pdf.setTextColor(255, 105, 0);
-      pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(7);
-      pdf.text('ESTADO Y FALLA', M + 3, y + 5);
-
-      pdf.setTextColor(50, 50, 50);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(8);
-      let yy = y + 9;
-      if (lineasEstado.length) {
-        pdf.text(lineasEstado, M + 3, yy);
-        yy += lineasEstado.length * 3.5;
-      }
-      if (lineasFalla.length) {
-        pdf.text(lineasFalla, M + 3, yy);
-      }
-      y += boxH + 3;
+      pdf.text(`IMEI: ${orden.imei}`, x2 + 3, y + 25.5);
     }
 
-    /* SEGURIDAD */
-    let patronTexto = '';
-    if (orden.tipoSeguridad === 'patron' && orden.patron) {
-      patronTexto = orden.patron.split(',').join('-');
-    }
-    const segInfo = orden.tipoSeguridad === 'pin'
-      ? `PIN: ${orden.pin}`
-      : orden.tipoSeguridad === 'patron'
-        ? `Patrón: ${patronTexto}`
-        : 'Sin clave de acceso';
+    y += 33;
 
-    pdf.setFillColor(248, 248, 248);
-    pdf.roundedRect(M, y, CW, 14, 1.5, 1.5, 'F');
+    /* 5. ESTADO Y FALLA + CLAVE (compactos) */
+    const bloque1W = (CW - 3) / 2;
+
+    // Estado y falla
+    pdf.setFillColor(255, 250, 245);
+    pdf.roundedRect(M, y, bloque1W, 20, 2, 2, 'F');
+    pdf.setDrawColor(255, 200, 150);
+    pdf.setLineWidth(0.3);
+    pdf.roundedRect(M, y, bloque1W, 20, 2, 2, 'S');
+
     pdf.setTextColor(255, 105, 0);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(7);
-    pdf.text('CLAVE DE ACCESO', M + 3, y + 5);
+    pdf.text('ESTADO / FALLA', M + 3, y + 4);
+
     pdf.setTextColor(50, 50, 50);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    const estadoTxt = (orden.estadoEquipo || 'Sin observaciones').slice(0, 40);
+    const fallaTxt = (orden.falla || 'Sin falla reportada').slice(0, 40);
+    pdf.text(pdf.splitTextToSize(estadoTxt, bloque1W - 6), M + 3, y + 9);
+    pdf.text(pdf.splitTextToSize(fallaTxt, bloque1W - 6), M + 3, y + 15);
+
+    // Clave de acceso
+    const x3 = M + bloque1W + 3;
+    pdf.setFillColor(255, 250, 245);
+    pdf.roundedRect(x3, y, bloque1W, 20, 2, 2, 'F');
+    pdf.setDrawColor(255, 200, 150);
+    pdf.roundedRect(x3, y, bloque1W, 20, 2, 2, 'S');
+
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7);
+    pdf.text('CLAVE DE ACCESO', x3 + 3, y + 4);
+
+    let patronTexto = '';
+    if (orden.tipoSeguridad === 'patron' && orden.patron) {
+      patronTexto = orden.patron.split(',').join(' → ');
+    }
+    const segInfo = orden.tipoSeguridad === 'pin'
+      ? `PIN: ${orden.pin || '-'}`
+      : orden.tipoSeguridad === 'patron'
+        ? `Patrón: ${patronTexto || '-'}`
+        : 'Sin clave';
+
+    pdf.setTextColor(40, 40, 40);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(10);
-    pdf.text(segInfo, M + 3, y + 11);
-    y += 18;
+    pdf.text(segInfo, x3 + 3, y + 13);
 
-    /* SERVICIOS */
-    if (y > 220) { pdf.addPage(); y = 20; }
+    y += 25;
 
-    pdf.setFillColor(255, 244, 235);
-    pdf.roundedRect(M, y, CW, 8, 1.5, 1.5, 'F');
+    /* 6. SERVICIOS */
     pdf.setTextColor(255, 105, 0);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8);
-    pdf.text('SERVICIOS Y COSTOS', M + 3, y + 5.5);
-    y += 11;
+    pdf.text('SERVICIOS Y COSTOS', M, y + 2);
+    y += 4;
 
     const servicios = Array.isArray(orden.servicios) ? orden.servicios : [];
     const serviciosData = servicios.length > 0
@@ -1146,11 +1225,13 @@ async function regenerarYEnviarPDF() {
       startY: y,
       head: [['Descripción', 'Costo']],
       body: serviciosData,
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [255, 105, 0], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      styles: { fontSize: 8, cellPadding: 2, lineColor: [240, 240, 240], lineWidth: 0.2 },
+      headStyles: { fillColor: [255, 105, 0], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+      bodyStyles: { textColor: [40, 40, 40], fillColor: [255, 255, 255] },
+      alternateRowStyles: { fillColor: [255, 250, 245] },
       columnStyles: {
-        0: { cellWidth: CW - 35 },
-        1: { halign: 'right', cellWidth: 35, fontStyle: 'bold' }
+        0: { cellWidth: CW - 32 },
+        1: { halign: 'right', cellWidth: 32, fontStyle: 'bold', textColor: [255, 105, 0] }
       },
       margin: { left: M, right: M },
       theme: 'grid'
@@ -1158,118 +1239,163 @@ async function regenerarYEnviarPDF() {
 
     y = pdf.lastAutoTable.finalY + 3;
 
-    /* TOTALES */
-    const boxAlto = Number(orden.adelanto) > 0 ? 22 : 14;
-    pdf.setFillColor(248, 248, 248);
-    pdf.roundedRect(M + CW - 70, y, 70, boxAlto, 1.5, 1.5, 'F');
+    /* 7. TOTALES (caja gradiente naranja) */
+    const boxW = 75;
+    const boxX = W - M - boxW;
+    const boxH = Number(orden.adelanto) > 0 ? 24 : 18;
 
-    pdf.setTextColor(80, 80, 80);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.text('Total:', M + CW - 66, y + 5);
-    pdf.setTextColor(50, 50, 50);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.text(formatBs(orden.total || 0), M + CW - 4, y + 5, { align: 'right' });
-
-    let rowY = y + 5;
-    if (Number(orden.adelanto) > 0) {
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(8);
-      pdf.setTextColor(80, 80, 80);
-      pdf.text('Adelanto:', M + CW - 66, y + 11);
-      pdf.setTextColor(50, 50, 50);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`- ${formatBs(orden.adelanto)}`, M + CW - 4, y + 11, { align: 'right' });
-      rowY = y + 11;
+    const totalGradSteps = 30;
+    for (let i = 0; i < totalGradSteps; i++) {
+      const ratio = i / totalGradSteps;
+      pdf.setFillColor(255, 105 + (ratio * 30), ratio * 40);
+      pdf.rect(boxX + (boxW / totalGradSteps) * i, y, boxW / totalGradSteps + 0.5, boxH, 'F');
     }
 
-    pdf.setTextColor(255, 105, 0);
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.text('Total:', boxX + 4, y + 6);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.text(formatBs(orden.total || 0), W - M - 4, y + 6, { align: 'right' });
+
+    if (Number(orden.adelanto) > 0) {
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7);
+      pdf.text('Adelanto:', boxX + 4, y + 12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`- ${formatBs(orden.adelanto)}`, W - M - 4, y + 12, { align: 'right' });
+    }
+
+    pdf.setDrawColor(255, 255, 255);
+    pdf.setLineWidth(0.3);
+    pdf.line(boxX + 3, y + boxH - 8, W - M - 3, y + boxH - 8);
+
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8);
-    pdf.text('SALDO A PAGAR:', M + CW - 66, rowY + 7);
-    pdf.setFontSize(11);
-    pdf.text(formatBs(orden.saldo || 0), M + CW - 4, rowY + 7, { align: 'right' });
+    pdf.text('SALDO:', boxX + 4, y + boxH - 3);
+    pdf.setFontSize(12);
+    pdf.text(formatBs(orden.saldo || 0), W - M - 4, y + boxH - 3, { align: 'right' });
 
-    y += boxAlto + 4;
+    y += boxH + 4;
 
-    /* FOTOS */
+    /* 8. FOTOS (polaroids compactas) */
     const fotosValidas = (Array.isArray(orden.fotos) ? orden.fotos : []).filter(f => f);
     if (fotosValidas.length > 0) {
-      if (y > 240) { pdf.addPage(); y = 20; }
-
-      pdf.setFillColor(255, 244, 235);
-      pdf.roundedRect(M, y, CW, 7, 1.5, 1.5, 'F');
       pdf.setTextColor(255, 105, 0);
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(7);
-      pdf.text('FOTOS DEL EQUIPO', M + 3, y + 5);
-      y += 10;
+      pdf.setFontSize(8);
+      pdf.text('FOTOS DEL EQUIPO', M, y + 2);
+      y += 4;
 
       const fotoW = (CW - 6) / 4;
       const fotoH = fotoW * 0.75;
       let x = M;
       for (let i = 0; i < Math.min(fotosValidas.length, 4); i++) {
+        pdf.setFillColor(255, 255, 255);
+        pdf.roundedRect(x, y, fotoW, fotoH + 2, 1, 1, 'F');
+        pdf.setDrawColor(230, 230, 230);
+        pdf.setLineWidth(0.2);
+        pdf.roundedRect(x, y, fotoW, fotoH + 2, 1, 1, 'S');
         try {
-          pdf.addImage(fotosValidas[i], 'JPEG', x, y, fotoW - 1, fotoH, undefined, 'FAST');
+          pdf.addImage(fotosValidas[i], 'JPEG', x + 0.5, y + 0.5, fotoW - 1, fotoH - 1, undefined, 'FAST');
         } catch (e) {}
-        x += fotoW + 1;
+        x += fotoW + 1.5;
       }
-      y += fotoH + 4;
+      y += fotoH + 5;
     }
 
-    /* URL */
-    if (y > 220) { pdf.addPage(); y = 20; }
-    pdf.setFillColor(255, 244, 235);
-    pdf.roundedRect(M, y, CW, 28, 1.5, 1.5, 'F');
+    /* 9. QR Y URL */
+    const qrDataUrl = await generarQROrden(`${CONFIG.web}/?recibo=${orden.numeroRecibo}`);
+    if (qrDataUrl && y < H - 75) {
+      pdf.setFillColor(255, 250, 245);
+      pdf.roundedRect(M, y, CW, 22, 2.5, 2.5, 'F');
+      pdf.setDrawColor(255, 105, 0);
+      pdf.setLineWidth(0.3);
+      pdf.roundedRect(M, y, CW, 22, 2.5, 2.5, 'S');
 
-    pdf.setTextColor(255, 105, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.text('Consulta tu reparación online', M + 6, y + 11);
+      try {
+        pdf.addImage(qrDataUrl, 'PNG', M + 3, y + 3, 16, 16);
+      } catch (e) {}
 
-    pdf.setTextColor(60, 60, 60);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
-    pdf.text(CONFIG.web, M + 6, y + 17);
+      pdf.setTextColor(255, 105, 0);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.text('Consulta el estado de tu reparación', M + 23, y + 8);
 
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7);
-    pdf.setTextColor(100, 100, 100);
-    pdf.text('Visita el enlace desde tu celular', M + 6, y + 22);
+      pdf.setTextColor(60, 60, 60);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7);
+      pdf.text('Escanea el código QR o visita:', M + 23, y + 13);
 
-    y += 32;
+      pdf.setTextColor(255, 105, 0);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.text(`${CONFIG.web}/?recibo=${orden.numeroRecibo}`, M + 23, y + 18);
 
-    /* CONDICIONES */
-    if (y > 245) { pdf.addPage(); y = 20; }
+      y += 26;
+    }
+
+    /* 10. FIRMA */
+    if (y < H - 45) {
+      const firmaY = H - 38;
+      pdf.setDrawColor(180, 180, 180);
+      pdf.setLineWidth(0.3);
+      pdf.line(M + 3, firmaY, M + 60, firmaY);
+      pdf.line(W - M - 60, firmaY, W - M - 3, firmaY);
+
+      pdf.setTextColor(120, 120, 120);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7);
+      pdf.text('Firma del cliente', M + 3, firmaY + 4);
+      pdf.text('DR. XIAOMI SCZ', W - M - 60, firmaY + 4);
+
+      // Sello
+      pdf.saveGraphicsState();
+      pdf.setGState(new pdf.GState({ opacity: 0.15 }));
+      pdf.setDrawColor(255, 105, 0);
+      pdf.setLineWidth(0.8);
+      pdf.roundedRect(W / 2 - 22, firmaY - 9, 44, 14, 3, 3, 'S');
+      pdf.setTextColor(255, 105, 0);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8);
+      pdf.text('RECIBO OFICIAL', W / 2, firmaY, { align: 'center' });
+      pdf.restoreGraphicsState();
+    }
+
+    /* 11. CONDICIONES (al pie) */
+    const condY = H - 26;
     pdf.setFillColor(248, 248, 248);
-    pdf.roundedRect(M, y, CW, 26, 1.5, 1.5, 'F');
+    pdf.roundedRect(M, condY, CW, 20, 2, 2, 'F');
+
     pdf.setTextColor(255, 105, 0);
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7);
-    pdf.text('CONDICIONES DEL SERVICIO', M + 3, y + 5);
-    pdf.setTextColor(80, 80, 80);
-    pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(6);
-    const condiciones = [
-      'Conserve este recibo. Solo con él puede retirar su equipo.',
-      'La fecha de entrega está sujeta a disponibilidad de repuestos.',
-      'El retiro debe hacerse dentro de los 10 días posteriores al aviso.',
-      'Pasados 20 días sin retiro, el equipo se considera abandonado.',
-      'Garantía: 30 días en repuestos / 60 días en mano de obra.'
-    ];
-    condiciones.forEach((txt, i) => {
-      pdf.text(`${i + 1}. ${txt}`, M + 3, y + 10 + i * 3);
-    });
-    y += 30;
+    pdf.text('CONDICIONES:', M + 2, condY + 3);
 
-    /* FOOTER */
-    pdf.setDrawColor(255, 105, 0);
-    pdf.setLineWidth(0.5);
-    pdf.line(M, H - 12, W - M, H - 12);
+    pdf.setTextColor(100, 100, 100);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(5.5);
+    const condiciones = [
+      '1. Conserve este recibo para retirar su equipo.',
+      '2. Entrega sujeta a disponibilidad de repuestos.',
+      '3. Retiro dentro de 10 días posteriores al aviso.',
+      '4. Pasados 20 días, el equipo se considera abandonado.',
+      '5. Garantía: 30 días repuestos / 60 días mano de obra.'
+    ];
+    pdf.text(condiciones[0], M + 2, condY + 7);
+    pdf.text(condiciones[1], M + 2, condY + 10.5);
+    pdf.text(condiciones[2], M + 2, condY + 14);
+    pdf.text(condiciones[3], M + CW / 2 + 2, condY + 7);
+    pdf.text(condiciones[4], M + CW / 2 + 2, condY + 10.5);
+
+    /* 12. FOOTER */
+    pdf.setFillColor(255, 105, 0);
+    pdf.rect(0, H - 5, W, 5, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(6);
-    pdf.setTextColor(120, 120, 120);
-    pdf.text(`© ${new Date().getFullYear()} ${CONFIG.nombreTienda} · Todos los derechos reservados`, W / 2, H - 7, { align: 'center' });
+    pdf.text(`© ${new Date().getFullYear()} ${CONFIG.nombreTienda}  ·  ${CONFIG.web}  ·  Tel: ${CONFIG.telefono}`, W / 2, H - 2, { align: 'center' });
 
     /* GUARDAR */
     const nombreArchivo = `Recibo_${orden.numeroRecibo || 'sin-numero'}_${(orden.cliente || 'Cliente').split(' ')[0]}.pdf`;
@@ -1297,7 +1423,7 @@ Le adjuntamos el PDF del recibo.`;
     try {
       const entrada = {
         tipo: 'whatsapp',
-        texto: `Recibo PDF regenerado y descargado`,
+        texto: `Recibo PDF premium regenerado`,
         autor: sesion.nombre,
         fecha: new Date().toISOString()
       };
@@ -1314,6 +1440,55 @@ Le adjuntamos el PDF del recibo.`;
   } finally {
     hideLoading();
   }
+}
+
+/* ============================================================
+   HELPERS PDF
+   ============================================================ */
+async function cargarLogoOrden() {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (e) { resolve(''); }
+    };
+    img.onerror = () => resolve('');
+    img.src = '/imagenes/web-app-manifest-192x192.png';
+  });
+}
+
+async function generarQROrden(texto) {
+  return new Promise((resolve) => {
+    if (typeof QRCode === 'undefined') { resolve(''); return; }
+    const div = document.createElement('div');
+    div.style.position = 'absolute';
+    div.style.left = '-9999px';
+    document.body.appendChild(div);
+    try {
+      new QRCode(div, {
+        text: texto, width: 256, height: 256,
+        colorDark: '#000000', colorLight: '#FFFFFF',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      setTimeout(() => {
+        const canvas = div.querySelector('canvas');
+        let dataUrl = '';
+        if (canvas) dataUrl = canvas.toDataURL('image/png');
+        div.remove();
+        resolve(dataUrl);
+      }, 200);
+    } catch (e) {
+      div.remove();
+      resolve('');
+    }
+  });
 }
 
 /* ============================================================
