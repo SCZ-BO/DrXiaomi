@@ -27,14 +27,6 @@
   <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
 
   <style>
-    /* Estilos específicos del panel */
-    .orden-card .chip-recibido    { background: rgba(245, 158, 11, 0.18); color: #F59E0B; }
-    .orden-card .chip-reparacion  { background: rgba(59, 130, 246, 0.18); color: #3B82F6; }
-    .orden-card .chip-listo       { background: rgba(16, 185, 129, 0.18); color: #10B981; }
-    .orden-card .chip-entregado   { background: rgba(139, 92, 246, 0.18); color: #8B5CF6; }
-    .orden-card .chip-devuelto    { background: rgba(239, 68, 68, 0.18); color: #EF4444; }
-    .orden-card .chip-cancelado   { background: rgba(115, 115, 115, 0.18); color: #9CA3AF; }
-
     /* ============================================================ */
     /* LOGO EN EL HEADER                                            */
     /* ============================================================ */
@@ -77,7 +69,7 @@
     .icon-btn:active .icon-img { transform: scale(0.9); }
 
     /* ============================================================ */
-    /* 🎨 TARJETAS DE ORDEN MEJORADAS                               */
+    /* TARJETAS DE ORDEN MEJORADAS                                  */
     /* ============================================================ */
     .orden-card {
       position: relative;
@@ -100,7 +92,6 @@
     <!-- HEADER -->
     <header class="app-header">
       <div class="brand">
-        <!-- 🟠 Logo DR. XIAOMI -->
         <div class="brand-logo-limpio">
           <img src="/img/logo1.png" alt="DR. Xiaomi"
                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:22px; width:46px; height:46px; display:flex; align-items:center; justify-content:center;&quot;></i>';">
@@ -112,19 +103,16 @@
       </div>
 
       <div class="header-actions">
-        <!-- 🏷️ Botón de Precios -->
         <button class="icon-btn" id="preciosBtn" title="Buscar precio" aria-label="Buscar precio">
           <img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img blanco"
                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
         </button>
 
-        <!-- 📊 Botón de Reportes (solo admin) -->
         <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;">
           <img src="/imagenes/icon-reportes.png" alt="Reportes" class="icon-img blanco"
                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
         </button>
 
-        <!-- 🚪 Botón de Salir -->
         <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
           <img src="/imagenes/icon-salir.png" alt="Salir" class="icon-img blanco"
                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
@@ -352,14 +340,14 @@
     function renderCard(o) {
       const estadoActual = o.estadoOrden || 'recibido';
       const estadoInfo = {
-        recibido:          { clase: 'recibido',  texto: 'EN PROCESO',     emoji: '📦', color: '#F59E0B' },
-        reparacion:        { clase: 'reparacion',texto: 'EN REPARACIÓN',  emoji: '🔧', color: '#3B82F6' },
-        'espera-repuesto': { clase: 'espera',    texto: 'ESPERANDO',      emoji: '⏳', color: '#FF6900' },
-        listo:             { clase: 'listo',     texto: 'LISTO',          emoji: '✅', color: '#10B981' },
-        entregado:         { clase: 'entregado', texto: 'ENTREGADO',      emoji: '🤝', color: '#8B5CF6' },
-        devuelto:          { clase: 'devuelto',  texto: 'DEVUELTO',       emoji: '↩️', color: '#EF4444' },
-        cancelado:         { clase: 'cancelado', texto: 'CANCELADO',      emoji: '⛔', color: '#9CA3AF' }
-      }[estadoActual] || { clase: 'recibido', texto: estadoActual.toUpperCase(), emoji: '📋', color: '#FF6900' };
+        recibido:          { clase: 'recibido',  texto: 'RECIBIDO',         emoji: '📦', color: '#FFFFFF', textColor: '#1a1a1a', borderColor: '#E5E5E5' },
+        reparacion:        { clase: 'reparacion',texto: 'EN REPARACIÓN',    emoji: '🔧', color: '#FF6900', textColor: '#FFFFFF', borderColor: '#FF6900' },
+        'espera-repuesto': { clase: 'espera',    texto: 'ESPERANDO REPUESTO', emoji: '⏳', color: '#3B82F6', textColor: '#FFFFFF', borderColor: '#3B82F6' },
+        listo:             { clase: 'listo',     texto: 'LISTO PARA ENTREGAR', emoji: '✅', color: '#FBBF24', textColor: '#1a1a1a', borderColor: '#FBBF24' },
+        entregado:         { clase: 'entregado', texto: 'ENTREGADO',        emoji: '🤝', color: '#10B981', textColor: '#FFFFFF', borderColor: '#10B981' },
+        devuelto:          { clase: 'devuelto',  texto: 'DEVUELTO',         emoji: '↩️', color: '#EF4444', textColor: '#FFFFFF', borderColor: '#EF4444' },
+        cancelado:         { clase: 'cancelado', texto: 'CANCELADO',        emoji: '⛔', color: '#9CA3AF', textColor: '#FFFFFF', borderColor: '#9CA3AF' }
+      }[estadoActual] || { clase: 'recibido', texto: estadoActual.toUpperCase(), emoji: '📋', color: '#FF6900', textColor: '#FFFFFF', borderColor: '#FF6900' };
 
       const total = Number(o.total) || 0;
 
@@ -372,11 +360,11 @@
       }
 
       return `
-        <div class="card card-interactive orden-card" data-id="${o.id}" style="border-left: 4px solid ${estadoInfo.color}; padding-left: 16px;">
+        <div class="card card-interactive orden-card" data-id="${o.id}" style="border-left: 4px solid ${estadoInfo.borderColor}; padding-left: 16px;">
           <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; background: ${estadoInfo.color}; color: white; box-shadow: 0 2px 8px ${estadoInfo.color}40;">
+                <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; background: ${estadoInfo.color}; color: ${estadoInfo.textColor}; border: 1px solid ${estadoInfo.borderColor}; box-shadow: 0 2px 8px ${estadoInfo.color}40;">
                   ${estadoInfo.emoji} ${estadoInfo.texto}
                 </span>
                 <span style="font-size: 10px; color: var(--text-3); font-weight: 700; font-family: monospace;">
