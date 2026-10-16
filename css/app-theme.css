@@ -60,6 +60,8 @@ html {
   --purple-100:  rgba(139, 92, 246, 0.15);
   --cyan-500:    #06B6D4;
   --cyan-100:    rgba(6, 182, 212, 0.15);
+  --yellow-500:  #FBBF24;
+  --yellow-100:  rgba(251, 191, 36, 0.15);
 
   /* Aplicación (tema oscuro por defecto) */
   --bg-base:    #0A0A0B;
@@ -204,19 +206,16 @@ a:hover {
   color: var(--brand-400);
 }
 
-/* Listas */
 ul, ol {
   list-style: none;
 }
 
-/* Imágenes */
 img {
   max-width: 100%;
   display: block;
   height: auto;
 }
 
-/* Botones nativos */
 button {
   font-family: inherit;
   cursor: pointer;
@@ -226,27 +225,23 @@ button {
   font-size: inherit;
 }
 
-/* Inputs y form elements */
 input, select, textarea {
   font-family: inherit;
   font-size: inherit;
   color: inherit;
 }
 
-/* Focus visible accesible */
 :focus-visible {
   outline: 2px solid var(--brand-500);
   outline-offset: 2px;
   border-radius: var(--r-sm);
 }
 
-/* ---------- SELECCIÓN DE TEXTO ---------- */
 ::selection {
   background: var(--brand-500);
   color: white;
 }
 
-/* ---------- SCROLLBAR ---------- */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -292,6 +287,91 @@ input, select, textarea {
 
 .hidden { display: none !important; }
 .invisible { visibility: hidden; }
+
+/* ============================================================
+   FORZAR COLORES DE CHIPS DE ESTADO (máxima prioridad)
+   ============================================================ */
+
+/* RECIBIDO - Blanco */
+.orden-card span[style*="background: #FFFFFF"],
+.orden-card span[style*="background:#FFFFFF"],
+.orden-card span[style*="background: rgb(255, 255, 255)"] {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  color: #1a1a1a !important;
+  border-color: #E5E5E5 !important;
+}
+
+/* EN REPARACIÓN - Naranja */
+.orden-card span[style*="background: #FF6900"],
+.orden-card span[style*="background:#FF6900"],
+.orden-card span[style*="background: rgb(255, 105, 0)"] {
+  background: #FF6900 !important;
+  background-color: #FF6900 !important;
+  color: #FFFFFF !important;
+  border-color: #FF6900 !important;
+}
+
+/* ESPERANDO REPUESTO - Azul */
+.orden-card span[style*="background: #3B82F6"],
+.orden-card span[style*="background:#3B82F6"],
+.orden-card span[style*="background: rgb(59, 130, 246)"] {
+  background: #3B82F6 !important;
+  background-color: #3B82F6 !important;
+  color: #FFFFFF !important;
+  border-color: #3B82F6 !important;
+}
+
+/* LISTO - Amarillo */
+.orden-card span[style*="background: #FBBF24"],
+.orden-card span[style*="background:#FBBF24"],
+.orden-card span[style*="background: rgb(251, 191, 36)"] {
+  background: #FBBF24 !important;
+  background-color: #FBBF24 !important;
+  color: #1a1a1a !important;
+  border-color: #FBBF24 !important;
+}
+
+/* ENTREGADO - Verde */
+.orden-card span[style*="background: #10B981"],
+.orden-card span[style*="background:#10B981"],
+.orden-card span[style*="background: rgb(16, 185, 129)"] {
+  background: #10B981 !important;
+  background-color: #10B981 !important;
+  color: #FFFFFF !important;
+  border-color: #10B981 !important;
+}
+
+/* DEVUELTO - Rojo */
+.orden-card span[style*="background: #EF4444"],
+.orden-card span[style*="background:#EF4444"],
+.orden-card span[style*="background: rgb(239, 68, 68)"] {
+  background: #EF4444 !important;
+  background-color: #EF4444 !important;
+  color: #FFFFFF !important;
+  border-color: #EF4444 !important;
+}
+
+/* CANCELADO - Gris */
+.orden-card span[style*="background: #9CA3AF"],
+.orden-card span[style*="background:#9CA3AF"],
+.orden-card span[style*="background: rgb(156, 163, 175)"] {
+  background: #9CA3AF !important;
+  background-color: #9CA3AF !important;
+  color: #FFFFFF !important;
+  border-color: #9CA3AF !important;
+}
+
+/* ============================================================
+   BORDE LATERAL DE TARJETAS (por estado)
+   ============================================================ */
+.orden-card[data-estado="recibido"] { border-left-color: #FFFFFF !important; }
+.orden-card[data-estado="reparacion"] { border-left-color: #FF6900 !important; }
+.orden-card[data-estado="espera-repuesto"] { border-left-color: #3B82F6 !important; }
+.orden-card[data-estado="listo"] { border-left-color: #FBBF24 !important; }
+.orden-card[data-estado="entregado"] { border-left-color: #10B981 !important; }
+.orden-card[data-estado="devuelto"] { border-left-color: #EF4444 !important; }
+.orden-card[data-estado="cancelado"] { border-left-color: #9CA3AF !important; }
 
 /* ---------- ACCESIBILIDAD ---------- */
 @media (prefers-reduced-motion: reduce) {
