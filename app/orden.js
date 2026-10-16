@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (Detalle + Bitácora + WhatsApp + Cobro + Costos)
+   DR. XIAOMI · ORDEN (Detalle + Bitácora + WhatsApp + Cobro + Costos + PDF)
    Archivo: app/orden.js
    Versión final completa
    ============================================================ */
@@ -355,14 +355,17 @@ function renderOrden() {
     <!-- CONTACTAR CLIENTE -->
     <div class="section-block">
       <h3>📞 Contactar al cliente</h3>
-      <div style="display:flex; gap:8px;">
-        <button class="btn btn-whatsapp" id="btnContactar" style="flex:1;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-whatsapp" id="btnContactar" style="flex:1; min-width:120px;">
           <i class="fab fa-whatsapp"></i> WhatsApp
         </button>
-        <a href="tel:${orden.telefono}" class="btn btn-secondary" style="flex:1; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px;">
+        <a href="tel:${orden.telefono}" class="btn btn-secondary" style="flex:1; min-width:120px; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px;">
           <i class="fas fa-phone"></i> Llamar
         </a>
       </div>
+      <button id="btnRegenerarPDF" style="width:100%; margin-top:8px; background:linear-gradient(135deg,#FF6900,#FF8A3C); color:white; border:none; padding:14px; border-radius:14px; font-weight:700; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-family:inherit;">
+        <i class="fas fa-file-pdf"></i> Enviar recibo PDF
+      </button>
     </div>
 
     ${estadoActual === 'listo' ? `
@@ -579,6 +582,10 @@ function configurarEventosOrden() {
   document.getElementById('btnContactar')?.addEventListener('click', contactarCliente);
   document.getElementById('btnEliminar')?.addEventListener('click', eliminarOrden);
   document.getElementById('btnRegistrarCosto')?.addEventListener('click', abrirModalCosto);
+  document.getElementById('btnRegenerarPDF')?.addEventListener('click', () => {
+    haptic(15);
+    regenerarYEnviarPDF();
+  });
 
   // Visor de imágenes
   document.querySelectorAll('[data-ver-img]').forEach(img => {
@@ -1168,6 +1175,340 @@ ${CONFIG.web}`;
 }
 
 /* ============================================================
+   REGENERAR PDF Y ENVIAR POR WHATSAPP
+   ============================================================ */
+async function regenerarYEnviarPDF() {
+  if (!orden.telefono) {
+    toast('La orden no tiene teléfono', 'error');
+    return;
+  }
+
+  if (typeof window.jspdf === 'undefined') {
+    toast('PDF no disponible. Recarga la página.', 'error', 3000);
+    return;
+  }
+
+  showLoading('Generando PDF...');
+  haptic(20);
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+    const W = 210, H = 297, M = 12;
+    const CW = W - M * 2;
+    let y = 0;
+
+    /* HEADER NARANJA */
+    pdf.setFillColor(255, 105, 0);
+    pdf.rect(0, 0, W, 28, 'F');
+
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(15);
+    pdf.text(CONFIG.nombreTienda, M + 4, 12);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.text('Servicio Técnico Especializado', M + 4, 17);
+    pdf.setFontSize(7);
+    pdf.text(`${CONFIG.direccion}  ·  Tel: ${CONFIG.telefono}`, M + 4, 22);
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9);
+    pdf.text('RECIBO DE INGRESO', W - M, 12, { align: 'right' });
+    pdf.setFontSize(8);
+    pdf.text(orden.numeroRecibo || '-', W - M, 17, { align: 'right' });
+
+    y = 33;
+
+    /* FECHA */
+    const fecha = new Date();
+    const fechaStr = `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')}/${fecha.getFullYear()} ${String(fecha.getHours()).padStart(2,'0')}:${String(fecha.getMinutes()).padStart(2,'0')}`;
+
+    pdf.setFillColor(248, 248, 248);
+    pdf.roundedRect(M, y, CW, 8, 1.5, 1.5, 'F');
+    pdf.setTextColor(80, 80, 80);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.text(`Fecha: ${fechaStr}`, M + 3, y + 5.5);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`Recibido por: ${orden.creadoPor || '-'}`, W - M - 3, y + 5.5, { align: 'right' });
+    y += 12;
+
+    /* CLIENTE Y EQUIPO */
+    const colW = (CW - 3) / 2;
+    pdf.setFillColor(255, 244, 235);
+    pdf.roundedRect(M, y, colW, 22, 1.5, 1.5, 'F');
+    pdf.roundedRect(M + colW + 3, y, colW, 22, 1.5, 1.5, 'F');
+
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7);
+    pdf.text('CLIENTE', M + 3, y + 5);
+    pdf.text('EQUIPO', M + colW + 6, y + 5);
+
+    pdf.setTextColor(30, 30, 30);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.text((orden.cliente || '').slice(0, 24), M + 3, y + 11);
+    pdf.text(`${orden.marca || ''} ${orden.modelo || ''}`.slice(0, 24), M + colW + 6, y + 11);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.setTextColor(80, 80, 80);
+    pdf.text(`Tel: ${orden.telefono || '-'}`, M + 3, y + 16);
+    if (orden.imei) {
+      pdf.text(`IMEI: ${orden.imei}`, M + colW + 6, y + 16);
+      pdf.text(`Enciende: ${orden.enciende || '-'}`, M + colW + 6, y + 20);
+    } else {
+      pdf.text(`Enciende: ${orden.enciende || '-'}`, M + colW + 6, y + 16);
+    }
+    y += 26;
+
+    /* ESTADO Y FALLA */
+    if (orden.estadoEquipo || orden.falla) {
+      const lineasEstado = orden.estadoEquipo ? pdf.splitTextToSize(`Estado: ${orden.estadoEquipo}`, CW - 6) : [];
+      const lineasFalla = orden.falla ? pdf.splitTextToSize(`Falla: ${orden.falla}`, CW - 6) : [];
+      const boxH = 8 + (lineasEstado.length * 3.5) + (lineasFalla.length * 3.5) + 2;
+
+      pdf.setFillColor(248, 248, 248);
+      pdf.roundedRect(M, y, CW, boxH, 1.5, 1.5, 'F');
+      pdf.setTextColor(255, 105, 0);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(7);
+      pdf.text('ESTADO Y FALLA', M + 3, y + 5);
+
+      pdf.setTextColor(50, 50, 50);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      let yy = y + 9;
+      if (lineasEstado.length) {
+        pdf.text(lineasEstado, M + 3, yy);
+        yy += lineasEstado.length * 3.5;
+      }
+      if (lineasFalla.length) {
+        pdf.text(lineasFalla, M + 3, yy);
+      }
+      y += boxH + 3;
+    }
+
+    /* SEGURIDAD */
+    let patronTexto = '';
+    if (orden.tipoSeguridad === 'patron' && orden.patron) {
+      patronTexto = orden.patron.split(',').join('-');
+    }
+    const segInfo = orden.tipoSeguridad === 'pin'
+      ? `PIN: ${orden.pin}`
+      : orden.tipoSeguridad === 'patron'
+        ? `Patrón: ${patronTexto}`
+        : 'Sin clave de acceso';
+
+    pdf.setFillColor(248, 248, 248);
+    pdf.roundedRect(M, y, CW, 14, 1.5, 1.5, 'F');
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7);
+    pdf.text('CLAVE DE ACCESO', M + 3, y + 5);
+    pdf.setTextColor(50, 50, 50);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.text(segInfo, M + 3, y + 11);
+    y += 18;
+
+    /* SERVICIOS */
+    if (y > 220) { pdf.addPage(); y = 20; }
+
+    pdf.setFillColor(255, 244, 235);
+    pdf.roundedRect(M, y, CW, 8, 1.5, 1.5, 'F');
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('SERVICIOS Y COSTOS', M + 3, y + 5.5);
+    y += 11;
+
+    const servicios = Array.isArray(orden.servicios) ? orden.servicios : [];
+    const serviciosData = servicios.length > 0
+      ? servicios.map(s => [s.desc || 'Sin descripción', formatBs(s.costo || 0)])
+      : [['Sin servicios registrados', '']];
+
+    pdf.autoTable({
+      startY: y,
+      head: [['Descripción', 'Costo']],
+      body: serviciosData,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [255, 105, 0], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      columnStyles: {
+        0: { cellWidth: CW - 35 },
+        1: { halign: 'right', cellWidth: 35, fontStyle: 'bold' }
+      },
+      margin: { left: M, right: M },
+      theme: 'grid'
+    });
+
+    y = pdf.lastAutoTable.finalY + 3;
+
+    /* TOTALES */
+    const boxAlto = Number(orden.adelanto) > 0 ? 22 : 14;
+    pdf.setFillColor(248, 248, 248);
+    pdf.roundedRect(M + CW - 70, y, 70, boxAlto, 1.5, 1.5, 'F');
+
+    pdf.setTextColor(80, 80, 80);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.text('Total:', M + CW - 66, y + 5);
+    pdf.setTextColor(50, 50, 50);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9);
+    pdf.text(formatBs(orden.total || 0), M + CW - 4, y + 5, { align: 'right' });
+
+    let rowY = y + 5;
+    if (Number(orden.adelanto) > 0) {
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      pdf.setTextColor(80, 80, 80);
+      pdf.text('Adelanto:', M + CW - 66, y + 11);
+      pdf.setTextColor(50, 50, 50);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`- ${formatBs(orden.adelanto)}`, M + CW - 4, y + 11, { align: 'right' });
+      rowY = y + 11;
+    }
+
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('SALDO A PAGAR:', M + CW - 66, rowY + 7);
+    pdf.setFontSize(11);
+    pdf.text(formatBs(orden.saldo || 0), M + CW - 4, rowY + 7, { align: 'right' });
+
+    y += boxAlto + 4;
+
+    /* FOTOS */
+    const fotosValidas = (Array.isArray(orden.fotos) ? orden.fotos : []).filter(f => f);
+    if (fotosValidas.length > 0) {
+      if (y > 240) { pdf.addPage(); y = 20; }
+
+      pdf.setFillColor(255, 244, 235);
+      pdf.roundedRect(M, y, CW, 7, 1.5, 1.5, 'F');
+      pdf.setTextColor(255, 105, 0);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(7);
+      pdf.text('FOTOS DEL EQUIPO', M + 3, y + 5);
+      y += 10;
+
+      const fotoW = (CW - 6) / 4;
+      const fotoH = fotoW * 0.75;
+      let x = M;
+      for (let i = 0; i < Math.min(fotosValidas.length, 4); i++) {
+        try {
+          pdf.addImage(fotosValidas[i], 'JPEG', x, y, fotoW - 1, fotoH, undefined, 'FAST');
+        } catch (e) { console.error('Error foto:', e); }
+        x += fotoW + 1;
+      }
+      y += fotoH + 4;
+    }
+
+    /* QR + URL */
+    if (y > 220) { pdf.addPage(); y = 20; }
+    pdf.setFillColor(255, 244, 235);
+    pdf.roundedRect(M, y, CW, 28, 1.5, 1.5, 'F');
+
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9);
+    pdf.text('Consulta tu reparación online', M + 6, y + 11);
+
+    pdf.setTextColor(60, 60, 60);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.text(CONFIG.web, M + 6, y + 17);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text('Visita el enlace desde tu celular', M + 6, y + 22);
+
+    y += 32;
+
+    /* CONDICIONES */
+    if (y > 245) { pdf.addPage(); y = 20; }
+    pdf.setFillColor(248, 248, 248);
+    pdf.roundedRect(M, y, CW, 26, 1.5, 1.5, 'F');
+    pdf.setTextColor(255, 105, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7);
+    pdf.text('CONDICIONES DEL SERVICIO', M + 3, y + 5);
+    pdf.setTextColor(80, 80, 80);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(6);
+    const condiciones = [
+      'Conserve este recibo. Solo con él puede retirar su equipo.',
+      'La fecha de entrega está sujeta a disponibilidad de repuestos.',
+      'El retiro debe hacerse dentro de los 10 días posteriores al aviso.',
+      'Pasados 20 días sin retiro, el equipo se considera abandonado.',
+      'Garantía: 30 días en repuestos / 60 días en mano de obra.'
+    ];
+    condiciones.forEach((txt, i) => {
+      pdf.text(`${i + 1}. ${txt}`, M + 3, y + 10 + i * 3);
+    });
+    y += 30;
+
+    /* FOOTER */
+    pdf.setDrawColor(255, 105, 0);
+    pdf.setLineWidth(0.5);
+    pdf.line(M, H - 12, W - M, H - 12);
+    pdf.setFontSize(6);
+    pdf.setTextColor(120, 120, 120);
+    pdf.text(`© ${new Date().getFullYear()} ${CONFIG.nombreTienda} · Todos los derechos reservados`, W / 2, H - 7, { align: 'center' });
+
+    /* GUARDAR PDF */
+    const nombreArchivo = `Recibo_${orden.numeroRecibo || 'sin-numero'}_${(orden.cliente || 'Cliente').split(' ')[0]}.pdf`;
+    pdf.save(nombreArchivo);
+
+    /* ABRIR WHATSAPP */
+    setTimeout(() => {
+      const nombreCliente = (orden.cliente || '').split(' ')[0] || 'cliente';
+      const equipo = `${orden.marca || ''} ${orden.modelo || ''}`.trim();
+      const mensaje = `Hola ${nombreCliente}, le adjuntamos el recibo de ingreso de su equipo.
+
+N° Recibo: ${orden.numeroRecibo || '-'}
+Equipo: ${equipo}
+Total: ${formatBs(orden.total || 0)}
+${Number(orden.saldo) > 0 ? `Saldo pendiente: ${formatBs(orden.saldo)}` : ''}
+
+Le adjuntamos el PDF del recibo.`;
+
+      const tel = (orden.telefono || '').replace(/\D/g, '');
+      const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+      toast('PDF descargado · Adjúntalo en WhatsApp', 'success', 4000);
+    }, 600);
+
+    /* REGISTRAR EN BITÁCORA */
+    try {
+      const entrada = {
+        tipo: 'whatsapp',
+        texto: `Recibo PDF regenerado y descargado`,
+        autor: sesion.nombre,
+        fecha: new Date().toISOString()
+      };
+      await updateDoc(doc(db, 'recibos', ordenId), {
+        bitacora: arrayUnion(entrada),
+        actualizadoEn: serverTimestamp()
+      });
+      orden.bitacora = [...(orden.bitacora || []), entrada];
+    } catch (err) {
+      console.error('Error registrando PDF en bitácora:', err);
+    }
+
+  } catch (err) {
+    console.error('Error regenerando PDF:', err);
+    toast('Error al generar el PDF: ' + err.message, 'error', 4000);
+  } finally {
+    hideLoading();
+  }
+}
+
+/* ============================================================
    GUARDAR NOTA
    ============================================================ */
 async function guardarNota() {
@@ -1206,108 +1547,4 @@ async function guardarNota() {
     console.error('Error guardando nota:', err);
     toast('Error al guardar la nota', 'error');
   } finally {
-    hideLoading();
-  }
-}
-
-/* ============================================================
-   RENDER FOTOS NUEVAS
-   ============================================================ */
-function renderFotosNuevas() {
-  const cont = document.getElementById('fotoUploader');
-  if (!cont) return;
-
-  const btnAdd = cont.querySelector('#btnAddFoto');
-  cont.querySelectorAll('.foto-preview').forEach(el => el.remove());
-
-  fotosNuevas.forEach((dataUrl, i) => {
-    const div = document.createElement('div');
-    div.className = 'foto-preview';
-    div.innerHTML = `
-      <img src="${dataUrl}" alt="preview">
-      <button type="button" class="btn-remove" data-idx="${i}">
-        <i class="fas fa-times"></i>
-      </button>
-    `;
-    cont.insertBefore(div, btnAdd);
-  });
-
-  cont.querySelectorAll('.btn-remove').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = parseInt(btn.dataset.idx);
-      fotosNuevas.splice(idx, 1);
-      renderFotosNuevas();
-      haptic(10);
-    });
-  });
-}
-
-/* ============================================================
-   ELIMINAR
-   ============================================================ */
-async function eliminarOrden() {
-  if (sesion.rol !== 'admin') return;
-
-  const confirmar = confirm(
-    '¿Estás seguro que quieres eliminar esta orden?\n\nEsta acción NO se puede deshacer.'
-  );
-
-  if (!confirmar) return;
-
-  haptic([50, 30, 50]);
-  showLoading('Eliminando...');
-
-  try {
-    await deleteDoc(doc(db, 'recibos', ordenId));
-    toast('Orden eliminada', 'success', 2000);
-    setTimeout(() => window.location.href = '/app/', 1000);
-  } catch (err) {
-    console.error('Error eliminando:', err);
-    toast('Error al eliminar', 'error');
-    hideLoading();
-  }
-}
-
-/* ============================================================
-   UTILIDADES
-   ============================================================ */
-function formatFecha(fecha) {
-  if (!fecha) return '-';
-  let d;
-  if (fecha.toDate) d = fecha.toDate();
-  else if (fecha instanceof Date) d = fecha;
-  else d = new Date(fecha);
-
-  if (isNaN(d.getTime())) return '-';
-
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-}
-
-async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > height && width > maxSize) {
-          height = (height * maxSize) / width;
-          width = maxSize;
-        } else if (height > maxSize) {
-          width = (width * maxSize) / height;
-          height = maxSize;
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.onerror = reject;
-      img.src = e.target.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+    hide
