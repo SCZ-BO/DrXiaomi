@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (minimalista + PDF premium)
+   DR. XIAOMI · ORDEN (minimalista + PDF premium + volver panel)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -418,6 +418,11 @@ function renderOrden() {
         </button>
       </div>
     ` : ''}
+
+    <!-- VOLVER AL PANEL (siempre visible) -->
+    <button id="btnVolverPanelFinal" style="width:100%; margin-top:8px; margin-bottom:24px; padding:16px; background:linear-gradient(135deg,#FF6900,#FF8A3C); color:white; border:none; border-radius:14px; font-weight:800; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-family:inherit; box-shadow:0 6px 20px rgba(255,105,0,0.35);">
+      <i class="fas fa-home"></i> VOLVER AL PANEL
+    </button>
   `;
 
   configurarEventosOrden();
@@ -520,6 +525,12 @@ function configurarEventosOrden() {
   document.getElementById('btnRegenerarPDF')?.addEventListener('click', () => {
     haptic(15);
     regenerarYEnviarPDF();
+  });
+
+  // ⬇️ BOTÓN VOLVER AL PANEL (siempre visible)
+  document.getElementById('btnVolverPanelFinal')?.addEventListener('click', () => {
+    haptic(15);
+    window.location.href = '/app/';
   });
 
   document.querySelectorAll('[data-ver-img]').forEach(img => {
@@ -1007,10 +1018,11 @@ async function regenerarYEnviarPDF() {
     const W = 210, H = 297, M = 10;
     const CW = W - M * 2;
 
-    /* 1. FONDO BLANCO CON MARCA DE AGUA */
+    /* FONDO BLANCO */
     pdf.setFillColor(253, 250, 247);
     pdf.rect(0, 0, W, H, 'F');
 
+    /* MARCA DE AGUA */
     pdf.saveGraphicsState();
     pdf.setGState(new pdf.GState({ opacity: 0.04 }));
     pdf.setTextColor(255, 105, 0);
@@ -1021,7 +1033,7 @@ async function regenerarYEnviarPDF() {
     }
     pdf.restoreGraphicsState();
 
-    /* 2. HEADER CON GRADIENTE NARANJA */
+    /* HEADER GRADIENTE */
     const headerGradSteps = 40;
     for (let i = 0; i < headerGradSteps; i++) {
       const ratio = i / headerGradSteps;
@@ -1029,14 +1041,12 @@ async function regenerarYEnviarPDF() {
       pdf.rect((W / headerGradSteps) * i, 0, W / headerGradSteps + 0.5, 32, 'F');
     }
 
-    // Círculos decorativos
     pdf.setFillColor(255, 255, 255);
     pdf.setGState(new pdf.GState({ opacity: 0.08 }));
     pdf.circle(190, 8, 22, 'F');
     pdf.circle(12, 32, 15, 'F');
     pdf.setGState(new pdf.GState({ opacity: 1 }));
 
-    // Logo
     const logoDataUrl = await cargarLogoOrden();
     if (logoDataUrl) {
       try {
@@ -1044,7 +1054,6 @@ async function regenerarYEnviarPDF() {
       } catch (e) {}
     }
 
-    // Datos tienda
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(18);
@@ -1057,7 +1066,6 @@ async function regenerarYEnviarPDF() {
     pdf.text(CONFIG.direccion, M + 31, 22);
     pdf.text(`Tel: ${CONFIG.telefono}  ·  ${CONFIG.web}`, M + 31, 26);
 
-    // Número de recibo
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8);
     pdf.text('RECIBO N°', W - M - 3, 12, { align: 'right' });
@@ -1071,7 +1079,7 @@ async function regenerarYEnviarPDF() {
 
     let y = 37;
 
-    /* 3. BARRA DE ESTADO */
+    /* ESTADO */
     const estadoActual = orden.estadoOrden || 'recibido';
     const estadosInfo = {
       'recibido': { texto: 'EN PROCESO', color: [245, 158, 11] },
@@ -1094,30 +1102,25 @@ async function regenerarYEnviarPDF() {
     pdf.text('Recibo de servicio técnico', W - M - 4, y + 6.8, { align: 'right' });
     y += 14;
 
-    /* 4. TARJETAS CLIENTE Y EQUIPO */
+    /* CLIENTE Y EQUIPO */
     const colW = (CW - 3) / 2;
 
-    // TARJETA CLIENTE
+    // Cliente
     pdf.setFillColor(255, 255, 255);
     pdf.roundedRect(M, y, colW, 28, 2.5, 2.5, 'F');
     pdf.setDrawColor(255, 105, 0);
     pdf.setLineWidth(0.4);
     pdf.roundedRect(M, y, colW, 28, 2.5, 2.5, 'S');
-
     pdf.setFillColor(255, 105, 0);
     pdf.roundedRect(M, y, colW, 7, 2.5, 2.5, 'F');
     pdf.rect(M, y + 3, colW, 4, 'F');
-
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8);
     pdf.text('CLIENTE', M + 3, y + 5);
-
     pdf.setTextColor(30, 30, 30);
-    pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(11);
     pdf.text((orden.cliente || '-').slice(0, 22), M + 3, y + 14);
-
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(80, 80, 80);
     pdf.setFontSize(9);
@@ -1125,27 +1128,22 @@ async function regenerarYEnviarPDF() {
     pdf.setFontSize(8);
     pdf.text('Cliente', M + 3, y + 25.5);
 
-    // TARJETA EQUIPO
+    // Equipo
     const x2 = M + colW + 3;
     pdf.setFillColor(255, 255, 255);
     pdf.roundedRect(x2, y, colW, 28, 2.5, 2.5, 'F');
     pdf.setDrawColor(255, 105, 0);
     pdf.roundedRect(x2, y, colW, 28, 2.5, 2.5, 'S');
-
     pdf.setFillColor(255, 105, 0);
     pdf.roundedRect(x2, y, colW, 7, 2.5, 2.5, 'F');
     pdf.rect(x2, y + 3, colW, 4, 'F');
-
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8);
     pdf.text('EQUIPO', x2 + 3, y + 5);
-
     pdf.setTextColor(30, 30, 30);
-    pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(11);
     pdf.text(`${orden.marca || ''} ${orden.modelo || ''}`.slice(0, 22), x2 + 3, y + 14);
-
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(80, 80, 80);
     pdf.setFontSize(9);
@@ -1157,21 +1155,18 @@ async function regenerarYEnviarPDF() {
 
     y += 33;
 
-    /* 5. ESTADO Y FALLA + CLAVE (compactos) */
+    /* ESTADO/FALLA + CLAVE */
     const bloque1W = (CW - 3) / 2;
 
-    // Estado y falla
     pdf.setFillColor(255, 250, 245);
     pdf.roundedRect(M, y, bloque1W, 20, 2, 2, 'F');
     pdf.setDrawColor(255, 200, 150);
     pdf.setLineWidth(0.3);
     pdf.roundedRect(M, y, bloque1W, 20, 2, 2, 'S');
-
     pdf.setTextColor(255, 105, 0);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(7);
     pdf.text('ESTADO / FALLA', M + 3, y + 4);
-
     pdf.setTextColor(50, 50, 50);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
@@ -1180,13 +1175,11 @@ async function regenerarYEnviarPDF() {
     pdf.text(pdf.splitTextToSize(estadoTxt, bloque1W - 6), M + 3, y + 9);
     pdf.text(pdf.splitTextToSize(fallaTxt, bloque1W - 6), M + 3, y + 15);
 
-    // Clave de acceso
     const x3 = M + bloque1W + 3;
     pdf.setFillColor(255, 250, 245);
     pdf.roundedRect(x3, y, bloque1W, 20, 2, 2, 'F');
     pdf.setDrawColor(255, 200, 150);
     pdf.roundedRect(x3, y, bloque1W, 20, 2, 2, 'S');
-
     pdf.setTextColor(255, 105, 0);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(7);
@@ -1209,7 +1202,7 @@ async function regenerarYEnviarPDF() {
 
     y += 25;
 
-    /* 6. SERVICIOS */
+    /* SERVICIOS */
     pdf.setTextColor(255, 105, 0);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8);
@@ -1239,7 +1232,7 @@ async function regenerarYEnviarPDF() {
 
     y = pdf.lastAutoTable.finalY + 3;
 
-    /* 7. TOTALES (caja gradiente naranja) */
+    /* TOTALES */
     const boxW = 75;
     const boxX = W - M - boxW;
     const boxH = Number(orden.adelanto) > 0 ? 24 : 18;
@@ -1279,7 +1272,7 @@ async function regenerarYEnviarPDF() {
 
     y += boxH + 4;
 
-    /* 8. FOTOS (polaroids compactas) */
+    /* FOTOS */
     const fotosValidas = (Array.isArray(orden.fotos) ? orden.fotos : []).filter(f => f);
     if (fotosValidas.length > 0) {
       pdf.setTextColor(255, 105, 0);
@@ -1305,7 +1298,7 @@ async function regenerarYEnviarPDF() {
       y += fotoH + 5;
     }
 
-    /* 9. QR Y URL */
+    /* QR */
     const qrDataUrl = await generarQROrden(`${CONFIG.web}/?recibo=${orden.numeroRecibo}`);
     if (qrDataUrl && y < H - 75) {
       pdf.setFillColor(255, 250, 245);
@@ -1322,12 +1315,10 @@ async function regenerarYEnviarPDF() {
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(9);
       pdf.text('Consulta el estado de tu reparación', M + 23, y + 8);
-
       pdf.setTextColor(60, 60, 60);
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(7);
       pdf.text('Escanea el código QR o visita:', M + 23, y + 13);
-
       pdf.setTextColor(255, 105, 0);
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(9);
@@ -1336,21 +1327,19 @@ async function regenerarYEnviarPDF() {
       y += 26;
     }
 
-    /* 10. FIRMA */
+    /* FIRMA */
     if (y < H - 45) {
       const firmaY = H - 38;
       pdf.setDrawColor(180, 180, 180);
       pdf.setLineWidth(0.3);
       pdf.line(M + 3, firmaY, M + 60, firmaY);
       pdf.line(W - M - 60, firmaY, W - M - 3, firmaY);
-
       pdf.setTextColor(120, 120, 120);
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(7);
       pdf.text('Firma del cliente', M + 3, firmaY + 4);
       pdf.text('DR. XIAOMI SCZ', W - M - 60, firmaY + 4);
 
-      // Sello
       pdf.saveGraphicsState();
       pdf.setGState(new pdf.GState({ opacity: 0.15 }));
       pdf.setDrawColor(255, 105, 0);
@@ -1363,16 +1352,14 @@ async function regenerarYEnviarPDF() {
       pdf.restoreGraphicsState();
     }
 
-    /* 11. CONDICIONES (al pie) */
+    /* CONDICIONES */
     const condY = H - 26;
     pdf.setFillColor(248, 248, 248);
     pdf.roundedRect(M, condY, CW, 20, 2, 2, 'F');
-
     pdf.setTextColor(255, 105, 0);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(6);
     pdf.text('CONDICIONES:', M + 2, condY + 3);
-
     pdf.setTextColor(100, 100, 100);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(5.5);
@@ -1389,7 +1376,7 @@ async function regenerarYEnviarPDF() {
     pdf.text(condiciones[3], M + CW / 2 + 2, condY + 7);
     pdf.text(condiciones[4], M + CW / 2 + 2, condY + 10.5);
 
-    /* 12. FOOTER */
+    /* FOOTER */
     pdf.setFillColor(255, 105, 0);
     pdf.rect(0, H - 5, W, 5, 'F');
     pdf.setTextColor(255, 255, 255);
