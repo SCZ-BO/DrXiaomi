@@ -1,8 +1,7 @@
 /* ============================================================
    DR. XIAOMI · REPORTES DE INGRESOS
    Archivo: app/reportes/reportes.js
-   Versión corregida: filtro robusto, fechas normalizadas,
-                      debug en consola, botones header (home, precios, logout)
+   Versión: con costos, ganancia, margen y botón volver al panel
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -17,7 +16,7 @@ import {
 /* ============================================================
    CONFIGURACIÓN
    ============================================================ */
-const DEBUG = true; // ← cambia a false cuando todo funcione
+const DEBUG = true;
 
 /* ============================================================
    ESTADO
@@ -57,25 +56,25 @@ async function iniciar() {
    EVENTOS
    ============================================================ */
 function configurarEventos() {
-  // 🏠 Botón Home → ir al panel principal
+  // 🏠 Botón Home
   document.getElementById('homeBtn')?.addEventListener('click', () => {
     haptic(15);
     window.location.href = '/app/';
   });
 
-  // 🏷️ Botón Precios → ir a la página de precios
+  // 🏷️ Botón Precios
   document.getElementById('preciosBtn')?.addEventListener('click', () => {
     haptic(15);
     window.location.href = '/precio/';
   });
 
-  // 🚪 Botón Salir → cerrar sesión
+  // 🚪 Botón Salir
   document.getElementById('logoutBtn')?.addEventListener('click', () => {
     haptic(20);
     if (confirm('¿Cerrar sesión?')) logout();
   });
 
-  // ← Botón Volver (flecha izquierda)
+  // ← Botón Volver (flecha)
   document.getElementById('backBtn')?.addEventListener('click', () => {
     haptic(10);
     window.location.href = '/app/';
@@ -86,6 +85,12 @@ function configurarEventos() {
     haptic(10);
     await cargarOrdenes();
     toast('Datos actualizados', 'success', 1500);
+  });
+
+  // 🏠 Botón "Volver al panel" (grande)
+  document.getElementById('btnVolverPanel')?.addEventListener('click', () => {
+    haptic(15);
+    window.location.href = '/app/';
   });
 
   // Filtros de fecha
@@ -148,15 +153,6 @@ async function cargarOrdenes() {
 
     if (DEBUG) {
       console.log(`📋 ${todasLasOrdenes.length} órdenes cargadas desde Firestore`);
-      console.table(todasLasOrdenes.map(o => ({
-        recibo: o.numeroRecibo,
-        cliente: o.cliente,
-        estado: o.estadoOrden,
-        monto: o.montoCobrado,
-        metodo: o.metodoPago,
-        fecha: normalizarFecha(o.fecha),
-        fechaEntrega: normalizarFecha(o.fechaEntrega)
-      })));
     }
 
     aplicarFiltro();
@@ -170,11 +166,10 @@ async function cargarOrdenes() {
 
 /* ============================================================
    NORMALIZAR FECHA
-   Convierte Timestamp / Date / string / number a Date local
    ============================================================ */
 function normalizarFecha(f) {
   if (!f) return null;
-  if (typeof f.toDate === 'function') return f.toDate(); // Firestore Timestamp
+  if (typeof f.toDate === 'function') return f.toDate();
   if (f instanceof Date) return f;
   if (typeof f === 'number') return new Date(f);
   if (typeof f === 'string') {
@@ -185,7 +180,6 @@ function normalizarFecha(f) {
 }
 
 function getFecha(orden) {
-  // Prioridad: fechaEntrega → actualizadoEn → fecha
   return (
     normalizarFecha(orden.fechaEntrega) ||
     normalizarFecha(orden.actualizadoEn) ||
@@ -206,47 +200,35 @@ function aplicarFiltro() {
       hasta = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 23, 59, 59, 999);
       break;
     }
-
     case 'ayer': {
       const ayer = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - 1);
       desde = new Date(ayer.getFullYear(), ayer.getMonth(), ayer.getDate(), 0, 0, 0, 0);
       hasta = new Date(ayer.getFullYear(), ayer.getMonth(), ayer.getDate(), 23, 59, 59, 999);
       break;
     }
-
     case 'semana': {
-      const diaSemana = ahora.getDay(); // 0=domingo
-      const diff = diaSemana === 0 ? 6 : diaSemana - 1; // lunes=0
+      const diaSemana = ahora.getDay();
+      const diff = diaSemana === 0 ? 6 : diaSemana - 1;
       desde = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - diff, 0, 0, 0, 0);
       hasta = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 23, 59, 59, 999);
       break;
     }
-
     case 'mes': {
       desde = new Date(ahora.getFullYear(), ahora.getMonth(), 1, 0, 0, 0, 0);
       hasta = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0, 23, 59, 59, 999);
       break;
     }
-
     case 'custom': {
       desde = fechaCustomDesde;
       hasta = fechaCustomHasta;
       break;
     }
-
     default: {
       desde = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 0, 0, 0, 0);
       hasta = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 23, 59, 59, 999);
     }
   }
 
-  if (DEBUG) {
-    console.log(`🔍 Filtro: ${rangoActual}`);
-    console.log(`   Desde: ${desde?.toLocaleString('es-BO')}`);
-    console.log(`   Hasta: ${hasta?.toLocaleString('es-BO')}`);
-  }
-
-  // Filtrar: incluye órdenes entregadas O con monto cobrado > 0
   ordenesFiltradas = todasLasOrdenes.filter(o => {
     const monto = Number(o.montoCobrado) || 0;
     const estado = o.estadoOrden || 'recibido';
@@ -254,28 +236,13 @@ function aplicarFiltro() {
     const esDevueltoConCobro = estado === 'devuelto' && monto > 0;
     const tieneCobro = monto > 0;
 
-    // Incluir si: entregado, o devuelto con cobro, o tiene cobro > 0
     if (!esEntregado && !esDevueltoConCobro && !tieneCobro) return false;
 
     const fecha = getFecha(o);
-    if (!fecha) {
-      if (DEBUG) console.warn(`⚠️ Orden sin fecha válida:`, o.numeroRecibo);
-      return false;
-    }
+    if (!fecha) return false;
 
     return fecha >= desde && fecha <= hasta;
   });
-
-  if (DEBUG) {
-    console.log(`✅ ${ordenesFiltradas.length} órdenes pasan el filtro`);
-    console.table(ordenesFiltradas.map(o => ({
-      recibo: o.numeroRecibo,
-      estado: o.estadoOrden,
-      monto: o.montoCobrado,
-      metodo: o.metodoPago,
-      fecha: getFecha(o)?.toLocaleString('es-BO')
-    })));
-  }
 
   renderizarReporte();
 }
@@ -285,6 +252,9 @@ function aplicarFiltro() {
    ============================================================ */
 function renderizarReporte() {
   let total = 0;
+  let totalCosto = 0;
+  let totalGanancia = 0;
+
   const porMetodo = {
     Efectivo: 0,
     QR: 0,
@@ -295,7 +265,12 @@ function renderizarReporte() {
 
   ordenesFiltradas.forEach(o => {
     const monto = Number(o.montoCobrado) || 0;
+    const costo = Number(o.costoRepuesto) || 0;
+    const ganancia = monto - costo;
+
     total += monto;
+    totalCosto += costo;
+    totalGanancia += ganancia;
 
     const metodo = (o.metodoPago || 'Otro').toLowerCase();
     if (metodo.includes('efectivo')) porMetodo.Efectivo += monto;
@@ -305,6 +280,7 @@ function renderizarReporte() {
     else porMetodo.Otro += monto;
   });
 
+  // Total cobrado
   const totalMontoEl = document.getElementById('totalMonto');
   const totalEntregasEl = document.getElementById('totalEntregas');
   if (totalMontoEl) totalMontoEl.textContent = formatBs(total);
@@ -313,6 +289,20 @@ function renderizarReporte() {
       `${ordenesFiltradas.length} entrega${ordenesFiltradas.length === 1 ? '' : 's'}`;
   }
 
+  // Costos y ganancia
+  const costoEl = document.getElementById('totalCosto');
+  const gananciaEl = document.getElementById('totalGanancia');
+  const margenEl = document.getElementById('totalMargen');
+
+  if (costoEl) costoEl.textContent = formatBs(totalCosto);
+  if (gananciaEl) gananciaEl.textContent = formatBs(totalGanancia);
+  if (margenEl) {
+    const margen = total > 0 ? Math.round((totalGanancia / total) * 100) : 0;
+    margenEl.textContent = margen + '%';
+    margenEl.style.color = margen >= 40 ? '#00FFCC' : margen >= 20 ? '#FFAA44' : '#FF4D6D';
+  }
+
+  // Promedio y máximo
   const promedio = ordenesFiltradas.length > 0 ? total / ordenesFiltradas.length : 0;
   const maximo = ordenesFiltradas.length > 0
     ? Math.max(...ordenesFiltradas.map(o => Number(o.montoCobrado) || 0))
@@ -323,6 +313,7 @@ function renderizarReporte() {
   if (statPromedioEl) statPromedioEl.textContent = formatBs(promedio);
   if (statMaximoEl) statMaximoEl.textContent = formatBs(maximo);
 
+  // Métodos de pago
   const metodosGrid = document.getElementById('metodosGrid');
   if (metodosGrid) {
     const metodosItems = [
@@ -343,6 +334,7 @@ function renderizarReporte() {
     `).join('');
   }
 
+  // Lista de movimientos
   const listaMov = document.getElementById('listaMovimientos');
   if (!listaMov) return;
 
@@ -368,6 +360,12 @@ function renderizarReporte() {
 
     const metodo = (o.metodoPago || 'Otro').replace(/\(.*\)/, '').trim();
     const monto = Number(o.montoCobrado) || 0;
+    const costo = Number(o.costoRepuesto) || 0;
+    const ganancia = monto - costo;
+
+    const costoInfo = costo > 0
+      ? `<div style="font-size:10px; color:#10B981; margin-top:2px; font-weight:700;">Ganancia: ${formatBs(ganancia)}</div>`
+      : `<div style="font-size:10px; color:#FF9500; margin-top:2px; font-weight:700;">Sin costo asignado</div>`;
 
     return `
       <div class="movimiento">
@@ -375,6 +373,7 @@ function renderizarReporte() {
         <div class="info">
           <div class="cliente">${escapeHtml(o.cliente || '-')}</div>
           <div class="detalle">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')} · ${escapeHtml(metodo)}</div>
+          ${costoInfo}
         </div>
         <div class="monto">${formatBs(monto)}</div>
       </div>
@@ -396,7 +395,8 @@ function exportarCSV() {
   const headers = [
     'Recibo', 'Cliente', 'Teléfono', 'Equipo',
     'Fecha Entrega', 'Método', 'Monto Cobrado',
-    'Total', 'Adelanto', 'Saldo'
+    'Total', 'Adelanto', 'Saldo',
+    'Costo Repuesto', 'Ganancia Neta'
   ];
 
   const filas = ordenesFiltradas.map(o => {
@@ -405,6 +405,10 @@ function exportarCSV() {
       ? `${String(fecha.getDate()).padStart(2, '0')}/${String(fecha.getMonth() + 1).padStart(2, '0')}/${fecha.getFullYear()} ${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')}`
       : '-';
 
+    const monto = Number(o.montoCobrado) || 0;
+    const costo = Number(o.costoRepuesto) || 0;
+    const ganancia = monto - costo;
+
     return [
       o.numeroRecibo || '-',
       o.cliente || '-',
@@ -412,10 +416,12 @@ function exportarCSV() {
       `${o.marca || ''} ${o.modelo || ''}`.trim() || '-',
       fechaStr,
       o.metodoPago || '-',
-      Number(o.montoCobrado) || 0,
+      monto,
       Number(o.total) || 0,
       Number(o.adelanto) || 0,
-      Number(o.saldo) || 0
+      Number(o.saldo) || 0,
+      costo,
+      ganancia
     ];
   });
 
