@@ -1,7 +1,7 @@
 /* ============================================================
    DR. XIAOMI · CLIENTE (Wizard de nuevo recibo)
    Archivo: js/cliente.js
-   Versión final: fotos cámara/galería, botón descargar PDF
+   Versión corregida: carga dinámica de librerías, fotos, PDF
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -52,16 +52,64 @@ const datos = {
 };
 
 /* ============================================================
+   CARGA DINÁMICA DE LIBRERÍAS GLOBALES
+   ============================================================ */
+async function cargarLibrerias() {
+  // JSPDF
+  if (!window.jspdf) {
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('No se pudo cargar JSPDF'));
+      document.head.appendChild(script);
+    });
+  }
+
+  // JSPDF AutoTable
+  if (!window.jspdf?.jsPDF?.API?.autoTable) {
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js';
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('No se pudo cargar AutoTable'));
+      document.head.appendChild(script);
+    });
+  }
+
+  // QRCode
+  if (!window.QRCode) {
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('No se pudo cargar QRCode'));
+      document.head.appendChild(script);
+    });
+  }
+
+  console.log('✅ Librerías cargadas correctamente');
+}
+
+/* ============================================================
    INICIALIZACIÓN
    ============================================================ */
 initTheme();
 
-requireAuth((s) => {
+requireAuth(async (s) => {
   sesion = s;
-  iniciar();
+  await iniciar();
 });
 
-function iniciar() {
+async function iniciar() {
+  try {
+    await cargarLibrerias();
+  } catch (err) {
+    console.error('Error cargando librerías:', err);
+    toast('Error al cargar librerías. Recarga la página.', 'error', 5000);
+    return;
+  }
+
   const userInfo = document.getElementById('userInfo');
   if (userInfo) userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
 
@@ -487,7 +535,7 @@ function configurarFotos() {
   const inputCamara = document.getElementById('inputCamara');
   const inputGaleria = document.getElementById('inputGaleria');
   const sheet = document.getElementById('fotoSheet');
-  if (!grid) return;
+  if (!grid || !inputCamara || !inputGaleria) return;
 
   let slotActual = null;
 
@@ -522,14 +570,19 @@ function configurarFotos() {
     if (e.target === sheet) cerrarSheet();
   });
 
+  // ✅ setTimeout para cerrar el sheet antes de abrir la cámara
   document.getElementById('btnTomarFoto')?.addEventListener('click', () => {
     cerrarSheet();
-    inputCamara?.click();
+    setTimeout(() => {
+      inputCamara.click();
+    }, 150);
   });
 
   document.getElementById('btnSubirFoto')?.addEventListener('click', () => {
     cerrarSheet();
-    inputGaleria?.click();
+    setTimeout(() => {
+      inputGaleria.click();
+    }, 150);
   });
 
   async function procesarFoto(e) {
@@ -548,8 +601,8 @@ function configurarFotos() {
     slotActual = null;
   }
 
-  inputCamara?.addEventListener('change', procesarFoto);
-  inputGaleria?.addEventListener('change', procesarFoto);
+  inputCamara.addEventListener('change', procesarFoto);
+  inputGaleria.addEventListener('change', procesarFoto);
 
   function renderSlots() {
     const slots = grid.querySelectorAll('.foto-slot');
@@ -606,20 +659,27 @@ async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
 }
 
 /* ============================================================
-   SERVICIOS
+   SERVICIOS (con delegación de eventos)
    ============================================================ */
 function configurarServicios() {
   const list = document.getElementById('serviciosList');
   const btnAdd = document.getElementById('addServicio');
   if (!list || !btnAdd) return;
 
-  const firstItem = list.querySelector('.servicio-item');
-  if (firstItem) {
-    const firstCosto = firstItem.querySelector('.servicio-costo');
-    const firstRemove = firstItem.querySelector('.removeServicio');
-    firstCosto?.addEventListener('input', calcularTotal);
-    firstRemove?.addEventListener('click', () => eliminarServicio(firstItem));
-  }
+  // ✅ Delegación de eventos para inputs de costo (incluye nuevos items)
+  list.addEventListener('input', (e) => {
+    if (e.target.classList.contains('servicio-costo')) {
+      calcularTotal();
+    }
+  });
+
+  // ✅ Delegación de eventos para botones de eliminar
+  list.addEventListener('click', (e) => {
+    const removeBtn = e.target.closest('.removeServicio');
+    if (!removeBtn) return;
+    const item = removeBtn.closest('.servicio-item');
+    if (item) eliminarServicio(item);
+  });
 
   btnAdd.addEventListener('click', () => {
     haptic(10);
@@ -628,6 +688,9 @@ function configurarServicios() {
     actualizarBotonesRemove();
     item.querySelector('.servicio-desc')?.focus();
   });
+
+  // Calcular total inicial (por si hay valores precargados)
+  calcularTotal();
 }
 
 function crearServicioItem() {
@@ -640,8 +703,6 @@ function crearServicioItem() {
     <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0" inputmode="decimal">
     <button type="button" class="removeServicio">✕</button>
   `;
-  div.querySelector('.servicio-costo')?.addEventListener('input', calcularTotal);
-  div.querySelector('.removeServicio')?.addEventListener('click', () => eliminarServicio(div));
   if (window.__dictadoIniciar) {
     setTimeout(() => window.__dictadoIniciar(), 50);
   }
@@ -869,11 +930,16 @@ function configurarPDF() {
   });
   document.getElementById('downloadPdfBtn')?.addEventListener('click', () => {
     haptic(15);
-    if (window._ultimoPDF && window._ultimoNombrePDF) {
-      window._ultimoPDF.save(window._ultimoNombrePDF);
-      toast('PDF descargado', 'success', 2000);
+    if (window._ultimoPDF) {
+      try {
+        window._ultimoPDF.save(window._ultimoNombrePDF || 'recibo.pdf');
+        toast('PDF descargado', 'success', 2000);
+      } catch (err) {
+        console.error('Error descargando PDF:', err);
+        toast('Error al descargar el PDF', 'error');
+      }
     } else {
-      toast('No hay PDF para descargar', 'error');
+      toast('Genera el recibo primero', 'warning');
     }
   });
 }
