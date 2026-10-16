@@ -26,19 +26,27 @@
 
   /* ---------- Inicializar cuando cargue el DOM ---------- */
   function init() {
-    // Buscar todos los campos con [data-dictado]
+    // Buscar todos los campos con [data-dictado] que NO tengan ya botón
     const campos = document.querySelectorAll('[data-dictado]');
-    
+
     if (campos.length === 0) {
       console.log('🎤 No hay campos para dictado');
       return;
     }
 
-    console.log(`🎤 ${campos.length} campos con dictado detectados`);
-
+    let agregados = 0;
     campos.forEach(campo => {
+      // Verificar si ya tiene botón
+      const wrap = campo.closest('.dictado-wrap') || campo.parentElement;
+      if (wrap && wrap.querySelector('.dictado-btn')) return;
+
       agregarBotonDictado(campo);
+      agregados++;
     });
+
+    if (agregados > 0) {
+      console.log(`🎤 ${agregados} campos nuevos con dictado`);
+    }
   }
 
   /* ---------- Añadir botón al campo ---------- */
@@ -48,7 +56,7 @@
 
     // Buscar el contenedor .dictado-wrap (ya está en el HTML)
     const wrap = campo.closest('.dictado-wrap') || campo.parentElement;
-    
+
     // Crear botón
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -100,7 +108,7 @@
       btn.classList.add('activo');
       btn.innerHTML = '<i class="fas fa-stop"></i>';
       indicador.classList.add('show');
-      
+
       // Vibración corta
       if ('vibrate' in navigator) navigator.vibrate(10);
     };
@@ -141,7 +149,7 @@
     // Errores
     recognition.onerror = (event) => {
       console.error('Error de dictado:', event.error);
-      
+
       estaEscuchando = false;
       btn.classList.remove('activo');
       btn.innerHTML = '<i class="fas fa-microphone"></i>';
@@ -181,7 +189,9 @@
     init();
   }
 
-  // Re-detectar campos después de añadir dinámicamente (para servicios)
-  window.addEventListener('camposAgregados', init);
+  /* ---------- Exponer función para reiniciar dictado ---------- */
+  // ✅ CLAVE: Esto es lo que permite que cliente.js reactive el dictado
+  // cuando se agregan nuevos servicios dinámicamente
+  window.__dictadoIniciar = init;
 
 })();
