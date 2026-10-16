@@ -323,7 +323,7 @@ function renderOrden() {
       <h3>📱 Acciones</h3>
       <div style="display:flex; gap:8px;">
         <button class="btn btn-whatsapp" id="btnContactar" style="flex:1;">
-          <i class="fab fa-whatsapp"></i> WhatsApp
+          <i class="fab fa-whatsapp"></i> Contactar
         </button>
         <button class="btn" id="btnRegenerarPDF" style="flex:1; background:linear-gradient(135deg,#FF6900,#FF8A3C); color:white; border:none; padding:14px; border-radius:14px; font-weight:700; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit;">
           <i class="fas fa-file-pdf"></i> Enviar PDF
