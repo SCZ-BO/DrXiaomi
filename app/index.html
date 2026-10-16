@@ -85,15 +85,66 @@
     }
 
     /* ============================================================ */
-    /* FORZAR COLORES DE CHIPS (sobreescribe cualquier CSS previo)  */
+    /* CHIP DE ESTADO - COLORES FORZADOS POR CLASE + data-estado    */
     /* ============================================================ */
-    .orden-card span[style*="background: #FF6900"] { background: #FF6900 !important; color: #FFFFFF !important; }
-    .orden-card span[style*="background: #10B981"] { background: #10B981 !important; color: #FFFFFF !important; }
-    .orden-card span[style*="background: #3B82F6"] { background: #3B82F6 !important; color: #FFFFFF !important; }
-    .orden-card span[style*="background: #FBBF24"] { background: #FBBF24 !important; color: #1a1a1a !important; }
-    .orden-card span[style*="background: #EF4444"] { background: #EF4444 !important; color: #FFFFFF !important; }
-    .orden-card span[style*="background: #FFFFFF"] { background: #FFFFFF !important; color: #1a1a1a !important; }
-    .orden-card span[style*="background: #9CA3AF"] { background: #9CA3AF !important; color: #FFFFFF !important; }
+    .orden-card .chip-estado {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      transition: all 0.15s ease;
+    }
+    .orden-card .chip-estado[data-estado="recibido"] {
+      background: #FFFFFF !important;
+      color: #1a1a1a !important;
+      border: 1px solid #E5E5E5 !important;
+    }
+    .orden-card .chip-estado[data-estado="reparacion"] {
+      background: #FF6900 !important;
+      color: #FFFFFF !important;
+      border: 1px solid #FF6900 !important;
+    }
+    .orden-card .chip-estado[data-estado="espera-repuesto"] {
+      background: #3B82F6 !important;
+      color: #FFFFFF !important;
+      border: 1px solid #3B82F6 !important;
+    }
+    .orden-card .chip-estado[data-estado="listo"] {
+      background: #FBBF24 !important;
+      color: #1a1a1a !important;
+      border: 1px solid #FBBF24 !important;
+    }
+    .orden-card .chip-estado[data-estado="entregado"] {
+      background: #10B981 !important;
+      color: #FFFFFF !important;
+      border: 1px solid #10B981 !important;
+    }
+    .orden-card .chip-estado[data-estado="devuelto"] {
+      background: #EF4444 !important;
+      color: #FFFFFF !important;
+      border: 1px solid #EF4444 !important;
+    }
+    .orden-card .chip-estado[data-estado="cancelado"] {
+      background: #9CA3AF !important;
+      color: #FFFFFF !important;
+      border: 1px solid #9CA3AF !important;
+    }
+
+    /* ============================================================ */
+    /* BORDE LATERAL POR ESTADO                                     */
+    /* ============================================================ */
+    .orden-card[data-estado="recibido"] { border-left: 4px solid #FFFFFF !important; }
+    .orden-card[data-estado="reparacion"] { border-left: 4px solid #FF6900 !important; }
+    .orden-card[data-estado="espera-repuesto"] { border-left: 4px solid #3B82F6 !important; }
+    .orden-card[data-estado="listo"] { border-left: 4px solid #FBBF24 !important; }
+    .orden-card[data-estado="entregado"] { border-left: 4px solid #10B981 !important; }
+    .orden-card[data-estado="devuelto"] { border-left: 4px solid #EF4444 !important; }
+    .orden-card[data-estado="cancelado"] { border-left: 4px solid #9CA3AF !important; }
   </style>
 </head>
 <body>
@@ -351,14 +402,14 @@
     function renderCard(o) {
       const estadoActual = o.estadoOrden || 'recibido';
       const estadoInfo = {
-        recibido:          { clase: 'recibido',  texto: 'RECIBIDO',           emoji: '📦', color: '#FFFFFF', textColor: '#1a1a1a', borderColor: '#E5E5E5' },
-        reparacion:        { clase: 'reparacion',texto: 'EN REPARACIÓN',      emoji: '🔧', color: '#FF6900', textColor: '#FFFFFF', borderColor: '#FF6900' },
-        'espera-repuesto': { clase: 'espera',    texto: 'ESPERANDO REPUESTO', emoji: '⏳', color: '#3B82F6', textColor: '#FFFFFF', borderColor: '#3B82F6' },
-        listo:             { clase: 'listo',     texto: 'LISTO PARA ENTREGAR',emoji: '✅', color: '#FBBF24', textColor: '#1a1a1a', borderColor: '#FBBF24' },
-        entregado:         { clase: 'entregado', texto: 'ENTREGADO',          emoji: '🤝', color: '#10B981', textColor: '#FFFFFF', borderColor: '#10B981' },
-        devuelto:          { clase: 'devuelto',  texto: 'DEVUELTO',           emoji: '↩️', color: '#EF4444', textColor: '#FFFFFF', borderColor: '#EF4444' },
-        cancelado:         { clase: 'cancelado', texto: 'CANCELADO',          emoji: '⛔', color: '#9CA3AF', textColor: '#FFFFFF', borderColor: '#9CA3AF' }
-      }[estadoActual] || { clase: 'recibido', texto: estadoActual.toUpperCase(), emoji: '📋', color: '#FF6900', textColor: '#FFFFFF', borderColor: '#FF6900' };
+        recibido:          { clase: 'recibido',  texto: 'RECIBIDO',           emoji: '📦' },
+        reparacion:        { clase: 'reparacion',texto: 'EN REPARACIÓN',      emoji: '🔧' },
+        'espera-repuesto': { clase: 'espera',    texto: 'ESPERANDO REPUESTO', emoji: '⏳' },
+        listo:             { clase: 'listo',     texto: 'LISTO PARA ENTREGAR',emoji: '✅' },
+        entregado:         { clase: 'entregado', texto: 'ENTREGADO',          emoji: '🤝' },
+        devuelto:          { clase: 'devuelto',  texto: 'DEVUELTO',           emoji: '↩️' },
+        cancelado:         { clase: 'cancelado', texto: 'CANCELADO',          emoji: '⛔' }
+      }[estadoActual] || { clase: 'recibido', texto: estadoActual.toUpperCase(), emoji: '📋' };
 
       const total = Number(o.total) || 0;
 
@@ -371,11 +422,11 @@
       }
 
       return `
-        <div class="card card-interactive orden-card" data-id="${o.id}" style="border-left: 4px solid ${estadoInfo.borderColor}; padding-left: 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+        <div class="card card-interactive orden-card" data-id="${o.id}" data-estado="${estadoActual}">
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px; padding-left: 16px;">
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; background: ${estadoInfo.color}; color: ${estadoInfo.textColor}; border: 1px solid ${estadoInfo.borderColor};">
+                <span class="chip-estado" data-estado="${estadoActual}">
                   ${estadoInfo.emoji} ${estadoInfo.texto}
                 </span>
                 <span style="font-size: 10px; color: var(--text-3); font-weight: 700; font-family: monospace;">
