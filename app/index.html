@@ -83,6 +83,17 @@
     .orden-card:hover {
       background: var(--bg-elev-2);
     }
+
+    /* ============================================================ */
+    /* FORZAR COLORES DE CHIPS (sobreescribe cualquier CSS previo)  */
+    /* ============================================================ */
+    .orden-card span[style*="background: #FF6900"] { background: #FF6900 !important; color: #FFFFFF !important; }
+    .orden-card span[style*="background: #10B981"] { background: #10B981 !important; color: #FFFFFF !important; }
+    .orden-card span[style*="background: #3B82F6"] { background: #3B82F6 !important; color: #FFFFFF !important; }
+    .orden-card span[style*="background: #FBBF24"] { background: #FBBF24 !important; color: #1a1a1a !important; }
+    .orden-card span[style*="background: #EF4444"] { background: #EF4444 !important; color: #FFFFFF !important; }
+    .orden-card span[style*="background: #FFFFFF"] { background: #FFFFFF !important; color: #1a1a1a !important; }
+    .orden-card span[style*="background: #9CA3AF"] { background: #9CA3AF !important; color: #FFFFFF !important; }
   </style>
 </head>
 <body>
@@ -340,13 +351,13 @@
     function renderCard(o) {
       const estadoActual = o.estadoOrden || 'recibido';
       const estadoInfo = {
-        recibido:          { clase: 'recibido',  texto: 'RECIBIDO',         emoji: '📦', color: '#FFFFFF', textColor: '#1a1a1a', borderColor: '#E5E5E5' },
-        reparacion:        { clase: 'reparacion',texto: 'EN REPARACIÓN',    emoji: '🔧', color: '#FF6900', textColor: '#FFFFFF', borderColor: '#FF6900' },
+        recibido:          { clase: 'recibido',  texto: 'RECIBIDO',           emoji: '📦', color: '#FFFFFF', textColor: '#1a1a1a', borderColor: '#E5E5E5' },
+        reparacion:        { clase: 'reparacion',texto: 'EN REPARACIÓN',      emoji: '🔧', color: '#FF6900', textColor: '#FFFFFF', borderColor: '#FF6900' },
         'espera-repuesto': { clase: 'espera',    texto: 'ESPERANDO REPUESTO', emoji: '⏳', color: '#3B82F6', textColor: '#FFFFFF', borderColor: '#3B82F6' },
-        listo:             { clase: 'listo',     texto: 'LISTO PARA ENTREGAR', emoji: '✅', color: '#FBBF24', textColor: '#1a1a1a', borderColor: '#FBBF24' },
-        entregado:         { clase: 'entregado', texto: 'ENTREGADO',        emoji: '🤝', color: '#10B981', textColor: '#FFFFFF', borderColor: '#10B981' },
-        devuelto:          { clase: 'devuelto',  texto: 'DEVUELTO',         emoji: '↩️', color: '#EF4444', textColor: '#FFFFFF', borderColor: '#EF4444' },
-        cancelado:         { clase: 'cancelado', texto: 'CANCELADO',        emoji: '⛔', color: '#9CA3AF', textColor: '#FFFFFF', borderColor: '#9CA3AF' }
+        listo:             { clase: 'listo',     texto: 'LISTO PARA ENTREGAR',emoji: '✅', color: '#FBBF24', textColor: '#1a1a1a', borderColor: '#FBBF24' },
+        entregado:         { clase: 'entregado', texto: 'ENTREGADO',          emoji: '🤝', color: '#10B981', textColor: '#FFFFFF', borderColor: '#10B981' },
+        devuelto:          { clase: 'devuelto',  texto: 'DEVUELTO',           emoji: '↩️', color: '#EF4444', textColor: '#FFFFFF', borderColor: '#EF4444' },
+        cancelado:         { clase: 'cancelado', texto: 'CANCELADO',          emoji: '⛔', color: '#9CA3AF', textColor: '#FFFFFF', borderColor: '#9CA3AF' }
       }[estadoActual] || { clase: 'recibido', texto: estadoActual.toUpperCase(), emoji: '📋', color: '#FF6900', textColor: '#FFFFFF', borderColor: '#FF6900' };
 
       const total = Number(o.total) || 0;
@@ -364,7 +375,7 @@
           <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; background: ${estadoInfo.color}; color: ${estadoInfo.textColor}; border: 1px solid ${estadoInfo.borderColor}; box-shadow: 0 2px 8px ${estadoInfo.color}40;">
+                <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; background: ${estadoInfo.color}; color: ${estadoInfo.textColor}; border: 1px solid ${estadoInfo.borderColor};">
                   ${estadoInfo.emoji} ${estadoInfo.texto}
                 </span>
                 <span style="font-size: 10px; color: var(--text-3); font-weight: 700; font-family: monospace;">
