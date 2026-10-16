@@ -1547,4 +1547,108 @@ async function guardarNota() {
     console.error('Error guardando nota:', err);
     toast('Error al guardar la nota', 'error');
   } finally {
-    hide
+    hideLoading();
+  }
+}
+
+/* ============================================================
+   RENDER FOTOS NUEVAS
+   ============================================================ */
+function renderFotosNuevas() {
+  const cont = document.getElementById('fotoUploader');
+  if (!cont) return;
+
+  const btnAdd = cont.querySelector('#btnAddFoto');
+  cont.querySelectorAll('.foto-preview').forEach(el => el.remove());
+
+  fotosNuevas.forEach((dataUrl, i) => {
+    const div = document.createElement('div');
+    div.className = 'foto-preview';
+    div.innerHTML = `
+      <img src="${dataUrl}" alt="preview">
+      <button type="button" class="btn-remove" data-idx="${i}">
+        <i class="fas fa-times"></i>
+      </button>
+    `;
+    cont.insertBefore(div, btnAdd);
+  });
+
+  cont.querySelectorAll('.btn-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      fotosNuevas.splice(idx, 1);
+      renderFotosNuevas();
+      haptic(10);
+    });
+  });
+}
+
+/* ============================================================
+   ELIMINAR
+   ============================================================ */
+async function eliminarOrden() {
+  if (sesion.rol !== 'admin') return;
+
+  const confirmar = confirm(
+    '¿Estás seguro que quieres eliminar esta orden?\n\nEsta acción NO se puede deshacer.'
+  );
+
+  if (!confirmar) return;
+
+  haptic([50, 30, 50]);
+  showLoading('Eliminando...');
+
+  try {
+    await deleteDoc(doc(db, 'recibos', ordenId));
+    toast('Orden eliminada', 'success', 2000);
+    setTimeout(() => window.location.href = '/app/', 1000);
+  } catch (err) {
+    console.error('Error eliminando:', err);
+    toast('Error al eliminar', 'error');
+    hideLoading();
+  }
+}
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+function formatFecha(fecha) {
+  if (!fecha) return '-';
+  let d;
+  if (fecha.toDate) d = fecha.toDate();
+  else if (fecha instanceof Date) d = fecha;
+  else d = new Date(fecha);
+
+  if (isNaN(d.getTime())) return '-';
+
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxSize) {
+          height = (height * maxSize) / width;
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = (width * maxSize) / height;
+          height = maxSize;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
