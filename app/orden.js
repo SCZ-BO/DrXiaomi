@@ -1324,33 +1324,61 @@ async function regenerarYEnviarPDF() {
       y += 26;
     }
 
-    /* FIRMA */
-    if (y < H - 45) {
-      const firmaY = H - 38;
-      pdf.setDrawColor(180, 180, 180);
-      pdf.setLineWidth(0.3);
-      pdf.line(M + 3, firmaY, M + 60, firmaY);
-      pdf.line(W - M - 60, firmaY, W - M - 3, firmaY);
-      pdf.setTextColor(120, 120, 120);
+    /* ============================================================
+       BLOQUE LLAMATIVO DE PÁGINA WEB (reemplaza firma)
+       ============================================================ */
+    if (y < H - 70) {
+      const linkY = H - 62;
+      const linkH = 26;
+
+      // Fondo gradiente naranja
+      const linkGradSteps = 30;
+      for (let i = 0; i < linkGradSteps; i++) {
+        const ratio = i / linkGradSteps;
+        pdf.setFillColor(255, 105 + (ratio * 30), ratio * 40);
+        pdf.rect(M + (CW / linkGradSteps) * i, linkY, CW / linkGradSteps + 0.5, linkH, 'F');
+      }
+
+      // Círculos decorativos
+      pdf.setFillColor(255, 255, 255);
+      pdf.setGState(new pdf.GState({ opacity: 0.1 }));
+      pdf.circle(M + 20, linkY + linkH + 5, 15, 'F');
+      pdf.circle(M + CW - 10, linkY - 5, 10, 'F');
+      pdf.setGState(new pdf.GState({ opacity: 1 }));
+
+      // Texto principal (grande y llamativo)
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.text('VISITA NUESTRA PÁGINA WEB', M + 6, linkY + 9);
+
+      // Link grande clickable
+      pdf.setFontSize(20);
+      pdf.text(CONFIG.web, M + 6, linkY + 18);
+
+      // QR grande a la derecha
+      if (qrDataUrl) {
+        try {
+          pdf.addImage(qrDataUrl, 'PNG', M + CW - 24, linkY + 2, 22, 22);
+        } catch (e) {}
+      }
+
+      // Icono de check o flecha (opcional)
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(7);
-      pdf.text('Firma del cliente', M + 3, firmaY + 4);
-      pdf.text('DR. XIAOMI SCZ', W - M - 60, firmaY + 4);
+      pdf.text('Escanea o visita el enlace', M + 6, linkY + 23);
 
-      pdf.saveGraphicsState();
-      pdf.setGState(new pdf.GState({ opacity: 0.15 }));
-      pdf.setDrawColor(255, 105, 0);
-      pdf.setLineWidth(0.8);
-      pdf.roundedRect(W / 2 - 22, firmaY - 9, 44, 14, 3, 3, 'S');
-      pdf.setTextColor(255, 105, 0);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(8);
-      pdf.text('RECIBO OFICIAL', W / 2, firmaY, { align: 'center' });
-      pdf.restoreGraphicsState();
+      // Área clickable con jsPDF (link)
+      pdf.link(M, linkY, CW, linkH, { url: CONFIG.urlApp });
+
+      // Marca de agua clickable también (para todo el bloque)
+      pdf.link(M, linkY - 40, CW, 40, { url: CONFIG.urlApp });
+
+      y += linkH + 6;
     }
 
     /* CONDICIONES */
-    const condY = H - 26;
+    const condY = H - 30;
     pdf.setFillColor(248, 248, 248);
     pdf.roundedRect(M, condY, CW, 20, 2, 2, 'F');
     pdf.setTextColor(255, 105, 0);
