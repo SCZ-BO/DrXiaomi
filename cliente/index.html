@@ -16,9 +16,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- ⚠️ Las librerías JSPDF, AutoTable y QRCode se cargan dinámicamente desde cliente.js -->
+  <!-- Esto evita problemas de scope en módulos ES6 -->
 
   <link rel="stylesheet" href="/css/app-theme.css">
   <link rel="stylesheet" href="/css/app-components.css">
@@ -486,9 +486,6 @@
           <button type="button" class="foto-slot" data-slot="2"><i class="fas fa-camera"></i><span>Añadir</span></button>
           <button type="button" class="foto-slot" data-slot="3"><i class="fas fa-camera"></i><span>Añadir</span></button>
         </div>
-        <!-- 2 inputs ocultos: uno para cámara, uno para galería -->
-        <input type="file" id="inputCamara" accept="image/*" capture="environment" hidden>
-        <input type="file" id="inputGaleria" accept="image/*" hidden>
         <p class="hint-text">
           <i class="fas fa-info-circle"></i>
           Las fotos quedan registradas en el recibo como respaldo del estado del equipo.
@@ -598,6 +595,12 @@
     </div>
   </div>
 
+  <!-- ✅ INPUTS DE CÁMARA Y GALERÍA (FUERA DEL SHEET, OCULTOS CON display:none) -->
+  <!-- No usar 'hidden' porque algunos navegadores móviles no disparan el click -->
+  <input type="file" id="inputCamara" accept="image/*" capture="environment" style="display:none">
+  <input type="file" id="inputGaleria" accept="image/*" style="display:none">
+
+  <!-- Scripts del proyecto -->
   <script type="module" src="/js/cliente.js"></script>
   <script type="module" src="/js/dictado.js"></script>
 
