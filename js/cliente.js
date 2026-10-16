@@ -1,7 +1,7 @@
 /* ============================================================
    DR. XIAOMI · CLIENTE (Wizard de nuevo recibo)
    Archivo: js/cliente.js
-   Versión corregida: carga dinámica de librerías, fotos, PDF
+   Versión sincronizada con index.html
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -107,7 +107,6 @@ async function iniciar() {
   } catch (err) {
     console.error('Error cargando librerías:', err);
     toast('Error al cargar librerías. Recarga la página.', 'error', 5000);
-    return;
   }
 
   const userInfo = document.getElementById('userInfo');
@@ -126,6 +125,8 @@ async function iniciar() {
   actualizarBotonesRemove();
   actualizarBarraProgreso();
   actualizarBotones();
+
+  console.log('✅ Wizard inicializado correctamente');
 }
 
 /* ============================================================
@@ -528,14 +529,25 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS (con sheet para elegir cámara o galería)
+   FOTOS (versión sincronizada con el HTML)
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
   const inputCamara = document.getElementById('inputCamara');
   const inputGaleria = document.getElementById('inputGaleria');
   const sheet = document.getElementById('fotoSheet');
-  if (!grid || !inputCamara || !inputGaleria) return;
+
+  console.log('🔍 configurarFotos:', {
+    grid: !!grid,
+    inputCamara: !!inputCamara,
+    inputGaleria: !!inputGaleria,
+    sheet: !!sheet
+  });
+
+  if (!grid) {
+    console.warn('⚠️ #fotosGrid no existe');
+    return;
+  }
 
   let slotActual = null;
 
@@ -570,19 +582,26 @@ function configurarFotos() {
     if (e.target === sheet) cerrarSheet();
   });
 
-  // ✅ setTimeout para cerrar el sheet antes de abrir la cámara
+  // ✅ Botón "Tomar foto" — protegido contra null
   document.getElementById('btnTomarFoto')?.addEventListener('click', () => {
     cerrarSheet();
-    setTimeout(() => {
-      inputCamara.click();
-    }, 150);
+    if (!inputCamara) {
+      console.error('❌ inputCamara es null');
+      toast('Cámara no disponible. Falta el input en el HTML.', 'error', 4000);
+      return;
+    }
+    setTimeout(() => inputCamara.click(), 150);
   });
 
+  // ✅ Botón "Elegir de galería" — protegido contra null
   document.getElementById('btnSubirFoto')?.addEventListener('click', () => {
     cerrarSheet();
-    setTimeout(() => {
-      inputGaleria.click();
-    }, 150);
+    if (!inputGaleria) {
+      console.error('❌ inputGaleria es null');
+      toast('Galería no disponible. Falta el input en el HTML.', 'error', 4000);
+      return;
+    }
+    setTimeout(() => inputGaleria.click(), 150);
   });
 
   async function procesarFoto(e) {
@@ -593,6 +612,7 @@ function configurarFotos() {
       const dataUrl = await comprimirImagen(file, 1000, 0.75);
       datos.fotos[slotActual] = { file, dataUrl };
       renderSlots();
+      toast('Foto añadida', 'success', 1500);
     } catch (err) {
       console.error('Error procesando foto:', err);
       toast('Error al procesar la imagen', 'error');
@@ -601,8 +621,9 @@ function configurarFotos() {
     slotActual = null;
   }
 
-  inputCamara.addEventListener('change', procesarFoto);
-  inputGaleria.addEventListener('change', procesarFoto);
+  // ✅ Optional chaining
+  inputCamara?.addEventListener('change', procesarFoto);
+  inputGaleria?.addEventListener('change', procesarFoto);
 
   function renderSlots() {
     const slots = grid.querySelectorAll('.foto-slot');
@@ -664,16 +685,21 @@ async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
 function configurarServicios() {
   const list = document.getElementById('serviciosList');
   const btnAdd = document.getElementById('addServicio');
-  if (!list || !btnAdd) return;
+  if (!list || !btnAdd) {
+    console.warn('⚠️ #serviciosList o #addServicio no existen');
+    return;
+  }
 
-  // ✅ Delegación de eventos para inputs de costo (incluye nuevos items)
+  console.log('✅ configurarServicios: listo');
+
+  // Delegación de eventos para inputs
   list.addEventListener('input', (e) => {
     if (e.target.classList.contains('servicio-costo')) {
       calcularTotal();
     }
   });
 
-  // ✅ Delegación de eventos para botones de eliminar
+  // Delegación para eliminar
   list.addEventListener('click', (e) => {
     const removeBtn = e.target.closest('.removeServicio');
     if (!removeBtn) return;
@@ -689,7 +715,6 @@ function configurarServicios() {
     item.querySelector('.servicio-desc')?.focus();
   });
 
-  // Calcular total inicial (por si hay valores precargados)
   calcularTotal();
 }
 
@@ -783,7 +808,7 @@ function configurarCharCounters() {
 }
 
 /* ============================================================
-   VISTA PREVIA (paso 7)
+   VISTA PREVIA
    ============================================================ */
 function generarVistaPrevia() {
   guardarDatosPaso(6);
@@ -921,7 +946,7 @@ function generarVistaPrevia() {
 }
 
 /* ============================================================
-   PDF COMPACTO
+   PDF
    ============================================================ */
 function configurarPDF() {
   document.getElementById('btnGenerate')?.addEventListener('click', generarPDF);
@@ -1032,7 +1057,6 @@ async function generarPDF() {
     const CW = W - M * 2;
     let y = 0;
 
-    /* HEADER NARANJA */
     pdf.setFillColor(255, 105, 0);
     pdf.rect(0, 0, W, 28, 'F');
 
@@ -1060,7 +1084,6 @@ async function generarPDF() {
 
     y = 33;
 
-    /* FECHA */
     const fecha = new Date();
     const fechaStr = `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')}/${fecha.getFullYear()} ${String(fecha.getHours()).padStart(2,'0')}:${String(fecha.getMinutes()).padStart(2,'0')}`;
 
@@ -1074,7 +1097,6 @@ async function generarPDF() {
     pdf.text(`Recibido por: ${sesion.nombre}`, W - M - 3, y + 5.5, { align: 'right' });
     y += 12;
 
-    /* CLIENTE Y EQUIPO */
     const colW = (CW - 3) / 2;
     pdf.setFillColor(255, 244, 235);
     pdf.roundedRect(M, y, colW, 22, 1.5, 1.5, 'F');
@@ -1104,7 +1126,6 @@ async function generarPDF() {
     }
     y += 26;
 
-    /* ESTADO Y FALLA */
     if (datos.estado || datos.falla) {
       const lineasEstado = datos.estado ? pdf.splitTextToSize(`Estado: ${datos.estado}`, CW - 6) : [];
       const lineasFalla = datos.falla ? pdf.splitTextToSize(`Falla: ${datos.falla}`, CW - 6) : [];
@@ -1131,7 +1152,6 @@ async function generarPDF() {
       y += boxH + 3;
     }
 
-    /* SEGURIDAD */
     let patronTexto = '';
     if (datos.tipoSeguridad === 'patron' && datos.patronSecuencia) {
       patronTexto = datos.patronSecuencia.split(',').join('-');
@@ -1154,7 +1174,6 @@ async function generarPDF() {
     pdf.text(segInfo, M + 3, y + 11);
     y += 18;
 
-    /* SERVICIOS */
     if (y > 220) { pdf.addPage(); y = 20; }
 
     pdf.setFillColor(255, 244, 235);
@@ -1182,7 +1201,6 @@ async function generarPDF() {
 
     y = pdf.lastAutoTable.finalY + 3;
 
-    /* TOTALES */
     const boxAlto = datos.adelanto > 0 ? 22 : 14;
     pdf.setFillColor(248, 248, 248);
     pdf.roundedRect(M + CW - 70, y, 70, boxAlto, 1.5, 1.5, 'F');
@@ -1217,7 +1235,6 @@ async function generarPDF() {
 
     y += boxAlto + 4;
 
-    /* FOTOS */
     const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
     if (fotosValidas.length > 0) {
       if (y > 240) { pdf.addPage(); y = 20; }
@@ -1242,7 +1259,6 @@ async function generarPDF() {
       y += fotoH + 4;
     }
 
-    /* QR + URL */
     if (y > 220) { pdf.addPage(); y = 20; }
     pdf.setFillColor(255, 244, 235);
     pdf.roundedRect(M, y, CW, 28, 1.5, 1.5, 'F');
@@ -1269,7 +1285,6 @@ async function generarPDF() {
 
     y += 32;
 
-    /* CONDICIONES */
     if (y > 245) { pdf.addPage(); y = 20; }
     pdf.setFillColor(248, 248, 248);
     pdf.roundedRect(M, y, CW, 26, 1.5, 1.5, 'F');
@@ -1285,7 +1300,6 @@ async function generarPDF() {
     });
     y += 30;
 
-    /* FOOTER */
     pdf.setDrawColor(255, 105, 0);
     pdf.setLineWidth(0.5);
     pdf.line(M, H - 12, W - M, H - 12);
@@ -1293,13 +1307,11 @@ async function generarPDF() {
     pdf.setTextColor(120, 120, 120);
     pdf.text(`© ${new Date().getFullYear()} ${CONFIG.nombreTienda} · Todos los derechos reservados`, W / 2, H - 7, { align: 'center' });
 
-    /* GUARDAR EN MEMORIA Y DESCARGAR */
     const nombreArchivo = `Recibo_${numeroRecibo}_${datos.nombre.split(' ')[0]}.pdf`;
     window._ultimoPDF = pdf;
     window._ultimoNombrePDF = nombreArchivo;
     pdf.save(nombreArchivo);
 
-    /* GUARDAR EN FIRESTORE */
     try {
       await addDoc(collection(db, 'recibos'), {
         numeroRecibo,
@@ -1330,7 +1342,6 @@ async function generarPDF() {
       toast('Recibo generado pero no se pudo guardar en la nube', 'warning', 4000);
     }
 
-    /* MODAL DE ÉXITO */
     const successNumero = document.getElementById('successNumero');
     if (successNumero) successNumero.textContent = numeroRecibo;
     const successModal = document.getElementById('successModal');
