@@ -1,8 +1,7 @@
 /* ============================================================
    DR. XIAOMI · CLIENTE (Wizard de nuevo recibo)
    Archivo: js/cliente.js
-   Descripción: Wizard, vista previa, PDF compacto con QR, WhatsApp
-   Versión corregida — sin errores de sintaxis ni accesos inseguros
+   Versión final: fotos cámara/galería, botón descargar PDF
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -42,14 +41,13 @@ const CONFIG = {
 let sesion = null;
 let pasoActual = 1;
 const TOTAL_PASOS = 7;
-const MAX_FOTOS = 4;
 
 const datos = {
   nombre: '', telefono: '',
   marca: '', modelo: '', imei: '', enciende: '',
   estado: '', falla: '',
   tipoSeguridad: 'patron', pin: '', patronSecuencia: '',
-  fotos: [null, null, null, null],   // ← inicializado para evitar huecos
+  fotos: [null, null, null, null],
   servicios: [], total: 0, adelanto: 0, saldo: 0
 };
 
@@ -65,9 +63,7 @@ requireAuth((s) => {
 
 function iniciar() {
   const userInfo = document.getElementById('userInfo');
-  if (userInfo) {
-    userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
-  }
+  if (userInfo) userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
 
   configurarHeader();
   configurarWizard();
@@ -88,43 +84,27 @@ function iniciar() {
    HEADER
    ============================================================ */
 function configurarHeader() {
-  // ← Botón Volver al panel (con confirmación si hay datos)
-  const backBtn = document.getElementById('backToPanelBtn');
-  if (backBtn) {
-    backBtn.addEventListener('click', () => {
-      haptic(10);
-      if (confirm('¿Salir? Los datos no guardados se perderán.')) {
-        window.location.href = '/app/';
-      }
-    });
-  }
-
-  // 🏠 Botón Home → ir directo al panel
-  const btnHome = document.getElementById('homeBtn');
-  if (btnHome) {
-    btnHome.addEventListener('click', () => {
-      haptic(15);
+  document.getElementById('backToPanelBtn')?.addEventListener('click', () => {
+    haptic(10);
+    if (confirm('¿Salir? Los datos no guardados se perderán.')) {
       window.location.href = '/app/';
-    });
-  }
+    }
+  });
 
-  // 🏷️ Botón de Precios → ir a /precio/
-  const btnPrecios = document.getElementById('preciosBtn');
-  if (btnPrecios) {
-    btnPrecios.addEventListener('click', () => {
-      haptic(15);
-      window.location.href = '/precio/';
-    });
-  }
+  document.getElementById('homeBtn')?.addEventListener('click', () => {
+    haptic(15);
+    window.location.href = '/app/';
+  });
 
-  // 🚪 Botón de Salir
-  const btnLogout = document.getElementById('logoutBtn');
-  if (btnLogout) {
-    btnLogout.addEventListener('click', () => {
-      haptic(20);
-      if (confirm('¿Cerrar sesión?')) logout();
-    });
-  }
+  document.getElementById('preciosBtn')?.addEventListener('click', () => {
+    haptic(15);
+    window.location.href = '/precio/';
+  });
+
+  document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    haptic(20);
+    if (confirm('¿Cerrar sesión?')) logout();
+  });
 }
 
 /* ============================================================
@@ -159,7 +139,7 @@ function irAPaso(nuevoPaso) {
 
   actualizarBarraProgreso();
   actualizarBotones();
-  if (pasoActual === TOTAL_PASOS) generarVistaPrevia();
+  if (pasoActual === 7) generarVistaPrevia();
 }
 
 function actualizarBarraProgreso() {
@@ -180,7 +160,6 @@ function actualizarBotones() {
   const btnPrev = document.getElementById('btnPrev');
   const btnNext = document.getElementById('btnNext');
   const btnGenerate = document.getElementById('btnGenerate');
-
   if (!btnPrev || !btnNext || !btnGenerate) return;
 
   btnPrev.style.display = pasoActual === 1 ? 'none' : 'flex';
@@ -360,7 +339,6 @@ function configurarPattern() {
   const lineCanvas = document.getElementById('lineCanvas');
   if (!bgCanvas || !lineCanvas) return;
 
-  // Crear input oculto para el patrón si no existe
   if (!document.getElementById('patronSecuencia')) {
     const input = document.createElement('input');
     input.type = 'hidden';
@@ -502,12 +480,14 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS
+   FOTOS (con sheet para elegir cámara o galería)
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
-  const input = document.getElementById('fotosInput');
-  if (!grid || !input) return;
+  const inputCamara = document.getElementById('inputCamara');
+  const inputGaleria = document.getElementById('inputGaleria');
+  const sheet = document.getElementById('fotoSheet');
+  if (!grid) return;
 
   let slotActual = null;
 
@@ -527,13 +507,34 @@ function configurarFotos() {
 
     const idx = parseInt(slot.dataset.slot);
     if (datos.fotos[idx]) return;
+
     slotActual = idx;
-    input.click();
+    haptic(10);
+    sheet?.classList.add('show');
   });
 
-  input.addEventListener('change', async (e) => {
+  function cerrarSheet() {
+    sheet?.classList.remove('show');
+  }
+
+  document.getElementById('btnCancelarFoto')?.addEventListener('click', cerrarSheet);
+  sheet?.addEventListener('click', (e) => {
+    if (e.target === sheet) cerrarSheet();
+  });
+
+  document.getElementById('btnTomarFoto')?.addEventListener('click', () => {
+    cerrarSheet();
+    inputCamara?.click();
+  });
+
+  document.getElementById('btnSubirFoto')?.addEventListener('click', () => {
+    cerrarSheet();
+    inputGaleria?.click();
+  });
+
+  async function procesarFoto(e) {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file || slotActual === null) return;
     haptic(10);
     try {
       const dataUrl = await comprimirImagen(file, 1000, 0.75);
@@ -543,8 +544,12 @@ function configurarFotos() {
       console.error('Error procesando foto:', err);
       toast('Error al procesar la imagen', 'error');
     }
-    input.value = '';
-  });
+    e.target.value = '';
+    slotActual = null;
+  }
+
+  inputCamara?.addEventListener('change', procesarFoto);
+  inputGaleria?.addEventListener('change', procesarFoto);
 
   function renderSlots() {
     const slots = grid.querySelectorAll('.foto-slot');
@@ -629,12 +634,17 @@ function crearServicioItem() {
   const div = document.createElement('div');
   div.className = 'servicio-item';
   div.innerHTML = `
-    <input type="text" class="servicio-desc" placeholder="Descripción del servicio" maxlength="100">
+    <div class="dictado-wrap">
+      <input type="text" class="servicio-desc" placeholder="Descripción del servicio" maxlength="100" data-dictado>
+    </div>
     <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0" inputmode="decimal">
     <button type="button" class="removeServicio">✕</button>
   `;
   div.querySelector('.servicio-costo')?.addEventListener('input', calcularTotal);
   div.querySelector('.removeServicio')?.addEventListener('click', () => eliminarServicio(div));
+  if (window.__dictadoIniciar) {
+    setTimeout(() => window.__dictadoIniciar(), 50);
+  }
   return div;
 }
 
@@ -857,6 +867,15 @@ function configurarPDF() {
   document.getElementById('backToPanelBtn2')?.addEventListener('click', () => {
     window.location.href = '/app/';
   });
+  document.getElementById('downloadPdfBtn')?.addEventListener('click', () => {
+    haptic(15);
+    if (window._ultimoPDF && window._ultimoNombrePDF) {
+      window._ultimoPDF.save(window._ultimoNombrePDF);
+      toast('PDF descargado', 'success', 2000);
+    } else {
+      toast('No hay PDF para descargar', 'error');
+    }
+  });
 }
 
 function generarNumeroRecibo() {
@@ -872,18 +891,15 @@ function generarNumeroRecibo() {
 
 async function generarQRDataUrl(texto) {
   return new Promise((resolve) => {
-    // Verificar que QRCode esté disponible
     if (typeof QRCode === 'undefined') {
-      console.warn('QRCode no está cargado. El PDF saldrá sin QR.');
+      console.warn('QRCode no está cargado');
       resolve('');
       return;
     }
-
     const div = document.createElement('div');
     div.style.position = 'absolute';
     div.style.left = '-9999px';
     document.body.appendChild(div);
-
     try {
       new QRCode(div, {
         text: texto,
@@ -893,7 +909,6 @@ async function generarQRDataUrl(texto) {
         colorLight: '#FFFFFF',
         correctLevel: QRCode.CorrectLevel.M
       });
-
       setTimeout(() => {
         const canvas = div.querySelector('canvas');
         const img = div.querySelector('img');
@@ -956,9 +971,8 @@ async function generarPDF() {
     pdf.rect(0, 0, W, 28, 'F');
 
     if (logoDataUrl) {
-      try {
-        pdf.addImage(logoDataUrl, 'PNG', M, 4, 20, 20);
-      } catch (e) { console.error('Error logo:', e); }
+      try { pdf.addImage(logoDataUrl, 'PNG', M, 4, 20, 20); }
+      catch (e) { console.error('Error logo:', e); }
     }
 
     pdf.setTextColor(255, 255, 255);
@@ -1168,9 +1182,8 @@ async function generarPDF() {
     pdf.roundedRect(M, y, CW, 28, 1.5, 1.5, 'F');
 
     if (qrDataUrl) {
-      try {
-        pdf.addImage(qrDataUrl, 'PNG', M + 3, y + 4, 20, 20);
-      } catch (e) { console.error('Error QR:', e); }
+      try { pdf.addImage(qrDataUrl, 'PNG', M + 3, y + 4, 20, 20); }
+      catch (e) { console.error('Error QR:', e); }
     }
 
     pdf.setTextColor(255, 105, 0);
@@ -1214,8 +1227,10 @@ async function generarPDF() {
     pdf.setTextColor(120, 120, 120);
     pdf.text(`© ${new Date().getFullYear()} ${CONFIG.nombreTienda} · Todos los derechos reservados`, W / 2, H - 7, { align: 'center' });
 
-    /* GUARDAR */
+    /* GUARDAR EN MEMORIA Y DESCARGAR */
     const nombreArchivo = `Recibo_${numeroRecibo}_${datos.nombre.split(' ')[0]}.pdf`;
+    window._ultimoPDF = pdf;
+    window._ultimoNombrePDF = nombreArchivo;
     pdf.save(nombreArchivo);
 
     /* GUARDAR EN FIRESTORE */
@@ -1309,6 +1324,6 @@ ${CONFIG.web}`;
 
     const tel = recibo.telefono.replace(/\D/g, '');
     const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, '_blank');
+    window.open(url, '_blank', 'noopener,noreferrer');
   });
 }
