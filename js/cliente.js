@@ -1,7 +1,7 @@
 /* ============================================================
    DR. XIAOMI · CLIENTE (Wizard de nuevo recibo)
    Archivo: js/cliente.js
-   Versión sincronizada con index.html
+   Versión: PDF PRO con diseño premium y enlaces clickeables
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -27,12 +27,27 @@ const CONFIG = {
   urlApp: 'https://xiaomi.scz.red',
   logoUrl: 'https://xiaomi.scz.red/img/logo1.png',
   condiciones: [
-    'Conserve este recibo. Solo con él puede retirar su equipo.',
-    'La fecha de entrega está sujeta a disponibilidad de repuestos.',
-    'El retiro debe hacerse dentro de los 10 días posteriores al aviso.',
-    'Pasados 20 días sin retiro, el equipo se considera abandonado.',
-    'Garantía: 30 días en repuestos / 60 días en mano de obra.'
+    'Conserve este recibo para retirar su equipo.',
+    'Entrega sujeta a disponibilidad de repuestos.',
+    'Retiro dentro de 10 días posteriores al aviso.',
+    'Pasados 20 días, el equipo se considera abandonado.',
+    'Garantía: 30 días repuestos / 60 días mano de obra.'
   ]
+};
+
+/* ============================================================
+   COLORES DE MARCA (para el PDF)
+   ============================================================ */
+const COLOR = {
+  naranja: [255, 105, 0],
+  naranjaClaro: [255, 140, 60],
+  naranjaSuave: [255, 244, 235],
+  grisFondo: [248, 248, 248],
+  grisSuave: [235, 235, 235],
+  textoOscuro: [30, 30, 30],
+  textoMedio: [80, 80, 80],
+  textoClaro: [120, 120, 120],
+  blanco: [255, 255, 255]
 };
 
 /* ============================================================
@@ -55,7 +70,6 @@ const datos = {
    CARGA DINÁMICA DE LIBRERÍAS GLOBALES
    ============================================================ */
 async function cargarLibrerias() {
-  // JSPDF
   if (!window.jspdf) {
     await new Promise((resolve, reject) => {
       const script = document.createElement('script');
@@ -66,7 +80,6 @@ async function cargarLibrerias() {
     });
   }
 
-  // JSPDF AutoTable
   if (!window.jspdf?.jsPDF?.API?.autoTable) {
     await new Promise((resolve, reject) => {
       const script = document.createElement('script');
@@ -77,7 +90,6 @@ async function cargarLibrerias() {
     });
   }
 
-  // QRCode
   if (!window.QRCode) {
     await new Promise((resolve, reject) => {
       const script = document.createElement('script');
@@ -529,7 +541,7 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS (versión sincronizada con el HTML)
+   FOTOS
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
@@ -537,17 +549,7 @@ function configurarFotos() {
   const inputGaleria = document.getElementById('inputGaleria');
   const sheet = document.getElementById('fotoSheet');
 
-  console.log('🔍 configurarFotos:', {
-    grid: !!grid,
-    inputCamara: !!inputCamara,
-    inputGaleria: !!inputGaleria,
-    sheet: !!sheet
-  });
-
-  if (!grid) {
-    console.warn('⚠️ #fotosGrid no existe');
-    return;
-  }
+  if (!grid) return;
 
   let slotActual = null;
 
@@ -582,23 +584,19 @@ function configurarFotos() {
     if (e.target === sheet) cerrarSheet();
   });
 
-  // ✅ Botón "Tomar foto" — protegido contra null
   document.getElementById('btnTomarFoto')?.addEventListener('click', () => {
     cerrarSheet();
     if (!inputCamara) {
-      console.error('❌ inputCamara es null');
-      toast('Cámara no disponible. Falta el input en el HTML.', 'error', 4000);
+      toast('Cámara no disponible.', 'error', 4000);
       return;
     }
     setTimeout(() => inputCamara.click(), 150);
   });
 
-  // ✅ Botón "Elegir de galería" — protegido contra null
   document.getElementById('btnSubirFoto')?.addEventListener('click', () => {
     cerrarSheet();
     if (!inputGaleria) {
-      console.error('❌ inputGaleria es null');
-      toast('Galería no disponible. Falta el input en el HTML.', 'error', 4000);
+      toast('Galería no disponible.', 'error', 4000);
       return;
     }
     setTimeout(() => inputGaleria.click(), 150);
@@ -621,7 +619,6 @@ function configurarFotos() {
     slotActual = null;
   }
 
-  // ✅ Optional chaining
   inputCamara?.addEventListener('change', procesarFoto);
   inputGaleria?.addEventListener('change', procesarFoto);
 
@@ -680,26 +677,19 @@ async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
 }
 
 /* ============================================================
-   SERVICIOS (con delegación de eventos)
+   SERVICIOS
    ============================================================ */
 function configurarServicios() {
   const list = document.getElementById('serviciosList');
   const btnAdd = document.getElementById('addServicio');
-  if (!list || !btnAdd) {
-    console.warn('⚠️ #serviciosList o #addServicio no existen');
-    return;
-  }
+  if (!list || !btnAdd) return;
 
-  console.log('✅ configurarServicios: listo');
-
-  // Delegación de eventos para inputs
   list.addEventListener('input', (e) => {
     if (e.target.classList.contains('servicio-costo')) {
       calcularTotal();
     }
   });
 
-  // Delegación para eliminar
   list.addEventListener('click', (e) => {
     const removeBtn = e.target.closest('.removeServicio');
     if (!removeBtn) return;
@@ -946,7 +936,7 @@ function generarVistaPrevia() {
 }
 
 /* ============================================================
-   PDF
+   PDF PRO CON DISEÑO PREMIUM
    ============================================================ */
 function configurarPDF() {
   document.getElementById('btnGenerate')?.addEventListener('click', generarPDF);
@@ -983,7 +973,6 @@ function generarNumeroRecibo() {
 async function generarQRDataUrl(texto) {
   return new Promise((resolve) => {
     if (typeof QRCode === 'undefined') {
-      console.warn('QRCode no está cargado');
       resolve('');
       return;
     }
@@ -1010,7 +999,6 @@ async function generarQRDataUrl(texto) {
         resolve(dataUrl);
       }, 200);
     } catch (e) {
-      console.error('Error generando QR:', e);
       div.remove();
       resolve('');
     }
@@ -1030,7 +1018,6 @@ async function cargarLogoDataUrl() {
         ctx.drawImage(img, 0, 0);
         resolve(canvas.toDataURL('image/png'));
       } catch (e) {
-        console.error('Error procesando logo:', e);
         resolve('');
       }
     };
@@ -1053,260 +1040,502 @@ async function generarPDF() {
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-    const W = 210, H = 297, M = 12;
+    const W = 210, H = 297, M = 14;
     const CW = W - M * 2;
     let y = 0;
 
-    pdf.setFillColor(255, 105, 0);
-    pdf.rect(0, 0, W, 28, 'F');
+    /* ============================================================
+       MARCA DE AGUA (diagonal, sutil)
+       ============================================================ */
+    pdf.saveGraphicsState();
+    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.setFont('helvetica', 'bold');
+    // @ts-ignore
+    pdf.setGState(new pdf.GState({ opacity: 0.05 }));
+    pdf.setFontSize(70);
+    pdf.text('DR. XIAOMI', W / 2, H / 2 - 20, { align: 'center', angle: 45 });
+    pdf.setFontSize(50);
+    pdf.text('SCZ', W / 2 + 10, H / 2 + 30, { align: 'center', angle: 45 });
+    pdf.restoreGraphicsState();
 
+    /* ============================================================
+       HEADER NARANJA CON BANDA DECORATIVA
+       ============================================================ */
+    // Banda principal
+    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.rect(0, 0, W, 34, 'F');
+
+    // Banda decorativa inferior (más clara)
+    pdf.setFillColor(COLOR.naranjaClaro[0], COLOR.naranjaClaro[1], COLOR.naranjaClaro[2]);
+    pdf.rect(0, 34, W, 1.5, 'F');
+
+    // Logo en círculo blanco
     if (logoDataUrl) {
-      try { pdf.addImage(logoDataUrl, 'PNG', M, 4, 20, 20); }
-      catch (e) { console.error('Error logo:', e); }
+      try {
+        pdf.setFillColor(255, 255, 255);
+        pdf.circle(M + 11, 17, 12, 'F');
+        pdf.addImage(logoDataUrl, 'PNG', M + 1, 7, 20, 20);
+      } catch (e) { console.error('Error logo:', e); }
     }
+
+    // Nombre tienda
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(20);
+    pdf.text(CONFIG.nombreTienda, M + 28, 14);
+
+    // Eslogan
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.text(CONFIG.eslogan, M + 28, 20);
+
+    // Dirección + Teléfono clickeable
+    pdf.setFontSize(8);
+    pdf.text(CONFIG.direccion, M + 28, 26);
+
+    const telLabel = ' · Tel: ';
+    const telLabelX = M + 28 + pdf.getTextWidth(CONFIG.direccion);
+    pdf.text(telLabel, telLabelX, 26);
+    pdf.textWithLink(CONFIG.telefono, telLabelX + pdf.getTextWidth(telLabel), 26, {
+      url: `tel:+591${CONFIG.telefono}`
+    });
+
+    // Recuadro RECIBO (derecha, semi-transparente)
+    pdf.setFillColor(255, 255, 255);
+    // @ts-ignore
+    pdf.setGState(new pdf.GState({ opacity: 0.15 }));
+    pdf.roundedRect(W - M - 55, 6, 55, 22, 2, 2, 'F');
+    // @ts-ignore
+    pdf.setGState(new pdf.GState({ opacity: 1 }));
 
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(15);
-    pdf.text(CONFIG.nombreTienda, M + 24, 12);
+    pdf.setFontSize(8);
+    pdf.text('RECIBO N°', W - M - 4, 11, { align: 'right' });
+    pdf.setFontSize(11);
+    pdf.text(numeroRecibo, W - M - 4, 17, { align: 'right' });
 
     pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.text(CONFIG.eslogan, M + 24, 17);
     pdf.setFontSize(7);
-    pdf.text(`${CONFIG.direccion}  ·  Tel: ${CONFIG.telefono}`, M + 24, 22);
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.text('RECIBO DE INGRESO', W - M, 12, { align: 'right' });
-    pdf.setFontSize(8);
-    pdf.text(numeroRecibo, W - M, 17, { align: 'right' });
-
-    y = 33;
-
     const fecha = new Date();
     const fechaStr = `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')}/${fecha.getFullYear()} ${String(fecha.getHours()).padStart(2,'0')}:${String(fecha.getMinutes()).padStart(2,'0')}`;
+    pdf.text(fechaStr, W - M - 4, 22, { align: 'right' });
+    pdf.text(`Atendido: ${sesion.nombre}`, W - M - 4, 26, { align: 'right' });
 
-    pdf.setFillColor(248, 248, 248);
-    pdf.roundedRect(M, y, CW, 8, 1.5, 1.5, 'F');
-    pdf.setTextColor(80, 80, 80);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.text(`Fecha: ${fechaStr}`, M + 3, y + 5.5);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(`Recibido por: ${sesion.nombre}`, W - M - 3, y + 5.5, { align: 'right' });
-    y += 12;
+    y = 40;
 
-    const colW = (CW - 3) / 2;
-    pdf.setFillColor(255, 244, 235);
-    pdf.roundedRect(M, y, colW, 22, 1.5, 1.5, 'F');
-    pdf.roundedRect(M + colW + 3, y, colW, 22, 1.5, 1.5, 'F');
-
-    pdf.setTextColor(255, 105, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7);
-    pdf.text('CLIENTE', M + 3, y + 5);
-    pdf.text('EQUIPO', M + colW + 6, y + 5);
-
-    pdf.setTextColor(30, 30, 30);
+    /* ============================================================
+       BANNER "RECIBIDO"
+       ============================================================ */
+    pdf.setFillColor(COLOR.grisSuave[0], COLOR.grisSuave[1], COLOR.grisSuave[2]);
+    pdf.roundedRect(M, y, CW, 10, 2, 2, 'F');
+    pdf.setTextColor(COLOR.textoOscuro[0], COLOR.textoOscuro[1], COLOR.textoOscuro[2]);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(10);
-    pdf.text(datos.nombre.slice(0, 24), M + 3, y + 11);
-    pdf.text(`${datos.marca} ${datos.modelo}`.slice(0, 24), M + colW + 6, y + 11);
+    pdf.text('RECIBIDO', M + 4, y + 6.5);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
+    pdf.text('Recibo de servicio técnico', W - M - 4, y + 6.5, { align: 'right' });
+    y += 14;
+
+    /* ============================================================
+       CLIENTE Y EQUIPO (2 columnas con estilo tarjeta)
+       ============================================================ */
+    const colW = (CW - 4) / 2;
+
+    // --- CLIENTE ---
+    pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
+    pdf.roundedRect(M, y, colW, 26, 2, 2, 'F');
+    // Borde izquierdo naranja grueso
+    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.rect(M, y, 1.5, 26, 'F');
+
+    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('CLIENTE', M + 5, y + 6);
+
+    pdf.setTextColor(COLOR.textoOscuro[0], COLOR.textoOscuro[1], COLOR.textoOscuro[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.text(datos.nombre.slice(0, 28), M + 5, y + 13);
 
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
-    pdf.setTextColor(80, 80, 80);
-    pdf.text(`Tel: ${datos.telefono}`, M + 3, y + 16);
+    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
+    pdf.text('Tel: ', M + 5, y + 18);
+    pdf.textWithLink(datos.telefono, M + 5 + pdf.getTextWidth('Tel: '), y + 18, {
+      url: `tel:+591${datos.telefono}`
+    });
+    pdf.text('Cliente', M + 5, y + 23);
+
+    // --- EQUIPO ---
+    pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
+    pdf.roundedRect(M + colW + 4, y, colW, 26, 2, 2, 'F');
+    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.rect(M + colW + 4, y, 1.5, 26, 'F');
+
+    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('EQUIPO', M + colW + 9, y + 6);
+
+    pdf.setTextColor(COLOR.textoOscuro[0], COLOR.textoOscuro[1], COLOR.textoOscuro[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.text(`${datos.marca} ${datos.modelo}`.slice(0, 28), M + colW + 9, y + 13);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
     if (datos.imei) {
-      pdf.text(`IMEI: ${datos.imei}`, M + colW + 6, y + 16);
-      pdf.text(`Enciende: ${datos.enciende}`, M + colW + 6, y + 20);
-    } else {
-      pdf.text(`Enciende: ${datos.enciende}`, M + colW + 6, y + 16);
+      pdf.text(`IMEI: ${datos.imei}`, M + colW + 9, y + 18);
     }
-    y += 26;
+    pdf.text(`Enciende: ${datos.enciende}`, M + colW + 9, y + 23);
 
-    if (datos.estado || datos.falla) {
-      const lineasEstado = datos.estado ? pdf.splitTextToSize(`Estado: ${datos.estado}`, CW - 6) : [];
-      const lineasFalla = datos.falla ? pdf.splitTextToSize(`Falla: ${datos.falla}`, CW - 6) : [];
-      const boxH = 8 + (lineasEstado.length * 3.5) + (lineasFalla.length * 3.5) + 2;
+    y += 30;
 
-      pdf.setFillColor(248, 248, 248);
-      pdf.roundedRect(M, y, CW, boxH, 1.5, 1.5, 'F');
-      pdf.setTextColor(255, 105, 0);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(7);
-      pdf.text('ESTADO Y FALLA', M + 3, y + 5);
+    /* ============================================================
+       ESTADO Y CLAVE DE ACCESO
+       ============================================================ */
+    // --- ESTADO / FALLA ---
+    pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
+    pdf.roundedRect(M, y, colW, 26, 2, 2, 'F');
+    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.rect(M, y, 1.5, 26, 'F');
 
-      pdf.setTextColor(50, 50, 50);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(8);
-      let yy = y + 9;
-      if (lineasEstado.length) {
-        pdf.text(lineasEstado, M + 3, yy);
-        yy += lineasEstado.length * 3.5;
-      }
-      if (lineasFalla.length) {
-        pdf.text(lineasFalla, M + 3, yy);
-      }
-      y += boxH + 3;
+    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('ESTADO / FALLA', M + 5, y + 6);
+
+    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    let yy = y + 12;
+    if (datos.estado) {
+      const lineas = pdf.splitTextToSize(datos.estado, colW - 10);
+      pdf.text(lineas.slice(0, 2), M + 5, yy);
+      yy += lineas.slice(0, 2).length * 3.5;
     }
+    if (datos.falla) {
+      const lineas = pdf.splitTextToSize(datos.falla, colW - 10);
+      pdf.text(lineas.slice(0, 2), M + 5, yy);
+    }
+
+    // --- CLAVE DE ACCESO ---
+    pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
+    pdf.roundedRect(M + colW + 4, y, colW, 26, 2, 2, 'F');
+    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.rect(M + colW + 4, y, 1.5, 26, 'F');
+
+    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('CLAVE DE ACCESO', M + colW + 9, y + 6);
 
     let patronTexto = '';
     if (datos.tipoSeguridad === 'patron' && datos.patronSecuencia) {
       patronTexto = datos.patronSecuencia.split(',').join('-');
     }
-    const segInfo = datos.tipoSeguridad === 'pin'
-      ? `PIN: ${datos.pin}`
-      : datos.tipoSeguridad === 'patron'
-        ? `Patrón: ${patronTexto}`
-        : 'Sin clave de acceso';
 
-    pdf.setFillColor(248, 248, 248);
-    pdf.roundedRect(M, y, CW, 14, 1.5, 1.5, 'F');
-    pdf.setTextColor(255, 105, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7);
-    pdf.text('CLAVE DE ACCESO', M + 3, y + 5);
-    pdf.setTextColor(50, 50, 50);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
-    pdf.text(segInfo, M + 3, y + 11);
-    y += 18;
+    let segInfo = '';
+    if (datos.tipoSeguridad === 'pin') segInfo = `PIN: ${datos.pin}`;
+    else if (datos.tipoSeguridad === 'patron' && patronTexto) segInfo = `Patrón: ${patronTexto}`;
+    else segInfo = 'Sin clave';
 
+    pdf.setTextColor(COLOR.textoOscuro[0], COLOR.textoOscuro[1], COLOR.textoOscuro[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(12);
+    pdf.text(segInfo.slice(0, 25), M + colW + 9, y + 16);
+
+    y += 30;
+
+    /* ============================================================
+       SERVICIOS Y COSTOS
+       ============================================================ */
     if (y > 220) { pdf.addPage(); y = 20; }
 
-    pdf.setFillColor(255, 244, 235);
-    pdf.roundedRect(M, y, CW, 8, 1.5, 1.5, 'F');
-    pdf.setTextColor(255, 105, 0);
+    // Banner de sección
+    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.roundedRect(M, y, CW, 9, 1.5, 1.5, 'F');
+    pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('SERVICIOS Y COSTOS', M + 3, y + 5.5);
-    y += 11;
+    pdf.setFontSize(9);
+    pdf.text('SERVICIOS Y COSTOS', M + 4, y + 6);
+    y += 12;
 
     const serviciosData = datos.servicios.map(s => [s.desc, formatBs(s.costo)]);
     pdf.autoTable({
       startY: y,
       head: [['Descripción', 'Costo']],
       body: serviciosData,
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [255, 105, 0], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      styles: {
+        fontSize: 9,
+        cellPadding: 3.5,
+        textColor: COLOR.textoOscuro,
+        lineColor: [230, 230, 230],
+        lineWidth: 0.2
+      },
+      headStyles: {
+        fillColor: COLOR.naranja,
+        textColor: 255,
+        fontStyle: 'bold',
+        fontSize: 9
+      },
+      alternateRowStyles: { fillColor: [255, 250, 245] },
       columnStyles: {
-        0: { cellWidth: CW - 35 },
-        1: { halign: 'right', cellWidth: 35, fontStyle: 'bold' }
+        0: { cellWidth: CW - 40 },
+        1: { halign: 'right', cellWidth: 40, fontStyle: 'bold', textColor: COLOR.naranja }
       },
       margin: { left: M, right: M },
       theme: 'grid'
     });
 
-    y = pdf.lastAutoTable.finalY + 3;
+    y = pdf.lastAutoTable.finalY + 5;
 
-    const boxAlto = datos.adelanto > 0 ? 22 : 14;
-    pdf.setFillColor(248, 248, 248);
-    pdf.roundedRect(M + CW - 70, y, 70, boxAlto, 1.5, 1.5, 'F');
+    /* ============================================================
+       TOTALES (caja destacada)
+       ============================================================ */
+    const boxW = 85;
+    const boxX = M + CW - boxW;
+    const boxAlto = datos.adelanto > 0 ? 28 : 20;
 
-    pdf.setTextColor(80, 80, 80);
+    // Fondo de la caja
+    pdf.setFillColor(COLOR.grisFondo[0], COLOR.grisFondo[1], COLOR.grisFondo[2]);
+    pdf.roundedRect(boxX, y, boxW, boxAlto, 2, 2, 'F');
+    // Borde naranja
+    pdf.setDrawColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.setLineWidth(0.4);
+    pdf.roundedRect(boxX, y, boxW, boxAlto, 2, 2, 'S');
+
+    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
     pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.text('Total:', M + CW - 66, y + 5);
-    pdf.setTextColor(50, 50, 50);
-    pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(9);
-    pdf.text(formatBs(datos.total), M + CW - 4, y + 5, { align: 'right' });
+    pdf.text('Total:', boxX + 5, y + 7);
+    pdf.setTextColor(COLOR.textoOscuro[0], COLOR.textoOscuro[1], COLOR.textoOscuro[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.text(formatBs(datos.total), boxX + boxW - 5, y + 7, { align: 'right' });
 
-    let rowY = y + 5;
+    let rowY = y + 7;
     if (datos.adelanto > 0) {
       pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(8);
-      pdf.setTextColor(80, 80, 80);
-      pdf.text('Adelanto:', M + CW - 66, y + 11);
-      pdf.setTextColor(50, 50, 50);
+      pdf.setFontSize(9);
+      pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
+      pdf.text('Adelanto:', boxX + 5, y + 14);
+      pdf.setTextColor(COLOR.textoOscuro[0], COLOR.textoOscuro[1], COLOR.textoOscuro[2]);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(`- ${formatBs(datos.adelanto)}`, M + CW - 4, y + 11, { align: 'right' });
-      rowY = y + 11;
+      pdf.text(`- ${formatBs(datos.adelanto)}`, boxX + boxW - 5, y + 14, { align: 'right' });
+      rowY = y + 14;
     }
 
-    pdf.setTextColor(255, 105, 0);
+    // Separador
+    pdf.setDrawColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.setLineWidth(0.5);
+    pdf.line(boxX + 5, rowY + 4, boxX + boxW - 5, rowY + 4);
+
+    // Saldo
+    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('SALDO A PAGAR:', M + CW - 66, rowY + 7);
-    pdf.setFontSize(11);
-    pdf.text(formatBs(datos.saldo), M + CW - 4, rowY + 7, { align: 'right' });
+    pdf.setFontSize(9);
+    pdf.text('SALDO:', boxX + 5, rowY + 11);
+    pdf.setFontSize(13);
+    pdf.text(formatBs(datos.saldo), boxX + boxW - 5, rowY + 11, { align: 'right' });
 
-    y += boxAlto + 4;
+    y += boxAlto + 6;
 
+    /* ============================================================
+       FOTOS DEL EQUIPO (con marco)
+       ============================================================ */
     const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
     if (fotosValidas.length > 0) {
-      if (y > 240) { pdf.addPage(); y = 20; }
+      if (y > 235) { pdf.addPage(); y = 20; }
 
-      pdf.setFillColor(255, 244, 235);
-      pdf.roundedRect(M, y, CW, 7, 1.5, 1.5, 'F');
-      pdf.setTextColor(255, 105, 0);
+      pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+      pdf.roundedRect(M, y, CW, 8, 1.5, 1.5, 'F');
+      pdf.setTextColor(255, 255, 255);
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(7);
-      pdf.text('FOTOS DEL EQUIPO', M + 3, y + 5);
-      y += 10;
+      pdf.setFontSize(8);
+      pdf.text('FOTOS DEL EQUIPO', M + 4, y + 5.5);
+      y += 11;
 
-      const fotoW = (CW - 6) / 4;
+      const fotoW = (CW - 9) / 4;
       const fotoH = fotoW * 0.75;
       let x = M;
       for (let i = 0; i < Math.min(fotosValidas.length, 4); i++) {
         try {
-          pdf.addImage(fotosValidas[i].dataUrl, 'JPEG', x, y, fotoW - 1, fotoH, undefined, 'FAST');
+          // Marco con sombra simulada
+          pdf.setFillColor(240, 240, 240);
+          pdf.roundedRect(x + 0.5, y + 0.5, fotoW, fotoH, 1, 1, 'F');
+          pdf.setFillColor(255, 255, 255);
+          pdf.roundedRect(x, y, fotoW, fotoH, 1, 1, 'F');
+          pdf.addImage(fotosValidas[i].dataUrl, 'JPEG', x + 1, y + 1, fotoW - 2, fotoH - 2, undefined, 'FAST');
         } catch (e) { console.error('Error foto:', e); }
-        x += fotoW + 1;
+        x += fotoW + 3;
       }
-      y += fotoH + 4;
+      y += fotoH + 6;
     }
 
-    if (y > 220) { pdf.addPage(); y = 20; }
-    pdf.setFillColor(255, 244, 235);
-    pdf.roundedRect(M, y, CW, 28, 1.5, 1.5, 'F');
+    /* ============================================================
+       QR + URL CLICKEABLE
+       ============================================================ */
+    if (y > 215) { pdf.addPage(); y = 20; }
+
+    pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
+    pdf.roundedRect(M, y, CW, 32, 2, 2, 'F');
+    // Borde izquierdo naranja
+    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.rect(M, y, 1.5, 32, 'F');
 
     if (qrDataUrl) {
-      try { pdf.addImage(qrDataUrl, 'PNG', M + 3, y + 4, 20, 20); }
-      catch (e) { console.error('Error QR:', e); }
+      try {
+        pdf.setFillColor(255, 255, 255);
+        pdf.roundedRect(M + 5, y + 5, 22, 22, 1.5, 1.5, 'F');
+        pdf.addImage(qrDataUrl, 'PNG', M + 6, y + 6, 20, 20);
+      } catch (e) { console.error('Error QR:', e); }
     }
 
-    pdf.setTextColor(255, 105, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.text('Consulta tu reparación online', M + 27, y + 9);
-
-    pdf.setTextColor(60, 60, 60);
+    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(10);
-    pdf.text(CONFIG.web, M + 27, y + 15);
+    pdf.text('Consulta el estado de tu reparación', M + 32, y + 10);
 
+    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
     pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7);
-    pdf.setTextColor(100, 100, 100);
-    pdf.text('Escanea el código QR o visita el enlace desde tu celular', M + 27, y + 20);
+    pdf.setFontSize(8);
+    pdf.text('Escanea el código QR o visita:', M + 32, y + 16);
 
-    y += 32;
-
-    if (y > 245) { pdf.addPage(); y = 20; }
-    pdf.setFillColor(248, 248, 248);
-    pdf.roundedRect(M, y, CW, 26, 1.5, 1.5, 'F');
-    pdf.setTextColor(255, 105, 0);
+    // ✅ URL clickeable
+    const urlTexto = `${CONFIG.web}/?recibo=${numeroRecibo}`;
+    const urlCompleta = `${CONFIG.urlApp}/?recibo=${numeroRecibo}`;
+    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7);
-    pdf.text('CONDICIONES DEL SERVICIO', M + 3, y + 5);
-    pdf.setTextColor(80, 80, 80);
+    pdf.setFontSize(9);
+    pdf.textWithLink(urlTexto, M + 32, y + 23, { url: urlCompleta });
+
+    // Subrayar la URL
+    const urlWidth = pdf.getTextWidth(urlTexto);
+    pdf.setDrawColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.setLineWidth(0.3);
+    pdf.line(M + 32, y + 24.5, M + 32 + urlWidth, y + 24.5);
+
+    y += 38;
+
+    /* ============================================================
+       BANNER GRANDE "VISITA NUESTRA WEB"
+       ============================================================ */
+    if (y > 240) { pdf.addPage(); y = 20; }
+
+    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.roundedRect(M, y, CW, 34, 2, 2, 'F');
+
+    // Banda decorativa clara en la parte superior
+    pdf.setFillColor(COLOR.naranjaClaro[0], COLOR.naranjaClaro[1], COLOR.naranjaClaro[2]);
+    pdf.rect(M, y, CW, 2, 'F');
+
+    pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(6);
+    pdf.setFontSize(9);
+    pdf.text('VISITA NUESTRA PÁGINA WEB', M + 8, y + 10);
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(22);
+    // ✅ Web clickeable
+    pdf.textWithLink(CONFIG.web, M + 8, y + 21, { url: CONFIG.urlApp });
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7);
+    pdf.text('Toca el enlace o escanea el código QR', M + 8, y + 28);
+
+    // QR grande a la derecha
+    if (qrDataUrl) {
+      try {
+        pdf.setFillColor(255, 255, 255);
+        pdf.roundedRect(W - M - 30, y + 4, 26, 26, 1.5, 1.5, 'F');
+        pdf.addImage(qrDataUrl, 'PNG', W - M - 28.5, y + 5.5, 23, 23);
+      } catch (e) { console.error('Error QR grande:', e); }
+    }
+
+    y += 40;
+
+    /* ============================================================
+       CONDICIONES (2 columnas)
+       ============================================================ */
+    if (y > 245) { pdf.addPage(); y = 20; }
+
+    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7.5);
+    pdf.text('CONDICIONES:', M, y + 4);
+
+    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(6.5);
+
+    const condColW = CW / 2 - 3;
     CONFIG.condiciones.forEach((txt, i) => {
-      pdf.text(`${i + 1}. ${txt}`, M + 3, y + 10 + i * 3);
+      const col = i < 3 ? 0 : 1;
+      const row = i < 3 ? i : i - 3;
+      const xPos = M + col * (condColW + 6);
+      const yPos = y + 9 + row * 3.5;
+      const lineas = pdf.splitTextToSize(`${i + 1}. ${txt}`, condColW);
+      pdf.text(lineas[0], xPos, yPos);
     });
-    y += 30;
 
-    pdf.setDrawColor(255, 105, 0);
-    pdf.setLineWidth(0.5);
-    pdf.line(M, H - 12, W - M, H - 12);
-    pdf.setFontSize(6);
-    pdf.setTextColor(120, 120, 120);
-    pdf.text(`© ${new Date().getFullYear()} ${CONFIG.nombreTienda} · Todos los derechos reservados`, W / 2, H - 7, { align: 'center' });
+    /* ============================================================
+       FOOTER CON ENLACES CLICKEABLES
+       ============================================================ */
+    // Línea divisoria naranja
+    pdf.setDrawColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.setLineWidth(0.6);
+    pdf.line(M, H - 15, W - M, H - 15);
 
+    // Copyright centrado
+    pdf.setFontSize(6.5);
+    pdf.setTextColor(COLOR.textoClaro[0], COLOR.textoClaro[1], COLOR.textoClaro[2]);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(
+      `© ${new Date().getFullYear()} ${CONFIG.nombreTienda} · Todos los derechos reservados`,
+      W / 2,
+      H - 10,
+      { align: 'center' }
+    );
+
+    // Enlaces del footer (centrados)
+    pdf.setFontSize(7);
+    const footerY = H - 6;
+
+    // Web
+    const webText = CONFIG.web;
+    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.setFont('helvetica', 'bold');
+
+    // Calcular posición central para los dos enlaces
+    const sepText = '  ·  ';
+    const telText = `Tel: ${CONFIG.telefono}`;
+    const webW = pdf.getTextWidth(webText);
+    const sepW = pdf.getTextWidth(sepText);
+    const telW = pdf.getTextWidth(telText);
+    const totalW = webW + sepW + telW;
+    const startX = (W - totalW) / 2;
+
+    pdf.textWithLink(webText, startX, footerY, { url: CONFIG.urlApp });
+
+    pdf.setTextColor(COLOR.textoClaro[0], COLOR.textoClaro[1], COLOR.textoClaro[2]);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(sepText, startX + webW, footerY);
+
+    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.textWithLink(telText, startX + webW + sepW, footerY, {
+      url: `tel:+591${CONFIG.telefono}`
+    });
+
+    /* ============================================================
+       GUARDAR Y SUBIR A FIRESTORE
+       ============================================================ */
     const nombreArchivo = `Recibo_${numeroRecibo}_${datos.nombre.split(' ')[0]}.pdf`;
     window._ultimoPDF = pdf;
     window._ultimoNombrePDF = nombreArchivo;
@@ -1391,13 +1620,11 @@ Equipo: ${recibo.marca} ${recibo.modelo}
 Total: ${formatBs(recibo.total)}
 ${recibo.saldo > 0 ? `Saldo pendiente: ${formatBs(recibo.saldo)}` : ''}
 
-Su equipo fue recibido en nuestro taller.
-Le avisaremos cuando este listo.
+Consulta el estado en: ${CONFIG.urlApp}/?recibo=${recibo.numeroRecibo}
 
 ${CONFIG.nombreTienda}
 ${CONFIG.direccion}
-Tel: ${CONFIG.telefono}
-${CONFIG.web}`;
+Tel: ${CONFIG.telefono}`;
 
     const tel = recibo.telefono.replace(/\D/g, '');
     const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
