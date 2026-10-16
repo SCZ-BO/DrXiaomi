@@ -221,6 +221,55 @@
     }
     .icon-btn:hover .icon-png { opacity: 1; }
     .icon-btn:active .icon-png { transform: scale(0.9); }
+
+    /* ============================================================ */
+    /* 📸 BOTTOM SHEET DE FOTOS                                     */
+    /* ============================================================ */
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .sheet-backdrop.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .sheet {
+      background: var(--bg-elev-1);
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
+      width: 100%;
+      max-width: 550px;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+      border-top: 1px solid var(--border-1);
+    }
+    .sheet-backdrop.show .sheet {
+      transform: translateY(0);
+    }
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      background: var(--border-2);
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+
+    /* Botón descargar PDF en modal de éxito */
+    .modal-actions .btn-download {
+      background: linear-gradient(135deg, #00FFCC, #0099FF);
+      color: #0A0C12;
+    }
   </style>
 </head>
 <body>
@@ -437,7 +486,9 @@
           <button type="button" class="foto-slot" data-slot="2"><i class="fas fa-camera"></i><span>Añadir</span></button>
           <button type="button" class="foto-slot" data-slot="3"><i class="fas fa-camera"></i><span>Añadir</span></button>
         </div>
-        <input type="file" id="fotosInput" accept="image/*" capture="environment" hidden>
+        <!-- 2 inputs ocultos: uno para cámara, uno para galería -->
+        <input type="file" id="inputCamara" accept="image/*" capture="environment" hidden>
+        <input type="file" id="inputGaleria" accept="image/*" hidden>
         <p class="hint-text">
           <i class="fas fa-info-circle"></i>
           Las fotos quedan registradas en el recibo como respaldo del estado del equipo.
@@ -508,6 +559,7 @@
     </button>
   </footer>
 
+  <!-- MODAL DE ÉXITO -->
   <div class="modal-backdrop" id="successModal">
     <div class="modal">
       <div class="success-icon">
@@ -515,14 +567,34 @@
       </div>
       <h3 class="modal-title">¡Recibo generado!</h3>
       <p class="modal-text" id="successNumero">REC-XXXXXXXX-XXXXXX</p>
-      <div class="modal-actions" style="flex-direction: column;">
+      <div class="modal-actions" style="flex-direction: column; gap: 10px;">
         <button class="btn btn-whatsapp" id="sendWhatsappBtn">
           <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
+        </button>
+        <button class="btn btn-download" id="downloadPdfBtn">
+          <i class="fas fa-download"></i> Descargar PDF
         </button>
         <button class="btn btn-secondary" id="backToPanelBtn2">
           <i class="fas fa-home"></i> Volver al panel
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM SHEET DE FOTOS -->
+  <div class="sheet-backdrop" id="fotoSheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h3 style="margin-bottom: 16px; font-size: 16px;">Añadir foto</h3>
+      <button type="button" class="btn btn-primary" id="btnTomarFoto" style="width: 100%; margin-bottom: 10px;">
+        <i class="fas fa-camera"></i> Tomar foto
+      </button>
+      <button type="button" class="btn btn-secondary" id="btnSubirFoto" style="width: 100%; margin-bottom: 10px;">
+        <i class="fas fa-image"></i> Elegir de galería
+      </button>
+      <button type="button" class="btn btn-ghost" id="btnCancelarFoto" style="width: 100%;">
+        Cancelar
+      </button>
     </div>
   </div>
 
