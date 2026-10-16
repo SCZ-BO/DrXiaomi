@@ -17,6 +17,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+  <!-- 📄 Librerías para generar PDF (necesarias para "Enviar recibo PDF") -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
   <link rel="stylesheet" href="/css/app-theme.css">
   <link rel="stylesheet" href="/css/app-components.css">
   <link rel="stylesheet" href="/css/app-layouts.css">
@@ -269,7 +273,7 @@
     .img-viewer .cerrar:active { transform: scale(0.92); }
 
     /* ============================================================ */
-    /* 📄 RECIBO BONITO (estilo vista previa del wizard)            */
+    /* 📄 RECIBO BONITO                                              */
     /* ============================================================ */
     .preview-recibo {
       background: var(--bg-elev-1);
@@ -468,7 +472,6 @@
           <i class="fas fa-arrow-left"></i>
         </button>
 
-        <!-- 🟠 Logo redondo -->
         <div class="brand-logo-orden">
           <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi"
                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:18px;&quot;></i>';">
