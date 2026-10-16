@@ -1,7 +1,6 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (Detalle + Bitácora + WhatsApp + Cobro + Costos + PDF)
+   DR. XIAOMI · ORDEN (minimalista)
    Archivo: app/orden.js
-   Versión final completa
    ============================================================ */
 
 import { requireAuth, logout, getSesion } from '/js/app-auth.js';
@@ -49,9 +48,6 @@ const ESTADO_COLORES = {
   'devuelto': '#EF4444'
 };
 
-/* ============================================================
-   ESTADO
-   ============================================================ */
 let sesion = null;
 let ordenId = null;
 let orden = null;
@@ -70,8 +66,6 @@ requireAuth(async (s) => {
 async function iniciar() {
   const params = new URLSearchParams(window.location.search);
   ordenId = params.get('id');
-
-  if (DEBUG) console.log('🆔 Orden ID:', ordenId);
 
   if (!ordenId) {
     toast('Orden no encontrada', 'error');
@@ -104,33 +98,22 @@ async function cargarOrden() {
     ]);
 
     if (!snap.exists()) {
-      if (DEBUG) console.warn('⚠️ La orden no existe:', ordenId);
       toast('Esta orden no existe o fue eliminada', 'error', 3000);
       setTimeout(() => window.location.href = '/app/', 2000);
       return;
     }
 
     orden = { id: snap.id, ...snap.data() };
-
-    if (DEBUG) console.log('✅ Orden cargada:', orden);
-
     renderOrden();
 
   } catch (err) {
-    console.error('❌ Error cargando orden:', err);
-
+    console.error('Error cargando orden:', err);
     let mensaje = 'Error al cargar la orden';
-    if (err.message?.includes('TIMEOUT')) {
-      mensaje = 'Firestore no responde. Verifica tu conexión.';
-    } else if (err.code === 'permission-denied') {
-      mensaje = 'Sin permisos para ver esta orden.';
-    } else if (err.code === 'unavailable') {
-      mensaje = 'Sin conexión. Revisa tu internet.';
-    }
-
+    if (err.message?.includes('TIMEOUT')) mensaje = 'Firestore no responde.';
+    else if (err.code === 'permission-denied') mensaje = 'Sin permisos.';
+    else if (err.code === 'unavailable') mensaje = 'Sin conexión.';
     toast(mensaje, 'error', 4000);
     setTimeout(() => window.location.href = '/app/', 2500);
-
   } finally {
     hideLoading();
   }
@@ -146,9 +129,7 @@ function renderOrden() {
   const titleEl = document.getElementById('headerTitle');
   const subtitleEl = document.getElementById('headerSubtitle');
   if (titleEl) titleEl.textContent = orden.numeroRecibo || 'ORDEN';
-  if (subtitleEl) {
-    subtitleEl.textContent = `${estadoInfo.texto} · ${tiempoRelativo(orden.fecha)}`;
-  }
+  if (subtitleEl) subtitleEl.textContent = `${estadoInfo.texto} · ${tiempoRelativo(orden.fecha)}`;
 
   const cont = document.getElementById('contenido');
   if (!cont) return;
@@ -181,7 +162,7 @@ function renderOrden() {
   const ganancia = (Number(orden.montoCobrado) || 0) - (Number(orden.costoRepuesto) || 0);
 
   cont.innerHTML = `
-    <!-- RECIBO BONITO -->
+    <!-- RECIBO -->
     <div class="preview-recibo">
       <div class="preview-header">
         <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi"
@@ -216,10 +197,8 @@ function renderOrden() {
         </div>
         <div class="preview-row">
           <span>Teléfono:</span>
-          <span>
-            <a href="tel:${orden.telefono}" style="color:var(--brand-500);text-decoration:none;font-weight:700;">
-              ${escapeHtml(orden.telefono || '-')}
-            </a>
+          <span style="color:var(--brand-500);font-weight:700;">
+            ${escapeHtml(orden.telefono || '-')}
           </span>
         </div>
       </div>
@@ -339,6 +318,19 @@ function renderOrden() {
       ` : ''}
     </div>
 
+    <!-- ACCIONES -->
+    <div class="section-block">
+      <h3>📱 Acciones</h3>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-whatsapp" id="btnContactar" style="flex:1;">
+          <i class="fab fa-whatsapp"></i> WhatsApp
+        </button>
+        <button class="btn" id="btnRegenerarPDF" style="flex:1; background:linear-gradient(135deg,#FF6900,#FF8A3C); color:white; border:none; padding:14px; border-radius:14px; font-weight:700; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit;">
+          <i class="fas fa-file-pdf"></i> Enviar PDF
+        </button>
+      </div>
+    </div>
+
     <!-- CAMBIAR ESTADO -->
     <div class="section-block">
       <h3>🔄 Cambiar estado</h3>
@@ -352,49 +344,7 @@ function renderOrden() {
       </div>
     </div>
 
-    <!-- CONTACTAR CLIENTE -->
-    <div class="section-block">
-      <h3>📞 Contactar al cliente</h3>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="btn btn-whatsapp" id="btnContactar" style="flex:1; min-width:120px;">
-          <i class="fab fa-whatsapp"></i> WhatsApp
-        </button>
-        <a href="tel:${orden.telefono}" class="btn btn-secondary" style="flex:1; min-width:120px; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px;">
-          <i class="fas fa-phone"></i> Llamar
-        </a>
-      </div>
-      <button id="btnRegenerarPDF" style="width:100%; margin-top:8px; background:linear-gradient(135deg,#FF6900,#FF8A3C); color:white; border:none; padding:14px; border-radius:14px; font-weight:700; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-family:inherit;">
-        <i class="fas fa-file-pdf"></i> Enviar recibo PDF
-      </button>
-    </div>
-
-    ${estadoActual === 'listo' ? `
-      <div class="section-block" style="border-color:rgba(37,211,102,0.4); background: rgba(37,211,102,0.05);">
-        <h3 style="color:#25D366;">📱 Avisar al cliente</h3>
-        <p style="font-size:12px; color:var(--text-3); margin-bottom:12px;">
-          El equipo está listo. Envía un WhatsApp al cliente para que venga a retirarlo.
-        </p>
-        <button class="btn-whatsapp-grande" id="btnWhatsappListo">
-          <i class="fab fa-whatsapp"></i>
-          Avisar que está listo
-        </button>
-      </div>
-    ` : ''}
-
-    ${estadoActual === 'entregado' ? `
-      <div class="section-block" style="border-color:rgba(37,211,102,0.4); background: rgba(37,211,102,0.05);">
-        <h3 style="color:#25D366;">✅ Confirmar entrega</h3>
-        <p style="font-size:12px; color:var(--text-3); margin-bottom:12px;">
-          Envía un WhatsApp al cliente confirmando que retiró su equipo.
-        </p>
-        <button class="btn-whatsapp-grande" id="btnWhatsappEntrega">
-          <i class="fab fa-whatsapp"></i>
-          Confirmar entrega por WhatsApp
-        </button>
-      </div>
-    ` : ''}
-
-    <!-- COSTOS Y GANANCIA (solo admin) -->
+    <!-- COSTOS Y GANANCIA (admin) -->
     ${sesion.rol === 'admin' ? `
       <div class="section-block" style="border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.03);">
         <h3 style="color:#10B981;">💰 Costos y ganancia</h3>
@@ -424,26 +374,21 @@ function renderOrden() {
           <i class="fas fa-calculator"></i>
           ${Number(orden.costoRepuesto) > 0 ? 'Editar costo' : 'Registrar costo'}
         </button>
-        ${orden.costoActualizadoPor ? `
-          <div style="font-size:10px; color:var(--text-3); text-align:center; margin-top:8px;">
-            Actualizado por: ${escapeHtml(orden.costoActualizadoPor)}
-          </div>
-        ` : ''}
       </div>
     ` : ''}
 
     <!-- BITÁCORA -->
     <div class="section-block">
-      <h3>📋 Bitácora de la reparación</h3>
+      <h3>📋 Bitácora</h3>
 
       <div style="margin-bottom:16px;">
         <div class="dictado-wrap textarea">
           <textarea
             id="nuevaNota"
-            placeholder="Escribe o dicta una nota sobre el proceso..."
+            placeholder="Escribe o dicta una nota..."
             maxlength="500"
             data-dictado
-            style="width:100%; padding:12px; padding-right:52px; background:var(--input-bg); color:var(--text-1); border:1.5px solid var(--border-2); border-radius:12px; font-family:inherit; font-size:13px; resize:vertical; min-height:80px;"></textarea>
+            style="width:100%; padding:12px; padding-right:52px; background:var(--input-bg); color:var(--text-1); border:1.5px solid var(--border-2); border-radius:12px; font-family:inherit; font-size:13px; resize:vertical; min-height:70px;"></textarea>
         </div>
 
         <div class="foto-uploader" id="fotoUploader">
@@ -455,7 +400,7 @@ function renderOrden() {
         <input type="file" id="fotoInput" accept="image/*" capture="environment" hidden>
 
         <button id="btnGuardarNota" class="btn btn-primary btn-sm" style="margin-top:12px; width:auto;">
-          <i class="fas fa-plus"></i> Añadir a la bitácora
+          <i class="fas fa-plus"></i> Añadir
         </button>
       </div>
 
@@ -464,10 +409,10 @@ function renderOrden() {
       </div>
     </div>
 
-    <!-- ACCIONES ADMIN -->
+    <!-- ADMIN -->
     ${sesion.rol === 'admin' ? `
       <div class="section-block" style="border-color: rgba(239,68,68,0.3);">
-        <h3 style="color:#EF4444;">⚙️ Acciones de administrador</h3>
+        <h3 style="color:#EF4444;">⚙️ Admin</h3>
         <button id="btnEliminar" class="btn btn-secondary" style="border-color:#EF4444; color:#EF4444;">
           <i class="fas fa-trash"></i> Eliminar orden
         </button>
@@ -482,16 +427,9 @@ function renderOrden() {
   }
 }
 
-function getTextoClave(o) {
-  if (!o.tipoSeguridad) return '-';
-  if (o.tipoSeguridad === 'pin') return `PIN: <strong style="color:var(--text-1);">${escapeHtml(o.pin || '-')}</strong>`;
-  if (o.tipoSeguridad === 'patron') {
-    const patron = (o.patron || '').split(',').join('-');
-    return `Patrón: <strong style="color:var(--text-1);">${escapeHtml(patron)}</strong>`;
-  }
-  return 'Sin clave de acceso';
-}
-
+/* ============================================================
+   BITÁCORA
+   ============================================================ */
 function renderBitacora() {
   const bitacora = Array.isArray(orden.bitacora) ? orden.bitacora : [];
 
@@ -569,7 +507,6 @@ function configurarEventosOrden() {
         fotosNuevas.push(dataUrl);
         renderFotosNuevas();
       } catch (err) {
-        console.error(err);
         toast('Error procesando imagen', 'error');
       }
       fotoInput.value = '';
@@ -577,8 +514,6 @@ function configurarEventosOrden() {
   }
 
   document.getElementById('btnGuardarNota')?.addEventListener('click', guardarNota);
-  document.getElementById('btnWhatsappListo')?.addEventListener('click', enviarWhatsappListo);
-  document.getElementById('btnWhatsappEntrega')?.addEventListener('click', enviarWhatsappEntrega);
   document.getElementById('btnContactar')?.addEventListener('click', contactarCliente);
   document.getElementById('btnEliminar')?.addEventListener('click', eliminarOrden);
   document.getElementById('btnRegistrarCosto')?.addEventListener('click', abrirModalCosto);
@@ -668,9 +603,7 @@ async function cambiarEstado(nuevoEstado) {
 
     toast(`Estado: ${ESTADOS[nuevoEstado].texto}`, 'success', 2000);
     renderOrden();
-
   } catch (err) {
-    console.error('Error cambiando estado:', err);
     toast('Error al cambiar estado', 'error');
   } finally {
     hideLoading();
@@ -825,7 +758,7 @@ function abrirModalCobro() {
     if (metodoSeleccionado === 'Mixto') {
       const detalle = document.getElementById('detalleMixto').value.trim();
       if (!detalle) {
-        document.getElementById('errorMetodo').textContent = 'Especifica el detalle del pago mixto';
+        document.getElementById('errorMetodo').textContent = 'Especifica el detalle';
         document.getElementById('errorMetodo').style.display = 'block';
         return;
       }
@@ -877,9 +810,7 @@ async function confirmarCobro(monto, metodo) {
 
     toast(`Entregado · ${formatBs(monto)} (${metodo})`, 'success', 2500);
     renderOrden();
-
   } catch (err) {
-    console.error('Error:', err);
     toast('Error al registrar entrega', 'error');
   } finally {
     hideLoading();
@@ -887,7 +818,7 @@ async function confirmarCobro(monto, metodo) {
 }
 
 /* ============================================================
-   MODAL PARA REGISTRAR COSTO (solo admin)
+   MODAL DE COSTO (admin)
    ============================================================ */
 function abrirModalCosto() {
   if (sesion.rol !== 'admin') return;
@@ -1016,9 +947,7 @@ function abrirModalCosto() {
       toast(`Costo guardado · Ganancia: ${formatBs(ganancia)}`, 'success', 2500);
       cerrarModalCosto();
       renderOrden();
-
     } catch (err) {
-      console.error('Error guardando costo:', err);
       toast('Error al guardar el costo', 'error');
     } finally {
       hideLoading();
@@ -1053,125 +982,7 @@ function contactarCliente() {
   const mensaje = `Hola ${nombreCliente}, le escribimos de ${CONFIG.nombreTienda} en relación a su ${equipo} (Recibo ${orden.numeroRecibo || '-'}).`;
 
   const tel = orden.telefono.replace(/\D/g, '');
-  const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
-  window.open(url, '_blank', 'noopener,noreferrer');
-}
-
-/* ============================================================
-   WHATSAPP - AVISAR LISTO
-   ============================================================ */
-async function enviarWhatsappListo() {
-  if (!orden.telefono) {
-    toast('La orden no tiene teléfono', 'error');
-    return;
-  }
-
-  haptic(15);
-
-  const serviciosTexto = Array.isArray(orden.servicios) && orden.servicios.length > 0
-    ? orden.servicios.map(s => `- ${s.desc}`).join('\n')
-    : '- Reparación realizada';
-
-  const nombreCliente = (orden.cliente || '').split(' ')[0] || 'cliente';
-  const equipo = `${orden.marca || ''} ${orden.modelo || ''}`.trim();
-  const saldoTexto = Number(orden.saldo) > 0 ? `Saldo pendiente: ${formatBs(orden.saldo)}\n` : '';
-
-  const mensaje = `Hola ${nombreCliente},
-
-Buenas noticias: su ${equipo} ya está LISTO para retirar.
-
-Servicios realizados:
-${serviciosTexto}
-
-Total: ${formatBs(orden.total || 0)}
-${saldoTexto}
-${CONFIG.nombreTienda}
-${CONFIG.direccion}
-${CONFIG.horario}
-Tel: ${CONFIG.telefono}
-
-Le esperamos.`;
-
-  const tel = orden.telefono.replace(/\D/g, '');
-  const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
-  window.open(url, '_blank', 'noopener,noreferrer');
-
-  try {
-    const entrada = {
-      tipo: 'whatsapp',
-      texto: `WhatsApp enviado: Aviso de equipo listo`,
-      autor: sesion.nombre,
-      fecha: new Date().toISOString()
-    };
-    await updateDoc(doc(db, 'recibos', ordenId), {
-      bitacora: arrayUnion(entrada),
-      actualizadoEn: serverTimestamp()
-    });
-    orden.bitacora = [...(orden.bitacora || []), entrada];
-    renderOrden();
-    toast('WhatsApp enviado y registrado', 'success', 2000);
-  } catch (err) {
-    console.error('Error registrando WhatsApp:', err);
-  }
-}
-
-/* ============================================================
-   WHATSAPP - CONFIRMAR ENTREGA
-   ============================================================ */
-async function enviarWhatsappEntrega() {
-  if (!orden.telefono) {
-    toast('La orden no tiene teléfono', 'error');
-    return;
-  }
-
-  haptic(15);
-
-  const fechaEntrega = orden.fechaEntrega
-    ? formatFecha(orden.fechaEntrega)
-    : formatFecha(new Date());
-
-  const nombreCliente = (orden.cliente || '').split(' ')[0] || 'cliente';
-  const equipo = `${orden.marca || ''} ${orden.modelo || ''}`.trim();
-  const montoTexto = orden.montoCobrado
-    ? `Total cobrado: ${formatBs(orden.montoCobrado)}\nMétodo: ${orden.metodoPago}\n`
-    : '';
-
-  const mensaje = `Hola ${nombreCliente},
-
-Confirmamos la entrega de su ${equipo}.
-
-N° Recibo: ${orden.numeroRecibo || '-'}
-Fecha de entrega: ${fechaEntrega}
-
-${montoTexto}
-Gracias por confiar en nosotros.
-Cualquier consulta:
-Tel: ${CONFIG.telefono}
-
-${CONFIG.nombreTienda}
-${CONFIG.web}`;
-
-  const tel = orden.telefono.replace(/\D/g, '');
-  const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
-  window.open(url, '_blank', 'noopener,noreferrer');
-
-  try {
-    const entrada = {
-      tipo: 'whatsapp',
-      texto: `WhatsApp enviado: Confirmación de entrega`,
-      autor: sesion.nombre,
-      fecha: new Date().toISOString()
-    };
-    await updateDoc(doc(db, 'recibos', ordenId), {
-      bitacora: arrayUnion(entrada),
-      actualizadoEn: serverTimestamp()
-    });
-    orden.bitacora = [...(orden.bitacora || []), entrada];
-    renderOrden();
-    toast('Confirmación enviada y registrada', 'success', 2000);
-  } catch (err) {
-    console.error('Error registrando WhatsApp:', err);
-  }
+  window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank', 'noopener,noreferrer');
 }
 
 /* ============================================================
@@ -1198,7 +1009,7 @@ async function regenerarYEnviarPDF() {
     const CW = W - M * 2;
     let y = 0;
 
-    /* HEADER NARANJA */
+    /* HEADER */
     pdf.setFillColor(255, 105, 0);
     pdf.rect(0, 0, W, 28, 'F');
 
@@ -1401,13 +1212,13 @@ async function regenerarYEnviarPDF() {
       for (let i = 0; i < Math.min(fotosValidas.length, 4); i++) {
         try {
           pdf.addImage(fotosValidas[i], 'JPEG', x, y, fotoW - 1, fotoH, undefined, 'FAST');
-        } catch (e) { console.error('Error foto:', e); }
+        } catch (e) {}
         x += fotoW + 1;
       }
       y += fotoH + 4;
     }
 
-    /* QR + URL */
+    /* URL */
     if (y > 220) { pdf.addPage(); y = 20; }
     pdf.setFillColor(255, 244, 235);
     pdf.roundedRect(M, y, CW, 28, 1.5, 1.5, 'F');
@@ -1460,11 +1271,11 @@ async function regenerarYEnviarPDF() {
     pdf.setTextColor(120, 120, 120);
     pdf.text(`© ${new Date().getFullYear()} ${CONFIG.nombreTienda} · Todos los derechos reservados`, W / 2, H - 7, { align: 'center' });
 
-    /* GUARDAR PDF */
+    /* GUARDAR */
     const nombreArchivo = `Recibo_${orden.numeroRecibo || 'sin-numero'}_${(orden.cliente || 'Cliente').split(' ')[0]}.pdf`;
     pdf.save(nombreArchivo);
 
-    /* ABRIR WHATSAPP */
+    /* WHATSAPP */
     setTimeout(() => {
       const nombreCliente = (orden.cliente || '').split(' ')[0] || 'cliente';
       const equipo = `${orden.marca || ''} ${orden.modelo || ''}`.trim();
@@ -1478,12 +1289,11 @@ ${Number(orden.saldo) > 0 ? `Saldo pendiente: ${formatBs(orden.saldo)}` : ''}
 Le adjuntamos el PDF del recibo.`;
 
       const tel = (orden.telefono || '').replace(/\D/g, '');
-      const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
-      window.open(url, '_blank', 'noopener,noreferrer');
+      window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank', 'noopener,noreferrer');
       toast('PDF descargado · Adjúntalo en WhatsApp', 'success', 4000);
     }, 600);
 
-    /* REGISTRAR EN BITÁCORA */
+    /* BITÁCORA */
     try {
       const entrada = {
         tipo: 'whatsapp',
@@ -1496,9 +1306,7 @@ Le adjuntamos el PDF del recibo.`;
         actualizadoEn: serverTimestamp()
       });
       orden.bitacora = [...(orden.bitacora || []), entrada];
-    } catch (err) {
-      console.error('Error registrando PDF en bitácora:', err);
-    }
+    } catch (err) {}
 
   } catch (err) {
     console.error('Error regenerando PDF:', err);
@@ -1540,12 +1348,10 @@ async function guardarNota() {
     orden.bitacora = [...(orden.bitacora || []), entrada];
     fotosNuevas = [];
 
-    toast('Entrada añadida a la bitácora', 'success', 2000);
+    toast('Añadido a la bitácora', 'success', 2000);
     renderOrden();
-
   } catch (err) {
-    console.error('Error guardando nota:', err);
-    toast('Error al guardar la nota', 'error');
+    toast('Error al guardar', 'error');
   } finally {
     hideLoading();
   }
@@ -1589,10 +1395,7 @@ function renderFotosNuevas() {
 async function eliminarOrden() {
   if (sesion.rol !== 'admin') return;
 
-  const confirmar = confirm(
-    '¿Estás seguro que quieres eliminar esta orden?\n\nEsta acción NO se puede deshacer.'
-  );
-
+  const confirmar = confirm('¿Eliminar esta orden?\n\nEsta acción NO se puede deshacer.');
   if (!confirmar) return;
 
   haptic([50, 30, 50]);
@@ -1603,7 +1406,6 @@ async function eliminarOrden() {
     toast('Orden eliminada', 'success', 2000);
     setTimeout(() => window.location.href = '/app/', 1000);
   } catch (err) {
-    console.error('Error eliminando:', err);
     toast('Error al eliminar', 'error');
     hideLoading();
   }
