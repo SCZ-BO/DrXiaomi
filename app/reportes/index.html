@@ -66,6 +66,74 @@
       opacity: 0.85;
     }
 
+    /* Stats de costos / ganancia */
+    .costos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .costo-card {
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .costo-card.costos {
+      background: rgba(255, 149, 0, 0.1);
+      border: 1.5px solid rgba(255, 149, 0, 0.35);
+    }
+    .costo-card.ganancia {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1.5px solid rgba(16, 185, 129, 0.35);
+    }
+    .costo-card .valor {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .costo-card.costos .valor { color: #FF9500; }
+    .costo-card.ganancia .valor { color: #10B981; }
+    .costo-card .label {
+      font-size: 11px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    /* Card margen destacada */
+    .margen-card {
+      background: linear-gradient(135deg, rgba(0, 255, 200, 0.1), rgba(0, 153, 255, 0.1));
+      border: 1.5px solid rgba(0, 255, 200, 0.35);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .margen-card .valor {
+      font-size: 32px;
+      font-weight: 900;
+      color: #00FFCC;
+      line-height: 1;
+    }
+    .margen-card .label {
+      font-size: 11px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+    .margen-card .helper {
+      font-size: 10px;
+      color: var(--text-3);
+      margin-top: 6px;
+      opacity: 0.7;
+    }
+
     /* Filtros de fecha */
     .fecha-filtros {
       display: flex;
@@ -235,6 +303,29 @@
     }
     .btn-export:active { transform: scale(0.97); }
 
+    /* Botón volver al panel */
+    .btn-back-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #FF6900, #FF8A3C);
+      border: none;
+      border-radius: 14px;
+      color: white;
+      font-size: 15px;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+      margin-top: 20px;
+      box-shadow: 0 6px 20px rgba(255, 105, 0, 0.35);
+      letter-spacing: 0.3px;
+      transition: transform 0.15s ease;
+    }
+    .btn-back-panel:active { transform: scale(0.97); }
+
     /* Fecha personalizada */
     .fecha-custom {
       display: none;
@@ -277,7 +368,7 @@
     }
 
     /* ============================================================ */
-    /* 🟠 BOTONES DEL HEADER (Font Awesome)                         */
+    /* 🟠 BOTONES DEL HEADER                                        */
     /* ============================================================ */
     .header-actions {
       display: flex;
@@ -312,11 +403,10 @@
     <!-- HEADER -->
     <header class="app-header">
       <div class="brand">
-        <button class="icon-btn" id="backBtn" aria-label="Volver">
+        <button class="icon-btn" id="backBtn" aria-label="Volver al panel">
           <i class="fas fa-arrow-left"></i>
         </button>
 
-        <!-- 🟠 Logo redondo -->
         <div class="brand-logo-orden">
           <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi"
                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:18px;&quot;></i>';">
@@ -328,7 +418,6 @@
         </div>
       </div>
 
-      <!-- 🔘 BOTONES DEL HEADER -->
       <div class="header-actions">
         <button class="icon-btn" id="homeBtn" title="Ir al panel" aria-label="Ir al panel">
           <i class="fas fa-home"></i>
@@ -336,7 +425,7 @@
         <button class="icon-btn" id="preciosBtn" title="Buscar precios" aria-label="Buscar precios">
           <i class="fas fa-tags"></i>
         </button>
-        <button class="icon-btn" id="refreshBtn" title="Actualizar" aria-label="Actualizar">
+        <button class="icon-btn" id="refreshBtn" title="Actualizar datos" aria-label="Actualizar">
           <i class="fas fa-rotate"></i>
         </button>
         <button class="icon-btn" id="logoutBtn" title="Cerrar sesión" aria-label="Cerrar sesión">
@@ -366,11 +455,29 @@
         </button>
       </div>
 
-      <!-- Total -->
+      <!-- Total cobrado -->
       <div class="total-card">
         <div class="label">Total cobrado</div>
         <div class="valor" id="totalMonto">Bs. 0.00</div>
         <div class="sub" id="totalEntregas">0 entregas</div>
+      </div>
+
+      <!-- COSTOS Y GANANCIA -->
+      <div class="costos-grid">
+        <div class="costo-card costos">
+          <div class="valor" id="totalCosto">Bs. 0</div>
+          <div class="label">Costos</div>
+        </div>
+        <div class="costo-card ganancia">
+          <div class="valor" id="totalGanancia">Bs. 0</div>
+          <div class="label">Ganancia neta</div>
+        </div>
+      </div>
+
+      <div class="margen-card">
+        <div class="valor" id="totalMargen">0%</div>
+        <div class="label">Margen de ganancia</div>
+        <div class="helper">(Ganancia / Total cobrado)</div>
       </div>
 
       <!-- Mini stats -->
@@ -389,21 +496,22 @@
       <h3 style="font-size:12px; font-weight:800; color:var(--brand-500); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px;">
         Por método de pago
       </h3>
-      <div class="metodos-grid" id="metodosGrid">
-        <!-- Dinámico -->
-      </div>
+      <div class="metodos-grid" id="metodosGrid"></div>
 
       <!-- Movimientos -->
       <h3 style="font-size:12px; font-weight:800; color:var(--brand-500); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px;">
         Movimientos
       </h3>
-      <div id="listaMovimientos">
-        <!-- Dinámico -->
-      </div>
+      <div id="listaMovimientos"></div>
 
-      <!-- Exportar -->
+      <!-- Exportar CSV -->
       <button class="btn-export" id="btnExportar">
         <i class="fas fa-download"></i> Exportar a CSV
+      </button>
+
+      <!-- Volver al panel -->
+      <button class="btn-back-panel" id="btnVolverPanel">
+        <i class="fas fa-home"></i> VOLVER AL PANEL
       </button>
 
     </main>
