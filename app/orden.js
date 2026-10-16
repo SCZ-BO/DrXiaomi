@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (minimalista + PDF premium + volver panel)
+   DR. XIAOMI · ORDEN (colores actualizados + volver panel)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -31,7 +31,7 @@ const CONFIG = {
 };
 
 const ESTADOS = {
-  recibido:          { texto: 'En proceso',          icono: 'fa-box',                clase: 'recibido' },
+  recibido:          { texto: 'Recibido',            icono: 'fa-box',                clase: 'recibido' },
   reparacion:        { texto: 'En reparación',       icono: 'fa-screwdriver-wrench', clase: 'reparacion' },
   'espera-repuesto': { texto: 'Esperando repuesto',  icono: 'fa-clock',              clase: 'espera' },
   listo:             { texto: 'Listo para entregar', icono: 'fa-check-circle',       clase: 'listo' },
@@ -40,11 +40,11 @@ const ESTADOS = {
 };
 
 const ESTADO_COLORES = {
-  'recibido': '#F59E0B',
-  'reparacion': '#3B82F6',
-  'espera-repuesto': '#FF6900',
-  'listo': '#10B981',
-  'entregado': '#8B5CF6',
+  'recibido': '#FFFFFF',
+  'reparacion': '#FF6900',
+  'espera-repuesto': '#3B82F6',
+  'listo': '#FBBF24',
+  'entregado': '#10B981',
   'devuelto': '#EF4444'
 };
 
@@ -527,7 +527,6 @@ function configurarEventosOrden() {
     regenerarYEnviarPDF();
   });
 
-  // ⬇️ BOTÓN VOLVER AL PANEL (siempre visible)
   document.getElementById('btnVolverPanelFinal')?.addEventListener('click', () => {
     haptic(15);
     window.location.href = '/app/';
@@ -1082,11 +1081,11 @@ async function regenerarYEnviarPDF() {
     /* ESTADO */
     const estadoActual = orden.estadoOrden || 'recibido';
     const estadosInfo = {
-      'recibido': { texto: 'EN PROCESO', color: [245, 158, 11] },
-      'reparacion': { texto: 'EN REPARACIÓN', color: [59, 130, 246] },
-      'espera-repuesto': { texto: 'ESPERANDO REPUESTO', color: [255, 105, 0] },
-      'listo': { texto: 'LISTO PARA ENTREGAR', color: [16, 185, 129] },
-      'entregado': { texto: 'ENTREGADO', color: [139, 92, 246] },
+      'recibido': { texto: 'RECIBIDO', color: [200, 200, 200] },
+      'reparacion': { texto: 'EN REPARACIÓN', color: [255, 105, 0] },
+      'espera-repuesto': { texto: 'ESPERANDO REPUESTO', color: [59, 130, 246] },
+      'listo': { texto: 'LISTO PARA ENTREGAR', color: [251, 191, 36] },
+      'entregado': { texto: 'ENTREGADO', color: [16, 185, 129] },
       'devuelto': { texto: 'DEVUELTO', color: [239, 68, 68] }
     };
     const estadoInfo = estadosInfo[estadoActual] || estadosInfo.recibido;
@@ -1105,7 +1104,6 @@ async function regenerarYEnviarPDF() {
     /* CLIENTE Y EQUIPO */
     const colW = (CW - 3) / 2;
 
-    // Cliente
     pdf.setFillColor(255, 255, 255);
     pdf.roundedRect(M, y, colW, 28, 2.5, 2.5, 'F');
     pdf.setDrawColor(255, 105, 0);
@@ -1128,7 +1126,6 @@ async function regenerarYEnviarPDF() {
     pdf.setFontSize(8);
     pdf.text('Cliente', M + 3, y + 25.5);
 
-    // Equipo
     const x2 = M + colW + 3;
     pdf.setFillColor(255, 255, 255);
     pdf.roundedRect(x2, y, colW, 28, 2.5, 2.5, 'F');
