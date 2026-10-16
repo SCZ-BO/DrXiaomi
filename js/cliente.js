@@ -1,7 +1,7 @@
 /* ============================================================
    DR. XIAOMI · CLIENTE (Wizard de nuevo recibo)
    Archivo: js/cliente.js
-   Versión: PDF PRO con diseño premium y enlaces clickeables
+   Versión FINAL: blindado + PDF PRO con enlaces clickeables
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -35,9 +35,6 @@ const CONFIG = {
   ]
 };
 
-/* ============================================================
-   COLORES DE MARCA (para el PDF)
-   ============================================================ */
 const COLOR = {
   naranja: [255, 105, 0],
   naranjaClaro: [255, 140, 60],
@@ -541,7 +538,7 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS
+   FOTOS — BLINDADO
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
@@ -549,7 +546,17 @@ function configurarFotos() {
   const inputGaleria = document.getElementById('inputGaleria');
   const sheet = document.getElementById('fotoSheet');
 
-  if (!grid) return;
+  console.log('🔍 configurarFotos:', {
+    grid: !!grid,
+    inputCamara: !!inputCamara,
+    inputGaleria: !!inputGaleria,
+    sheet: !!sheet
+  });
+
+  if (!grid) {
+    console.warn('⚠️ #fotosGrid no existe');
+    return;
+  }
 
   let slotActual = null;
 
@@ -572,13 +579,24 @@ function configurarFotos() {
 
     slotActual = idx;
     haptic(10);
-    sheet?.classList.add('show');
+
+    // Si hay sheet, abrirlo. Si no, abrir galería directamente.
+    if (sheet) {
+      sheet.classList.add('show');
+    } else if (inputGaleria) {
+      inputGaleria.click();
+    } else if (inputCamara) {
+      inputCamara.click();
+    } else {
+      toast('Subida de fotos no disponible', 'error');
+    }
   });
 
   function cerrarSheet() {
     sheet?.classList.remove('show');
   }
 
+  // Optional chaining en TODOS
   document.getElementById('btnCancelarFoto')?.addEventListener('click', cerrarSheet);
   sheet?.addEventListener('click', (e) => {
     if (e.target === sheet) cerrarSheet();
@@ -587,7 +605,7 @@ function configurarFotos() {
   document.getElementById('btnTomarFoto')?.addEventListener('click', () => {
     cerrarSheet();
     if (!inputCamara) {
-      toast('Cámara no disponible.', 'error', 4000);
+      toast('Cámara no disponible. Falta #inputCamara en el HTML.', 'error', 4000);
       return;
     }
     setTimeout(() => inputCamara.click(), 150);
@@ -596,7 +614,7 @@ function configurarFotos() {
   document.getElementById('btnSubirFoto')?.addEventListener('click', () => {
     cerrarSheet();
     if (!inputGaleria) {
-      toast('Galería no disponible.', 'error', 4000);
+      toast('Galería no disponible. Falta #inputGaleria en el HTML.', 'error', 4000);
       return;
     }
     setTimeout(() => inputGaleria.click(), 150);
@@ -677,12 +695,21 @@ async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
 }
 
 /* ============================================================
-   SERVICIOS
+   SERVICIOS — BLINDADO
    ============================================================ */
 function configurarServicios() {
   const list = document.getElementById('serviciosList');
   const btnAdd = document.getElementById('addServicio');
-  if (!list || !btnAdd) return;
+
+  console.log('🔍 configurarServicios:', {
+    list: !!list,
+    btnAdd: !!btnAdd
+  });
+
+  if (!list) {
+    console.warn('⚠️ #serviciosList no existe');
+    return;
+  }
 
   list.addEventListener('input', (e) => {
     if (e.target.classList.contains('servicio-costo')) {
@@ -697,7 +724,7 @@ function configurarServicios() {
     if (item) eliminarServicio(item);
   });
 
-  btnAdd.addEventListener('click', () => {
+  btnAdd?.addEventListener('click', () => {
     haptic(10);
     const item = crearServicioItem();
     list.appendChild(item);
@@ -747,10 +774,13 @@ function calcularTotal() {
   document.querySelectorAll('.servicio-costo').forEach(input => {
     total += parseFloat(input.value) || 0;
   });
+
   const costoTotal = document.getElementById('costoTotal');
   if (costoTotal) costoTotal.value = total.toFixed(2);
+
   const display = document.getElementById('costoTotalDisplay');
   if (display) display.textContent = formatBs(total);
+
   actualizarSaldo();
 }
 
@@ -766,11 +796,14 @@ function recolectarServicios() {
 }
 
 /* ============================================================
-   ADELANTO Y SALDO
+   ADELANTO Y SALDO — BLINDADO
    ============================================================ */
 function configurarAdelanto() {
   const input = document.getElementById('adelanto');
-  if (!input) return;
+  if (!input) {
+    console.warn('⚠️ #adelanto no existe');
+    return;
+  }
   input.addEventListener('input', actualizarSaldo);
 }
 
@@ -936,7 +969,7 @@ function generarVistaPrevia() {
 }
 
 /* ============================================================
-   PDF PRO CON DISEÑO PREMIUM
+   PDF — CONFIGURACIÓN
    ============================================================ */
 function configurarPDF() {
   document.getElementById('btnGenerate')?.addEventListener('click', generarPDF);
@@ -1026,6 +1059,9 @@ async function cargarLogoDataUrl() {
   });
 }
 
+/* ============================================================
+   PDF PRO CON ENLACES CLICKEABLES
+   ============================================================ */
 async function generarPDF() {
   guardarDatosPaso(6);
   const numeroRecibo = generarNumeroRecibo();
@@ -1044,32 +1080,26 @@ async function generarPDF() {
     const CW = W - M * 2;
     let y = 0;
 
-    /* ============================================================
-       MARCA DE AGUA (diagonal, sutil)
-       ============================================================ */
+    /* ---------- MARCA DE AGUA ---------- */
     pdf.saveGraphicsState();
     pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.setFont('helvetica', 'bold');
-    // @ts-ignore
-    pdf.setGState(new pdf.GState({ opacity: 0.05 }));
+    try {
+      // @ts-ignore
+      pdf.setGState(new pdf.GState({ opacity: 0.05 }));
+    } catch (e) { /* ignore si no soporta opacity */ }
     pdf.setFontSize(70);
     pdf.text('DR. XIAOMI', W / 2, H / 2 - 20, { align: 'center', angle: 45 });
     pdf.setFontSize(50);
     pdf.text('SCZ', W / 2 + 10, H / 2 + 30, { align: 'center', angle: 45 });
     pdf.restoreGraphicsState();
 
-    /* ============================================================
-       HEADER NARANJA CON BANDA DECORATIVA
-       ============================================================ */
-    // Banda principal
+    /* ---------- HEADER NARANJA ---------- */
     pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.rect(0, 0, W, 34, 'F');
-
-    // Banda decorativa inferior (más clara)
     pdf.setFillColor(COLOR.naranjaClaro[0], COLOR.naranjaClaro[1], COLOR.naranjaClaro[2]);
     pdf.rect(0, 34, W, 1.5, 'F');
 
-    // Logo en círculo blanco
     if (logoDataUrl) {
       try {
         pdf.setFillColor(255, 255, 255);
@@ -1078,18 +1108,15 @@ async function generarPDF() {
       } catch (e) { console.error('Error logo:', e); }
     }
 
-    // Nombre tienda
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(20);
     pdf.text(CONFIG.nombreTienda, M + 28, 14);
 
-    // Eslogan
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(9);
     pdf.text(CONFIG.eslogan, M + 28, 20);
 
-    // Dirección + Teléfono clickeable
     pdf.setFontSize(8);
     pdf.text(CONFIG.direccion, M + 28, 26);
 
@@ -1100,13 +1127,16 @@ async function generarPDF() {
       url: `tel:+591${CONFIG.telefono}`
     });
 
-    // Recuadro RECIBO (derecha, semi-transparente)
     pdf.setFillColor(255, 255, 255);
-    // @ts-ignore
-    pdf.setGState(new pdf.GState({ opacity: 0.15 }));
+    try {
+      // @ts-ignore
+      pdf.setGState(new pdf.GState({ opacity: 0.15 }));
+    } catch (e) { /* ignore */ }
     pdf.roundedRect(W - M - 55, 6, 55, 22, 2, 2, 'F');
-    // @ts-ignore
-    pdf.setGState(new pdf.GState({ opacity: 1 }));
+    try {
+      // @ts-ignore
+      pdf.setGState(new pdf.GState({ opacity: 1 }));
+    } catch (e) { /* ignore */ }
 
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
@@ -1124,9 +1154,7 @@ async function generarPDF() {
 
     y = 40;
 
-    /* ============================================================
-       BANNER "RECIBIDO"
-       ============================================================ */
+    /* ---------- BANNER RECIBIDO ---------- */
     pdf.setFillColor(COLOR.grisSuave[0], COLOR.grisSuave[1], COLOR.grisSuave[2]);
     pdf.roundedRect(M, y, CW, 10, 2, 2, 'F');
     pdf.setTextColor(COLOR.textoOscuro[0], COLOR.textoOscuro[1], COLOR.textoOscuro[2]);
@@ -1139,15 +1167,11 @@ async function generarPDF() {
     pdf.text('Recibo de servicio técnico', W - M - 4, y + 6.5, { align: 'right' });
     y += 14;
 
-    /* ============================================================
-       CLIENTE Y EQUIPO (2 columnas con estilo tarjeta)
-       ============================================================ */
+    /* ---------- CLIENTE Y EQUIPO ---------- */
     const colW = (CW - 4) / 2;
 
-    // --- CLIENTE ---
     pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
     pdf.roundedRect(M, y, colW, 26, 2, 2, 'F');
-    // Borde izquierdo naranja grueso
     pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.rect(M, y, 1.5, 26, 'F');
 
@@ -1170,7 +1194,6 @@ async function generarPDF() {
     });
     pdf.text('Cliente', M + 5, y + 23);
 
-    // --- EQUIPO ---
     pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
     pdf.roundedRect(M + colW + 4, y, colW, 26, 2, 2, 'F');
     pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
@@ -1196,10 +1219,7 @@ async function generarPDF() {
 
     y += 30;
 
-    /* ============================================================
-       ESTADO Y CLAVE DE ACCESO
-       ============================================================ */
-    // --- ESTADO / FALLA ---
+    /* ---------- ESTADO Y CLAVE ---------- */
     pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
     pdf.roundedRect(M, y, colW, 26, 2, 2, 'F');
     pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
@@ -1224,7 +1244,6 @@ async function generarPDF() {
       pdf.text(lineas.slice(0, 2), M + 5, yy);
     }
 
-    // --- CLAVE DE ACCESO ---
     pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
     pdf.roundedRect(M + colW + 4, y, colW, 26, 2, 2, 'F');
     pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
@@ -1252,12 +1271,9 @@ async function generarPDF() {
 
     y += 30;
 
-    /* ============================================================
-       SERVICIOS Y COSTOS
-       ============================================================ */
+    /* ---------- SERVICIOS ---------- */
     if (y > 220) { pdf.addPage(); y = 20; }
 
-    // Banner de sección
     pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.roundedRect(M, y, CW, 9, 1.5, 1.5, 'F');
     pdf.setTextColor(255, 255, 255);
@@ -1295,17 +1311,13 @@ async function generarPDF() {
 
     y = pdf.lastAutoTable.finalY + 5;
 
-    /* ============================================================
-       TOTALES (caja destacada)
-       ============================================================ */
+    /* ---------- TOTALES ---------- */
     const boxW = 85;
     const boxX = M + CW - boxW;
     const boxAlto = datos.adelanto > 0 ? 28 : 20;
 
-    // Fondo de la caja
     pdf.setFillColor(COLOR.grisFondo[0], COLOR.grisFondo[1], COLOR.grisFondo[2]);
     pdf.roundedRect(boxX, y, boxW, boxAlto, 2, 2, 'F');
-    // Borde naranja
     pdf.setDrawColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.setLineWidth(0.4);
     pdf.roundedRect(boxX, y, boxW, boxAlto, 2, 2, 'S');
@@ -1331,12 +1343,10 @@ async function generarPDF() {
       rowY = y + 14;
     }
 
-    // Separador
     pdf.setDrawColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.setLineWidth(0.5);
     pdf.line(boxX + 5, rowY + 4, boxX + boxW - 5, rowY + 4);
 
-    // Saldo
     pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(9);
@@ -1346,9 +1356,7 @@ async function generarPDF() {
 
     y += boxAlto + 6;
 
-    /* ============================================================
-       FOTOS DEL EQUIPO (con marco)
-       ============================================================ */
+    /* ---------- FOTOS ---------- */
     const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
     if (fotosValidas.length > 0) {
       if (y > 235) { pdf.addPage(); y = 20; }
@@ -1366,7 +1374,6 @@ async function generarPDF() {
       let x = M;
       for (let i = 0; i < Math.min(fotosValidas.length, 4); i++) {
         try {
-          // Marco con sombra simulada
           pdf.setFillColor(240, 240, 240);
           pdf.roundedRect(x + 0.5, y + 0.5, fotoW, fotoH, 1, 1, 'F');
           pdf.setFillColor(255, 255, 255);
@@ -1378,14 +1385,11 @@ async function generarPDF() {
       y += fotoH + 6;
     }
 
-    /* ============================================================
-       QR + URL CLICKEABLE
-       ============================================================ */
+    /* ---------- QR + URL ---------- */
     if (y > 215) { pdf.addPage(); y = 20; }
 
     pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
     pdf.roundedRect(M, y, CW, 32, 2, 2, 'F');
-    // Borde izquierdo naranja
     pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.rect(M, y, 1.5, 32, 'F');
 
@@ -1407,7 +1411,6 @@ async function generarPDF() {
     pdf.setFontSize(8);
     pdf.text('Escanea el código QR o visita:', M + 32, y + 16);
 
-    // ✅ URL clickeable
     const urlTexto = `${CONFIG.web}/?recibo=${numeroRecibo}`;
     const urlCompleta = `${CONFIG.urlApp}/?recibo=${numeroRecibo}`;
     pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
@@ -1415,7 +1418,6 @@ async function generarPDF() {
     pdf.setFontSize(9);
     pdf.textWithLink(urlTexto, M + 32, y + 23, { url: urlCompleta });
 
-    // Subrayar la URL
     const urlWidth = pdf.getTextWidth(urlTexto);
     pdf.setDrawColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.setLineWidth(0.3);
@@ -1423,15 +1425,11 @@ async function generarPDF() {
 
     y += 38;
 
-    /* ============================================================
-       BANNER GRANDE "VISITA NUESTRA WEB"
-       ============================================================ */
+    /* ---------- BANNER WEB ---------- */
     if (y > 240) { pdf.addPage(); y = 20; }
 
     pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.roundedRect(M, y, CW, 34, 2, 2, 'F');
-
-    // Banda decorativa clara en la parte superior
     pdf.setFillColor(COLOR.naranjaClaro[0], COLOR.naranjaClaro[1], COLOR.naranjaClaro[2]);
     pdf.rect(M, y, CW, 2, 'F');
 
@@ -1442,14 +1440,12 @@ async function generarPDF() {
 
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(22);
-    // ✅ Web clickeable
     pdf.textWithLink(CONFIG.web, M + 8, y + 21, { url: CONFIG.urlApp });
 
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(7);
     pdf.text('Toca el enlace o escanea el código QR', M + 8, y + 28);
 
-    // QR grande a la derecha
     if (qrDataUrl) {
       try {
         pdf.setFillColor(255, 255, 255);
@@ -1460,9 +1456,7 @@ async function generarPDF() {
 
     y += 40;
 
-    /* ============================================================
-       CONDICIONES (2 columnas)
-       ============================================================ */
+    /* ---------- CONDICIONES ---------- */
     if (y > 245) { pdf.addPage(); y = 20; }
 
     pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
@@ -1484,15 +1478,11 @@ async function generarPDF() {
       pdf.text(lineas[0], xPos, yPos);
     });
 
-    /* ============================================================
-       FOOTER CON ENLACES CLICKEABLES
-       ============================================================ */
-    // Línea divisoria naranja
+    /* ---------- FOOTER ---------- */
     pdf.setDrawColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
     pdf.setLineWidth(0.6);
     pdf.line(M, H - 15, W - M, H - 15);
 
-    // Copyright centrado
     pdf.setFontSize(6.5);
     pdf.setTextColor(COLOR.textoClaro[0], COLOR.textoClaro[1], COLOR.textoClaro[2]);
     pdf.setFont('helvetica', 'normal');
@@ -1503,16 +1493,9 @@ async function generarPDF() {
       { align: 'center' }
     );
 
-    // Enlaces del footer (centrados)
     pdf.setFontSize(7);
     const footerY = H - 6;
-
-    // Web
     const webText = CONFIG.web;
-    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setFont('helvetica', 'bold');
-
-    // Calcular posición central para los dos enlaces
     const sepText = '  ·  ';
     const telText = `Tel: ${CONFIG.telefono}`;
     const webW = pdf.getTextWidth(webText);
@@ -1521,6 +1504,8 @@ async function generarPDF() {
     const totalW = webW + sepW + telW;
     const startX = (W - totalW) / 2;
 
+    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
+    pdf.setFont('helvetica', 'bold');
     pdf.textWithLink(webText, startX, footerY, { url: CONFIG.urlApp });
 
     pdf.setTextColor(COLOR.textoClaro[0], COLOR.textoClaro[1], COLOR.textoClaro[2]);
@@ -1533,14 +1518,13 @@ async function generarPDF() {
       url: `tel:+591${CONFIG.telefono}`
     });
 
-    /* ============================================================
-       GUARDAR Y SUBIR A FIRESTORE
-       ============================================================ */
+    /* ---------- GUARDAR ---------- */
     const nombreArchivo = `Recibo_${numeroRecibo}_${datos.nombre.split(' ')[0]}.pdf`;
     window._ultimoPDF = pdf;
     window._ultimoNombrePDF = nombreArchivo;
     pdf.save(nombreArchivo);
 
+    /* ---------- FIRESTORE ---------- */
     try {
       await addDoc(collection(db, 'recibos'), {
         numeroRecibo,
@@ -1571,6 +1555,7 @@ async function generarPDF() {
       toast('Recibo generado pero no se pudo guardar en la nube', 'warning', 4000);
     }
 
+    /* ---------- MODAL ÉXITO ---------- */
     const successNumero = document.getElementById('successNumero');
     if (successNumero) successNumero.textContent = numeroRecibo;
     const successModal = document.getElementById('successModal');
