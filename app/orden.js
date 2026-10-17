@@ -1,9 +1,9 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (colores actualizados + volver panel)
+   DR. XIAOMI · ORDEN (RÁPIDO Y FUNCIONAL)
    Archivo: app/orden.js
    ============================================================ */
 
-import { requireAuth, logout, getSesion } from '/js/app-auth.js';
+import { requireAuth, logout } from '/js/app-auth.js';
 import {
   toast, haptic, initTheme, escapeHtml,
   formatBs, tiempoRelativo, showLoading, hideLoading
@@ -22,14 +22,12 @@ import '/js/dictado.js';
 /* ============================================================
    CONFIGURACIÓN
    ============================================================ */
-const DEBUG = true;
 const TIMEOUT_MS = 10000;
 
 const CONFIG = {
   nombreTienda: 'DR. XIAOMI SCZ',
   direccion: 'Centro Comercial Cañoto #K1, Santa Cruz',
   telefono: '75959450',
-  horario: 'Lunes a Sábado 9:00 - 20:00',
   web: 'xiaomi.scz.red'
 };
 
@@ -422,7 +420,7 @@ function renderOrden() {
       </div>
     ` : ''}
 
-    <!-- VOLVER AL PANEL (siempre visible) -->
+    <!-- VOLVER AL PANEL -->
     <button id="btnVolverPanelFinal" style="width:100%; margin-top:8px; margin-bottom:24px; padding:16px; background:linear-gradient(135deg,#FF6900,#FF8A3C); color:white; border:none; border-radius:14px; font-weight:800; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-family:inherit; box-shadow:0 6px 20px rgba(255,105,0,0.35);">
       <i class="fas fa-home"></i> VOLVER AL PANEL
     </button>
