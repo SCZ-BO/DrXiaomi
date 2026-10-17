@@ -38,11 +38,59 @@
     .stat-value.brand { color: var(--brand-500); }
     .stat-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
 
+    /* Skeleton Loader (Mantenido por si acaso) */
     .skeleton-card { background: var(--bg-elev-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border-1); animation: pulse 1.5s infinite; }
     .skeleton-line { height: 12px; background: var(--bg-elev-2); border-radius: 6px; margin-bottom: 8px; }
     @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
+    /* ============================================================ */
+    /* NUEVO LOADER PRO (LOGO + ANILLO GIRATORIO)                   */
+    /* ============================================================ */
+    .loader-overlay {
+      position: fixed; inset: 0; 
+      background: rgba(10, 10, 11, 0.85); /* Fondo oscuro semitransparente */
+      backdrop-filter: blur(8px);
+      z-index: 999999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.4s ease;
+    }
+    .loader-overlay.hidden { opacity: 0; pointer-events: none; }
+    
+    .loader-logo-container {
+      position: relative;
+      width: 90px; height: 90px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    /* El anillo que gira */
+    .loader-ring {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      border-top-color: var(--brand-500); /* Naranja Xiaomi */
+      border-bottom-color: var(--brand-500);
+      animation: spin 1.2s linear infinite;
+    }
+    
+    /* El logo circular en el centro */
+    .loader-logo-img {
+      width: 70px; height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--bg-elev-2);
+      border: 2px solid var(--border-1);
+      box-shadow: 0 0 20px rgba(255, 105, 0, 0.2);
+    }
+    
+    .loader-text {
+      font-size: 14px; font-weight: 600; color: var(--text-2);
+      letter-spacing: 0.5px;
+      animation: pulse 1.5s infinite;
+    }
+
+    /* Tarjetas de recibos (Pro y Minimalista) */
     .orden-card { position: relative; transition: 0.2s; cursor: pointer; background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; }
     .orden-card:active { transform: scale(0.98); background: var(--bg-elev-2) !important; }
     
@@ -56,6 +104,7 @@
     
     .metodo-pago { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 6px; color: #22C55E; }
 
+    /* BOTTOM SHEET CENTRADO */
     .sheet-backdrop { 
       position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important;
       background: rgba(0,0,0,0.7) !important; backdrop-filter: blur(8px) !important; z-index: 999999 !important; 
@@ -80,6 +129,15 @@
   </style>
 </head>
 <body>
+
+  <!-- 🔥 LOADER OVERLAY (Se oculta al cargar) -->
+  <div class="loader-overlay" id="appLoader">
+    <div class="loader-logo-container">
+      <div class="loader-ring"></div>
+      <img src="/img/logo1.png" alt="Cargando..." class="loader-logo-img" onerror="this.src='/imagenes/web-app-manifest-192x192.png'">
+    </div>
+    <div class="loader-text">Cargando recibos...</div>
+  </div>
 
   <div class="app-container">
     <header class="app-header">
@@ -129,6 +187,7 @@
       </div>
 
       <div class="cards-list" id="listaOrdenes">
+        <!-- Skeleton se muestra mientras carga, pero el loader tapará esto -->
         <div class="skeleton-card"><div class="skeleton-line" style="width: 40%; height: 18px;"></div><div class="skeleton-line" style="width: 70%;"></div><div class="skeleton-line" style="width: 30%;"></div></div>
       </div>
 
@@ -169,6 +228,7 @@
     const reciboSheet = document.getElementById('reciboSheet');
     const sheetContent = document.getElementById('sheetContent');
     const btnCargarMas = document.getElementById('btnCargarMas');
+    const appLoader = document.getElementById('appLoader'); // 🔥 Referencia al loader
 
     requireAuth((s) => {
       sesion = s;
@@ -223,9 +283,11 @@
       });
     }
 
-    // 🔥 FUNCIÓN CORREGIDA: SIN TIMEOUT QUE CAUSE "CONEXIÓN LENTA"
     function cargarOrdenes() {
       if (unsubscribe) unsubscribe();
+
+      // 🔥 MOSTRAMOS EL LOADER
+      if (appLoader) appLoader.classList.remove('hidden');
 
       const q = query(
         collection(db, 'recibos'), 
@@ -248,6 +310,9 @@
 
           renderizarOrdenes();
           actualizarStats();
+
+          // 🔥 OCULTAMOS EL LOADER CUANDO YA HAY DATOS
+          if (appLoader) appLoader.classList.add('hidden');
         }, 
         (error) => {
           console.error('❌ Error cargando órdenes:', error);
@@ -257,10 +322,13 @@
               <h3>Error al cargar</h3>
               <p>${error.message}</p>
             </div>`;
+          // 🔥 OCULTAMOS EL LOADER AUNQUE HAYA ERROR
+          if (appLoader) appLoader.classList.add('hidden');
         }
       );
     }
 
+    // 🔥 Mostrar/Ocultar loader al cargar más
     async function cargarMasOrdenes() {
       if (!ultimoDocumento) return;
 
