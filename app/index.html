@@ -9,7 +9,6 @@
 
   <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32x32.png">
   <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
-  <link rel="icon" type="image/x-icon" href="/imagenes/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,154 +19,57 @@
   <link rel="stylesheet" href="/css/app-theme.css">
   <link rel="stylesheet" href="/css/app-components.css">
   <link rel="stylesheet" href="/css/app-layouts.css">
-
   <link rel="manifest" href="/app/manifest.json">
-  <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
 
   <style>
-    /* ============================================================ */
-    /* VARIABLES Y ESTILOS BASE                                     */
-    /* ============================================================ */
     :root {
       --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px;
-      --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 4px 12px rgba(0,0,0,0.08); --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
     }
-
-    .brand-logo-limpio {
-      width: 44px; height: 44px; border-radius: 50%; overflow: hidden;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; background: var(--bg-elev-2); box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border-1);
-    }
+    .brand-logo-limpio { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--bg-elev-2); box-shadow: var(--shadow-sm); border: 1px solid var(--border-1); }
     .brand-logo-limpio img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
-
-    .icon-btn .icon-img {
-      width: 20px; height: 20px; object-fit: contain; display: block;
-      pointer-events: none; opacity: 0.7; transition: opacity 0.2s ease, transform 0.15s ease;
-    }
+    .icon-btn .icon-img { width: 20px; height: 20px; object-fit: contain; display: block; pointer-events: none; opacity: 0.7; transition: 0.2s; }
     .icon-btn .icon-img.blanco { filter: brightness(0) invert(1); }
-    .icon-btn:hover .icon-img { opacity: 1; }
-    .icon-btn:active .icon-img { transform: scale(0.9); }
-
-    /* ============================================================ */
-    /* ESTADÍSTICAS                                                 */
-    /* ============================================================ */
-    .stats-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px;
-    }
-    .stat-card {
-      background: var(--bg-elev-1); border: 1px solid var(--border-1);
-      border-radius: var(--radius-lg); padding: 16px 12px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      box-shadow: var(--shadow-sm); transition: transform 0.2s ease;
-    }
-    .stat-card:active { transform: scale(0.97); }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: var(--radius-lg); padding: 16px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
     .stat-value { font-size: 24px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 4px; }
     .stat-value.success { color: #22C55E; }
     .stat-value.brand { color: var(--brand-500); }
     .stat-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
-
-    /* ============================================================ */
-    /* SKELETON Y BOTÓN CARGAR MÁS                                  */
-    /* ============================================================ */
-    .skeleton-card {
-      background: var(--bg-elev-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px;
-      border: 1px solid var(--border-1); animation: pulse 1.5s infinite ease-in-out;
-    }
+    .skeleton-card { background: var(--bg-elev-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border-1); animation: pulse 1.5s infinite; }
     .skeleton-line { height: 12px; background: var(--bg-elev-2); border-radius: 6px; margin-bottom: 8px; }
-    .skeleton-line.title { width: 40%; height: 18px; margin-bottom: 12px; }
-    .skeleton-line.sub { width: 70%; }
-    .skeleton-line.short { width: 30%; }
     @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-
-    .btn-load-more {
-      width: 100%; padding: 16px; border-radius: var(--radius-md); background: var(--bg-elev-2);
-      color: var(--text-1); border: 1px solid var(--border-2); font-weight: 700; font-size: 14px;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      cursor: pointer; margin-top: 10px; margin-bottom: 20px; transition: all 0.2s;
-      font-family: inherit;
-    }
-    .btn-load-more:active { background: var(--border-2); transform: scale(0.98); }
-
-    /* ============================================================ */
-    /* TARJETAS DE RECIBOS                                          */
-    /* ============================================================ */
-    .orden-card {
-      position: relative; transition: all 0.2s ease; cursor: pointer;
-      background: var(--bg-elev-1); border: 1px solid var(--border-1);
-      border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px;
-      box-shadow: var(--shadow-sm);
-    }
-    .orden-card:active { transform: scale(0.98); background: var(--bg-elev-2) !important; }
     
-    .chip-estado {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 12px; border-radius: 20px; font-size: 11px;
-      font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase;
-    }
+    /* Animación de la flecha de refrescar */
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    .btn-load-more { width: 100%; padding: 16px; border-radius: var(--radius-md); background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-2); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; margin-top: 10px; margin-bottom: 20px; }
+    .orden-card { position: relative; transition: 0.2s; cursor: pointer; background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; }
+    .orden-card:active { transform: scale(0.98); background: var(--bg-elev-2) !important; }
+    .chip-estado { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
     .chip-estado[data-estado="recibido"] { background: rgba(255, 255, 255, 0.1); color: var(--text-1); }
     .chip-estado[data-estado="reparacion"] { background: rgba(255, 105, 0, 0.15); color: var(--brand-500); }
     .chip-estado[data-estado="espera-repuesto"] { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
     .chip-estado[data-estado="listo"] { background: rgba(251, 191, 36, 0.15); color: #FBBF24; }
     .chip-estado[data-estado="entregado"] { background: rgba(34, 197, 94, 0.15); color: #22C55E; }
     .chip-estado[data-estado="devuelto"] { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
-    
-    [data-theme="light"] .chip-estado[data-estado="recibido"] { background: rgba(0,0,0,0.05); }
     .metodo-pago { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 6px; color: #22C55E; }
-
-    /* ============================================================ */
-    /* BOTTOM SHEET                                                 */
-    /* ============================================================ */
-    .sheet-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(8px); z-index: 99999; opacity: 0; pointer-events: none;
-      transition: opacity 0.3s ease; display: flex; align-items: center; justify-content: center;
-    }
+    .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 99999; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; }
     .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
-    
-    .sheet {
-      background: var(--bg-elev-1); border-radius: 24px; padding: 24px;
-      width: 90%; max-width: 400px;
-      transform: translateY(20px) scale(0.95); opacity: 0;
-      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1); 
-      border: 1px solid var(--border-1); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-      position: relative;
-    }
+    .sheet { background: var(--bg-elev-1); border-radius: 24px; padding: 24px; width: 90%; max-width: 400px; transform: translateY(20px) scale(0.95); opacity: 0; transition: 0.3s; border: 1px solid var(--border-1); position: relative; }
     .sheet-backdrop.show .sheet { transform: translateY(0) scale(1); opacity: 1; }
-    
-    .btn-close-sheet {
-      position: absolute; top: 20px; right: 20px; 
-      background: var(--bg-elev-2); border: none; color: var(--text-3); 
-      width: 32px; height: 32px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
-      transition: 0.2s;
-    }
-    .btn-sheet {
-      width: 100%; padding: 16px; border-radius: 12px; font-size: 14px; font-weight: 700;
-      border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: all 0.2s; font-family: inherit; margin-bottom: 10px;
-    }
-    .btn-sheet:active { transform: scale(0.98); }
-    .btn-sheet-primary { background: var(--brand-500); color: white; box-shadow: 0 4px 12px rgba(255,105,0,0.3); }
+    .btn-close-sheet { position: absolute; top: 20px; right: 20px; background: var(--bg-elev-2); border: none; color: var(--text-3); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .btn-sheet { width: 100%; padding: 16px; border-radius: 12px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+    .btn-sheet-primary { background: var(--brand-500); color: white; }
     .btn-sheet-whatsapp { background: #25D366; color: white; }
     .btn-sheet-danger { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
     .btn-sheet-edit { background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-2); }
-    
-    .custom-select {
-      width: 100%; padding: 14px; border-radius: 10px; 
-      background-color: var(--bg-1) !important; color: var(--text-1) !important; 
-      border: 1px solid var(--border-1); outline: none; font-family: inherit; font-weight: 600; font-size: 14px;
-      appearance: none; -webkit-appearance: none;
-      background-image: url('data:image/svg+xml;utf8,<svg fill=\"%239CA3AF\" height=\"24\" viewBox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/><path d=\"M0 0h24v24H0z\" fill=\"none\"/></svg>');
-      background-repeat: no-repeat; background-position: right 10px center;
-    }
-    .custom-select option { background: var(--bg-1); color: var(--text-1); }
+    .custom-select { width: 100%; padding: 14px; border-radius: 10px; background-color: var(--bg-1) !important; color: var(--text-1) !important; border: 1px solid var(--border-1); outline: none; font-weight: 600; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill=\"%239CA3AF\" height=\"24\" viewBox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/></svg>'); background-repeat: no-repeat; background-position: right 10px center; }
   </style>
 </head>
 <body>
 
   <div class="app-container">
-    <!-- HEADER -->
     <header class="app-header">
       <div class="brand">
         <div class="brand-logo-limpio">
@@ -179,6 +81,12 @@
         </div>
       </div>
       <div class="header-actions" style="display: flex; gap: 4px;">
+        
+        <!-- 🔥 BOTÓN REFRESCAR -->
+        <button class="icon-btn" id="btnRefresh" title="Actualizar" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
+          <i class="fas fa-rotate" id="iconRefresh" style="color: var(--brand-500); font-size: 16px;"></i>
+        </button>
+
         <button class="icon-btn" id="preciosBtn" title="Buscar precio" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
           <img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
         </button>
@@ -191,7 +99,6 @@
       </div>
     </header>
 
-    <!-- CONTENIDO -->
     <main class="app-content">
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-value" id="statActivas">—</div><div class="stat-label">Activas</div></div>
@@ -210,42 +117,25 @@
         <button class="chip chip-interactive" data-filtro="reparacion">En reparación</button>
         <button class="chip chip-interactive" data-filtro="listo">Listas</button>
         <button class="chip chip-interactive" data-filtro="entregado">Entregadas</button>
-        <button class="chip chip-interactive" data-filtro="devuelto">Devueltas</button>
       </div>
 
-      <!-- Lista -->
       <div class="cards-list" id="listaOrdenes">
-        <div class="skeleton-card">
-          <div class="skeleton-line title"></div>
-          <div class="skeleton-line sub"></div>
-          <div class="skeleton-line short"></div>
-        </div>
-        <div class="skeleton-card">
-          <div class="skeleton-line title"></div>
-          <div class="skeleton-line sub"></div>
-          <div class="skeleton-line short"></div>
-        </div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width: 40%; height: 18px;"></div><div class="skeleton-line" style="width: 70%;"></div><div class="skeleton-line" style="width: 30%;"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line" style="width: 40%; height: 18px;"></div><div class="skeleton-line" style="width: 70%;"></div><div class="skeleton-line" style="width: 30%;"></div></div>
       </div>
 
-      <!-- BOTÓN CARGAR MÁS -->
-      <button id="btnCargarMas" class="btn-load-more" style="display: none;">
-        <i class="fas fa-chevron-down"></i> Cargar más recibos
-      </button>
+      <button id="btnCargarMas" class="btn-load-more" style="display: none;"><i class="fas fa-chevron-down"></i> Cargar más recibos</button>
     </main>
 
-    <!-- FAB -->
-    <button class="btn-fab" id="nuevoReciboBtn" title="Nuevo recibo" style="position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px; border-radius: 50%; background: var(--brand-500); color: white; border: none; box-shadow: 0 4px 16px rgba(255,105,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 90; transition: transform 0.2s;">
+    <button class="btn-fab" id="nuevoReciboBtn" style="position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px; border-radius: 50%; background: var(--brand-500); color: white; border: none; box-shadow: 0 4px 16px rgba(255,105,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 90;">
       <i class="fas fa-plus"></i>
     </button>
   </div>
 
-  <!-- BOTTOM SHEET -->
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
       <button class="btn-close-sheet" id="btnCloseSheet"><i class="fas fa-times"></i></button>
-      <div id="sheetContent" style="margin-top: 10px;">
-        <!-- El JS inyectará las opciones aquí -->
-      </div>
+      <div id="sheetContent" style="margin-top: 10px;"></div>
     </div>
   </div>
 
@@ -253,9 +143,7 @@
     import { requireAuth, logout } from '/js/app-auth.js';
     import { toast, haptic, initTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
     import { db } from '/js/firebase.js';
-    import { 
-      collection, query, orderBy, onSnapshot, limit, doc, updateDoc, deleteDoc, startAfter, getDocs 
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { collection, query, orderBy, onSnapshot, limit, doc, updateDoc, deleteDoc, startAfter, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     initTheme();
     let sesion = null;
@@ -264,15 +152,15 @@
     let busquedaActual = '';
     let unsubscribe = null;
     
-    // Variables para paginación
-    const LIMITE_POR_PAGINA = 20;
-    let ultimoDocumento = null; // Guarda el último recibo para saber dónde seguir
-    let hayMasRecibos = true;   // Bandera para saber si mostrar el botón
+    const LIMITE_POR_PAGINA = 10; // 🔥 Límite bajo para velocidad
+    let ultimoDocumento = null;
+    let hayMasRecibos = true;
 
     const reciboSheet = document.getElementById('reciboSheet');
     const sheetContent = document.getElementById('sheetContent');
     const btnCargarMas = document.getElementById('btnCargarMas');
 
+    // La sesión es instantánea (localStorage)
     requireAuth((s) => {
       sesion = s;
       iniciarApp();
@@ -311,11 +199,26 @@
 
       document.getElementById('btnCloseSheet')?.addEventListener('click', cerrarSheet);
       reciboSheet?.addEventListener('click', (e) => { if (e.target === reciboSheet) cerrarSheet(); });
-
       btnCargarMas?.addEventListener('click', cargarMasOrdenes);
+
+      // 🔥 EVENTO DEL BOTÓN REFRESCAR
+      document.getElementById('btnRefresh')?.addEventListener('click', () => {
+        haptic(15);
+        const icon = document.getElementById('iconRefresh');
+        icon.style.animation = 'spin 0.8s linear infinite'; // Gira mientras carga
+        
+        // Forzamos una nueva conexión
+        if (unsubscribe) unsubscribe();
+        cargarOrdenes();
+        
+        // Detener animación después de 1.5s
+        setTimeout(() => { 
+          icon.style.animation = 'none'; 
+          toast('Lista actualizada', 'success', 1500);
+        }, 1500);
+      });
     }
 
-    // 🔥 1. CARGA INICIAL (Solo 20 recibos)
     function cargarOrdenes() {
       if (unsubscribe) unsubscribe();
 
@@ -325,18 +228,16 @@
         limit(LIMITE_POR_PAGINA)
       );
 
+      // 🔥 includeMetadataChanges hace la magia del caché
       unsubscribe = onSnapshot(q, 
         { includeMetadataChanges: true },
         (snapshot) => {
-          const source = snapshot.metadata.fromCache ? '💾 Caché' : '☁️ Servidor';
-          console.log(`📡 Cargados ${snapshot.docs.length} recibos desde: ${source}`);
+          const source = snapshot.metadata.fromCache ? '💾 Caché (Rápido)' : '☁️ Servidor (Lento)';
+          console.log(`📡 Recibos cargados desde: ${source}`);
           
           ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          
-          // Si devolvió exactamente el límite, significa que probablemente haya más en la base de datos
           hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
           
-          // Guardamos el último documento de esta página
           if (snapshot.docs.length > 0) {
             ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
           }
@@ -351,12 +252,12 @@
               <i class="fas fa-exclamation-triangle" style="color: #EF4444;"></i>
               <h3>Error al cargar</h3>
               <p>${error.message}</p>
+              <button onclick="location.reload()" style="margin-top:12px; padding:10px 20px; border-radius:10px; background:var(--brand-500); color:white; border:none; font-weight:bold;">Reintentar</button>
             </div>`;
         }
       );
     }
 
-    // 🔥 2. CARGAR MÁS RECIBOS (Paginación)
     async function cargarMasOrdenes() {
       if (!ultimoDocumento) return;
 
@@ -369,23 +270,15 @@
         const q = query(
           collection(db, 'recibos'), 
           orderBy('fecha', 'desc'), 
-          startAfter(ultimoDocumento), // Empieza después del último que ya tenemos
+          startAfter(ultimoDocumento),
           limit(LIMITE_POR_PAGINA)
         );
 
         const snapshot = await getDocs(q);
-        
         const nuevosRecibos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         
-        // Agregamos los nuevos al array global
         ordenes = [...ordenes, ...nuevosRecibos];
-        
-        // Actualizamos el puntero al último documento
-        if (snapshot.docs.length > 0) {
-          ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
-        }
-        
-        // Verificamos si hay más
+        if (snapshot.docs.length > 0) ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
         hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
 
         renderizarOrdenes();
@@ -420,8 +313,6 @@
       
       lista.innerHTML = filtradas.map(o => renderCard(o)).join('');
       
-      // Mostrar u ocultar el botón de "Cargar más"
-      // Solo lo mostramos si no estamos buscando y si la base de datos tiene más
       if (hayMasRecibos && !busquedaActual && filtroActual === 'todos') {
         btnCargarMas.style.display = 'flex';
       } else {
@@ -484,7 +375,6 @@
     }
 
     function actualizarStats() {
-      // Las estadísticas se calculan solo con los recibos cargados actualmente en memoria
       const activas = ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
       const listas = ordenes.filter(o => o.estadoOrden === 'listo').length;
       const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
@@ -501,16 +391,12 @@
 
       sheetContent.innerHTML = `
         <div style="margin-bottom: 24px; padding-right: 30px;">
-          <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1); margin: 0 0 6px 0; letter-spacing: -0.5px;">${escapeHtml(orden.numeroRecibo)}</h3>
-          <p style="font-size: 14px; color: var(--text-2); margin: 0; font-weight: 500;">${escapeHtml(orden.cliente)} · ${escapeHtml(orden.marca)} ${escapeHtml(orden.modelo)}</p>
+          <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1); margin: 0 0 6px 0;">${escapeHtml(orden.numeroRecibo)}</h3>
+          <p style="font-size: 14px; color: var(--text-2); margin: 0;">${escapeHtml(orden.cliente)} · ${escapeHtml(orden.marca)} ${escapeHtml(orden.modelo)}</p>
         </div>
-
-        <button class="btn-sheet btn-sheet-edit" id="btnEditarOrden">
-          <i class="fas fa-edit"></i> Editar Orden Completa
-        </button>
-
-        <div style="background: var(--bg-elev-2); padding: 16px; border-radius: var(--radius-md); margin: 20px 0;">
-          <label style="font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; margin-bottom: 10px; display: block; letter-spacing: 0.5px;">Cambiar Estado</label>
+        <button class="btn-sheet btn-sheet-edit" id="btnEditarOrden"><i class="fas fa-edit"></i> Editar Orden Completa</button>
+        <div style="background: var(--bg-elev-2); padding: 16px; border-radius: 12px; margin: 20px 0;">
+          <label style="font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; margin-bottom: 10px; display: block;">Cambiar Estado</label>
           <select id="selectEstado" class="custom-select">
             <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
             <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
@@ -520,7 +406,6 @@
             <option value="devuelto" ${orden.estadoOrden === 'devuelto' ? 'selected' : ''}>↩️ Devuelto</option>
           </select>
         </div>
-
         <div style="display: flex; flex-direction: column;">
           <button class="btn-sheet btn-sheet-primary" id="btnActualizarEstado"><i class="fas fa-save"></i> Guardar Cambios</button>
           <button class="btn-sheet btn-sheet-whatsapp" id="btnWhatsApp"><i class="fab fa-whatsapp"></i> Reenviar por WhatsApp</button>
@@ -541,7 +426,7 @@
           await updateDoc(doc(db, 'recibos', id), { estadoOrden: nuevoEstado });
           toast('Estado actualizado', 'success');
           
-          // Actualizamos el objeto local para que no tenga que recargar toda la lista
+          // Actualización local instantánea
           orden.estadoOrden = nuevoEstado; 
           renderizarOrdenes(); 
           actualizarStats();
@@ -562,7 +447,6 @@
           try {
             await deleteDoc(doc(db, 'recibos', id));
             toast('Recibo eliminado', 'success');
-            // Lo quitamos del array local
             ordenes = ordenes.filter(o => o.id !== id);
             renderizarOrdenes();
             actualizarStats();
