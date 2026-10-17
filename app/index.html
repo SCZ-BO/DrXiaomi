@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0A0A0B">
-  <meta name="mobile-web-app-capable" content="yes">
   <title>DR. Xiaomi · Panel</title>
 
   <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32x32.png">
@@ -27,11 +26,13 @@
       --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
     }
     
+    /* Header y Logo */
     .brand-logo-limpio { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--bg-elev-2); box-shadow: var(--shadow-sm); border: 1px solid var(--border-1); }
     .brand-logo-limpio img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
     .icon-btn .icon-img { width: 20px; height: 20px; object-fit: contain; display: block; pointer-events: none; opacity: 0.7; transition: 0.2s; }
     .icon-btn .icon-img.blanco { filter: brightness(0) invert(1); }
 
+    /* Estadísticas (Pro) */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
     .stat-card { background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: var(--radius-lg); padding: 16px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
     .stat-value { font-size: 24px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 4px; }
@@ -39,11 +40,13 @@
     .stat-value.brand { color: var(--brand-500); }
     .stat-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
 
+    /* Skeleton Loader */
     .skeleton-card { background: var(--bg-elev-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border-1); animation: pulse 1.5s infinite; }
     .skeleton-line { height: 12px; background: var(--bg-elev-2); border-radius: 6px; margin-bottom: 8px; }
     @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
+    /* Tarjeta de Recibo (Pro y Minimalista) */
     .orden-card { position: relative; transition: 0.2s; cursor: pointer; background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; }
     .orden-card:active { transform: scale(0.98); background: var(--bg-elev-2) !important; }
     
@@ -57,7 +60,9 @@
     
     .metodo-pago { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 6px; color: #22C55E; }
 
-    /* BOTTOM SHEET (CENTRADO Y BLINDADO) */
+    /* ============================================================ */
+    /* BOTTOM SHEET (CENTRADO Y BLINDADO PARA CELULAR)              */
+    /* ============================================================ */
     .sheet-backdrop { 
       position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important;
       background: rgba(0,0,0,0.7) !important; backdrop-filter: blur(8px) !important; z-index: 999999 !important; 
@@ -228,7 +233,6 @@
     }
 
     function cargarOrdenes() {
-      // ⏱️ TIMEOUT DE SEGURIDAD (4 segundos)
       const timeoutId = setTimeout(() => {
         if (ordenes.length === 0) {
           document.getElementById('listaOrdenes').innerHTML = `
@@ -338,6 +342,7 @@
       });
     }
 
+    // 🔥 TARJETA PRO Y MINIMALISTA (Recuperada)
     function renderCard(o) {
       const estadoActual = o.estadoOrden || 'recibido';
       const estadoInfo = {
