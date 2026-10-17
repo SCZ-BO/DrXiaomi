@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0A0A0B">
-  <meta name="mobile-web-app-capable" content="yes">
-  <title>DR. Xiaomi · Nuevo Recibo</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>DR. Xiaomi · Panel</title>
 
+  <!-- Favicons -->
   <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32x32.png">
   <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
   <link rel="icon" type="image/x-icon" href="/imagenes/favicon.ico">
@@ -20,597 +21,370 @@
   <link rel="stylesheet" href="/css/app-theme.css">
   <link rel="stylesheet" href="/css/app-components.css">
   <link rel="stylesheet" href="/css/app-layouts.css">
-  <link rel="stylesheet" href="/css/cliente.css">
 
+  <!-- PWA -->
   <link rel="manifest" href="/app/manifest.json">
   <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
 
   <style>
-    /* ============================================================ */
-    /* VARIABLES DE DISEÑO MINIMALISTA Y PRO                        */
-    /* ============================================================ */
-    :root {
-      --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px;
-      --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 4px 12px rgba(0,0,0,0.08); --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
-      --brand: #FF6900; --brand-hover: #E65F00; --brand-light: #FFF4EB;
-    }
-
-    [data-theme="dark"] {
-      --bg-main: #0A0A0B; --bg-card: #151517; --bg-elev: #1E1E21;
-      --text-main: #F3F4F6; --text-mute: #9CA3AF; --border: #2D2D30;
-    }
-    [data-theme="light"] {
-      --bg-main: #F8F9FA; --bg-card: #FFFFFF; --bg-elev: #F1F3F5;
-      --text-main: #111827; --text-mute: #6B7280; --border: #E5E7EB;
-    }
-
-    body {
-      background-color: var(--bg-main); color: var(--text-main);
-      font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased;
-      transition: background-color 0.3s, color 0.3s;
-    }
-
-    .hidden-file-input {
-      position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; overflow: hidden;
-    }
+    /* ... (Mismos estilos de header y tarjetas que ya tenías) ... */
+    .brand-logo-limpio { width: 46px; height: 46px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: transparent; box-shadow: 0 4px 12px rgba(255, 105, 0, 0.35); }
+    .brand-logo-limpio img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+    .icon-btn .icon-img { width: 22px; height: 22px; object-fit: contain; display: block; pointer-events: none; opacity: 0.85; transition: opacity 0.2s ease, transform 0.15s ease; }
+    .icon-btn .icon-img.blanco { filter: brightness(0) invert(1); }
+    .icon-btn:hover .icon-img { opacity: 1; }
+    .icon-btn:active .icon-img { transform: scale(0.9); }
+    .orden-card { position: relative; transition: all 0.2s ease; cursor: pointer; }
+    .orden-card:active { transform: scale(0.99); background: var(--bg-elev-2) !important; }
+    .orden-card:hover { background: var(--bg-elev-2); }
+    .orden-card .chip-estado { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
+    .orden-card .chip-estado[data-estado="recibido"] { background: #FFFFFF !important; color: #1a1a1a !important; border: 1px solid #E5E5E5 !important; }
+    .orden-card .chip-estado[data-estado="reparacion"] { background: #FF6900 !important; color: #FFFFFF !important; border: 1px solid #FF6900 !important; }
+    .orden-card .chip-estado[data-estado="espera-repuesto"] { background: #3B82F6 !important; color: #FFFFFF !important; border: 1px solid #3B82F6 !important; }
+    .orden-card .chip-estado[data-estado="listo"] { background: #FBBF24 !important; color: #1a1a1a !important; border: 1px solid #FBBF24 !important; }
+    .orden-card .chip-estado[data-estado="entregado"] { background: #22C55E !important; color: #FFFFFF !important; border: 1px solid #22C55E !important; }
+    .orden-card .chip-estado[data-estado="devuelto"] { background: #EF4444 !important; color: #FFFFFF !important; border: 1px solid #EF4444 !important; }
+    .orden-card[data-estado="recibido"] { border-left: 4px solid #FFFFFF !important; }
+    .orden-card[data-estado="reparacion"] { border-left: 4px solid #FF6900 !important; }
+    .orden-card[data-estado="espera-repuesto"] { border-left: 4px solid #3B82F6 !important; }
+    .orden-card[data-estado="listo"] { border-left: 4px solid #FBBF24 !important; }
+    .orden-card[data-estado="entregado"] { border-left: 4px solid #22C55E !important; }
+    .orden-card[data-estado="devuelto"] { border-left: 4px solid #EF4444 !important; }
+    .metodo-pago { font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 4px; }
 
     /* ============================================================ */
-    /* HEADER MINIMALISTA                                           */
-    /* ============================================================ */
-    .app-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 16px; background: var(--bg-main);
-      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
-    }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-logo-orden {
-      width: 40px; height: 40px; border-radius: 50%; overflow: hidden;
-      background: var(--bg-card); display: flex; align-items: center; justify-content: center;
-      box-shadow: var(--shadow-sm); border: 1px solid var(--border);
-    }
-    .brand-logo-orden img { width: 100%; height: 100%; object-fit: cover; }
-    .brand-text h1 { font-size: 16px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
-    .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; font-weight: 500; }
-    
-    .header-actions { display: flex; gap: 8px; }
-    .icon-btn {
-      width: 38px; height: 38px; border-radius: 50%;
-      background: var(--bg-card); border: 1px solid var(--border);
-      color: var(--text-main); font-size: 15px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.2s;
-    }
-    .icon-btn:hover { background: var(--bg-elev); transform: translateY(-1px); }
-    .icon-btn:active { transform: scale(0.95); }
-
-    /* ============================================================ */
-    /* BARRA DE PROGRESO                                            */
-    /* ============================================================ */
-    .wizard-progress { padding: 16px; background: var(--bg-main); }
-    .wizard-steps { display: flex; justify-content: space-between; margin-bottom: 12px; }
-    .wizard-step { display: flex; flex-direction: column; align-items: center; gap: 4px; opacity: 0.4; transition: 0.3s; }
-    .wizard-step.active, .wizard-step.done { opacity: 1; }
-    .step-circle {
-      width: 24px; height: 24px; border-radius: 50%;
-      background: var(--bg-elev); border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 700;
-    }
-    .wizard-step.active .step-circle { background: var(--brand); color: white; border-color: var(--brand); }
-    .wizard-step.done .step-circle { background: var(--brand-light); color: var(--brand); border-color: var(--brand); }
-    .step-label { font-size: 10px; font-weight: 600; color: var(--text-mute); }
-    
-    .wizard-bar { height: 4px; background: var(--bg-elev); border-radius: 4px; overflow: hidden; }
-    .wizard-bar-fill { height: 100%; background: var(--brand); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-
-    /* ============================================================ */
-    /* CONTENIDO Y PANELES                                          */
-    /* ============================================================ */
-    .wizard-content { padding: 0 16px 100px 16px; max-width: 600px; margin: 0 auto; }
-    .panel-header h2 { font-size: 22px; font-weight: 800; margin: 0 0 4px 0; letter-spacing: -0.5px; }
-    .panel-header p { font-size: 13px; color: var(--text-mute); margin: 0 0 20px 0; }
-    
-    .card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px;
-      box-shadow: var(--shadow-sm);
-    }
-
-    /* ============================================================ */
-    /* INPUTS Y FORMULARIOS PRO (MICRÓFONO INTEGRADO)               */
-    /* ============================================================ */
-    .field { position: relative; margin-bottom: 16px; }
-    
-    /* Añadimos padding a la derecha para que el texto no toque el micrófono */
-    .field input, .field textarea {
-      width: 100%; padding: 16px 45px 14px 14px; 
-      background: var(--bg-elev); border: 1.5px solid transparent;
-      border-radius: var(--radius-md); color: var(--text-main);
-      font-size: 15px; font-family: inherit; transition: all 0.2s; outline: none;
-    }
-    
-    .field input:focus, .field textarea:focus { border-color: var(--brand); background: var(--bg-card); }
-    
-    .field label {
-      position: absolute; left: 14px; top: 16px; font-size: 14px;
-      color: var(--text-mute); pointer-events: none; transition: 0.2s;
-    }
-    
-    .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label,
-    .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label {
-      top: 6px; font-size: 10px; font-weight: 700; color: var(--brand);
-    }
-
-    /* EL BOTÓN DEL MICRÓFONO (Inyectado por dictado.js) */
-    .dictado-btn {
-      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-      width: 34px; height: 34px; border-radius: 50%;
-      background: transparent; border: none; color: var(--text-mute);
-      font-size: 16px; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.2s ease; z-index: 10;
-    }
-    
-    .dictado-btn:hover { background: var(--border); color: var(--text-main); }
-    
-    .dictado-btn.activo {
-      background: #EF4444; color: white;
-      animation: dictadoPulse 1.2s ease-in-out infinite;
-    }
-    
-    @keyframes dictadoPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-      50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-    }
-
-    /* Ajuste para Textarea (Falla y Estado) para que el micrófono vaya abajo */
-    .dictado-wrap.textarea .dictado-btn { top: auto; bottom: 12px; transform: none; }
-
-    /* El texto de "Escuchando..." */
-    .dictado-indicador {
-      display: none; align-items: center; gap: 6px;
-      font-size: 11px; font-weight: 700; color: #EF4444;
-      margin-top: -8px; margin-bottom: 16px; padding-left: 4px;
-    }
-    .dictado-indicador.show { display: flex; }
-    .dictado-indicador .punto {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #EF4444; animation: parpadeo 1s ease-in-out infinite;
-    }
-    @keyframes parpadeo { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-    .field-title { display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
-    .required-field::after { content: " *"; color: var(--brand); }
-
-    .marcas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
-    .marca-btn {
-      padding: 10px; border-radius: var(--radius-md); border: 1.5px solid var(--border);
-      background: var(--bg-elev); color: var(--text-main); font-weight: 600; font-size: 12px;
-      cursor: pointer; transition: all 0.2s;
-    }
-    .marca-btn.active { background: var(--brand); color: white; border-color: var(--brand); }
-
-    .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .radio-option {
-      padding: 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border);
-      background: var(--bg-elev); color: var(--text-main); font-weight: 600; font-size: 12px;
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-      cursor: pointer; transition: all 0.2s;
-    }
-    .radio-option.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); }
-    [data-theme="dark"] .radio-option.active { background: rgba(255, 105, 0, 0.15); }
-
-    /* ============================================================ */
-    /* FOTOS                                                        */
-    /* ============================================================ */
-    .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .foto-slot {
-      aspect-ratio: 4/3; border-radius: var(--radius-md); border: 2px dashed var(--border);
-      background: var(--bg-elev); display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 6px;
-      color: var(--text-mute); font-size: 12px; font-weight: 600;
-      cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
-    }
-    .foto-slot:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
-    [data-theme="dark"] .foto-slot:hover { background: rgba(255, 105, 0, 0.1); }
-    .foto-slot.filled { border: none; }
-    .foto-slot img { width: 100%; height: 100%; object-fit: cover; }
-    .foto-remove {
-      position: absolute; top: 6px; right: 6px; width: 24px; height: 24px;
-      border-radius: 50%; background: rgba(0,0,0,0.6); color: white;
-      border: none; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 12px; backdrop-filter: blur(4px);
-    }
-
-    /* ============================================================ */
-    /* SERVICIOS Y COSTOS                                           */
-    /* ============================================================ */
-    .servicio-item { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
-    .servicio-item .dictado-wrap { flex: 1; margin-bottom: 0; }
-    
-    .servicio-item input.servicio-desc {
-      padding: 14px 40px 14px 14px; border-radius: var(--radius-md);
-    }
-    .servicio-item .dictado-btn { right: 6px; width: 28px; height: 28px; font-size: 13px; }
-    .servicio-item .servicio-costo {
-      width: 90px; padding: 14px; border-radius: var(--radius-md);
-      border: 1.5px solid var(--border); background: var(--bg-elev);
-      color: var(--text-main); font-weight: 700; text-align: right; outline: none;
-    }
-    .servicio-item .removeServicio {
-      width: 40px; height: 40px; border-radius: var(--radius-md);
-      background: #FEE2E2; color: #EF4444; border: none; font-weight: 800; cursor: pointer;
-    }
-    [data-theme="dark"] .servicio-item .removeServicio { background: rgba(239, 68, 68, 0.2); }
-
-    .resumen-row { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 600; }
-    .resumen-row strong { font-size: 18px; font-weight: 800; color: var(--text-main); }
-    .resumen-saldo { border-top: 1px dashed var(--border); padding-top: 12px; margin-top: 12px; color: var(--brand); }
-    .resumen-saldo strong { color: var(--brand); font-size: 20px; }
-
-    /* ============================================================ */
-    /* BOTTOM SHEET DE FOTOS                                        */
+    /* BOTTOM SHEET (CORREGIDO Y CENTRADO)                          */
     /* ============================================================ */
     .sheet-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.6);
       backdrop-filter: blur(4px); z-index: 9999; opacity: 0; pointer-events: none;
-      transition: opacity 0.25s; display: flex; align-items: flex-end; justify-content: center;
+      transition: opacity 0.25s; 
+      display: flex; align-items: flex-end; justify-content: center;
+      /* Forzamos que cubra toda la pantalla */
+      width: 100vw; height: 100vh;
     }
     .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
+    
     .sheet {
-      background: var(--bg-card); border-top-left-radius: var(--radius-xl); border-top-right-radius: var(--radius-xl);
-      padding: 16px 20px calc(24px + env(safe-area-inset-bottom));
-      width: 100%; max-width: 550px; transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1); border-top: 1px solid var(--border);
+      background: var(--bg-1); 
+      border-top-left-radius: 24px; 
+      border-top-right-radius: 24px;
+      padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
+      /* Ancho máximo y centrado */
+      width: 100%; 
+      max-width: 500px; 
+      margin: 0 auto; 
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1); 
+      border-top: 1px solid var(--border-1);
+      position: relative;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
     }
     .sheet-backdrop.show .sheet { transform: translateY(0); }
-    .sheet-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
-
-    /* ============================================================ */
-    /* BOTONES Y FOOTER                                             */
-    /* ============================================================ */
-    .wizard-footer {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
-      background: rgba(var(--bg-main), 0.9); backdrop-filter: blur(12px);
-      border-top: 1px solid var(--border); display: flex; gap: 12px; z-index: 100;
-      max-width: 600px; margin: 0 auto;
-    }
-    [data-theme="dark"] .wizard-footer { background: rgba(10, 10, 11, 0.9); }
-    [data-theme="light"] .wizard-footer { background: rgba(248, 249, 250, 0.9); }
+    .sheet-handle { width: 40px; height: 4px; background: var(--border-2); border-radius: 2px; margin: 0 auto 20px; }
     
-    .btn {
-      padding: 16px; border-radius: var(--radius-md); font-size: 15px; font-weight: 700;
+    .btn-close-sheet {
+      position: absolute; top: 16px; right: 16px; background: var(--bg-elev-2);
+      border: none; color: var(--text-3); width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-close-sheet:hover { background: var(--border-2); color: var(--text-1); }
+    
+    .btn-sheet {
+      width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700;
       border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: all 0.2s; font-family: inherit;
+      transition: all 0.2s; font-family: inherit; margin-bottom: 10px;
     }
-    .btn-primary { background: var(--brand); color: white; box-shadow: 0 4px 12px rgba(255, 105, 0, 0.3); }
-    .btn-primary:active { transform: scale(0.98); background: var(--brand-hover); }
-    .btn-secondary { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); }
-    .btn-secondary:active { transform: scale(0.98); background: var(--border); }
-    .btn-ghost { background: transparent; color: var(--text-mute); }
-    .btn-whatsapp { background: #25D366; color: white; }
-    .btn-download { background: #3B82F6; color: white; }
-
-    /* ============================================================ */
-    /* VISTA PREVIA (PASO 7)                                        */
-    /* ============================================================ */
-    .preview-recibo {
-      background: white; color: #1a1a1a; border-radius: var(--radius-lg);
-      padding: 20px; font-family: 'Inter', sans-serif; font-size: 12px; line-height: 1.5;
-      box-shadow: var(--shadow-md); overflow: hidden;
-    }
-    .preview-header {
-      background: linear-gradient(135deg, var(--brand), #FF8A3C); color: white;
-      margin: -20px -20px 16px; padding: 16px 20px; display: flex; align-items: center; gap: 12px;
-    }
-    .preview-header img { width: 48px; height: 48px; object-fit: contain; background: white; border-radius: 50%; padding: 4px; }
-    .preview-header-text h3 { font-size: 16px; font-weight: 800; color: white; margin: 0; }
-    .preview-header-text p { font-size: 10px; color: rgba(255,255,255,0.85); margin: 2px 0 0; }
-    .preview-section { background: #f9fafb; border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px; }
-    .preview-section-title { font-size: 10px; font-weight: 800; color: var(--brand); text-transform: uppercase; margin-bottom: 8px; }
-    .preview-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; }
-    .preview-servicios-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-    .preview-servicios-table th { background: var(--brand); color: white; padding: 6px; text-align: left; }
-    .preview-servicios-table td { padding: 6px; border-bottom: 1px solid #eee; }
-    .preview-totales { border-top: 2px solid var(--brand); margin-top: 8px; padding-top: 8px; }
-    .saldo-row { display: flex; justify-content: space-between; font-weight: 800; color: var(--brand); font-size: 13px; }
-    .preview-fotos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-    .preview-fotos-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; }
-
-    /* MODAL */
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 10000; }
-    .modal-backdrop.show { opacity: 1; pointer-events: auto; }
-    .modal { background: var(--bg-card); padding: 24px; border-radius: var(--radius-lg); width: 90%; max-width: 400px; text-align: center; box-shadow: var(--shadow-lg); }
-    .success-icon { font-size: 48px; color: #22C55E; margin-bottom: 16px; }
-    
-    /* Utilidades */
-    .hidden { display: none !important; }
+    .btn-sheet-primary { background: var(--brand-500); color: white; }
+    .btn-sheet-whatsapp { background: #25D366; color: white; }
+    .btn-sheet-danger { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
+    .btn-sheet-edit { background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-2); }
   </style>
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header class="app-header">
-    <div class="brand">
-      <button class="icon-btn" id="backToPanelBtn" aria-label="Volver al panel">
-        <i class="fas fa-arrow-left"></i>
-      </button>
-      <div class="brand-logo-orden">
-        <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi"
-             onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand); font-size:18px;&quot;></i>';">
+  <div class="app-container">
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-logo-limpio">
+          <img src="/img/logo1.png" alt="DR. Xiaomi" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:22px; width:46px; height:46px; display:flex; align-items:center; justify-content:center;&quot;></i>';">
+        </div>
+        <div class="brand-text">
+          <h1>DR. XIAOMI</h1>
+          <p id="userInfo">Cargando...</p>
+        </div>
       </div>
-      <div class="brand-text">
-        <h1>NUEVO RECIBO</h1>
-        <p id="userInfo">Cargando...</p>
+      <div class="header-actions">
+        <button class="icon-btn" id="preciosBtn" title="Buscar precio"><img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';"></button>
+        <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;"><img src="/imagenes/icon-reportes.png" alt="Reportes" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';"></button>
+        <button class="icon-btn" id="logoutBtn" title="Cerrar sesión"><img src="/imagenes/icon-salir.png" alt="Salir" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';"></button>
       </div>
-    </div>
-    <div class="header-actions">
-      <button class="icon-btn" id="themeToggleBtn" title="Cambiar tema" aria-label="Cambiar tema">
-        <i class="fas fa-moon" id="themeIcon"></i>
-      </button>
-      <button class="icon-btn" id="homeBtn" title="Ir al panel"><i class="fas fa-home"></i></button>
-      <button class="icon-btn" id="logoutBtn" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i></button>
-    </div>
-  </header>
+    </header>
 
-  <!-- BARRA DE PROGRESO -->
-  <div class="wizard-progress" id="wizardProgress">
-    <div class="wizard-steps">
-      <div class="wizard-step active" data-step="1"><div class="step-circle">1</div><div class="step-label">Cliente</div></div>
-      <div class="wizard-step" data-step="2"><div class="step-circle">2</div><div class="step-label">Equipo</div></div>
-      <div class="wizard-step" data-step="3"><div class="step-circle">3</div><div class="step-label">Falla</div></div>
-      <div class="wizard-step" data-step="4"><div class="step-circle">4</div><div class="step-label">Clave</div></div>
-      <div class="wizard-step" data-step="5"><div class="step-circle">5</div><div class="step-label">Fotos</div></div>
-      <div class="wizard-step" data-step="6"><div class="step-circle">6</div><div class="step-label">Costos</div></div>
-      <div class="wizard-step" data-step="7"><div class="step-circle">7</div><div class="step-label">Listo</div></div>
-    </div>
-    <div class="wizard-bar"><div class="wizard-bar-fill" id="wizardBarFill" style="width: 14.28%;"></div></div>
+    <!-- CONTENIDO -->
+    <main class="app-content">
+      <!-- Stats -->
+      <div class="stats-grid" style="margin-bottom: 20px;">
+        <div class="stat-card"><div class="stat-value" id="statActivas">—</div><div class="stat-label">Activas</div></div>
+        <div class="stat-card"><div class="stat-value success" id="statListas">—</div><div class="stat-label">Listas</div></div>
+        <div class="stat-card"><div class="stat-value brand" id="statHoy">—</div><div class="stat-label">Hoy</div></div>
+      </div>
+
+      <!-- Buscador -->
+      <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="search" id="buscador" placeholder="Buscar por cliente, teléfono o recibo..." autocomplete="off">
+      </div>
+
+      <!-- Filtros -->
+      <div class="filters-row" id="filtros">
+        <button class="chip chip-interactive active" data-filtro="todos">Todas</button>
+        <button class="chip chip-interactive" data-filtro="recibido">Recibidas</button>
+        <button class="chip chip-interactive" data-filtro="reparacion">En reparación</button>
+        <button class="chip chip-interactive" data-filtro="listo">Listas</button>
+        <button class="chip chip-interactive" data-filtro="entregado">Entregadas</button>
+        <button class="chip chip-interactive" data-filtro="devuelto">Devueltas</button>
+      </div>
+
+      <!-- Lista -->
+      <div class="cards-list" id="listaOrdenes">
+        <div class="empty-state"><div class="spinner" style="margin: 20px auto;"></div><p>Cargando órdenes...</p></div>
+      </div>
+    </main>
+
+    <!-- FAB -->
+    <button class="btn-fab" id="nuevoReciboBtn" title="Nuevo recibo"><i class="fas fa-plus"></i></button>
   </div>
 
-  <!-- CONTENIDO -->
-  <main class="wizard-content" id="wizardContent">
-
-    <!-- PASO 1: CLIENTE -->
-    <section class="wizard-panel" data-panel="1">
-      <div class="panel-header">
-        <h2>Datos del cliente</h2>
-        <p>¿Quién trae el equipo hoy?</p>
-      </div>
-      <div class="card">
-        <div class="field dictado-wrap">
-          <input type="text" id="nombre" placeholder=" " required autocomplete="name" maxlength="80" data-dictado>
-          <label for="nombre">Nombre completo *</label>
-        </div>
-        <div class="field">
-          <input type="tel" id="telefono" placeholder=" " required autocomplete="tel" inputmode="numeric" maxlength="8">
-          <label for="telefono">Teléfono / WhatsApp *</label>
-        </div>
-      </div>
-    </section>
-
-    <!-- PASO 2: EQUIPO -->
-    <section class="wizard-panel hidden" data-panel="2">
-      <div class="panel-header">
-        <h2>Datos del equipo</h2>
-        <p>Información del dispositivo a reparar</p>
-      </div>
-      <div class="card">
-        <label class="field-title required-field">Marca *</label>
-        <div class="marcas-grid" id="marcasGrid">
-          <button type="button" class="marca-btn" data-marca="Xiaomi">Xiaomi</button>
-          <button type="button" class="marca-btn" data-marca="Samsung">Samsung</button>
-          <button type="button" class="marca-btn" data-marca="Huawei">Huawei</button>
-          <button type="button" class="marca-btn" data-marca="Tecno">Tecno</button>
-          <button type="button" class="marca-btn" data-marca="Honor">Honor</button>
-          <button type="button" class="marca-btn" data-marca="Infinix">Infinix</button>
-          <button type="button" class="marca-btn" data-marca="iPhone">iPhone</button>
-          <button type="button" class="marca-btn" data-marca="Otro">Otro</button>
-        </div>
-        <input type="hidden" id="marca" required>
-
-        <div class="field dictado-wrap">
-          <input type="text" id="modelo" placeholder=" " required maxlength="60" data-dictado>
-          <label for="modelo">Modelo *</label>
-        </div>
-        <div class="field">
-          <input type="text" id="imei" placeholder=" " inputmode="numeric" maxlength="20">
-          <label for="imei">IMEI / Serial (opcional)</label>
-        </div>
-
-        <label class="field-title required-field" style="margin-top: 20px;">¿El equipo enciende? *</label>
-        <div class="radio-group" id="enciendeGroup">
-          <button type="button" class="radio-option" data-value="Sí"><i class="fas fa-power-off"></i><span>Sí</span></button>
-          <button type="button" class="radio-option" data-value="No"><i class="fas fa-ban"></i><span>No</span></button>
-          <button type="button" class="radio-option" data-value="A veces"><i class="fas fa-circle-half-stroke"></i><span>A veces</span></button>
-        </div>
-        <input type="hidden" id="enciende" required>
-      </div>
-    </section>
-
-    <!-- PASO 3: FALLA -->
-    <section class="wizard-panel hidden" data-panel="3">
-      <div class="panel-header">
-        <h2>Estado y falla</h2>
-        <p>Describe el estado y problema del equipo</p>
-      </div>
-      <div class="card">
-        <div class="field dictado-wrap textarea">
-          <textarea id="estado" placeholder=" " rows="3" maxlength="500" data-dictado></textarea>
-          <label for="estado">Estado físico del equipo</label>
-          <div class="char-counter" data-for="estado">0/500</div>
-        </div>
-        <div class="field dictado-wrap textarea" style="margin-top: 16px;">
-          <textarea id="falla" placeholder=" " rows="3" maxlength="500" data-dictado></textarea>
-          <label for="falla">Falla reportada por el cliente</label>
-          <div class="char-counter" data-for="falla">0/500</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PASO 4: SEGURIDAD -->
-    <section class="wizard-panel hidden" data-panel="4">
-      <div class="panel-header">
-        <h2>Seguridad</h2>
-        <p>¿Cómo está bloqueado el equipo?</p>
-      </div>
-      <div class="card">
-        <div class="radio-group" id="tipoSeguridadGroup">
-          <button type="button" class="radio-option active" data-value="patron"><i class="fas fa-braille"></i><span>Patrón</span></button>
-          <button type="button" class="radio-option" data-value="pin"><i class="fas fa-hashtag"></i><span>PIN</span></button>
-          <button type="button" class="radio-option" data-value="ninguno"><i class="fas fa-lock-open"></i><span>Ninguno</span></button>
-        </div>
-        <input type="hidden" id="tipoSeguridad" value="patron">
-
-        <div id="pinContainer" class="hidden" style="margin-top: 20px;">
-          <div class="field">
-            <input type="text" id="pinInput" placeholder=" " maxlength="12" inputmode="numeric">
-            <label for="pinInput">PIN de acceso</label>
-          </div>
-        </div>
-
-        <div id="patronContainer" style="margin-top: 20px;">
-          <label class="field-title">Dibuja el patrón de desbloqueo</label>
-          <div id="pattern-container" style="position: relative; width: 300px; max-width: 100%; margin: 0 auto; aspect-ratio: 1; background: var(--bg-elev); border-radius: var(--radius-md); overflow: hidden;">
-            <canvas id="bgCanvas" width="300" height="300" style="position:absolute; inset:0; width:100%; height:100%;"></canvas>
-            <canvas id="lineCanvas" width="300" height="300" style="position:absolute; inset:0; width:100%; height:100%;"></canvas>
-          </div>
-          <div id="pattern-sequence" style="text-align: center; font-size: 12px; font-weight: 700; color: var(--text-mute); margin: 10px 0;">Sin patrón</div>
-          <button type="button" id="clearPattern" class="btn btn-secondary" style="width: 100%;"><i class="fas fa-eraser"></i> Limpiar patrón</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- PASO 5: FOTOS -->
-    <section class="wizard-panel hidden" data-panel="5">
-      <div class="panel-header">
-        <h2>Fotos del equipo</h2>
-        <p>Registra el estado en que recibes el dispositivo</p>
-      </div>
-      <div class="card">
-        <div class="fotos-grid" id="fotosGrid">
-          <button type="button" class="foto-slot" data-slot="0"><i class="fas fa-camera"></i><span>Añadir</span></button>
-          <button type="button" class="foto-slot" data-slot="1"><i class="fas fa-camera"></i><span>Añadir</span></button>
-          <button type="button" class="foto-slot" data-slot="2"><i class="fas fa-camera"></i><span>Añadir</span></button>
-          <button type="button" class="foto-slot" data-slot="3"><i class="fas fa-camera"></i><span>Añadir</span></button>
-        </div>
-      </div>
-    </section>
-
-    <!-- PASO 6: COSTOS -->
-    <section class="wizard-panel hidden" data-panel="6">
-      <div class="panel-header">
-        <h2>Servicios y costos</h2>
-        <p>Detalla los servicios a realizar</p>
-      </div>
-      <div class="card">
-        <div class="servicios-container" id="serviciosList">
-          <div class="servicio-item">
-            <div class="dictado-wrap">
-              <input type="text" class="servicio-desc" placeholder="Descripción del servicio" maxlength="100" data-dictado>
-            </div>
-            <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0" inputmode="decimal">
-            <button type="button" class="removeServicio" style="display:none"><i class="fas fa-times"></i></button>
-          </div>
-        </div>
-        <button type="button" id="addServicio" class="btn btn-secondary" style="width: 100%; margin-top: 10px; font-size: 13px;"><i class="fas fa-plus"></i> Añadir otro servicio</button>
-      </div>
-
-      <div class="card">
-        <h3 class="field-title">Resumen de pago</h3>
-        <div class="resumen-row">
-          <span>Total servicios</span>
-          <strong id="costoTotalDisplay">Bs. 0.00</strong>
-        </div>
-        <div class="field" style="margin-top: 16px; margin-bottom: 0;">
-          <input type="number" id="adelanto" placeholder=" " step="0.01" min="0" inputmode="decimal" value="0">
-          <label for="adelanto">Adelanto / Pago inicial</label>
-        </div>
-        <div class="resumen-row resumen-saldo">
-          <span>Saldo pendiente</span>
-          <strong id="saldoDisplay">Bs. 0.00</strong>
-        </div>
-      </div>
-      <input type="hidden" id="costoTotal" value="0">
-    </section>
-
-    <!-- PASO 7: VISTA PREVIA -->
-    <section class="wizard-panel hidden" data-panel="7">
-      <div class="panel-header">
-        <h2>Vista previa del recibo</h2>
-        <p>Así se verá el recibo entregado al cliente</p>
-      </div>
-      <div id="previewContainer"></div>
-    </section>
-
-  </main>
-
-  <!-- FOOTER (BOTONES) -->
-  <footer class="wizard-footer" id="wizardFooter">
-    <button type="button" class="btn btn-secondary" id="btnPrev" style="display: none;">
-      <i class="fas fa-arrow-left"></i>
-    </button>
-    <button type="button" class="btn btn-primary" id="btnNext" style="flex: 1;">
-      Siguiente <i class="fas fa-arrow-right"></i>
-    </button>
-    <button type="button" class="btn btn-primary" id="btnGenerate" style="display: none; flex: 1;">
-      <i class="fas fa-file-pdf"></i> Generar Recibo
-    </button>
-  </footer>
-
-  <!-- MODAL DE ÉXITO -->
-  <div class="modal-backdrop" id="successModal">
-    <div class="modal">
-      <div class="success-icon"><i class="fas fa-check-circle"></i></div>
-      <h3 style="font-size: 20px; margin-bottom: 8px;">¡Recibo generado!</h3>
-      <p style="font-size: 14px; color: var(--text-mute); margin-bottom: 24px;" id="successNumero">REC-XXXXXXXX-XXXXXX</p>
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        <button class="btn btn-whatsapp" id="sendWhatsappBtn"><i class="fab fa-whatsapp"></i> Enviar por WhatsApp</button>
-        <button class="btn btn-download" id="downloadPdfBtn"><i class="fas fa-download"></i> Descargar PDF</button>
-        <button class="btn btn-secondary" id="backToPanelBtn2"><i class="fas fa-home"></i> Volver al panel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- BOTTOM SHEET DE FOTOS -->
-  <div class="sheet-backdrop" id="fotoSheet">
+  <!-- BOTTOM SHEET: ACCIONES DEL RECIBO -->
+  <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <h3 style="margin-bottom: 20px; font-size: 18px; font-weight: 800; text-align: center;">Añadir foto</h3>
-      <button type="button" class="btn btn-primary" id="btnTomarFoto" style="width: 100%; margin-bottom: 12px;"><i class="fas fa-camera"></i> Tomar foto</button>
-      <button type="button" class="btn btn-secondary" id="btnSubirFoto" style="width: 100%; margin-bottom: 12px;"><i class="fas fa-image"></i> Elegir de galería</button>
-      <button type="button" class="btn btn-ghost" id="btnCancelarFoto" style="width: 100%;">Cancelar</button>
+      <button class="btn-close-sheet" id="btnCloseSheet"><i class="fas fa-times"></i></button>
+      <div id="sheetContent" style="margin-top: 10px;">
+        <!-- El JS inyectará las opciones aquí -->
+      </div>
     </div>
   </div>
 
-  <!-- INPUTS DE ARCHIVO OCULTOS -->
-  <input type="file" id="inputCamara" accept="image/*" capture="environment" class="hidden-file-input">
-  <input type="file" id="inputGaleria" accept="image/*" class="hidden-file-input">
+  <script type="module">
+    import { requireAuth, logout } from '/js/app-auth.js';
+    import { toast, haptic, initTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
+    import { db } from '/js/firebase.js';
+    import { collection, query, orderBy, onSnapshot, limit, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  <!-- SCRIPTS -->
-  <script>
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    const themeIcon = document.getElementById('themeIcon');
-    const htmlElement = document.documentElement;
+    initTheme();
+    let sesion = null;
+    let ordenes = [];
+    let filtroActual = 'todos';
+    let busquedaActual = '';
+    let unsubscribe = null;
+    const reciboSheet = document.getElementById('reciboSheet');
+    const sheetContent = document.getElementById('sheetContent');
 
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    htmlElement.setAttribute('data-theme', savedTheme);
-    updateThemeIcon(savedTheme);
-
-    themeToggleBtn.addEventListener('click', () => {
-      const currentTheme = htmlElement.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      htmlElement.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
-      updateThemeIcon(newTheme);
+    requireAuth((s) => {
+      sesion = s;
+      iniciarApp();
     });
 
-    function updateThemeIcon(theme) {
-      themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    function iniciarApp() {
+      document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
+      if (sesion.rol === 'admin') document.getElementById('reportesBtn').style.display = 'flex';
+      configurarEventos();
+      cargarOrdenes();
+      toast(`Bienvenido, ${sesion.nombre}`, 'success', 2000);
+    }
+
+    function configurarEventos() {
+      document.getElementById('preciosBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/precio/'; });
+      document.getElementById('reportesBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/reportes/'; });
+      document.getElementById('logoutBtn').addEventListener('click', () => { haptic(20); logout(); });
+      document.getElementById('nuevoReciboBtn').addEventListener('click', () => { haptic(15); window.location.href = '/cliente/'; });
+
+      document.getElementById('filtros').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-filtro]');
+        if (!btn) return;
+        haptic(10);
+        document.querySelectorAll('#filtros .chip-interactive').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filtroActual = btn.dataset.filtro;
+        renderizarOrdenes();
+      });
+
+      document.getElementById('buscador').addEventListener('input', (e) => {
+        busquedaActual = e.target.value.toLowerCase().trim();
+        renderizarOrdenes();
+      });
+
+      document.getElementById('btnCloseSheet')?.addEventListener('click', cerrarSheet);
+      reciboSheet?.addEventListener('click', (e) => { if (e.target === reciboSheet) cerrarSheet(); });
+    }
+
+    function cargarOrdenes() {
+      const q = query(collection(db, 'recibos'), orderBy('fecha', 'desc'), limit(200));
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderizarOrdenes();
+        actualizarStats();
+      }, (error) => {
+        console.error('❌ Error:', error);
+        document.getElementById('listaOrdenes').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Error</h3><p>${error.message}</p></div>`;
+      });
+    }
+
+    function renderizarOrdenes() {
+      const lista = document.getElementById('listaOrdenes');
+      let filtradas = ordenes;
+      if (filtroActual !== 'todos') filtradas = filtradas.filter(o => (o.estadoOrden || 'recibido') === filtroActual);
+      if (busquedaActual) {
+        filtradas = filtradas.filter(o => {
+          const texto = [o.numeroRecibo, o.cliente, o.telefono, o.marca, o.modelo].filter(Boolean).join(' ').toLowerCase();
+          return texto.includes(busquedaActual);
+        });
+      }
+      if (filtradas.length === 0) {
+        lista.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><h3>${busquedaActual ? 'Sin resultados' : 'No hay órdenes'}</h3><p>${busquedaActual ? 'Prueba otra búsqueda' : 'Crea el primer recibo tocando +'}</p></div>`;
+        return;
+      }
+      lista.innerHTML = filtradas.map(o => renderCard(o)).join('');
+      lista.querySelectorAll('.orden-card').forEach(card => {
+        card.addEventListener('click', () => { haptic(10); abrirSheet(card.dataset.id); });
+      });
+    }
+
+    function renderCard(o) {
+      const estadoActual = o.estadoOrden || 'recibido';
+      const estadoInfo = {
+        recibido: { texto: 'RECIBIDO', emoji: '📦' },
+        reparacion: { texto: 'EN REPARACIÓN', emoji: '🔧' },
+        'espera-repuesto': { texto: 'ESPERANDO REPUESTO', emoji: '⏳' },
+        listo: { texto: 'LISTO PARA ENTREGAR', emoji: '✅' },
+        entregado: { texto: 'ENTREGADO', emoji: '🤝' },
+        devuelto: { texto: 'DEVUELTO', emoji: '↩️' },
+        cancelado: { texto: 'CANCELADO', emoji: '⛔' }
+      }[estadoActual] || { texto: estadoActual.toUpperCase(), emoji: '📋' };
+
+      const total = Number(o.total) || 0;
+      const metodoPago = o.metodoPago ? o.metodoPago.replace(/\(.*\)/, '').trim() : '';
+      let serviciosTexto = '';
+      if (Array.isArray(o.servicios) && o.servicios.length > 0) serviciosTexto = o.servicios.map(s => s.desc).filter(d => d && d.trim() !== '' && d.trim() !== 'Sin descripción').join(' · ');
+
+      return `
+        <div class="card card-interactive orden-card" data-id="${o.id}" data-estado="${estadoActual}">
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px; padding-left: 16px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                <span class="chip-estado" data-estado="${estadoActual}">${estadoInfo.emoji} ${estadoInfo.texto}</span>
+                <span style="font-size: 10px; color: var(--text-3); font-weight: 700; font-family: monospace;">${o.numeroRecibo || '—'}</span>
+              </div>
+              <div style="font-size: 17px; font-weight: 800; color: var(--text-1); margin-bottom: 6px; letter-spacing: -0.3px;">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
+              ${o.cliente ? `<div style="font-size: 12px; color: var(--text-2); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;"><span style="font-size: 13px;">👤</span><span>${escapeHtml(o.cliente)}</span></div>` : ''}
+              ${serviciosTexto ? `<div style="font-size: 11px; color: var(--text-3); margin-bottom: 4px; line-height: 1.4; display: flex; align-items: start; gap: 6px;"><span style="font-size: 12px; flex-shrink: 0;">🔧</span><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">${escapeHtml(serviciosTexto)}</span></div>` : ''}
+              <div style="font-size: 10px; color: var(--text-3); margin-top: 8px; display: flex; align-items: center; gap: 4px;"><i class="far fa-clock"></i> ${tiempoRelativo(o.fecha)}</div>
+            </div>
+            <div style="text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: end; gap: 4px;">
+              <div style="font-size: 20px; font-weight: 900; color: var(--brand-500); letter-spacing: -0.5px;">${formatBs(total)}</div>
+              ${metodoPago ? `<div class="metodo-pago" style="color: #22C55E;">${getIconoMetodo(metodoPago)} ${escapeHtml(metodoPago)}</div>` : (estadoActual === 'entregado' ? `<div class="metodo-pago" style="color: #22C55E;">✓ Pagado</div>` : '')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function getIconoMetodo(metodo) {
+      const m = String(metodo || '').toLowerCase();
+      if (m.includes('efectivo')) return '💵';
+      if (m.includes('qr')) return '📱';
+      if (m.includes('transf')) return '🏦';
+      if (m.includes('mixto')) return '🔀';
+      return '💳';
+    }
+
+    function actualizarStats() {
+      const activas = ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
+      const listas = ordenes.filter(o => o.estadoOrden === 'listo').length;
+      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+      const hoyCount = ordenes.filter(o => { if (!o.fecha) return false; const d = o.fecha.toDate ? o.fecha.toDate() : new Date(o.fecha); return d >= hoy; }).length;
+      document.getElementById('statActivas').textContent = activas;
+      document.getElementById('statListas').textContent = listas;
+      document.getElementById('statHoy').textContent = hoyCount;
+    }
+
+    function abrirSheet(id) {
+      const orden = ordenes.find(o => o.id === id);
+      if (!orden) return;
+
+      sheetContent.innerHTML = `
+        <div style="margin-bottom: 20px;">
+          <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1); margin: 0 0 4px 0;">${escapeHtml(orden.numeroRecibo)}</h3>
+          <p style="font-size: 13px; color: var(--text-2); margin: 0;">${escapeHtml(orden.cliente)} · ${escapeHtml(orden.marca)} ${escapeHtml(orden.modelo)}</p>
+        </div>
+
+        <!-- BOTÓN PARA EDITAR LA ORDEN COMPLETA -->
+        <button class="btn-sheet btn-sheet-edit" id="btnEditarOrden">
+          <i class="fas fa-edit"></i> Editar / Ver Orden Completa
+        </button>
+
+        <!-- Cambiar Estado -->
+        <div style="background: var(--bg-elev-2); padding: 12px; border-radius: 12px; margin: 16px 0;">
+          <label style="font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px; display: block;">Cambiar Estado</label>
+          <select id="selectEstado" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-1); color: var(--text-1); border: 1px solid var(--border-1); outline: none; font-family: inherit; font-weight: 600;">
+            <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
+            <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
+            <option value="espera-repuesto" ${orden.estadoOrden === 'espera-repuesto' ? 'selected' : ''}>⏳ Esperando repuesto</option>
+            <option value="listo" ${orden.estadoOrden === 'listo' ? 'selected' : ''}>✅ Listo para entregar</option>
+            <option value="entregado" ${orden.estadoOrden === 'entregado' ? 'selected' : ''}>🤝 Entregado</option>
+            <option value="devuelto" ${orden.estadoOrden === 'devuelto' ? 'selected' : ''}>↩️ Devuelto</option>
+          </select>
+        </div>
+
+        <!-- Acciones -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button class="btn-sheet btn-sheet-primary" id="btnActualizarEstado"><i class="fas fa-save"></i> Guardar Cambios</button>
+          <button class="btn-sheet btn-sheet-whatsapp" id="btnWhatsApp"><i class="fab fa-whatsapp"></i> Reenviar por WhatsApp</button>
+          <button class="btn-sheet btn-sheet-danger" id="btnEliminar"><i class="fas fa-trash"></i> Eliminar Recibo</button>
+        </div>
+      `;
+
+      reciboSheet.classList.add('show');
+      haptic(15);
+
+      document.getElementById('btnEditarOrden')?.addEventListener('click', () => {
+        window.location.href = `/app/orden.html?id=${id}`;
+      });
+
+      document.getElementById('btnActualizarEstado')?.addEventListener('click', async () => {
+        const nuevoEstado = document.getElementById('selectEstado').value;
+        try {
+          await updateDoc(doc(db, 'recibos', id), { estadoOrden: nuevoEstado });
+          toast('Estado actualizado', 'success');
+          cerrarSheet();
+        } catch (err) { toast('Error al actualizar', 'error'); }
+      });
+
+      document.getElementById('btnWhatsApp')?.addEventListener('click', () => {
+        const mensaje = `Hola ${orden.cliente.split(' ')[0]}, tu equipo ${orden.marca} ${orden.modelo} está en estado: *${orden.estadoOrden || 'recibido'}*.\n\nN Recibo: ${orden.numeroRecibo}\nPuedes revisarlo en: https://xiaomi.scz.red/?recibo=${orden.numeroRecibo}`;
+        const tel = orden.telefono.replace(/\D/g, '');
+        window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank');
+        cerrarSheet();
+      });
+
+      document.getElementById('btnEliminar')?.addEventListener('click', async () => {
+        if (confirm('¿Eliminar este recibo permanentemente?')) {
+          try {
+            await deleteDoc(doc(db, 'recibos', id));
+            toast('Recibo eliminado', 'success');
+            cerrarSheet();
+          } catch (err) { toast('Error al eliminar', 'error'); }
+        }
+      });
+    }
+
+    function cerrarSheet() {
+      if (reciboSheet) reciboSheet.classList.remove('show');
     }
   </script>
-
-  <script type="module" src="/js/dictado.js"></script>
-  <script type="module" src="/js/cliente.js"></script>
-
 </body>
 </html>
