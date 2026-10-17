@@ -1,13 +1,11 @@
 /* ============================================================
-   DR. XIAOMI · CONFIGURACIÓN FIREBASE (RÁPIDA Y SEGURA)
+   DR. XIAOMI · CONFIGURACIÓN FIREBASE (RESTAURADA)
    Archivo: js/firebase.js
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-  initializeFirestore, 
-  memoryLocalCache 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeFirestore, memoryLocalCache } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"; // 🔥 Volvemos a importar Auth
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -22,13 +20,14 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// 🔥 Usamos memoria caché en lugar de disco para que sea instantáneo
+// 🔥 RESTAURAMOS los servicios que Firestore necesita para no bloquearse
 export const db = initializeFirestore(app, {
   localCache: memoryLocalCache()
 });
 
+export const auth = getAuth(app); // 🔥 Esto es lo que faltaba
 export const storage = getStorage(app);
 
 export { app };
 
-console.log('🔥 Firebase inicializado (Modo Seguro con PIN):', firebaseConfig.projectId);
+console.log('🔥 Firebase inicializado correctamente:', firebaseConfig.projectId);
