@@ -1,462 +1,240 @@
-<!DOCTYPE html>
-<html lang="es" data-theme="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0A0A0B">
-  <meta name="mobile-web-app-capable" content="yes">
-  <title>DR. Xiaomi · Panel</title>
+/* ============================================================
+   DR. XIAOMI · REPORTES (SIN ÍNDICES, FILTRA EN CELULAR)
+   Archivo: app/reportes/reportes.js
+   ============================================================ */
 
-  <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32x32.png">
-  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
-  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
+import { requireAuth, logout } from '/js/app-auth.js';
+import { toast, haptic, initTheme, formatBs, escapeHtml } from '/js/app-ui.js';
+import { db } from '/js/firebase.js';
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+initTheme();
+let sesion = null;
+let rangoActual = 'hoy';
 
-  <link rel="stylesheet" href="/css/app-theme.css">
-  <link rel="stylesheet" href="/css/app-components.css">
-  <link rel="stylesheet" href="/css/app-layouts.css">
-  <link rel="manifest" href="/app/manifest.json">
+// Elementos del DOM (IDs exactos de tu HTML)
+const headerSubtitle = document.getElementById('headerSubtitle');
+const totalMontoEl = document.getElementById('totalMonto');
+const totalEntregasEl = document.getElementById('totalEntregas');
+const totalCostoEl = document.getElementById('totalCosto');
+const totalGananciaEl = document.getElementById('totalGanancia');
+const totalMargenEl = document.getElementById('totalMargen');
+const statPromedioEl = document.getElementById('statPromedio');
+const statMaximoEl = document.getElementById('statMaximo');
+const metodosGrid = document.getElementById('metodosGrid');
+const listaMovimientos = document.getElementById('listaMovimientos');
 
-  <style>
-    :root {
-      --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px;
-      --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-    }
-    
-    /* Header y Logo */
-    .brand-logo-limpio { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--bg-elev-2); box-shadow: var(--shadow-sm); border: 1px solid var(--border-1); }
-    .brand-logo-limpio img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
-    .icon-btn .icon-img { width: 20px; height: 20px; object-fit: contain; display: block; pointer-events: none; opacity: 0.7; transition: 0.2s; }
-    .icon-btn .icon-img.blanco { filter: brightness(0) invert(1); }
+requireAuth((s) => {
+  sesion = s;
+  configurarEventos();
+  cargarReporte('hoy');
+});
 
-    /* Estadísticas (Pro) */
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-    .stat-card { background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: var(--radius-lg); padding: 16px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
-    .stat-value { font-size: 24px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 4px; }
-    .stat-value.success { color: #22C55E; }
-    .stat-value.brand { color: var(--brand-500); }
-    .stat-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+function configurarEventos() {
+  document.getElementById('homeBtn')?.addEventListener('click', () => window.location.href = '/app/');
+  document.getElementById('backBtn')?.addEventListener('click', () => window.location.href = '/app/');
+  document.getElementById('preciosBtn')?.addEventListener('click', () => window.location.href = '/precio/');
+  document.getElementById('logoutBtn')?.addEventListener('click', () => logout());
+  document.getElementById('refreshBtn')?.addEventListener('click', () => cargarReporte(rangoActual));
 
-    /* Skeleton Loader */
-    .skeleton-card { background: var(--bg-elev-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border-1); animation: pulse 1.5s infinite; }
-    .skeleton-line { height: 12px; background: var(--bg-elev-2); border-radius: 6px; margin-bottom: 8px; }
-    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-
-    /* Tarjeta de Recibo (Pro y Minimalista) */
-    .orden-card { position: relative; transition: 0.2s; cursor: pointer; background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; }
-    .orden-card:active { transform: scale(0.98); background: var(--bg-elev-2) !important; }
-    
-    .chip-estado { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-    .chip-estado[data-estado="recibido"] { background: rgba(255, 255, 255, 0.1); color: var(--text-1); }
-    .chip-estado[data-estado="reparacion"] { background: rgba(255, 105, 0, 0.15); color: var(--brand-500); }
-    .chip-estado[data-estado="espera-repuesto"] { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
-    .chip-estado[data-estado="listo"] { background: rgba(251, 191, 36, 0.15); color: #FBBF24; }
-    .chip-estado[data-estado="entregado"] { background: rgba(34, 197, 94, 0.15); color: #22C55E; }
-    .chip-estado[data-estado="devuelto"] { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
-    
-    .metodo-pago { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 6px; color: #22C55E; }
-
-    /* ============================================================ */
-    /* BOTTOM SHEET (CENTRADO Y BLINDADO PARA CELULAR)              */
-    /* ============================================================ */
-    .sheet-backdrop { 
-      position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important;
-      background: rgba(0,0,0,0.7) !important; backdrop-filter: blur(8px) !important; z-index: 999999 !important; 
-      opacity: 0; pointer-events: none; display: flex !important; align-items: center !important; justify-content: center !important; 
-    }
-    .sheet-backdrop.show { opacity: 1 !important; pointer-events: auto !important; }
-    
-    .sheet { 
-      background: var(--bg-elev-1) !important; border-radius: 24px !important; padding: 24px !important; width: 90% !important; max-width: 400px !important; 
-      transform: translateY(20px) scale(0.95) !important; opacity: 0; transition: 0.3s !important; border: 1px solid var(--border-1) !important; 
-      position: relative !important; box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important; max-height: 90vh !important; overflow-y: auto !important;
-    }
-    .sheet-backdrop.show .sheet { transform: translateY(0) scale(1) !important; opacity: 1 !important; }
-    
-    .btn-close-sheet { position: absolute; top: 20px; right: 20px; background: var(--bg-elev-2); border: none; color: var(--text-3); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    .btn-sheet { width: 100%; padding: 16px; border-radius: 12px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
-    .btn-sheet-primary { background: var(--brand-500); color: white; }
-    .btn-sheet-whatsapp { background: #25D366; color: white; }
-    .btn-sheet-danger { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
-    .btn-sheet-edit { background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-2); }
-    .custom-select { width: 100%; padding: 14px; border-radius: 10px; background-color: var(--bg-1) !important; color: var(--text-1) !important; border: 1px solid var(--border-1); outline: none; font-weight: 600; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill=\"%239CA3AF\" height=\"24\" viewBox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/></svg>'); background-repeat: no-repeat; background-position: right 10px center; }
-  </style>
-</head>
-<body>
-
-  <div class="app-container">
-    <header class="app-header">
-      <div class="brand">
-        <div class="brand-logo-limpio">
-          <img src="/img/logo1.png" alt="DR. Xiaomi" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:20px;&quot;></i>';">
-        </div>
-        <div class="brand-text">
-          <h1 style="font-size: 18px; font-weight: 800; letter-spacing: -0.5px;">DR. XIAOMI</h1>
-          <p id="userInfo" style="font-size: 12px; color: var(--text-3);">Cargando...</p>
-        </div>
-      </div>
-      <div class="header-actions" style="display: flex; gap: 4px;">
-        <button class="icon-btn" id="btnRefresh" title="Actualizar" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
-          <i class="fas fa-rotate" id="iconRefresh" style="color: var(--brand-500); font-size: 16px;"></i>
-        </button>
-        <button class="icon-btn" id="preciosBtn" title="Buscar precio" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
-          <img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
-        </button>
-        <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none; width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
-          <img src="/imagenes/icon-reportes.png" alt="Reportes" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
-        </button>
-        <button class="icon-btn" id="logoutBtn" title="Cerrar sesión" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
-          <img src="/imagenes/icon-salir.png" alt="Salir" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
-        </button>
-      </div>
-    </header>
-
-    <main class="app-content">
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-value" id="statActivas">—</div><div class="stat-label">Activas</div></div>
-        <div class="stat-card"><div class="stat-value success" id="statListas">—</div><div class="stat-label">Listas</div></div>
-        <div class="stat-card"><div class="stat-value brand" id="statHoy">—</div><div class="stat-label">Hoy</div></div>
-      </div>
-
-      <div class="search-bar">
-        <i class="fas fa-search"></i>
-        <input type="search" id="buscador" placeholder="Buscar cliente o recibo..." autocomplete="off">
-      </div>
-
-      <div class="filters-row" id="filtros">
-        <button class="chip chip-interactive active" data-filtro="todos">Todas</button>
-        <button class="chip chip-interactive" data-filtro="recibido">Recibidas</button>
-        <button class="chip chip-interactive" data-filtro="reparacion">En reparación</button>
-        <button class="chip chip-interactive" data-filtro="listo">Listas</button>
-        <button class="chip chip-interactive" data-filtro="entregado">Entregadas</button>
-      </div>
-
-      <div class="cards-list" id="listaOrdenes">
-        <div class="skeleton-card"><div class="skeleton-line" style="width: 40%; height: 18px;"></div><div class="skeleton-line" style="width: 70%;"></div><div class="skeleton-line" style="width: 30%;"></div></div>
-      </div>
-
-      <button id="btnCargarMas" class="btn-load-more" style="display: none; width: 100%; padding: 16px; border-radius: var(--radius-md); background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-2); font-weight: 700; cursor: pointer; margin-top: 10px; margin-bottom: 20px;"><i class="fas fa-chevron-down"></i> Cargar más recibos</button>
-    </main>
-
-    <button class="btn-fab" id="nuevoReciboBtn" style="position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px; border-radius: 50%; background: var(--brand-500); color: white; border: none; box-shadow: 0 4px 16px rgba(255,105,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 90;">
-      <i class="fas fa-plus"></i>
-    </button>
-  </div>
-
-  <div class="sheet-backdrop" id="reciboSheet">
-    <div class="sheet">
-      <button class="btn-close-sheet" id="btnCloseSheet"><i class="fas fa-times"></i></button>
-      <div id="sheetContent" style="margin-top: 10px;"></div>
-    </div>
-  </div>
-
-  <script type="module">
-    import { requireAuth, logout } from '/js/app-auth.js';
-    import { toast, haptic, initTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
-    import { db } from '/js/firebase.js';
-    import { collection, query, orderBy, onSnapshot, limit, doc, updateDoc, deleteDoc, startAfter, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    initTheme();
-    let sesion = null;
-    let ordenes = [];
-    let filtroActual = 'todos';
-    let busquedaActual = '';
-    let unsubscribe = null;
-    
-    const LIMITE_POR_PAGINA = 10;
-    let ultimoDocumento = null;
-    let hayMasRecibos = true;
-
-    const reciboSheet = document.getElementById('reciboSheet');
-    const sheetContent = document.getElementById('sheetContent');
-    const btnCargarMas = document.getElementById('btnCargarMas');
-
-    requireAuth((s) => {
-      sesion = s;
-      iniciarApp();
-    });
-
-    function iniciarApp() {
-      document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
-      if (sesion.rol === 'admin') {
-        const btnRep = document.getElementById('reportesBtn');
-        if (btnRep) btnRep.style.display = 'flex';
-      }
-      configurarEventos();
-      cargarOrdenes();
-    }
-
-    function configurarEventos() {
-      document.getElementById('preciosBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/precio/'; });
-      document.getElementById('reportesBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/reportes/'; });
-      document.getElementById('logoutBtn').addEventListener('click', () => { haptic(20); logout(); });
-      document.getElementById('nuevoReciboBtn').addEventListener('click', () => { haptic(15); window.location.href = '/cliente/'; });
-
-      document.getElementById('filtros').addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-filtro]');
-        if (!btn) return;
-        haptic(10);
-        document.querySelectorAll('#filtros .chip-interactive').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        filtroActual = btn.dataset.filtro;
-        renderizarOrdenes();
-      });
-
-      document.getElementById('buscador').addEventListener('input', (e) => {
-        busquedaActual = e.target.value.toLowerCase().trim();
-        renderizarOrdenes();
-      });
-
-      document.getElementById('btnCloseSheet')?.addEventListener('click', cerrarSheet);
-      reciboSheet?.addEventListener('click', (e) => { if (e.target === reciboSheet) cerrarSheet(); });
-      btnCargarMas?.addEventListener('click', cargarMasOrdenes);
-
-      document.getElementById('btnRefresh')?.addEventListener('click', () => {
-        haptic(15);
-        const icon = document.getElementById('iconRefresh');
-        icon.style.animation = 'spin 0.8s linear infinite';
-        if (unsubscribe) unsubscribe();
-        cargarOrdenes();
-        setTimeout(() => { icon.style.animation = 'none'; toast('Lista actualizada', 'success', 1500); }, 1500);
-      });
-    }
-
-    function cargarOrdenes() {
-      if (unsubscribe) unsubscribe();
-
-      const q = query(
-        collection(db, 'recibos'), 
-        orderBy('fecha', 'desc'), 
-        limit(LIMITE_POR_PAGINA)
-      );
-
-      unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
-        const source = snapshot.metadata.fromCache ? '💾 Caché' : '☁️ Servidor';
-        console.log(`📡 Recibos cargados desde: ${source}`);
-        
-        ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
-        
-        if (snapshot.docs.length > 0) {
-          ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
-        }
-
-        renderizarOrdenes();
-        actualizarStats();
-      }, (error) => {
-        console.error('❌ Error cargando órdenes:', error);
-        document.getElementById('listaOrdenes').innerHTML = `
-          <div class="empty-state">
-            <i class="fas fa-exclamation-triangle" style="color: #EF4444;"></i>
-            <h3>Error al cargar</h3>
-            <p>${error.message}</p>
-          </div>`;
-      });
-    }
-
-    async function cargarMasOrdenes() {
-      if (!ultimoDocumento) return;
-
+  document.querySelectorAll('.fecha-btn[data-rango]').forEach(btn => {
+    btn.addEventListener('click', () => {
       haptic(10);
-      const textoOriginal = btnCargarMas.innerHTML;
-      btnCargarMas.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
-      btnCargarMas.disabled = true;
+      document.querySelectorAll('.fecha-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      rangoActual = btn.dataset.rango;
 
-      try {
-        const q = query(
-          collection(db, 'recibos'), 
-          orderBy('fecha', 'desc'), 
-          startAfter(ultimoDocumento),
-          limit(LIMITE_POR_PAGINA)
-        );
-
-        const snapshot = await getDocs(q);
-        const nuevosRecibos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        
-        ordenes = [...ordenes, ...nuevosRecibos];
-        if (snapshot.docs.length > 0) ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
-        hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
-
-        renderizarOrdenes();
-        actualizarStats();
-      } catch (error) {
-        console.error('Error cargando más:', error);
-        toast('No se pudieron cargar más recibos', 'error');
-      } finally {
-        btnCargarMas.innerHTML = textoOriginal;
-        btnCargarMas.disabled = false;
+      if (rangoActual === 'custom') {
+        document.getElementById('fechaCustom').classList.add('show');
+      } else {
+        document.getElementById('fechaCustom').classList.remove('show');
+        cargarReporte(rangoActual);
       }
+    });
+  });
+
+  document.getElementById('btnAplicarCustom')?.addEventListener('click', () => {
+    const desde = document.getElementById('fechaDesde').value;
+    const hasta = document.getElementById('fechaHasta').value;
+    if (!desde || !hasta) {
+      toast('Selecciona ambas fechas', 'warning');
+      return;
+    }
+    cargarReporte('custom', desde, hasta);
+  });
+
+  document.getElementById('btnVolverPanel')?.addEventListener('click', () => window.location.href = '/app/');
+}
+
+async function cargarReporte(rango, desdeFecha, hastaFecha) {
+  // Estado de carga
+  totalMontoEl.textContent = '...';
+  totalEntregasEl.textContent = 'Buscando...';
+  listaMovimientos.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-3);">⏳ Cargando datos...</div>';
+
+  try {
+    let inicio = new Date();
+    let fin = new Date();
+
+    // Calcular fechas
+    if (rango === 'hoy') {
+      inicio.setHours(0, 0, 0, 0);
+      fin.setHours(23, 59, 59, 999);
+    } else if (rango === 'ayer') {
+      inicio.setDate(inicio.getDate() - 1);
+      inicio.setHours(0, 0, 0, 0);
+      fin.setDate(fin.getDate() - 1);
+      fin.setHours(23, 59, 59, 999);
+    } else if (rango === 'semana') {
+      const dia = inicio.getDay() || 7;
+      inicio.setDate(inicio.getDate() - dia + 1);
+      inicio.setHours(0, 0, 0, 0);
+      fin.setHours(23, 59, 59, 999);
+    } else if (rango === 'mes') {
+      inicio.setDate(1);
+      inicio.setHours(0, 0, 0, 0);
+      fin.setHours(23, 59, 59, 999);
+    } else if (rango === 'custom') {
+      inicio = new Date(desdeFecha + 'T00:00:00');
+      fin = new Date(hastaFecha + 'T23:59:59');
     }
 
-    function renderizarOrdenes() {
-      const lista = document.getElementById('listaOrdenes');
-      let filtradas = ordenes;
+    const opcionesFecha = { day: '2-digit', month: 'short' };
+    headerSubtitle.textContent = `${inicio.toLocaleDateString('es-BO', opcionesFecha)} - ${fin.toLocaleDateString('es-BO', opcionesFecha)}`;
+
+    // 🔥 CONSULTA SENCILLA: Traemos TODOS los recibos sin where (evita índices)
+    const snapshot = await getDocs(collection(db, 'recibos'));
+    console.log(`📡 Recibos descargados de la nube: ${snapshot.size}`);
+
+    const datos = [];
+
+    // Recorremos y filtramos manualmente en el celular
+    snapshot.forEach(doc => {
+      const d = doc.data();
       
-      if (filtroActual !== 'todos') filtradas = filtradas.filter(o => (o.estadoOrden || 'recibido') === filtroActual);
-      if (busquedaActual) {
-        filtradas = filtradas.filter(o => {
-          const texto = [o.numeroRecibo, o.cliente, o.telefono, o.marca, o.modelo].filter(Boolean).join(' ').toLowerCase();
-          return texto.includes(busquedaActual);
+      // Filtro blindado (acepta mayúsculas y minúsculas)
+      const estado = (d.estadoOrden || '').toLowerCase().trim();
+      if (estado !== 'entregado') return;
+
+      // Fecha válida (respaldo: fechaEntrega o fecha de creación)
+      let fechaValida = d.fechaEntrega || d.fecha;
+      let fechaD = new Date();
+      if (fechaValida) {
+        if (typeof fechaValida.toDate === 'function') fechaD = fechaValida.toDate();
+        else fechaD = new Date(fechaValida);
+      }
+
+      // Filtramos por el rango de fechas
+      if (fechaD >= inicio && fechaD <= fin) {
+        datos.push({
+          numeroRecibo: d.numeroRecibo,
+          cliente: d.cliente,
+          marca: d.marca,
+          modelo: d.modelo,
+          montoCobrado: Number(d.montoCobrado) || 0,
+          costoRepuesto: Number(d.costoRepuesto) || 0,
+          metodoPago: d.metodoPago || 'Efectivo',
+          fechaReal: fechaD
         });
       }
-      
-      if (filtradas.length === 0) {
-        lista.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><h3>${busquedaActual ? 'Sin resultados' : 'No hay órdenes'}</h3><p>${busquedaActual ? 'Prueba otra búsqueda' : 'Crea el primer recibo tocando +'}</p></div>`;
-        btnCargarMas.style.display = 'none';
-        return;
-      }
-      
-      lista.innerHTML = filtradas.map(o => renderCard(o)).join('');
-      
-      if (hayMasRecibos && !busquedaActual && filtroActual === 'todos') {
-        btnCargarMas.style.display = 'flex';
-      } else {
-        btnCargarMas.style.display = 'none';
-      }
+    });
 
-      lista.querySelectorAll('.orden-card').forEach(card => {
-        card.addEventListener('click', () => { haptic(10); abrirSheet(card.dataset.id); });
-      });
-    }
+    // Ordenar del más reciente al más antiguo
+    datos.sort((a, b) => b.fechaReal - a.fechaReal);
+    console.log(`✅ Entregas encontradas en este rango: ${datos.length}`);
 
-    // 🔥 TARJETA PRO Y MINIMALISTA
-    function renderCard(o) {
-      const estadoActual = o.estadoOrden || 'recibido';
-      const estadoInfo = {
-        recibido: { texto: 'Recibido', emoji: '📦' },
-        reparacion: { texto: 'En Reparación', emoji: '🔧' },
-        'espera-repuesto': { texto: 'Esperando Repuesto', emoji: '⏳' },
-        listo: { texto: 'Listo', emoji: '✅' },
-        entregado: { texto: 'Entregado', emoji: '🤝' },
-        devuelto: { texto: 'Devuelto', emoji: '↩️' },
-        cancelado: { texto: 'Cancelado', emoji: '⛔' }
-      }[estadoActual] || { texto: estadoActual, emoji: '📋' };
+    renderizarReporte(datos);
 
-      const total = Number(o.total) || 0;
-      const metodoPago = o.metodoPago ? o.metodoPago.replace(/\(.*\)/, '').trim() : '';
-      let serviciosTexto = '';
-      if (Array.isArray(o.servicios) && o.servicios.length > 0) {
-        serviciosTexto = o.servicios.map(s => s.desc).filter(d => d && d.trim() !== '' && d.trim() !== 'Sin descripción').join(' · ');
-      }
+  } catch (error) {
+    console.error('❌ Error al cargar reporte:', error);
+    totalMontoEl.textContent = 'Bs. 0.00';
+    totalEntregasEl.textContent = 'Error';
+    listaMovimientos.innerHTML = `
+      <div style="text-align:center; padding:20px; color:#EF4444;">
+        <i class="fas fa-exclamation-triangle" style="font-size:30px; margin-bottom:10px;"></i>
+        <h3>Error de conexión</h3>
+        <p style="font-size:12px;">${error.message}</p>
+        <button onclick="location.reload()" style="margin-top:10px; padding:10px 20px; border-radius:8px; background:var(--brand-500); color:white; border:none; font-weight:bold;">Reintentar</button>
+      </div>
+    `;
+  }
+}
 
-      return `
-        <div class="orden-card" data-id="${o.id}" data-estado="${estadoActual}">
-          <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
-            <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                <span class="chip-estado" data-estado="${estadoActual}">${estadoInfo.emoji} ${estadoInfo.texto}</span>
-                <span style="font-size: 11px; color: var(--text-3); font-weight: 600; font-family: monospace;">${o.numeroRecibo || '—'}</span>
-              </div>
-              <div style="font-size: 16px; font-weight: 700; color: var(--text-1); margin-bottom: 4px;">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
-              ${o.cliente ? `<div style="font-size: 13px; color: var(--text-2); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;"><span style="font-size: 14px;">👤</span><span>${escapeHtml(o.cliente)}</span></div>` : ''}
-              ${serviciosTexto ? `<div style="font-size: 12px; color: var(--text-3); margin-bottom: 4px; display: flex; align-items: start; gap: 6px;"><span style="font-size: 13px; flex-shrink: 0;">🔧</span><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">${escapeHtml(serviciosTexto)}</span></div>` : ''}
-              <div style="font-size: 11px; color: var(--text-3); margin-top: 10px; display: flex; align-items: center; gap: 4px;"><i class="far fa-clock"></i> ${tiempoRelativo(o.fecha)}</div>
-            </div>
-            <div style="text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: end; gap: 4px;">
-              <div style="font-size: 18px; font-weight: 800; color: var(--brand-500);">${formatBs(total)}</div>
-              ${metodoPago ? `<div class="metodo-pago">${getIconoMetodo(metodoPago)} ${escapeHtml(metodoPago)}</div>` : (estadoActual === 'entregado' ? `<div class="metodo-pago">✓ Pagado</div>` : '')}
-            </div>
-          </div>
+function renderizarReporte(datos) {
+  if (datos.length === 0) {
+    totalMontoEl.textContent = 'Bs. 0.00';
+    totalEntregasEl.textContent = '0 entregas';
+    totalCostoEl.textContent = 'Bs. 0';
+    totalGananciaEl.textContent = 'Bs. 0';
+    totalMargenEl.textContent = '0%';
+    statPromedioEl.textContent = 'Bs. 0';
+    statMaximoEl.textContent = 'Bs. 0';
+    metodosGrid.innerHTML = '';
+    listaMovimientos.innerHTML = `
+      <div style="text-align:center; padding:40px 20px; color:var(--text-3);">
+        <i class="fas fa-inbox" style="font-size:40px; opacity:0.3; margin-bottom:10px; display:block;"></i>
+        <h3 style="font-size:15px;">Sin movimientos</h3>
+        <p style="font-size:12px;">No hay ventas entregadas en este período.</p>
+      </div>
+    `;
+    return;
+  }
+
+  let totalMonto = 0;
+  let totalCosto = 0;
+  let metodos = { efectivo: 0, qr: 0, transferencia: 0, mixto: 0 };
+  let maxVenta = 0;
+  let movimientosHtml = '';
+
+  for (let i = 0; i < datos.length; i++) {
+    const d = datos[i];
+    const monto = d.montoCobrado;
+    const costo = d.costoRepuesto;
+    const metodo = d.metodoPago.toLowerCase();
+
+    totalMonto += monto;
+    totalCosto += costo;
+    if (monto > maxVenta) maxVenta = monto;
+
+    if (metodo.includes('efectivo')) metodos.efectivo += monto;
+    else if (metodo.includes('qr')) metodos.qr += monto;
+    else if (metodo.includes('transf')) metodos.transferencia += monto;
+    else metodos.mixto += monto;
+
+    const fechaD = d.fechaReal;
+    const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
+
+    movimientosHtml += `
+      <div class="movimiento">
+        <div class="hora">${horaStr}</div>
+        <div class="info">
+          <div class="cliente">${escapeHtml(d.cliente || 'Cliente')}</div>
+          <div class="detalle">${escapeHtml(d.marca || '')} ${escapeHtml(d.modelo || '')} · ${escapeHtml(d.metodoPago)}</div>
         </div>
-      `;
-    }
+        <div class="monto">${formatBs(monto)}</div>
+      </div>
+    `;
+  }
 
-    function getIconoMetodo(metodo) {
-      const m = String(metodo || '').toLowerCase();
-      if (m.includes('efectivo')) return '💵';
-      if (m.includes('qr')) return '📱';
-      if (m.includes('transf')) return '🏦';
-      if (m.includes('mixto')) return '🔀';
-      return '💳';
-    }
+  const totalGanancia = totalMonto - totalCosto;
+  const margen = totalMonto > 0 ? (totalGanancia / totalMonto) * 100 : 0;
+  const promedio = totalMonto / datos.length;
 
-    function actualizarStats() {
-      const activas = ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
-      const listas = ordenes.filter(o => o.estadoOrden === 'listo').length;
-      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-      const hoyCount = ordenes.filter(o => { if (!o.fecha) return false; const d = o.fecha.toDate ? o.fecha.toDate() : new Date(o.fecha); return d >= hoy; }).length;
-      
-      document.getElementById('statActivas').textContent = activas;
-      document.getElementById('statListas').textContent = listas;
-      document.getElementById('statHoy').textContent = hoyCount;
-    }
+  // Inyectar en el HTML
+  totalMontoEl.textContent = formatBs(totalMonto);
+  totalEntregasEl.textContent = `${datos.length} entregas`;
+  totalCostoEl.textContent = formatBs(totalCosto);
+  totalGananciaEl.textContent = formatBs(totalGanancia);
+  totalMargenEl.textContent = `${margen.toFixed(1)}%`;
+  statPromedioEl.textContent = formatBs(promedio);
+  statMaximoEl.textContent = formatBs(maxVenta);
 
-    function abrirSheet(id) {
-      const orden = ordenes.find(o => o.id === id);
-      if (!orden) return;
+  metodosGrid.innerHTML = `
+    <div class="metodo-card"><div class="icono efectivo"><i class="fas fa-money-bill-wave"></i></div><div class="nombre">Efectivo</div><div class="monto">${formatBs(metodos.efectivo)}</div></div>
+    <div class="metodo-card"><div class="icono qr"><i class="fas fa-qrcode"></i></div><div class="nombre">QR</div><div class="monto">${formatBs(metodos.qr)}</div></div>
+    <div class="metodo-card"><div class="icono transf"><i class="fas fa-building-columns"></i></div><div class="nombre">Transf.</div><div class="monto">${formatBs(metodos.transferencia)}</div></div>
+    <div class="metodo-card"><div class="icono mixto"><i class="fas fa-shuffle"></i></div><div class="nombre">Mixto</div><div class="monto">${formatBs(metodos.mixto)}</div></div>
+  `;
 
-      sheetContent.innerHTML = `
-        <div style="margin-bottom: 24px; padding-right: 30px;">
-          <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1); margin: 0 0 6px 0;">${escapeHtml(orden.numeroRecibo)}</h3>
-          <p style="font-size: 14px; color: var(--text-2); margin: 0;">${escapeHtml(orden.cliente)} · ${escapeHtml(orden.marca)} ${escapeHtml(orden.modelo)}</p>
-        </div>
-        <button class="btn-sheet btn-sheet-edit" id="btnEditarOrden"><i class="fas fa-edit"></i> Editar Orden Completa</button>
-        <div style="background: var(--bg-elev-2); padding: 16px; border-radius: 12px; margin: 20px 0;">
-          <label style="font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; margin-bottom: 10px; display: block;">Cambiar Estado</label>
-          <select id="selectEstado" class="custom-select">
-            <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
-            <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
-            <option value="espera-repuesto" ${orden.estadoOrden === 'espera-repuesto' ? 'selected' : ''}>⏳ Esperando repuesto</option>
-            <option value="listo" ${orden.estadoOrden === 'listo' ? 'selected' : ''}>✅ Listo para entregar</option>
-            <option value="entregado" ${orden.estadoOrden === 'entregado' ? 'selected' : ''}>🤝 Entregado</option>
-            <option value="devuelto" ${orden.estadoOrden === 'devuelto' ? 'selected' : ''}>↩️ Devuelto</option>
-          </select>
-        </div>
-        <div style="display: flex; flex-direction: column;">
-          <button class="btn-sheet btn-sheet-primary" id="btnActualizarEstado"><i class="fas fa-save"></i> Guardar Cambios</button>
-          <button class="btn-sheet btn-sheet-whatsapp" id="btnWhatsApp"><i class="fab fa-whatsapp"></i> Reenviar por WhatsApp</button>
-          <button class="btn-sheet btn-sheet-danger" id="btnEliminar"><i class="fas fa-trash"></i> Eliminar Recibo</button>
-        </div>
-      `;
-
-      reciboSheet.classList.add('show');
-      haptic(15);
-
-      document.getElementById('btnEditarOrden')?.addEventListener('click', () => {
-        window.location.href = `/app/orden.html?id=${id}`;
-      });
-
-      document.getElementById('btnActualizarEstado')?.addEventListener('click', async () => {
-        const nuevoEstado = document.getElementById('selectEstado').value;
-        try {
-          await updateDoc(doc(db, 'recibos', id), { estadoOrden: nuevoEstado });
-          toast('Estado actualizado', 'success');
-          orden.estadoOrden = nuevoEstado;
-          renderizarOrdenes();
-          actualizarStats();
-          cerrarSheet();
-        } catch (err) { console.error(err); toast('Error al actualizar', 'error'); }
-      });
-
-      document.getElementById('btnWhatsApp')?.addEventListener('click', () => {
-        const mensaje = `Hola ${orden.cliente.split(' ')[0]}, tu equipo ${orden.marca} ${orden.modelo} está en estado: *${orden.estadoOrden || 'recibido'}*.\n\nN Recibo: ${orden.numeroRecibo}\nPuedes revisarlo en: https://xiaomi.scz.red/?recibo=${orden.numeroRecibo}`;
-        const tel = orden.telefono.replace(/\D/g, '');
-        window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank');
-        cerrarSheet();
-      });
-
-      document.getElementById('btnEliminar')?.addEventListener('click', async () => {
-        if (confirm('¿Eliminar este recibo permanentemente?')) {
-          try {
-            await deleteDoc(doc(db, 'recibos', id));
-            toast('Recibo eliminado', 'success');
-            ordenes = ordenes.filter(o => o.id !== id);
-            renderizarOrdenes();
-            actualizarStats();
-            cerrarSheet();
-          } catch (err) { toast('Error al eliminar', 'error'); }
-        }
-      });
-    }
-
-    function cerrarSheet() {
-      if (reciboSheet) reciboSheet.classList.remove('show');
-    }
-  </script>
-</body>
-</html>
+  listaMovimientos.innerHTML = movimientosHtml;
+}
