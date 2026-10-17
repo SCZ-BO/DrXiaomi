@@ -135,68 +135,112 @@
     }
 
     /* ============================================================ */
-    /* INPUTS Y FORMULARIOS PRO (CON MICRÓFONO AL LADO)             */
+    /* INPUTS Y FORMULARIOS PRO (MICRÓFONO INTEGRADO)               */
     /* ============================================================ */
+    .field { 
+      position: relative; 
+      margin-bottom: 16px; 
+    }
     
-    /* Envoltorio para poner el input y el botón en la misma línea */
-    .input-with-mic {
-      display: flex; gap: 8px; align-items: stretch; margin-bottom: 16px;
-    }
-    .input-with-mic .field {
-      flex: 1; margin-bottom: 0; /* Quitamos el margen porque lo maneja el envoltorio */
-    }
-
-    /* El campo de texto normal */
-    .field { position: relative; }
+    /* Añadimos padding a la derecha para que el texto no toque el micrófono */
     .field input, .field textarea {
-      width: 100%; padding: 16px 14px 14px 14px;
-      background: var(--bg-elev); border: 1.5px solid transparent;
-      border-radius: var(--radius-md); color: var(--text-main);
-      font-size: 15px; font-family: inherit; transition: all 0.2s; outline: none;
+      width: 100%; 
+      padding: 16px 45px 14px 14px; 
+      background: var(--bg-elev); 
+      border: 1.5px solid transparent;
+      border-radius: var(--radius-md); 
+      color: var(--text-main);
+      font-size: 15px; 
+      font-family: inherit; 
+      transition: all 0.2s; 
+      outline: none;
     }
-    .field input:focus, .field textarea:focus { border-color: var(--brand); background: var(--bg-card); }
+    
+    .field input:focus, .field textarea:focus { 
+      border-color: var(--brand); 
+      background: var(--bg-card); 
+    }
+    
     .field label {
-      position: absolute; left: 14px; top: 16px; font-size: 14px;
-      color: var(--text-mute); pointer-events: none; transition: 0.2s;
+      position: absolute; 
+      left: 14px; 
+      top: 16px; 
+      font-size: 14px;
+      color: var(--text-mute); 
+      pointer-events: none; 
+      transition: 0.2s;
     }
+    
     .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label,
     .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label {
-      top: 6px; font-size: 10px; font-weight: 700; color: var(--brand);
+      top: 6px; 
+      font-size: 10px; 
+      font-weight: 700; 
+      color: var(--brand);
     }
 
-    /* BOTÓN DEL MICRÓFONO (Estilo WhatsApp) */
+    /* EL BOTÓN DEL MICRÓFONO (Inyectado por dictado.js) */
     .dictado-btn {
-      width: 48px; /* Cuadrado */
-      border-radius: var(--radius-md);
-      background: var(--bg-elev);
-      border: 1.5px solid var(--border);
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
       color: var(--text-mute);
       font-size: 16px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.2s ease;
-      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      z-index: 10;
     }
+    
     .dictado-btn:hover {
-      background: var(--bg-card); color: var(--brand); border-color: var(--brand);
+      background: var(--border);
+      color: var(--text-main);
     }
+    
     .dictado-btn.activo {
-      background: #EF4444; border-color: #EF4444; color: white;
+      background: #EF4444;
+      color: white;
       animation: dictadoPulse 1.2s ease-in-out infinite;
     }
+    
     @keyframes dictadoPulse {
       0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
       50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
     }
-    
-    /* Ajuste para los textarea (Falla y Estado) */
+
+    /* Ajuste para Textarea (Falla y Estado) para que el micrófono vaya abajo */
     .dictado-wrap.textarea .dictado-btn {
-      position: absolute;
-      right: 10px;
-      bottom: 10px;
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
+      top: auto;
+      bottom: 12px;
+      transform: none;
     }
+
+    /* El texto de "Escuchando..." */
+    .dictado-indicador {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #EF4444;
+      margin-top: -8px;
+      margin-bottom: 16px;
+      padding-left: 4px;
+    }
+    .dictado-indicador.show { display: flex; }
+    .dictado-indicador .punto {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #EF4444; animation: parpadeo 1s ease-in-out infinite;
+    }
+    @keyframes parpadeo { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
     .field-title { display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
     .required-field::after { content: " *"; color: var(--brand); }
@@ -245,7 +289,19 @@
     /* SERVICIOS Y COSTOS                                           */
     /* ============================================================ */
     .servicio-item { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
-    .servicio-item .input-with-mic { flex: 1; margin-bottom: 0; }
+    .servicio-item .dictado-wrap { flex: 1; margin-bottom: 0; }
+    
+    /* Ajuste para el input de servicios (más pequeño para que quepa el botón) */
+    .servicio-item input.servicio-desc {
+      padding: 14px 40px 14px 14px; /* Espacio para el micrófono */
+      border-radius: var(--radius-md);
+    }
+    .servicio-item .dictado-btn {
+      right: 6px;
+      width: 28px;
+      height: 28px;
+      font-size: 13px;
+    }
     .servicio-item .servicio-costo {
       width: 90px; padding: 14px; border-radius: var(--radius-md);
       border: 1.5px solid var(--border); background: var(--bg-elev);
@@ -392,14 +448,10 @@
         <p>¿Quién trae el equipo hoy?</p>
       </div>
       <div class="card">
-        <!-- ENVOLTORIO CON MICRÓFONO AL LADO -->
-        <div class="input-with-mic">
-          <div class="field dictado-wrap">
-            <input type="text" id="nombre" placeholder=" " required autocomplete="name" maxlength="80" data-dictado>
-            <label for="nombre">Nombre completo *</label>
-          </div>
+        <div class="field dictado-wrap">
+          <input type="text" id="nombre" placeholder=" " required autocomplete="name" maxlength="80" data-dictado>
+          <label for="nombre">Nombre completo *</label>
         </div>
-        
         <div class="field">
           <input type="tel" id="telefono" placeholder=" " required autocomplete="tel" inputmode="numeric" maxlength="8">
           <label for="telefono">Teléfono / WhatsApp *</label>
@@ -427,14 +479,10 @@
         </div>
         <input type="hidden" id="marca" required>
 
-        <!-- ENVOLTORIO CON MICRÓFONO AL LADO -->
-        <div class="input-with-mic">
-          <div class="field dictado-wrap">
-            <input type="text" id="modelo" placeholder=" " required maxlength="60" data-dictado>
-            <label for="modelo">Modelo *</label>
-          </div>
+        <div class="field dictado-wrap">
+          <input type="text" id="modelo" placeholder=" " required maxlength="60" data-dictado>
+          <label for="modelo">Modelo *</label>
         </div>
-
         <div class="field">
           <input type="text" id="imei" placeholder=" " inputmode="numeric" maxlength="20">
           <label for="imei">IMEI / Serial (opcional)</label>
@@ -457,13 +505,15 @@
         <p>Describe el estado y problema del equipo</p>
       </div>
       <div class="card">
-        <div class="field dictado-wrap textarea" style="margin-bottom: 16px;">
+        <div class="field dictado-wrap textarea">
           <textarea id="estado" placeholder=" " rows="3" maxlength="500" data-dictado></textarea>
           <label for="estado">Estado físico del equipo</label>
+          <div class="char-counter" data-for="estado">0/500</div>
         </div>
-        <div class="field dictado-wrap textarea">
+        <div class="field dictado-wrap textarea" style="margin-top: 16px;">
           <textarea id="falla" placeholder=" " rows="3" maxlength="500" data-dictado></textarea>
           <label for="falla">Falla reportada por el cliente</label>
+          <div class="char-counter" data-for="falla">0/500</div>
         </div>
       </div>
     </section>
@@ -526,12 +576,8 @@
       <div class="card">
         <div class="servicios-container" id="serviciosList">
           <div class="servicio-item">
-            <!-- ENVOLTORIO CON MICRÓFONO AL LADO -->
-            <div class="input-with-mic">
-              <div class="field dictado-wrap">
-                <input type="text" class="servicio-desc" placeholder="Descripción del servicio" maxlength="100" data-dictado>
-                <label>Descripción</label>
-              </div>
+            <div class="dictado-wrap">
+              <input type="text" class="servicio-desc" placeholder="Descripción del servicio" maxlength="100" data-dictado>
             </div>
             <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0" inputmode="decimal">
             <button type="button" class="removeServicio" style="display:none"><i class="fas fa-times"></i></button>
