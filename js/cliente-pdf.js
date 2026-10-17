@@ -1,82 +1,28 @@
 /* ============================================================
-   DR. XIAOMI · PDF DEL RECIBO (DISEÑO PRO BLINDADO)
+   DR. XIAOMI · GENERADOR DE PDF CENTRAL
    Archivo: js/cliente-pdf.js
    ============================================================ */
 
-import {
-  datos, sesion, CONFIG, generarNumeroRecibo, configurarWhatsApp,
-  db, collection, addDoc, serverTimestamp
-} from '/js/cliente.js';
+import { CONFIG, sesion, generarNumeroRecibo } from '/js/cliente.js';
+import { toast, haptic, formatBs } from '/js/app-ui.js';
 
-import { toast, haptic, formatBs, showLoading, hideLoading } from '/js/app-ui.js';
-
-const COLOR = {
-  naranja: [255, 105, 0], 
-  naranjaClaro: [255, 140, 60], 
-  naranjaSuave: [255, 244, 235],
-  grisFondo: [248, 248, 248], 
-  grisSuave: [235, 235, 235],
-  textoOscuro: [30, 30, 30], 
-  textoMedio: [100, 100, 100], 
-  textoClaro: [150, 150, 150], 
-  blanco: [255, 255, 255],
-  verde: [34, 197, 94]
-};
-
-// Función auxiliar para cargar scripts de forma segura y esperar a que estén disponibles
-function cargarScript(url) {
-  return new Promise((resolve, reject) => {
-    // Si ya existe en el DOM, resolvemos
-    if (document.querySelector(`script[src="${url}"]`)) {
-      resolve();
-      return;
-    }
-    const s = document.createElement('script');
-    s.src = url;
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error(`Error al descargar: ${url}`));
-    document.head.appendChild(s);
+// Función auxiliar para cargar el logo como DataURL
+async function cargarLogoDataUrl() {
+  return new Promise((resolve) => {
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try { 
+        const c = document.createElement('canvas'); 
+        c.width = img.width; c.height = img.height; 
+        c.getContext('2d').drawImage(img, 0, 0); 
+        resolve(c.toDataURL('image/png')); 
+      } catch (e) { resolve(''); }
+    };
+    img.onerror = () => resolve(''); img.src = CONFIG.logoUrl;
   });
 }
 
-async function cargarLibreriasPDF() {
-  // 1. Cargar jsPDF
-  if (!window.jspdf) {
-    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-    // Pequeña pausa para que el navegador procese el script
-    await new Promise(r => setTimeout(r, 100));
-  }
-  
-  // Verificación estricta
-  if (!window.jspdf || !window.jspdf.jsPDF) {
-    throw new Error("jsPDF no se inicializó correctamente. Revisa tu conexión a internet.");
-  }
-
-  // 2. Cargar AutoTable
-  if (!window.jspdf.jsPDF.API.autoTable) {
-    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js');
-    await new Promise(r => setTimeout(r, 100));
-  }
-
-  // 3. Cargar QRCode
-  if (!window.QRCode) {
-    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
-    await new Promise(r => setTimeout(r, 100));
-  }
-}
-
-export function configurarPDF() {
-  document.getElementById('btnGenerate')?.addEventListener('click', generarPDF);
-  document.getElementById('backToPanelBtn2')?.addEventListener('click', () => window.location.href = '/app/');
-  document.getElementById('downloadPdfBtn')?.addEventListener('click', () => {
-    haptic(15);
-    if (window._ultimoPDF) {
-      try { window._ultimoPDF.save(window._ultimoNombrePDF || 'recibo.pdf'); toast('PDF descargado', 'success'); } catch (err) {}
-    } else toast('Genera el recibo primero', 'warning');
-  });
-}
-
+// Función auxiliar para generar el QR
 async function generarQRDataUrl(texto) {
   return new Promise((resolve) => {
     if (typeof QRCode === 'undefined') { resolve(''); return; }
@@ -94,40 +40,32 @@ async function generarQRDataUrl(texto) {
   });
 }
 
-async function cargarLogoDataUrl() {
-  return new Promise((resolve) => {
-    const img = new Image(); img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0); resolve(c.toDataURL('image/png')); }
-      catch (e) { resolve(''); }
-    };
-    img.onerror = () => resolve(''); img.src = CONFIG.logoUrl;
-  });
-}
-
-export async function generarPDF() {
-  const numeroRecibo = generarNumeroRecibo();
-  showLoading('Generando PDF...'); haptic(20);
-  
+// Función principal que exportaremos
+export async function generarPDFUnificado(datosRecibo, accion = 'guardar') {
   try {
-    // 1. Cargar librerías de forma segura
-    await cargarLibreriasPDF();
-    
-    // 2. Cargar Logo y QR
-    const [logoDataUrl, qrDataUrl] = await Promise.all([cargarLogoDataUrl(), generarQRDataUrl(`${CONFIG.urlApp}/?recibo=${numeroRecibo}`)]);
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      throw new Error("Las librerías de PDF se están cargando. Intenta de nuevo en 2 segundos.");
+    }
 
-    // 3. Inicializar jsPDF (Ahora sí estamos 100% seguros de que existe)
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     const W = 210, H = 297, M = 15, CW = W - M * 2; let y = 0;
 
-    /* ================= HEADER ================= */
-    pdf.setFillColor(...COLOR.naranja);
-    pdf.rect(0, 0, W, 40, 'F');
-    pdf.setFillColor(...COLOR.naranjaClaro);
-    pdf.rect(0, 40, W, 2, 'F');
+    const naranja = [255, 105, 0];
+    const naranjaSuave = [255, 244, 235];
+    const grisFondo = [248, 248, 248];
+    const textoOscuro = [30, 30, 30];
+    const textoMedio = [100, 100, 100];
 
-    // Logo con fondo blanco
+    const [logoDataUrl, qrDataUrl] = await Promise.all([
+      cargarLogoDataUrl(), 
+      generarQRDataUrl(`${CONFIG.urlApp}/?recibo=${datosRecibo.numeroRecibo || 'NUEVO'}`)
+    ]);
+
+    /* ================= HEADER ================= */
+    pdf.setFillColor(...naranja);
+    pdf.rect(0, 0, W, 40, 'F');
+
     if (logoDataUrl) {
       try {
         pdf.setFillColor(255, 255, 255);
@@ -136,7 +74,6 @@ export async function generarPDF() {
       } catch (e) {}
     }
 
-    // Textos del Header
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(22);
@@ -148,94 +85,89 @@ export async function generarPDF() {
     pdf.setFontSize(8);
     pdf.text(`${CONFIG.direccion} · Tel: ${CONFIG.telefono}`, M + 28, 28);
 
-    // Caja del Recibo
     pdf.setFillColor(255, 255, 255);
     pdf.roundedRect(W - M - 60, 8, 60, 24, 3, 3, 'F');
-    pdf.setTextColor(...COLOR.naranja);
+    pdf.setTextColor(...naranja);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(9);
     pdf.text('RECIBO N°', W - M - 4, 14, { align: 'right' });
     pdf.setFontSize(11);
-    pdf.text(numeroRecibo, W - M - 4, 20, { align: 'right' });
-    pdf.setTextColor(...COLOR.textoMedio);
+    pdf.text(datosRecibo.numeroRecibo || 'NUEVO', W - M - 4, 20, { align: 'right' });
+    pdf.setTextColor(...textoMedio);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
     const f = new Date(); const fStr = `${String(f.getDate()).padStart(2,'0')}/${String(f.getMonth()+1).padStart(2,'0')}/${f.getFullYear()}`;
-    pdf.text(`${fStr} · ${sesion.nombre}`, W - M - 4, 26, { align: 'right' });
+    pdf.text(`${fStr} · ${datosRecibo.creadoPor || sesion.nombre}`, W - M - 4, 26, { align: 'right' });
 
     y = 50;
 
     /* ================= CLIENTE / EQUIPO ================= */
     const colW = (CW - 6) / 2;
 
-    // Tarjeta Cliente
-    pdf.setFillColor(...COLOR.grisFondo);
+    // Cliente
+    pdf.setFillColor(...grisFondo);
     pdf.roundedRect(M, y, colW, 30, 3, 3, 'F');
-    pdf.setFillColor(...COLOR.naranja);
+    pdf.setFillColor(...naranja);
     pdf.rect(M, y, 2, 30, 'F');
-    
-    pdf.setTextColor(...COLOR.naranja);
+    pdf.setTextColor(...naranja);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8);
     pdf.text('CLIENTE', M + 5, y + 7);
-    pdf.setTextColor(...COLOR.textoOscuro);
+    pdf.setTextColor(...textoOscuro);
     pdf.setFontSize(12);
-    pdf.text(datos.nombre.slice(0, 25), M + 5, y + 15);
+    pdf.text((datosRecibo.cliente || '').slice(0, 25), M + 5, y + 15);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(9);
-    pdf.setTextColor(...COLOR.textoMedio);
-    pdf.text(`Tel: ${datos.telefono}`, M + 5, y + 23);
+    pdf.setTextColor(...textoMedio);
+    pdf.text(`Tel: ${datosRecibo.telefono || ''}`, M + 5, y + 23);
 
-    // Tarjeta Equipo
-    pdf.setFillColor(...COLOR.grisFondo);
+    // Equipo
+    pdf.setFillColor(...grisFondo);
     pdf.roundedRect(M + colW + 6, y, colW, 30, 3, 3, 'F');
-    pdf.setFillColor(...COLOR.naranja);
+    pdf.setFillColor(...naranja);
     pdf.rect(M + colW + 6, y, 2, 30, 'F');
-
-    pdf.setTextColor(...COLOR.naranja);
+    pdf.setTextColor(...naranja);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8);
     pdf.text('EQUIPO', M + colW + 11, y + 7);
-    pdf.setTextColor(...COLOR.textoOscuro);
+    pdf.setTextColor(...textoOscuro);
     pdf.setFontSize(12);
-    pdf.text(`${datos.marca} ${datos.modelo}`.slice(0, 25), M + colW + 11, y + 15);
+    pdf.text(`${datosRecibo.marca || ''} ${datosRecibo.modelo || ''}`.slice(0, 25), M + colW + 11, y + 15);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(9);
-    pdf.setTextColor(...COLOR.textoMedio);
-    if (datos.imei) pdf.text(`IMEI: ${datos.imei}`, M + colW + 11, y + 21);
-    pdf.text(`Enciende: ${datos.enciende}`, M + colW + 11, y + 26);
+    pdf.setTextColor(...textoMedio);
+    if (datosRecibo.imei) pdf.text(`IMEI: ${datosRecibo.imei}`, M + colW + 11, y + 21);
+    pdf.text(`Enciende: ${datosRecibo.enciende || ''}`, M + colW + 11, y + 26);
 
     y += 36;
 
     /* ================= FALLA / SEGURIDAD ================= */
-    pdf.setFillColor(...COLOR.grisFondo);
+    pdf.setFillColor(...grisFondo);
     pdf.roundedRect(M, y, colW, 30, 3, 3, 'F');
-    pdf.setFillColor(...COLOR.naranja);
+    pdf.setFillColor(...naranja);
     pdf.rect(M, y, 2, 30, 'F');
-    
-    pdf.setTextColor(...COLOR.naranja);
+    pdf.setTextColor(...naranja);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8);
     pdf.text('ESTADO / FALLA', M + 5, y + 7);
-    pdf.setTextColor(...COLOR.textoMedio);
+    pdf.setTextColor(...textoMedio);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(9);
-    let fallaText = datos.falla || datos.estado || 'No especificado';
+    let fallaText = datosRecibo.falla || datosRecibo.estadoEquipo || 'No especificado';
     pdf.text(pdf.splitTextToSize(fallaText, colW - 10), M + 5, y + 14);
 
-    // Tarjeta Seguridad
-    pdf.setFillColor(...COLOR.grisFondo);
+    // Seguridad
+    pdf.setFillColor(...grisFondo);
     pdf.roundedRect(M + colW + 6, y, colW, 30, 3, 3, 'F');
-    pdf.setFillColor(...COLOR.naranja);
+    pdf.setFillColor(...naranja);
     pdf.rect(M + colW + 6, y, 2, 30, 'F');
-
-    pdf.setTextColor(...COLOR.naranja);
+    pdf.setTextColor(...naranja);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8);
     pdf.text('CLAVE DE ACCESO', M + colW + 11, y + 7);
     
-    let segInfo = datos.tipoSeguridad === 'pin' ? `PIN: ${datos.pin}` : (datos.patronSecuencia ? `Patrón: ${datos.patronSecuencia.split(',').join('-')}` : 'Sin clave');
-    pdf.setTextColor(...COLOR.textoOscuro);
+    let segInfo = datosRecibo.tipoSeguridad === 'pin' ? `PIN: ${datosRecibo.pin}` : (datosRecibo.patron ? `Patrón: ${datosRecibo.patron.split(',').join('-')}` : 'Sin clave');
+    pdf.setTextColor(...textoOscuro);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(12);
     pdf.text(segInfo.slice(0, 25), M + colW + 11, y + 17);
@@ -243,7 +175,7 @@ export async function generarPDF() {
     y += 36;
 
     /* ================= SERVICIOS Y COSTOS ================= */
-    pdf.setFillColor(...COLOR.naranja);
+    pdf.setFillColor(...naranja);
     pdf.roundedRect(M, y, CW, 10, 3, 3, 'F');
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
@@ -254,13 +186,13 @@ export async function generarPDF() {
     pdf.autoTable({
       startY: y,
       head: [['Descripción', 'Costo']],
-      body: datos.servicios.map(s => [s.desc, formatBs(s.costo)]),
-      styles: { fontSize: 10, cellPadding: 4, textColor: COLOR.textoOscuro, lineColor: [230,230,230], lineWidth: 0.1 },
-      headStyles: { fillColor: COLOR.naranja, textColor: 255, fontStyle: 'bold', fontSize: 10 },
+      body: (datosRecibo.servicios || []).map(s => [s.desc, formatBs(s.costo)]),
+      styles: { fontSize: 10, cellPadding: 4, textColor: textoOscuro, lineColor: [230,230,230], lineWidth: 0.1 },
+      headStyles: { fillColor: naranja, textColor: 255, fontStyle: 'bold', fontSize: 10 },
       alternateRowStyles: { fillColor: [255, 250, 245] },
       columnStyles: {
         0: { cellWidth: CW - 40 },
-        1: { halign: 'right', cellWidth: 40, fontStyle: 'bold', textColor: COLOR.naranja }
+        1: { halign: 'right', cellWidth: 40, fontStyle: 'bold', textColor: naranja }
       },
       margin: { left: M, right: M },
       theme: 'grid'
@@ -271,54 +203,54 @@ export async function generarPDF() {
     /* ================= TOTALES ================= */
     const boxW = 80;
     const boxX = M + CW - boxW;
-    const boxAlto = datos.adelanto > 0 ? 28 : 20;
+    const boxAlto = datosRecibo.adelanto > 0 ? 28 : 20;
 
-    pdf.setFillColor(...COLOR.grisFondo);
+    pdf.setFillColor(...grisFondo);
     pdf.roundedRect(boxX, y, boxW, boxAlto, 3, 3, 'F');
-    pdf.setDrawColor(...COLOR.naranja);
+    pdf.setDrawColor(...naranja);
     pdf.setLineWidth(0.5);
     pdf.roundedRect(boxX, y, boxW, boxAlto, 3, 3, 'S');
 
-    pdf.setTextColor(...COLOR.textoMedio);
+    pdf.setTextColor(...textoMedio);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(10);
     pdf.text('Total:', boxX + 5, y + 8);
-    pdf.setTextColor(...COLOR.textoOscuro);
+    pdf.setTextColor(...textoOscuro);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(12);
-    pdf.text(formatBs(datos.total), boxX + boxW - 5, y + 8, { align: 'right' });
+    pdf.text(formatBs(datosRecibo.total || 0), boxX + boxW - 5, y + 8, { align: 'right' });
 
     let rowY = y + 8;
-    if (datos.adelanto > 0) {
+    if (datosRecibo.adelanto > 0) {
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(10);
-      pdf.setTextColor(...COLOR.textoMedio);
+      pdf.setTextColor(...textoMedio);
       pdf.text('Adelanto:', boxX + 5, y + 15);
-      pdf.setTextColor(...COLOR.textoOscuro);
+      pdf.setTextColor(...textoOscuro);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(`- ${formatBs(datos.adelanto)}`, boxX + boxW - 5, y + 15, { align: 'right' });
+      pdf.text(`- ${formatBs(datosRecibo.adelanto)}`, boxX + boxW - 5, y + 15, { align: 'right' });
       rowY = y + 15;
     }
 
-    pdf.setDrawColor(...COLOR.naranja);
+    pdf.setDrawColor(...naranja);
     pdf.setLineWidth(0.3);
     pdf.line(boxX + 5, rowY + 5, boxX + boxW - 5, rowY + 5);
 
-    pdf.setTextColor(...COLOR.naranja);
+    pdf.setTextColor(...naranja);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(10);
     pdf.text('SALDO:', boxX + 5, rowY + 12);
     pdf.setFontSize(14);
-    pdf.text(formatBs(datos.saldo), boxX + boxW - 5, rowY + 12, { align: 'right' });
+    pdf.text(formatBs(datosRecibo.saldo || 0), boxX + boxW - 5, rowY + 12, { align: 'right' });
 
     y += boxAlto + 8;
 
-    /* ================= FOTOS (MEJORADAS) ================= */
-    const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
+    /* ================= FOTOS ================= */
+    const fotosValidas = (datosRecibo.fotos || []).filter(f => f);
     if (fotosValidas.length > 0) {
       if (y > 220) { pdf.addPage(); y = 20; }
       
-      pdf.setFillColor(...COLOR.naranja);
+      pdf.setFillColor(...naranja);
       pdf.roundedRect(M, y, CW, 10, 3, 3, 'F');
       pdf.setTextColor(255, 255, 255);
       pdf.setFont('helvetica', 'bold');
@@ -332,31 +264,23 @@ export async function generarPDF() {
       
       for (let i = 0; i < Math.min(fotosValidas.length, 4); i++) {
         try {
-          // Fondo blanco para las fotos
           pdf.setFillColor(255, 255, 255);
           pdf.roundedRect(x, y, fotoW, fotoH, 2, 2, 'F');
           pdf.setDrawColor(220, 220, 220);
           pdf.roundedRect(x, y, fotoW, fotoH, 2, 2, 'S');
-          
-          // Insertar imagen con un margen interno
-          pdf.addImage(fotosValidas[i].dataUrl, 'JPEG', x + 1, y + 1, fotoW - 2, fotoH - 2, undefined, 'FAST');
-        } catch (e) {
-          console.error('Error foto:', e);
-          pdf.setFillColor(240, 240, 240);
-          pdf.roundedRect(x, y, fotoW, fotoH, 2, 2, 'F');
-        }
+          pdf.addImage(fotosValidas[i], 'JPEG', x + 1, y + 1, fotoW - 2, fotoH - 2, undefined, 'FAST');
+        } catch (e) {}
         x += fotoW + 3;
       }
       y += fotoH + 10;
     }
 
-    /* ================= BANNER WEB (PRO) ================= */
+    /* ================= BANNER WEB ================= */
     if (y > 215) { pdf.addPage(); y = 20; }
     
-    pdf.setFillColor(...COLOR.naranja);
+    pdf.setFillColor(...naranja);
     pdf.roundedRect(M, y, CW, 35, 4, 4, 'F');
     
-    // Diseño interno del banner
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(9);
@@ -370,7 +294,6 @@ export async function generarPDF() {
     pdf.setFontSize(8);
     pdf.text('Toca el enlace o escanea el código QR', M + 10, y + 29);
 
-    // QR a la derecha
     if (qrDataUrl) {
       try {
         pdf.setFillColor(255, 255, 255);
@@ -382,41 +305,38 @@ export async function generarPDF() {
 
     /* ================= CONDICIONES ================= */
     if (y > 245) { pdf.addPage(); y = 20; }
-    pdf.setFillColor(...COLOR.grisFondo);
+    pdf.setFillColor(...grisFondo);
     pdf.roundedRect(M, y, CW, 30, 3, 3, 'F');
     
-    pdf.setTextColor(...COLOR.naranja);
+    pdf.setTextColor(...naranja);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8);
     pdf.text('CONDICIONES DEL SERVICIO', M + 5, y + 6);
     
-    pdf.setTextColor(...COLOR.textoMedio);
+    pdf.setTextColor(...textoMedio);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(7.5);
-    CONFIG.condiciones.forEach((txt, i) => {
+    (CONFIG.condiciones || []).forEach((txt, i) => {
       pdf.text(`${i + 1}. ${txt}`, M + 5, y + 12 + i * 3.5);
     });
 
-    /* ================= GUARDAR Y FIRESTORE ================= */
-    const nombreArchivo = `Recibo_${numeroRecibo}_${datos.nombre.split(' ')[0]}.pdf`;
-    window._ultimoPDF = pdf; window._ultimoNombrePDF = nombreArchivo; pdf.save(nombreArchivo);
+    /* ================= GUARDAR ================= */
+    if (accion === 'guardar') {
+      const nombreArchivo = `Recibo_${datosRecibo.numeroRecibo}_${datosRecibo.cliente.split(' ')[0]}.pdf`;
+      window._ultimoPDF = pdf; 
+      window._ultimoNombrePDF = nombreArchivo; 
+      pdf.save(nombreArchivo);
+    } else if (accion === 'whatsapp') {
+      const nombreArchivo = `Recibo_${datosRecibo.numeroRecibo}.pdf`;
+      window._ultimoPDF = pdf; 
+      window._ultimoNombrePDF = nombreArchivo; 
+    }
 
-    try {
-      await addDoc(collection(db, 'recibos'), {
-        numeroRecibo, cliente: datos.nombre, telefono: datos.telefono, marca: datos.marca, modelo: datos.modelo, 
-        imei: datos.imei || null, enciende: datos.enciende, estadoEquipo: datos.estado || '-', falla: datos.falla || '-', 
-        tipoSeguridad: datos.tipoSeguridad, pin: datos.tipoSeguridad === 'pin' ? datos.pin : null, patron: datos.tipoSeguridad === 'patron' ? datos.patronSecuencia : null, 
-        servicios: datos.servicios, total: datos.total, adelanto: datos.adelanto, saldo: datos.saldo, 
-        fotos: datos.fotos.filter(f => f && f.dataUrl).map(f => f.dataUrl), estadoOrden: 'recibido', 
-        creadoPor: sesion.nombre, creadoPorRol: sesion.rol, fecha: serverTimestamp()
-      });
-    } catch (err) { toast('Recibo generado, pero no se guardó en la nube', 'warning'); }
+    return true; // Éxito
 
-    document.getElementById('successNumero').textContent = numeroRecibo;
-    document.getElementById('successModal')?.classList.add('show');
-    window._ultimoRecibo = { numeroRecibo, cliente: datos.nombre, telefono: datos.telefono, marca: datos.marca, modelo: datos.modelo, total: datos.total, saldo: datos.saldo };
-    configurarWhatsApp();
   } catch (err) {
-    console.error(err); toast('Error al generar el PDF: ' + err.message, 'error', 5000);
-  } finally { hideLoading(); }
+    console.error('Error PDF:', err);
+    toast('Error al generar el PDF: ' + err.message, 'error', 5000);
+    return false;
+  }
 }
