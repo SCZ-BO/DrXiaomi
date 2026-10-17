@@ -27,13 +27,11 @@
       --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
     }
     
-    /* Header y Logo */
     .brand-logo-limpio { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--bg-elev-2); box-shadow: var(--shadow-sm); border: 1px solid var(--border-1); }
     .brand-logo-limpio img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
     .icon-btn .icon-img { width: 20px; height: 20px; object-fit: contain; display: block; pointer-events: none; opacity: 0.7; transition: 0.2s; }
     .icon-btn .icon-img.blanco { filter: brightness(0) invert(1); }
 
-    /* Estadísticas (Pro) */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
     .stat-card { background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: var(--radius-lg); padding: 16px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
     .stat-value { font-size: 24px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 4px; }
@@ -41,13 +39,11 @@
     .stat-value.brand { color: var(--brand-500); }
     .stat-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* Skeleton Loader */
     .skeleton-card { background: var(--bg-elev-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border-1); animation: pulse 1.5s infinite; }
     .skeleton-line { height: 12px; background: var(--bg-elev-2); border-radius: 6px; margin-bottom: 8px; }
     @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    /* Tarjeta de Recibo (Pro y Minimalista) */
     .orden-card { position: relative; transition: 0.2s; cursor: pointer; background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; }
     .orden-card:active { transform: scale(0.98); background: var(--bg-elev-2) !important; }
     
@@ -62,19 +58,21 @@
     .metodo-pago { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 6px; color: #22C55E; }
 
     /* ============================================================ */
-    /* BOTTOM SHEET (CENTRADO Y BLINDADO PARA CELULAR)              */
+    /* BOTTOM SHEET (CORREGIDO Y SUAVE)                             */
     /* ============================================================ */
     .sheet-backdrop { 
       position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important;
       background: rgba(0,0,0,0.7) !important; backdrop-filter: blur(8px) !important; z-index: 999999 !important; 
       opacity: 0; pointer-events: none; display: flex !important; align-items: center !important; justify-content: center !important; 
+      transition: opacity 0.3s ease !important;
     }
     .sheet-backdrop.show { opacity: 1 !important; pointer-events: auto !important; }
     
     .sheet { 
       background: var(--bg-elev-1) !important; border-radius: 24px !important; padding: 24px !important; width: 90% !important; max-width: 400px !important; 
-      transform: translateY(20px) scale(0.95) !important; opacity: 0; transition: 0.3s !important; border: 1px solid var(--border-1) !important; 
-      position: relative !important; box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important; max-height: 90vh !important; overflow-y: auto !important;
+      transform: translateY(20px) scale(0.95) !important; opacity: 0; transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1) !important; 
+      border: 1px solid var(--border-1) !important; position: relative !important; box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important; 
+      max-height: 85vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important;
     }
     .sheet-backdrop.show .sheet { transform: translateY(0) scale(1) !important; opacity: 1 !important; }
     
@@ -140,7 +138,9 @@
         <div class="skeleton-card"><div class="skeleton-line" style="width: 40%; height: 18px;"></div><div class="skeleton-line" style="width: 70%;"></div><div class="skeleton-line" style="width: 30%;"></div></div>
       </div>
 
-      <button id="btnCargarMas" class="btn-load-more" style="display: none; width: 100%; padding: 16px; border-radius: var(--radius-md); background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-2); font-weight: 700; cursor: pointer; margin-top: 10px; margin-bottom: 20px;"><i class="fas fa-chevron-down"></i> Cargar más recibos</button>
+      <button id="btnCargarMas" style="display: none; width: 100%; padding: 16px; border-radius: 12px; background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-2); font-weight: 700; cursor: pointer; margin-top: 10px; margin-bottom: 20px;">
+        <i class="fas fa-chevron-down"></i> Cargar más recibos
+      </button>
     </main>
 
     <button class="btn-fab" id="nuevoReciboBtn" style="position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px; border-radius: 50%; background: var(--brand-500); color: white; border: none; box-shadow: 0 4px 16px rgba(255,105,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 90;">
@@ -220,15 +220,22 @@
         haptic(15);
         const icon = document.getElementById('iconRefresh');
         icon.style.animation = 'spin 0.8s linear infinite';
-        if (unsubscribe) unsubscribe();
+        
+        // 🔥 CORREGIDO: No crea doble escucha
+        if (unsubscribe) {
+          unsubscribe();
+          unsubscribe = null;
+        }
         cargarOrdenes();
-        setTimeout(() => { icon.style.animation = 'none'; toast('Lista actualizada', 'success', 1500); }, 1500);
+        
+        setTimeout(() => { 
+          icon.style.animation = 'none'; 
+          toast('Lista actualizada', 'success', 1500); 
+        }, 1500);
       });
     }
 
     function cargarOrdenes() {
-      if (unsubscribe) unsubscribe();
-
       const q = query(
         collection(db, 'recibos'), 
         orderBy('fecha', 'desc'), 
@@ -324,7 +331,6 @@
       });
     }
 
-    // 🔥 TARJETA PRO Y MINIMALISTA
     function renderCard(o) {
       const estadoActual = o.estadoOrden || 'recibido';
       const estadoInfo = {
