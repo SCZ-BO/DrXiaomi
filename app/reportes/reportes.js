@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES OPTIMIZADOS PARA MÓVILES
+   DR. XIAOMI · REPORTES OPTIMIZADOS (MÓVILES iOS/ANDROID)
    Archivo: app/reportes/reportes.js
    ============================================================ */
 
@@ -20,7 +20,6 @@ const headerSubtitle = document.getElementById('headerSubtitle');
 requireAuth((s) => {
   sesion = s;
   configurarEventos();
-  // Al cargar por primera vez, mostramos "Hoy"
   cargarReporte('hoy');
 });
 
@@ -58,12 +57,11 @@ function configurarEventos() {
   });
 }
 
-// 🔥 FUNCIÓN OPTIMIZADA PARA CELULARES
+// 🔥 FUNCIÓN OPTIMIZADA Y COMPATIBLE CON SAFARI
 async function cargarReporte(rango, desdeFecha, hastaFecha) {
-  // Mostrar un mensaje de carga rápido
   reporteContenido.innerHTML = `
     <div style="display:flex; justify-content:center; padding:40px;">
-      <div class="spinner" style="border: 3px solid var(--border-1); border-top: 3px solid var(--brand-500); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+      <div style="border: 3px solid var(--border-1); border-top: 3px solid var(--brand-500); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
     </div>
   `;
 
@@ -71,7 +69,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
     let inicio = new Date();
     let fin = new Date();
 
-    // Calcular las fechas
     if (rango === 'hoy') {
       inicio.setHours(0, 0, 0, 0);
       fin.setHours(23, 59, 59, 999);
@@ -94,12 +91,9 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       fin = new Date(hastaFecha + 'T23:59:59');
     }
 
-    // Rango formateado para el Header
     const opcionesFecha = { day: '2-digit', month: 'short' };
     headerSubtitle.textContent = `${inicio.toLocaleDateString('es-BO', opcionesFecha)} - ${fin.toLocaleDateString('es-BO', opcionesFecha)}`;
 
-    // 🔥 LA CLAVE: La consulta. Le pedimos SOLO los entregados en este rango.
-    // limit(100) evita que el celular colapse si hay miles.
     const q = query(
       collection(db, 'recibos'),
       where('estadoOrden', '==', 'entregado'),
@@ -111,7 +105,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
 
     const snapshot = await getDocs(q);
     
-    // Extraemos solo los datos que nos importan (sin fotos para ahorrar memoria)
     const datos = snapshot.docs.map(doc => {
       const d = doc.data();
       return {
@@ -141,7 +134,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
   }
 }
 
-// Renderiza el HTML de forma rápida (usando variables locales)
 function renderizarReporte(datos) {
   if (datos.length === 0) {
     reporteContenido.innerHTML = `
@@ -160,7 +152,6 @@ function renderizarReporte(datos) {
   let maxVenta = 0;
   let movimientosHtml = '';
 
-  // Recorremos los datos una sola vez (súper rápido)
   for (let i = 0; i < datos.length; i++) {
     const d = datos[i];
     const monto = Number(d.montoCobrado) || 0;
@@ -176,11 +167,16 @@ function renderizarReporte(datos) {
     else if (metodo.includes('transf')) metodos.transferencia += monto;
     else metodos.mixto += monto;
 
-    // Formatear hora
-    let fechaD;
-    if (d.fechaEntrega && d.fechaEntrega.toDate) fechaD = d.fechaEntrega.toDate();
-    else fechaD = new Date(d.fechaEntrega);
-
+    // 🔥 COMPATIBILIDAD CON SAFARI (Fecha segura)
+    let fechaD = new Date();
+    if (d.fechaEntrega) {
+      if (typeof d.fechaEntrega.toDate === 'function') {
+        fechaD = d.fechaEntrega.toDate(); // Firebase Timestamp
+      } else {
+        fechaD = new Date(d.fechaEntrega); // String o Date
+      }
+    }
+    
     const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
 
     movimientosHtml += `
@@ -247,7 +243,7 @@ function renderizarReporte(datos) {
     <h3 style="font-size:12px; font-weight:800; color:var(--brand-500); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px;">
       Movimientos
     </h3>
-    <div style="max-height: 400px; overflow-y: auto;">
+    <div style="max-height: 400px; overflow-y: auto; -webkit-overflow-scrolling: touch;">
       ${movimientosHtml}
     </div>
 
@@ -264,29 +260,47 @@ function renderizarReporte(datos) {
   document.getElementById('btnExportar')?.addEventListener('click', () => exportarCSV(datos));
 }
 
-// Exportar a Excel/CSV
+// 🔥 EXPORTAR CSV COMPATIBLE CON SAFARI (iOS)
 function exportarCSV(datos) {
   haptic(15);
   if (datos.length === 0) return toast('No hay datos para exportar', 'warning');
 
-  let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-  csvContent += "Recibo,Cliente,Equipo,Cobrado,Costo,Ganancia,Metodo,Fecha\n";
+  // En Safari móvil, el formato de descarga es más estricto
+  let csvContent = "Recibo,Cliente,Equipo,Cobrado,Costo,Ganancia,Metodo,Fecha\n";
 
   datos.forEach(d => {
     const monto = Number(d.montoCobrado) || 0;
     const costo = Number(d.costoRepuesto) || 0;
     const ganancia = monto - costo;
-    let fechaD = d.fechaEntrega.toDate ? d.fechaEntrega.toDate() : new Date(d.fechaEntrega);
+    
+    let fechaD = new Date();
+    if (d.fechaEntrega) {
+      if (typeof d.fechaEntrega.toDate === 'function') fechaD = d.fechaEntrega.toDate();
+      else fechaD = new Date(d.fechaEntrega);
+    }
+    
     const fechaStr = `${String(fechaD.getDate()).padStart(2,'0')}/${String(fechaD.getMonth()+1).padStart(2,'0')}/${fechaD.getFullYear()}`;
     
     csvContent += `"${d.numeroRecibo || ''}","${d.cliente || ''}","${d.marca || ''} ${d.modelo || ''}",${monto},${costo},${ganancia},"${d.metodoPago || 'Efectivo'}","${fechaStr}"\n`;
   });
 
-  const encodedUri = encodeURI(csvContent);
+  // Truco para que Safari y Chrome descarguen el archivo de forma nativa
+  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+  
+  if (navigator.msSaveBlob) { // Para IE/Edge antiguo
+    navigator.msSaveBlob(blob, 'Reporte_DR_Xiaomi.csv');
+    return;
+  }
+
   const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", `Reporte_DR_Xiaomi.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "Reporte_DR_Xiaomi.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 }
