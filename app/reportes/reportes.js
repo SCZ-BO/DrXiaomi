@@ -7,7 +7,7 @@ import { requireAuth, logout } from '/js/app-auth.js';
 import { toast, haptic, initTheme, formatBs, escapeHtml } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
 import { 
-  collection, query, where, orderBy, getDocs, limit 
+  collection, query, where, getDocs, limit 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 initTheme();
@@ -57,7 +57,7 @@ function configurarEventos() {
   });
 }
 
-// 🔥 FUNCIÓN OPTIMIZADA Y COMPATIBLE CON SAFARI
+// 🔥 FUNCIÓN OPTIMIZADA (SIN orderBy EN LA NUBE)
 async function cargarReporte(rango, desdeFecha, hastaFecha) {
   reporteContenido.innerHTML = `
     <div style="display:flex; justify-content:center; padding:40px;">
@@ -94,19 +94,28 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
     const opcionesFecha = { day: '2-digit', month: 'short' };
     headerSubtitle.textContent = `${inicio.toLocaleDateString('es-BO', opcionesFecha)} - ${fin.toLocaleDateString('es-BO', opcionesFecha)}`;
 
+    // 🔥 CONSULTA SIN orderBy (evita el error del índice)
+    // Traemos los entregados y filtramos por fecha manualmente
     const q = query(
       collection(db, 'recibos'),
       where('estadoOrden', '==', 'entregado'),
-      where('fechaEntrega', '>=', inicio),
-      where('fechaEntrega', '<=', fin),
-      orderBy('fechaEntrega', 'desc'),
       limit(100) 
     );
 
     const snapshot = await getDocs(q);
     
+    // Mapear y usar fechaEntrega o fecha como respaldo
     const datos = snapshot.docs.map(doc => {
       const d = doc.data();
+      // Respaldo: si no hay fechaEntrega, usamos fecha de creación
+      let fechaValida = d.fechaEntrega || d.fecha;
+      let fechaD = new Date();
+      
+      if (fechaValida) {
+        if (typeof fechaValida.toDate === 'function') fechaD = fechaValida.toDate();
+        else fechaD = new Date(fechaValida);
+      }
+
       return {
         numeroRecibo: d.numeroRecibo,
         cliente: d.cliente,
@@ -115,11 +124,19 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         montoCobrado: d.montoCobrado,
         costoRepuesto: d.costoRepuesto,
         metodoPago: d.metodoPago,
-        fechaEntrega: d.fechaEntrega
+        fechaEntregaReal: fechaD // Guardamos el objeto Date
       };
     });
 
-    renderizarReporte(datos);
+    // Filtrar por rango de fechas manualmente
+    const filtrados = datos.filter(d => {
+      return d.fechaEntregaReal >= inicio && d.fechaEntregaReal <= fin;
+    });
+
+    // Ordenar de más reciente a más antiguo
+    filtrados.sort((a, b) => b.fechaEntregaReal - a.fechaEntregaReal);
+
+    renderizarReporte(filtrados);
 
   } catch (error) {
     console.error('Error al cargar reporte:', error);
@@ -167,16 +184,7 @@ function renderizarReporte(datos) {
     else if (metodo.includes('transf')) metodos.transferencia += monto;
     else metodos.mixto += monto;
 
-    // 🔥 COMPATIBILIDAD CON SAFARI (Fecha segura)
-    let fechaD = new Date();
-    if (d.fechaEntrega) {
-      if (typeof d.fechaEntrega.toDate === 'function') {
-        fechaD = d.fechaEntrega.toDate(); // Firebase Timestamp
-      } else {
-        fechaD = new Date(d.fechaEntrega); // String o Date
-      }
-    }
-    
+    const fechaD = d.fechaEntregaReal;
     const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
 
     movimientosHtml += `
@@ -265,7 +273,6 @@ function exportarCSV(datos) {
   haptic(15);
   if (datos.length === 0) return toast('No hay datos para exportar', 'warning');
 
-  // En Safari móvil, el formato de descarga es más estricto
   let csvContent = "Recibo,Cliente,Equipo,Cobrado,Costo,Ganancia,Metodo,Fecha\n";
 
   datos.forEach(d => {
@@ -273,21 +280,15 @@ function exportarCSV(datos) {
     const costo = Number(d.costoRepuesto) || 0;
     const ganancia = monto - costo;
     
-    let fechaD = new Date();
-    if (d.fechaEntrega) {
-      if (typeof d.fechaEntrega.toDate === 'function') fechaD = d.fechaEntrega.toDate();
-      else fechaD = new Date(d.fechaEntrega);
-    }
-    
+    const fechaD = d.fechaEntregaReal;
     const fechaStr = `${String(fechaD.getDate()).padStart(2,'0')}/${String(fechaD.getMonth()+1).padStart(2,'0')}/${fechaD.getFullYear()}`;
     
     csvContent += `"${d.numeroRecibo || ''}","${d.cliente || ''}","${d.marca || ''} ${d.modelo || ''}",${monto},${costo},${ganancia},"${d.metodoPago || 'Efectivo'}","${fechaStr}"\n`;
   });
 
-  // Truco para que Safari y Chrome descarguen el archivo de forma nativa
   const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
   
-  if (navigator.msSaveBlob) { // Para IE/Edge antiguo
+  if (navigator.msSaveBlob) {
     navigator.msSaveBlob(blob, 'Reporte_DR_Xiaomi.csv');
     return;
   }
