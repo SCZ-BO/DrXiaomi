@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0A0A0B">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>DR. Xiaomi · Panel</title>
 
   <!-- Favicons -->
@@ -28,7 +28,7 @@
 
   <style>
     /* ============================================================ */
-    /* LOGO EN EL HEADER                                            */
+    /* ESTILOS ORIGINALES DE TU PANEL                               */
     /* ============================================================ */
     .brand-logo-limpio {
       width: 46px; height: 46px; border-radius: 50%; overflow: hidden;
@@ -37,9 +37,6 @@
     }
     .brand-logo-limpio img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
 
-    /* ============================================================ */
-    /* ICONOS PNG EN EL HEADER                                      */
-    /* ============================================================ */
     .icon-btn .icon-img {
       width: 22px; height: 22px; object-fit: contain; display: block;
       pointer-events: none; opacity: 0.85; transition: opacity 0.2s ease, transform 0.15s ease;
@@ -48,16 +45,10 @@
     .icon-btn:hover .icon-img { opacity: 1; }
     .icon-btn:active .icon-img { transform: scale(0.9); }
 
-    /* ============================================================ */
-    /* TARJETAS DE ORDEN                                            */
-    /* ============================================================ */
     .orden-card { position: relative; transition: all 0.2s ease; cursor: pointer; }
     .orden-card:active { transform: scale(0.99); background: var(--bg-elev-2) !important; }
     .orden-card:hover { background: var(--bg-elev-2); }
 
-    /* ============================================================ */
-    /* CHIP DE ESTADO - COLORES FORZADOS                            */
-    /* ============================================================ */
     .orden-card .chip-estado {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 4px 10px; border-radius: 20px; font-size: 10px;
@@ -69,43 +60,64 @@
     .orden-card .chip-estado[data-estado="listo"] { background: #FBBF24 !important; color: #1a1a1a !important; border: 1px solid #FBBF24 !important; }
     .orden-card .chip-estado[data-estado="entregado"] { background: #22C55E !important; color: #FFFFFF !important; border: 1px solid #22C55E !important; }
     .orden-card .chip-estado[data-estado="devuelto"] { background: #EF4444 !important; color: #FFFFFF !important; border: 1px solid #EF4444 !important; }
-    .orden-card .chip-estado[data-estado="cancelado"] { background: #9CA3AF !important; color: #FFFFFF !important; border: 1px solid #9CA3AF !important; }
 
-    /* BORDE LATERAL */
     .orden-card[data-estado="recibido"] { border-left: 4px solid #FFFFFF !important; }
     .orden-card[data-estado="reparacion"] { border-left: 4px solid #FF6900 !important; }
     .orden-card[data-estado="espera-repuesto"] { border-left: 4px solid #3B82F6 !important; }
     .orden-card[data-estado="listo"] { border-left: 4px solid #FBBF24 !important; }
     .orden-card[data-estado="entregado"] { border-left: 4px solid #22C55E !important; }
     .orden-card[data-estado="devuelto"] { border-left: 4px solid #EF4444 !important; }
-    .orden-card[data-estado="cancelado"] { border-left: 4px solid #9CA3AF !important; }
 
     .metodo-pago { font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 4px; }
 
     /* ============================================================ */
-    /* BOTTOM SHEET (MENÚ DE ACCIONES)                              */
+    /* BOTTOM SHEET (CENTRADO Y FLOTANTE)                           */
     /* ============================================================ */
     .sheet-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(4px); z-index: 9999; opacity: 0; pointer-events: none;
-      transition: opacity 0.25s; display: flex; align-items: flex-end; justify-content: center;
+      position: fixed; inset: 0; 
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px); 
+      z-index: 99999; 
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s; 
+      
+      /* Esto asegura que cubra TODA la pantalla, sin importar el contenedor */
+      width: 100vw; height: 100vh;
+      top: 0; left: 0;
+
+      display: flex; 
+      align-items: center; /* Lo centra verticalmente */
+      justify-content: center; /* Lo centra horizontalmente */
     }
     .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
+    
     .sheet {
-      background: var(--bg-1); border-top-left-radius: 24px; border-top-right-radius: 24px;
-      padding: 16px 20px calc(24px + env(safe-area-inset-bottom));
-      width: 100%; max-width: 550px; transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1); border-top: 1px solid var(--border-1);
+      background: var(--bg-1); 
+      border-radius: 24px; /* Bordes redondos en todas las esquinas porque está flotando */
+      padding: 24px;
+      width: 90%; 
+      max-width: 400px; 
+      
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1); 
+      border: 1px solid var(--border-1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       position: relative;
     }
-    .sheet-backdrop.show .sheet { transform: translateY(0); }
-    .sheet-handle { width: 40px; height: 4px; background: var(--border-2); border-radius: 2px; margin: 0 auto 20px; }
+    .sheet-backdrop.show .sheet { 
+      transform: translateY(0); 
+      opacity: 1;
+    }
     
     .btn-close-sheet {
-      position: absolute; top: 16px; right: 16px; background: var(--bg-elev-2);
-      border: none; color: var(--text-3); width: 32px; height: 32px; border-radius: 50%;
+      position: absolute; top: 16px; right: 16px; 
+      background: var(--bg-elev-2); border: none; color: var(--text-3); 
+      width: 32px; height: 32px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: 0.2s;
     }
+    .btn-close-sheet:hover { background: var(--border-2); color: var(--text-1); }
     
     .btn-sheet {
       width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700;
@@ -115,6 +127,7 @@
     .btn-sheet-primary { background: var(--brand-500); color: white; }
     .btn-sheet-whatsapp { background: #25D366; color: white; }
     .btn-sheet-danger { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
+    .btn-sheet-edit { background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-2); }
   </style>
 </head>
 <body>
@@ -155,18 +168,9 @@
 
       <!-- Stats -->
       <div class="stats-grid" style="margin-bottom: 20px;">
-        <div class="stat-card">
-          <div class="stat-value" id="statActivas">—</div>
-          <div class="stat-label">Activas</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value success" id="statListas">—</div>
-          <div class="stat-label">Listas</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value brand" id="statHoy">—</div>
-          <div class="stat-label">Hoy</div>
-        </div>
+        <div class="stat-card"><div class="stat-value" id="statActivas">—</div><div class="stat-label">Activas</div></div>
+        <div class="stat-card"><div class="stat-value success" id="statListas">—</div><div class="stat-label">Listas</div></div>
+        <div class="stat-card"><div class="stat-value brand" id="statHoy">—</div><div class="stat-label">Hoy</div></div>
       </div>
 
       <!-- Buscador -->
@@ -187,10 +191,7 @@
 
       <!-- Lista -->
       <div class="cards-list" id="listaOrdenes">
-        <div class="empty-state">
-          <div class="spinner" style="margin: 20px auto;"></div>
-          <p>Cargando órdenes...</p>
-        </div>
+        <div class="empty-state"><div class="spinner" style="margin: 20px auto;"></div><p>Cargando órdenes...</p></div>
       </div>
 
     </main>
@@ -199,13 +200,11 @@
     <button class="btn-fab" id="nuevoReciboBtn" title="Nuevo recibo">
       <i class="fas fa-plus"></i>
     </button>
-
   </div>
 
-  <!-- BOTTOM SHEET: ACCIONES DEL RECIBO -->
+  <!-- BOTTOM SHEET: ACCIONES DEL RECIBO (FUERA DEL APP-CONTAINER) -->
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
-      <div class="sheet-handle"></div>
       <button class="btn-close-sheet" id="btnCloseSheet"><i class="fas fa-times"></i></button>
       <div id="sheetContent" style="margin-top: 10px;">
         <!-- El JS inyectará las opciones aquí -->
@@ -213,24 +212,19 @@
     </div>
   </div>
 
-  <!-- SCRIPTS -->
   <script type="module">
     import { requireAuth, logout } from '/js/app-auth.js';
     import { toast, haptic, initTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
     import { db } from '/js/firebase.js';
-    import { 
-      collection, query, orderBy, onSnapshot, limit, doc, updateDoc, deleteDoc 
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { collection, query, orderBy, onSnapshot, limit, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     initTheme();
-
     let sesion = null;
     let ordenes = [];
     let filtroActual = 'todos';
     let busquedaActual = '';
     let unsubscribe = null;
-
-    // Elementos del Bottom Sheet
+    
     const reciboSheet = document.getElementById('reciboSheet');
     const sheetContent = document.getElementById('sheetContent');
 
@@ -241,39 +235,24 @@
 
     function iniciarApp() {
       document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
-
       if (sesion.rol === 'admin') {
         const btnRep = document.getElementById('reportesBtn');
         if (btnRep) btnRep.style.display = 'flex';
       }
-
       configurarEventos();
       cargarOrdenes();
-
       toast(`Bienvenido, ${sesion.nombre}`, 'success', 2000);
     }
 
     function configurarEventos() {
-      document.getElementById('preciosBtn')?.addEventListener('click', () => {
-        haptic(15); window.location.href = '/precio/';
-      });
-
-      document.getElementById('reportesBtn')?.addEventListener('click', () => {
-        haptic(15); window.location.href = '/app/reportes/';
-      });
-
-      document.getElementById('logoutBtn').addEventListener('click', () => {
-        haptic(20); logout();
-      });
-
-      document.getElementById('nuevoReciboBtn').addEventListener('click', () => {
-        haptic(15); window.location.href = '/cliente/';
-      });
+      document.getElementById('preciosBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/precio/'; });
+      document.getElementById('reportesBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/reportes/'; });
+      document.getElementById('logoutBtn').addEventListener('click', () => { haptic(20); logout(); });
+      document.getElementById('nuevoReciboBtn').addEventListener('click', () => { haptic(15); window.location.href = '/cliente/'; });
 
       document.getElementById('filtros').addEventListener('click', (e) => {
         const btn = e.target.closest('[data-filtro]');
         if (!btn) return;
-
         haptic(10);
         document.querySelectorAll('#filtros .chip-interactive').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -286,66 +265,39 @@
         renderizarOrdenes();
       });
 
-      // Cerrar Bottom Sheet
       document.getElementById('btnCloseSheet')?.addEventListener('click', cerrarSheet);
-      reciboSheet?.addEventListener('click', (e) => {
-        if (e.target === reciboSheet) cerrarSheet();
-      });
+      reciboSheet?.addEventListener('click', (e) => { if (e.target === reciboSheet) cerrarSheet(); });
     }
 
     function cargarOrdenes() {
       const q = query(collection(db, 'recibos'), orderBy('fecha', 'desc'), limit(200));
-
-      unsubscribe = onSnapshot(q, 
-        (snapshot) => {
-          ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          renderizarOrdenes();
-          actualizarStats();
-        },
-        (error) => {
-          console.error('❌ Error cargando órdenes:', error);
-          document.getElementById('listaOrdenes').innerHTML = `
-            <div class="empty-state">
-              <i class="fas fa-exclamation-triangle"></i>
-              <h3>Error al cargar</h3>
-              <p>${error.message || 'Intenta de nuevo'}</p>
-            </div>`;
-        }
-      );
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderizarOrdenes();
+        actualizarStats();
+      }, (error) => {
+        console.error('❌ Error cargando órdenes:', error);
+        document.getElementById('listaOrdenes').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Error</h3><p>${error.message}</p></div>`;
+      });
     }
 
     function renderizarOrdenes() {
       const lista = document.getElementById('listaOrdenes');
       let filtradas = ordenes;
-
-      if (filtroActual !== 'todos') {
-        filtradas = filtradas.filter(o => (o.estadoOrden || 'recibido') === filtroActual);
-      }
-
+      if (filtroActual !== 'todos') filtradas = filtradas.filter(o => (o.estadoOrden || 'recibido') === filtroActual);
       if (busquedaActual) {
         filtradas = filtradas.filter(o => {
           const texto = [o.numeroRecibo, o.cliente, o.telefono, o.marca, o.modelo].filter(Boolean).join(' ').toLowerCase();
           return texto.includes(busquedaActual);
         });
       }
-
       if (filtradas.length === 0) {
-        lista.innerHTML = `
-          <div class="empty-state">
-            <i class="fas fa-inbox"></i>
-            <h3>${busquedaActual ? 'Sin resultados' : 'No hay órdenes'}</h3>
-            <p>${busquedaActual ? 'Prueba otra búsqueda' : 'Crea el primer recibo tocando +'}</p>
-          </div>`;
+        lista.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><h3>${busquedaActual ? 'Sin resultados' : 'No hay órdenes'}</h3><p>${busquedaActual ? 'Prueba otra búsqueda' : 'Crea el primer recibo tocando +'}</p></div>`;
         return;
       }
-
       lista.innerHTML = filtradas.map(o => renderCard(o)).join('');
-
       lista.querySelectorAll('.orden-card').forEach(card => {
-        card.addEventListener('click', () => {
-          haptic(10);
-          abrirSheet(card.dataset.id);
-        });
+        card.addEventListener('click', () => { haptic(10); abrirSheet(card.dataset.id); });
       });
     }
 
@@ -363,37 +315,24 @@
 
       const total = Number(o.total) || 0;
       const metodoPago = o.metodoPago ? o.metodoPago.replace(/\(.*\)/, '').trim() : '';
-
       let serviciosTexto = '';
-      if (Array.isArray(o.servicios) && o.servicios.length > 0) {
-        serviciosTexto = o.servicios.map(s => s.desc).filter(d => d && d.trim() !== '' && d.trim() !== 'Sin descripción').join(' · ');
-      }
+      if (Array.isArray(o.servicios) && o.servicios.length > 0) serviciosTexto = o.servicios.map(s => s.desc).filter(d => d && d.trim() !== '' && d.trim() !== 'Sin descripción').join(' · ');
 
       return `
         <div class="card card-interactive orden-card" data-id="${o.id}" data-estado="${estadoActual}">
           <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px; padding-left: 16px;">
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                <span class="chip-estado" data-estado="${estadoActual}">
-                  ${estadoInfo.emoji} ${estadoInfo.texto}
-                </span>
-                <span style="font-size: 10px; color: var(--text-3); font-weight: 700; font-family: monospace;">
-                  ${o.numeroRecibo || '—'}
-                </span>
+                <span class="chip-estado" data-estado="${estadoActual}">${estadoInfo.emoji} ${estadoInfo.texto}</span>
+                <span style="font-size: 10px; color: var(--text-3); font-weight: 700; font-family: monospace;">${o.numeroRecibo || '—'}</span>
               </div>
-              <div style="font-size: 17px; font-weight: 800; color: var(--text-1); margin-bottom: 6px; letter-spacing: -0.3px;">
-                ${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}
-              </div>
+              <div style="font-size: 17px; font-weight: 800; color: var(--text-1); margin-bottom: 6px; letter-spacing: -0.3px;">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
               ${o.cliente ? `<div style="font-size: 12px; color: var(--text-2); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;"><span style="font-size: 13px;">👤</span><span>${escapeHtml(o.cliente)}</span></div>` : ''}
               ${serviciosTexto ? `<div style="font-size: 11px; color: var(--text-3); margin-bottom: 4px; line-height: 1.4; display: flex; align-items: start; gap: 6px;"><span style="font-size: 12px; flex-shrink: 0;">🔧</span><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">${escapeHtml(serviciosTexto)}</span></div>` : ''}
-              <div style="font-size: 10px; color: var(--text-3); margin-top: 8px; display: flex; align-items: center; gap: 4px;">
-                <i class="far fa-clock"></i> ${tiempoRelativo(o.fecha)}
-              </div>
+              <div style="font-size: 10px; color: var(--text-3); margin-top: 8px; display: flex; align-items: center; gap: 4px;"><i class="far fa-clock"></i> ${tiempoRelativo(o.fecha)}</div>
             </div>
             <div style="text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: end; gap: 4px;">
-              <div style="font-size: 20px; font-weight: 900; color: var(--brand-500); letter-spacing: -0.5px;">
-                ${formatBs(total)}
-              </div>
+              <div style="font-size: 20px; font-weight: 900; color: var(--brand-500); letter-spacing: -0.5px;">${formatBs(total)}</div>
               ${metodoPago ? `<div class="metodo-pago" style="color: #22C55E;">${getIconoMetodo(metodoPago)} ${escapeHtml(metodoPago)}</div>` : (estadoActual === 'entregado' ? `<div class="metodo-pago" style="color: #22C55E;">✓ Pagado</div>` : '')}
             </div>
           </div>
@@ -413,41 +352,32 @@
     function actualizarStats() {
       const activas = ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
       const listas = ordenes.filter(o => o.estadoOrden === 'listo').length;
-
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      const hoyCount = ordenes.filter(o => {
-        if (!o.fecha) return false;
-        const d = o.fecha.toDate ? o.fecha.toDate() : new Date(o.fecha);
-        return d >= hoy;
-      }).length;
-
+      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+      const hoyCount = ordenes.filter(o => { if (!o.fecha) return false; const d = o.fecha.toDate ? o.fecha.toDate() : new Date(o.fecha); return d >= hoy; }).length;
       document.getElementById('statActivas').textContent = activas;
       document.getElementById('statListas').textContent = listas;
       document.getElementById('statHoy').textContent = hoyCount;
     }
 
-    /* ============================================================
-       BOTTOM SHEET (ACCIONES DEL RECIBO)
-       ============================================================ */
     function abrirSheet(id) {
       const orden = ordenes.find(o => o.id === id);
       if (!orden) return;
 
       sheetContent.innerHTML = `
-        <div style="margin-bottom: 16px;">
-          <h3 style="font-size: 16px; font-weight: 800; color: var(--text-1); margin: 0 0 4px 0;">
-            ${escapeHtml(orden.numeroRecibo)}
-          </h3>
-          <p style="font-size: 12px; color: var(--text-2); margin: 0;">
-            ${escapeHtml(orden.cliente)} · ${escapeHtml(orden.marca)} ${escapeHtml(orden.modelo)}
-          </p>
+        <div style="margin-bottom: 20px; padding-right: 30px;">
+          <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1); margin: 0 0 4px 0;">${escapeHtml(orden.numeroRecibo)}</h3>
+          <p style="font-size: 13px; color: var(--text-2); margin: 0;">${escapeHtml(orden.cliente)} · ${escapeHtml(orden.marca)} ${escapeHtml(orden.modelo)}</p>
         </div>
 
+        <!-- BOTÓN PARA EDITAR LA ORDEN COMPLETA -->
+        <button class="btn-sheet btn-sheet-edit" id="btnEditarOrden">
+          <i class="fas fa-edit"></i> Editar / Ver Orden Completa
+        </button>
+
         <!-- Cambiar Estado -->
-        <div style="background: var(--bg-elev-2); padding: 12px; border-radius: 12px; margin-bottom: 16px;">
+        <div style="background: var(--bg-elev-2); padding: 12px; border-radius: 12px; margin: 16px 0;">
           <label style="font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px; display: block;">Cambiar Estado</label>
-          <select id="selectEstado" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-1); color: var(--text-1); border: 1px solid var(--border-1); outline: none; font-family: inherit;">
+          <select id="selectEstado" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-1); color: var(--text-1); border: 1px solid var(--border-1); outline: none; font-family: inherit; font-weight: 600;">
             <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
             <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
             <option value="espera-repuesto" ${orden.estadoOrden === 'espera-repuesto' ? 'selected' : ''}>⏳ Esperando repuesto</option>
@@ -459,32 +389,26 @@
 
         <!-- Acciones -->
         <div style="display: flex; flex-direction: column;">
-          <button class="btn-sheet btn-sheet-primary" id="btnActualizarEstado">
-            <i class="fas fa-save"></i> Guardar Cambios
-          </button>
-          <button class="btn-sheet btn-sheet-whatsapp" id="btnWhatsApp">
-            <i class="fab fa-whatsapp"></i> Reenviar por WhatsApp
-          </button>
-          <button class="btn-sheet btn-sheet-danger" id="btnEliminar">
-            <i class="fas fa-trash"></i> Eliminar Recibo
-          </button>
+          <button class="btn-sheet btn-sheet-primary" id="btnActualizarEstado"><i class="fas fa-save"></i> Guardar Cambios</button>
+          <button class="btn-sheet btn-sheet-whatsapp" id="btnWhatsApp"><i class="fab fa-whatsapp"></i> Reenviar por WhatsApp</button>
+          <button class="btn-sheet btn-sheet-danger" id="btnEliminar"><i class="fas fa-trash"></i> Eliminar Recibo</button>
         </div>
       `;
 
       reciboSheet.classList.add('show');
       haptic(15);
 
-      // Eventos de los botones del Sheet
+      document.getElementById('btnEditarOrden')?.addEventListener('click', () => {
+        window.location.href = `/app/orden.html?id=${id}`;
+      });
+
       document.getElementById('btnActualizarEstado')?.addEventListener('click', async () => {
         const nuevoEstado = document.getElementById('selectEstado').value;
         try {
           await updateDoc(doc(db, 'recibos', id), { estadoOrden: nuevoEstado });
           toast('Estado actualizado', 'success');
           cerrarSheet();
-        } catch (err) {
-          console.error(err);
-          toast('Error al actualizar', 'error');
-        }
+        } catch (err) { console.error(err); toast('Error al actualizar', 'error'); }
       });
 
       document.getElementById('btnWhatsApp')?.addEventListener('click', () => {
@@ -500,10 +424,7 @@
             await deleteDoc(doc(db, 'recibos', id));
             toast('Recibo eliminado', 'success');
             cerrarSheet();
-          } catch (err) {
-            console.error(err);
-            toast('Error al eliminar', 'error');
-          }
+          } catch (err) { toast('Error al eliminar', 'error'); }
         }
       });
     }
@@ -511,7 +432,6 @@
     function cerrarSheet() {
       if (reciboSheet) reciboSheet.classList.remove('show');
     }
-
   </script>
 
 </body>
