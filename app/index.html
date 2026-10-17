@@ -31,113 +31,47 @@
     /* LOGO EN EL HEADER                                            */
     /* ============================================================ */
     .brand-logo-limpio {
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      background: transparent;
-      box-shadow: 0 4px 12px rgba(255, 105, 0, 0.35);
+      width: 46px; height: 46px; border-radius: 50%; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; background: transparent; box-shadow: 0 4px 12px rgba(255, 105, 0, 0.35);
     }
-    .brand-logo-limpio img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-      display: block;
-    }
+    .brand-logo-limpio img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
 
     /* ============================================================ */
     /* ICONOS PNG EN EL HEADER                                      */
     /* ============================================================ */
     .icon-btn .icon-img {
-      width: 22px;
-      height: 22px;
-      object-fit: contain;
-      display: block;
-      pointer-events: none;
-      opacity: 0.85;
-      transition: opacity 0.2s ease, transform 0.15s ease;
+      width: 22px; height: 22px; object-fit: contain; display: block;
+      pointer-events: none; opacity: 0.85; transition: opacity 0.2s ease, transform 0.15s ease;
     }
-    .icon-btn .icon-img.blanco {
-      filter: brightness(0) invert(1);
-    }
+    .icon-btn .icon-img.blanco { filter: brightness(0) invert(1); }
     .icon-btn:hover .icon-img { opacity: 1; }
     .icon-btn:active .icon-img { transform: scale(0.9); }
 
     /* ============================================================ */
-    /* TARJETAS DE ORDEN MEJORADAS                                  */
+    /* TARJETAS DE ORDEN                                            */
     /* ============================================================ */
-    .orden-card {
-      position: relative;
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-    .orden-card:active {
-      transform: scale(0.99);
-      background: var(--bg-elev-2) !important;
-    }
-    .orden-card:hover {
-      background: var(--bg-elev-2);
-    }
+    .orden-card { position: relative; transition: all 0.2s ease; cursor: pointer; }
+    .orden-card:active { transform: scale(0.99); background: var(--bg-elev-2) !important; }
+    .orden-card:hover { background: var(--bg-elev-2); }
 
     /* ============================================================ */
-    /* CHIP DE ESTADO - COLORES FORZADOS POR CLASE + data-estado    */
+    /* CHIP DE ESTADO - COLORES FORZADOS                            */
     /* ============================================================ */
     .orden-card .chip-estado {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      transition: all 0.15s ease;
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 20px; font-size: 10px;
+      font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;
     }
-    .orden-card .chip-estado[data-estado="recibido"] {
-      background: #FFFFFF !important;
-      color: #1a1a1a !important;
-      border: 1px solid #E5E5E5 !important;
-    }
-    .orden-card .chip-estado[data-estado="reparacion"] {
-      background: #FF6900 !important;
-      color: #FFFFFF !important;
-      border: 1px solid #FF6900 !important;
-    }
-    .orden-card .chip-estado[data-estado="espera-repuesto"] {
-      background: #3B82F6 !important;
-      color: #FFFFFF !important;
-      border: 1px solid #3B82F6 !important;
-    }
-    .orden-card .chip-estado[data-estado="listo"] {
-      background: #FBBF24 !important;
-      color: #1a1a1a !important;
-      border: 1px solid #FBBF24 !important;
-    }
-    .orden-card .chip-estado[data-estado="entregado"] {
-      background: #22C55E !important;
-      color: #FFFFFF !important;
-      border: 1px solid #22C55E !important;
-    }
-    .orden-card .chip-estado[data-estado="devuelto"] {
-      background: #EF4444 !important;
-      color: #FFFFFF !important;
-      border: 1px solid #EF4444 !important;
-    }
-    .orden-card .chip-estado[data-estado="cancelado"] {
-      background: #9CA3AF !important;
-      color: #FFFFFF !important;
-      border: 1px solid #9CA3AF !important;
-    }
+    .orden-card .chip-estado[data-estado="recibido"] { background: #FFFFFF !important; color: #1a1a1a !important; border: 1px solid #E5E5E5 !important; }
+    .orden-card .chip-estado[data-estado="reparacion"] { background: #FF6900 !important; color: #FFFFFF !important; border: 1px solid #FF6900 !important; }
+    .orden-card .chip-estado[data-estado="espera-repuesto"] { background: #3B82F6 !important; color: #FFFFFF !important; border: 1px solid #3B82F6 !important; }
+    .orden-card .chip-estado[data-estado="listo"] { background: #FBBF24 !important; color: #1a1a1a !important; border: 1px solid #FBBF24 !important; }
+    .orden-card .chip-estado[data-estado="entregado"] { background: #22C55E !important; color: #FFFFFF !important; border: 1px solid #22C55E !important; }
+    .orden-card .chip-estado[data-estado="devuelto"] { background: #EF4444 !important; color: #FFFFFF !important; border: 1px solid #EF4444 !important; }
+    .orden-card .chip-estado[data-estado="cancelado"] { background: #9CA3AF !important; color: #FFFFFF !important; border: 1px solid #9CA3AF !important; }
 
-    /* ============================================================ */
-    /* BORDE LATERAL POR ESTADO                                     */
-    /* ============================================================ */
+    /* BORDE LATERAL */
     .orden-card[data-estado="recibido"] { border-left: 4px solid #FFFFFF !important; }
     .orden-card[data-estado="reparacion"] { border-left: 4px solid #FF6900 !important; }
     .orden-card[data-estado="espera-repuesto"] { border-left: 4px solid #3B82F6 !important; }
@@ -146,18 +80,41 @@
     .orden-card[data-estado="devuelto"] { border-left: 4px solid #EF4444 !important; }
     .orden-card[data-estado="cancelado"] { border-left: 4px solid #9CA3AF !important; }
 
+    .metodo-pago { font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 4px; }
+
     /* ============================================================ */
-    /* MÉTODO DE PAGO                                               */
+    /* BOTTOM SHEET (MENÚ DE ACCIONES)                              */
     /* ============================================================ */
-    .metodo-pago {
-      font-size: 10px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      justify-content: flex-end;
-      margin-top: 4px;
+    .sheet-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px); z-index: 9999; opacity: 0; pointer-events: none;
+      transition: opacity 0.25s; display: flex; align-items: flex-end; justify-content: center;
     }
+    .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
+    .sheet {
+      background: var(--bg-1); border-top-left-radius: 24px; border-top-right-radius: 24px;
+      padding: 16px 20px calc(24px + env(safe-area-inset-bottom));
+      width: 100%; max-width: 550px; transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1); border-top: 1px solid var(--border-1);
+      position: relative;
+    }
+    .sheet-backdrop.show .sheet { transform: translateY(0); }
+    .sheet-handle { width: 40px; height: 4px; background: var(--border-2); border-radius: 2px; margin: 0 auto 20px; }
+    
+    .btn-close-sheet {
+      position: absolute; top: 16px; right: 16px; background: var(--bg-elev-2);
+      border: none; color: var(--text-3); width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    
+    .btn-sheet {
+      width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700;
+      border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s; font-family: inherit; margin-bottom: 8px;
+    }
+    .btn-sheet-primary { background: var(--brand-500); color: white; }
+    .btn-sheet-whatsapp { background: #25D366; color: white; }
+    .btn-sheet-danger { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
   </style>
 </head>
 <body>
@@ -182,12 +139,10 @@
           <img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img blanco"
                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
         </button>
-
         <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;">
           <img src="/imagenes/icon-reportes.png" alt="Reportes" class="icon-img blanco"
                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
         </button>
-
         <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
           <img src="/imagenes/icon-salir.png" alt="Salir" class="icon-img blanco"
                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
@@ -217,10 +172,7 @@
       <!-- Buscador -->
       <div class="search-bar">
         <i class="fas fa-search"></i>
-        <input type="search" 
-               id="buscador" 
-               placeholder="Buscar por cliente, teléfono o recibo..."
-               autocomplete="off">
+        <input type="search" id="buscador" placeholder="Buscar por cliente, teléfono o recibo..." autocomplete="off">
       </div>
 
       <!-- Filtros -->
@@ -250,12 +202,24 @@
 
   </div>
 
+  <!-- BOTTOM SHEET: ACCIONES DEL RECIBO -->
+  <div class="sheet-backdrop" id="reciboSheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <button class="btn-close-sheet" id="btnCloseSheet"><i class="fas fa-times"></i></button>
+      <div id="sheetContent" style="margin-top: 10px;">
+        <!-- El JS inyectará las opciones aquí -->
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
   <script type="module">
     import { requireAuth, logout } from '/js/app-auth.js';
-    import { toast, haptic, initTheme, toggleTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
+    import { toast, haptic, initTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
     import { db } from '/js/firebase.js';
     import { 
-      collection, query, orderBy, onSnapshot, limit 
+      collection, query, orderBy, onSnapshot, limit, doc, updateDoc, deleteDoc 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     initTheme();
@@ -266,14 +230,17 @@
     let busquedaActual = '';
     let unsubscribe = null;
 
+    // Elementos del Bottom Sheet
+    const reciboSheet = document.getElementById('reciboSheet');
+    const sheetContent = document.getElementById('sheetContent');
+
     requireAuth((s) => {
       sesion = s;
       iniciarApp();
     });
 
     function iniciarApp() {
-      document.getElementById('userInfo').textContent = 
-        `${sesion.icono || ''} ${sesion.nombre}`;
+      document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
 
       if (sesion.rol === 'admin') {
         const btnRep = document.getElementById('reportesBtn');
@@ -288,23 +255,19 @@
 
     function configurarEventos() {
       document.getElementById('preciosBtn')?.addEventListener('click', () => {
-        haptic(15);
-        window.location.href = '/precio/';
+        haptic(15); window.location.href = '/precio/';
       });
 
       document.getElementById('reportesBtn')?.addEventListener('click', () => {
-        haptic(15);
-        window.location.href = '/app/reportes/';
+        haptic(15); window.location.href = '/app/reportes/';
       });
 
       document.getElementById('logoutBtn').addEventListener('click', () => {
-        haptic(20);
-        logout();
+        haptic(20); logout();
       });
 
       document.getElementById('nuevoReciboBtn').addEventListener('click', () => {
-        haptic(15);
-        window.location.href = '/cliente/';
+        haptic(15); window.location.href = '/cliente/';
       });
 
       document.getElementById('filtros').addEventListener('click', (e) => {
@@ -312,9 +275,7 @@
         if (!btn) return;
 
         haptic(10);
-        document.querySelectorAll('#filtros .chip-interactive').forEach(b => 
-          b.classList.remove('active')
-        );
+        document.querySelectorAll('#filtros .chip-interactive').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         filtroActual = btn.dataset.filtro;
         renderizarOrdenes();
@@ -324,53 +285,37 @@
         busquedaActual = e.target.value.toLowerCase().trim();
         renderizarOrdenes();
       });
+
+      // Cerrar Bottom Sheet
+      document.getElementById('btnCloseSheet')?.addEventListener('click', cerrarSheet);
+      reciboSheet?.addEventListener('click', (e) => {
+        if (e.target === reciboSheet) cerrarSheet();
+      });
     }
 
     function cargarOrdenes() {
-      const q = query(
-        collection(db, 'recibos'),
-        orderBy('fecha', 'desc'),
-        limit(200)
-      );
+      const q = query(collection(db, 'recibos'), orderBy('fecha', 'desc'), limit(200));
 
       unsubscribe = onSnapshot(q, 
         (snapshot) => {
-          ordenes = snapshot.docs.map(d => ({
-            id: d.id,
-            ...d.data()
-          }));
-
-          console.log(`📋 ${ordenes.length} órdenes cargadas`);
+          ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
           renderizarOrdenes();
           actualizarStats();
         },
         (error) => {
           console.error('❌ Error cargando órdenes:', error);
-          
-          if (error.message && error.message.includes('index')) {
-            document.getElementById('listaOrdenes').innerHTML = `
-              <div class="empty-state">
-                <i class="fas fa-database"></i>
-                <h3>Falta crear un índice</h3>
-                <p>Abre la consola (F12) para ver el link</p>
-              </div>
-            `;
-          } else {
-            document.getElementById('listaOrdenes').innerHTML = `
-              <div class="empty-state">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h3>Error al cargar</h3>
-                <p>${error.message || 'Intenta de nuevo'}</p>
-              </div>
-            `;
-          }
+          document.getElementById('listaOrdenes').innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-exclamation-triangle"></i>
+              <h3>Error al cargar</h3>
+              <p>${error.message || 'Intenta de nuevo'}</p>
+            </div>`;
         }
       );
     }
 
     function renderizarOrdenes() {
       const lista = document.getElementById('listaOrdenes');
-
       let filtradas = ordenes;
 
       if (filtroActual !== 'todos') {
@@ -379,13 +324,7 @@
 
       if (busquedaActual) {
         filtradas = filtradas.filter(o => {
-          const texto = [
-            o.numeroRecibo,
-            o.cliente,
-            o.telefono,
-            o.marca,
-            o.modelo
-          ].filter(Boolean).join(' ').toLowerCase();
+          const texto = [o.numeroRecibo, o.cliente, o.telefono, o.marca, o.modelo].filter(Boolean).join(' ').toLowerCase();
           return texto.includes(busquedaActual);
         });
       }
@@ -396,8 +335,7 @@
             <i class="fas fa-inbox"></i>
             <h3>${busquedaActual ? 'Sin resultados' : 'No hay órdenes'}</h3>
             <p>${busquedaActual ? 'Prueba otra búsqueda' : 'Crea el primer recibo tocando +'}</p>
-          </div>
-        `;
+          </div>`;
         return;
       }
 
@@ -405,43 +343,30 @@
 
       lista.querySelectorAll('.orden-card').forEach(card => {
         card.addEventListener('click', () => {
-          const id = card.dataset.id;
           haptic(10);
-          window.location.href = `/app/orden.html?id=${id}`;
+          abrirSheet(card.dataset.id);
         });
       });
-    }
-
-    function getIconoMetodo(metodo) {
-      const m = String(metodo || '').toLowerCase();
-      if (m.includes('efectivo')) return '💵';
-      if (m.includes('qr')) return '📱';
-      if (m.includes('transf')) return '🏦';
-      if (m.includes('mixto')) return '🔀';
-      return '💳';
     }
 
     function renderCard(o) {
       const estadoActual = o.estadoOrden || 'recibido';
       const estadoInfo = {
-        recibido:          { clase: 'recibido',  texto: 'RECIBIDO',           emoji: '📦' },
-        reparacion:        { clase: 'reparacion',texto: 'EN REPARACIÓN',      emoji: '🔧' },
-        'espera-repuesto': { clase: 'espera',    texto: 'ESPERANDO REPUESTO', emoji: '⏳' },
-        listo:             { clase: 'listo',     texto: 'LISTO PARA ENTREGAR',emoji: '✅' },
-        entregado:         { clase: 'entregado', texto: 'ENTREGADO',          emoji: '🤝' },
-        devuelto:          { clase: 'devuelto',  texto: 'DEVUELTO',           emoji: '↩️' },
-        cancelado:         { clase: 'cancelado', texto: 'CANCELADO',          emoji: '⛔' }
-      }[estadoActual] || { clase: 'recibido', texto: estadoActual.toUpperCase(), emoji: '📋' };
+        recibido: { texto: 'RECIBIDO', emoji: '📦' },
+        reparacion: { texto: 'EN REPARACIÓN', emoji: '🔧' },
+        'espera-repuesto': { texto: 'ESPERANDO REPUESTO', emoji: '⏳' },
+        listo: { texto: 'LISTO PARA ENTREGAR', emoji: '✅' },
+        entregado: { texto: 'ENTREGADO', emoji: '🤝' },
+        devuelto: { texto: 'DEVUELTO', emoji: '↩️' },
+        cancelado: { texto: 'CANCELADO', emoji: '⛔' }
+      }[estadoActual] || { texto: estadoActual.toUpperCase(), emoji: '📋' };
 
       const total = Number(o.total) || 0;
       const metodoPago = o.metodoPago ? o.metodoPago.replace(/\(.*\)/, '').trim() : '';
 
       let serviciosTexto = '';
       if (Array.isArray(o.servicios) && o.servicios.length > 0) {
-        serviciosTexto = o.servicios
-          .map(s => s.desc)
-          .filter(d => d && d.trim() !== '' && d.trim() !== 'Sin descripción')
-          .join(' · ');
+        serviciosTexto = o.servicios.map(s => s.desc).filter(d => d && d.trim() !== '' && d.trim() !== 'Sin descripción').join(' · ');
       }
 
       return `
@@ -459,18 +384,8 @@
               <div style="font-size: 17px; font-weight: 800; color: var(--text-1); margin-bottom: 6px; letter-spacing: -0.3px;">
                 ${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}
               </div>
-              ${o.cliente ? `
-                <div style="font-size: 12px; color: var(--text-2); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                  <span style="font-size: 13px;">👤</span>
-                  <span>${escapeHtml(o.cliente)}</span>
-                </div>
-              ` : ''}
-              ${serviciosTexto ? `
-                <div style="font-size: 11px; color: var(--text-3); margin-bottom: 4px; line-height: 1.4; display: flex; align-items: start; gap: 6px;">
-                  <span style="font-size: 12px; flex-shrink: 0;">🔧</span>
-                  <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">${escapeHtml(serviciosTexto)}</span>
-                </div>
-              ` : ''}
+              ${o.cliente ? `<div style="font-size: 12px; color: var(--text-2); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;"><span style="font-size: 13px;">👤</span><span>${escapeHtml(o.cliente)}</span></div>` : ''}
+              ${serviciosTexto ? `<div style="font-size: 11px; color: var(--text-3); margin-bottom: 4px; line-height: 1.4; display: flex; align-items: start; gap: 6px;"><span style="font-size: 12px; flex-shrink: 0;">🔧</span><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">${escapeHtml(serviciosTexto)}</span></div>` : ''}
               <div style="font-size: 10px; color: var(--text-3); margin-top: 8px; display: flex; align-items: center; gap: 4px;">
                 <i class="far fa-clock"></i> ${tiempoRelativo(o.fecha)}
               </div>
@@ -479,32 +394,28 @@
               <div style="font-size: 20px; font-weight: 900; color: var(--brand-500); letter-spacing: -0.5px;">
                 ${formatBs(total)}
               </div>
-              ${metodoPago ? `
-                <div class="metodo-pago" style="color: #22C55E;">
-                  ${getIconoMetodo(metodoPago)} ${escapeHtml(metodoPago)}
-                </div>
-              ` : (estadoActual === 'entregado' ? `
-                <div class="metodo-pago" style="color: #22C55E;">
-                  ✓ Pagado
-                </div>
-              ` : '')}
+              ${metodoPago ? `<div class="metodo-pago" style="color: #22C55E;">${getIconoMetodo(metodoPago)} ${escapeHtml(metodoPago)}</div>` : (estadoActual === 'entregado' ? `<div class="metodo-pago" style="color: #22C55E;">✓ Pagado</div>` : '')}
             </div>
           </div>
         </div>
       `;
     }
 
-    function actualizarStats() {
-      const activas = ordenes.filter(o => {
-        const e = o.estadoOrden || 'recibido';
-        return ['recibido', 'reparacion', 'espera-repuesto'].includes(e);
-      }).length;
+    function getIconoMetodo(metodo) {
+      const m = String(metodo || '').toLowerCase();
+      if (m.includes('efectivo')) return '💵';
+      if (m.includes('qr')) return '📱';
+      if (m.includes('transf')) return '🏦';
+      if (m.includes('mixto')) return '🔀';
+      return '💳';
+    }
 
+    function actualizarStats() {
+      const activas = ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
       const listas = ordenes.filter(o => o.estadoOrden === 'listo').length;
 
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
-
       const hoyCount = ordenes.filter(o => {
         if (!o.fecha) return false;
         const d = o.fecha.toDate ? o.fecha.toDate() : new Date(o.fecha);
@@ -514,6 +425,91 @@
       document.getElementById('statActivas').textContent = activas;
       document.getElementById('statListas').textContent = listas;
       document.getElementById('statHoy').textContent = hoyCount;
+    }
+
+    /* ============================================================
+       BOTTOM SHEET (ACCIONES DEL RECIBO)
+       ============================================================ */
+    function abrirSheet(id) {
+      const orden = ordenes.find(o => o.id === id);
+      if (!orden) return;
+
+      sheetContent.innerHTML = `
+        <div style="margin-bottom: 16px;">
+          <h3 style="font-size: 16px; font-weight: 800; color: var(--text-1); margin: 0 0 4px 0;">
+            ${escapeHtml(orden.numeroRecibo)}
+          </h3>
+          <p style="font-size: 12px; color: var(--text-2); margin: 0;">
+            ${escapeHtml(orden.cliente)} · ${escapeHtml(orden.marca)} ${escapeHtml(orden.modelo)}
+          </p>
+        </div>
+
+        <!-- Cambiar Estado -->
+        <div style="background: var(--bg-elev-2); padding: 12px; border-radius: 12px; margin-bottom: 16px;">
+          <label style="font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px; display: block;">Cambiar Estado</label>
+          <select id="selectEstado" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-1); color: var(--text-1); border: 1px solid var(--border-1); outline: none; font-family: inherit;">
+            <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
+            <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
+            <option value="espera-repuesto" ${orden.estadoOrden === 'espera-repuesto' ? 'selected' : ''}>⏳ Esperando repuesto</option>
+            <option value="listo" ${orden.estadoOrden === 'listo' ? 'selected' : ''}>✅ Listo para entregar</option>
+            <option value="entregado" ${orden.estadoOrden === 'entregado' ? 'selected' : ''}>🤝 Entregado</option>
+            <option value="devuelto" ${orden.estadoOrden === 'devuelto' ? 'selected' : ''}>↩️ Devuelto</option>
+          </select>
+        </div>
+
+        <!-- Acciones -->
+        <div style="display: flex; flex-direction: column;">
+          <button class="btn-sheet btn-sheet-primary" id="btnActualizarEstado">
+            <i class="fas fa-save"></i> Guardar Cambios
+          </button>
+          <button class="btn-sheet btn-sheet-whatsapp" id="btnWhatsApp">
+            <i class="fab fa-whatsapp"></i> Reenviar por WhatsApp
+          </button>
+          <button class="btn-sheet btn-sheet-danger" id="btnEliminar">
+            <i class="fas fa-trash"></i> Eliminar Recibo
+          </button>
+        </div>
+      `;
+
+      reciboSheet.classList.add('show');
+      haptic(15);
+
+      // Eventos de los botones del Sheet
+      document.getElementById('btnActualizarEstado')?.addEventListener('click', async () => {
+        const nuevoEstado = document.getElementById('selectEstado').value;
+        try {
+          await updateDoc(doc(db, 'recibos', id), { estadoOrden: nuevoEstado });
+          toast('Estado actualizado', 'success');
+          cerrarSheet();
+        } catch (err) {
+          console.error(err);
+          toast('Error al actualizar', 'error');
+        }
+      });
+
+      document.getElementById('btnWhatsApp')?.addEventListener('click', () => {
+        const mensaje = `Hola ${orden.cliente.split(' ')[0]}, tu equipo ${orden.marca} ${orden.modelo} está en estado: *${orden.estadoOrden || 'recibido'}*.\n\nN Recibo: ${orden.numeroRecibo}\nPuedes revisarlo en: https://xiaomi.scz.red/?recibo=${orden.numeroRecibo}`;
+        const tel = orden.telefono.replace(/\D/g, '');
+        window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank');
+        cerrarSheet();
+      });
+
+      document.getElementById('btnEliminar')?.addEventListener('click', async () => {
+        if (confirm('¿Eliminar este recibo permanentemente?')) {
+          try {
+            await deleteDoc(doc(db, 'recibos', id));
+            toast('Recibo eliminado', 'success');
+            cerrarSheet();
+          } catch (err) {
+            console.error(err);
+            toast('Error al eliminar', 'error');
+          }
+        }
+      });
+    }
+
+    function cerrarSheet() {
+      if (reciboSheet) reciboSheet.classList.remove('show');
     }
 
   </script>
