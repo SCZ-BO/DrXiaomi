@@ -12,8 +12,8 @@ import { db } from '/js/firebase.js';
 import { collection, addDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ⬇️ Importamos el PDF desde su archivo
-import { generarPDF, configurarPDF } from '/js/cliente-pdf.js';
+// ⬇️ Importamos el generador de PDF unificado
+import { generarPDFUnificado } from '/js/cliente-pdf.js';
 
 /* ============================================================
    CONFIGURACIÓN GENERAL
@@ -52,7 +52,7 @@ const datos = {
   servicios: [], total: 0, adelanto: 0, saldo: 0
 };
 
-/* Exportamos para que el PDF lo use */
+// Exportamos para que el PDF pueda usar estos datos si es necesario
 export {
   sesion, datos, CONFIG, generarNumeroRecibo, configurarWhatsApp,
   showLoading, hideLoading, toast, haptic, formatBs, escapeHtml,
@@ -83,9 +83,9 @@ function iniciar() {
   configurarAdelanto();
   configurarCharCounters();
   
-  // Configuramos el PDF DESPUÉS de que todo lo demás esté listo
-  configurarPDF();
-  
+  // 🔥 Configuramos el botón de generar PDF con protección
+  configurarBotonGenerarPDF();
+
   actualizarBotonesRemove();
   actualizarBarraProgreso();
   actualizarBotones();
@@ -413,13 +413,12 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS (Corregido para que abra cámara y galería)
+   FOTOS
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
   const sheet = document.getElementById('fotoSheet');
   
-  // Buscamos los inputs por ID o por tipo, para evitar fallos
   const inputCamara = document.getElementById('inputCamara') || document.querySelector('input[type="file"][capture]');
   const inputGaleria = document.getElementById('inputGaleria') || document.querySelector('input[type="file"]:not([capture])');
   
@@ -427,7 +426,6 @@ function configurarFotos() {
 
   let slotActual = null;
 
-  // Evento para abrir la hoja de opciones (cámara / galería)
   grid.addEventListener('click', (e) => {
     const slot = e.target.closest('.foto-slot');
     if (!slot) return;
@@ -439,11 +437,10 @@ function configurarFotos() {
     }
 
     const idx = parseInt(slot.dataset.slot);
-    if (datos.fotos[idx]) return; // Ya tiene foto
+    if (datos.fotos[idx]) return;
 
     slotActual = idx; haptic(10);
     
-    // Si hay un bottom sheet, lo mostramos, si no, abrimos la galería directo
     if (sheet) sheet.classList.add('show');
     else if (inputGaleria) inputGaleria.click();
   });
@@ -515,18 +512,15 @@ async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
 }
 
 /* ============================================================
-   SERVICIOS (Corregido para que SUME correctamente)
+   SERVICIOS Y COSTOS
    ============================================================ */
 function configurarServicios() {
   const list = document.getElementById('serviciosList');
   const btnAdd = document.getElementById('addServicio');
   if (!list || !btnAdd) return;
 
-  // ESCUCHAMOS EL EVENTO INPUT PARA QUE SUME EN TIEMPO REAL
   list.addEventListener('input', (e) => {
-    if (e.target.classList.contains('servicio-costo')) {
-      calcularTotal();
-    }
+    if (e.target.classList.contains('servicio-costo')) calcularTotal();
   });
 
   list.addEventListener('click', (e) => {
@@ -541,7 +535,7 @@ function configurarServicios() {
     item.querySelector('.servicio-desc')?.focus();
   });
 
-  calcularTotal(); // Calcula al inicio
+  calcularTotal();
 }
 
 function crearServicioItem() {
@@ -552,7 +546,7 @@ function crearServicioItem() {
       <input type="text" class="servicio-desc" placeholder="Descripción del servicio" maxlength="100" data-dictado>
     </div>
     <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0" inputmode="decimal">
-    <button type="button" class="removeServicio">✕</button>
+    <button type="button" class="removeServicio"><i class="fas fa-times"></i></button>
   `;
   if (window.__dictadoIniciar) setTimeout(() => window.__dictadoIniciar(), 50);
   return div;
@@ -668,6 +662,70 @@ function generarVistaPrevia() {
       ${fotosHtml}
     </div>
   `;
+}
+
+/* ============================================================
+   CONFIGURACIÓN DEL BOTÓN DE PDF (NUEVA VERSIÓN BLINDADA)
+   ============================================================ */
+function configurarBotonGenerarPDF() {
+  const btn = document.getElementById('btnGenerate');
+  if (!btn) return;
+
+  let generando = false;
+
+  btn.addEventListener('click', async () => {
+    if (generando) return;
+    generando = true;
+
+    if (!validarCostos()) {
+      generando = false;
+      return;
+    }
+    guardarDatosPaso(6);
+
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+    btn.style.opacity = '0.7';
+
+    try {
+      const numeroRecibo = generarNumeroRecibo();
+      
+      const paquete = {
+        numeroRecibo: numeroRecibo,
+        cliente: datos.nombre,
+        telefono: datos.telefono,
+        marca: datos.marca,
+        modelo: datos.modelo,
+        imei: datos.imei,
+        enciende: datos.enciende,
+        estadoEquipo: datos.estado || '-',
+        falla: datos.falla || '-',
+        tipoSeguridad: datos.tipoSeguridad,
+        pin: datos.tipoSeguridad === 'pin' ? datos.pin : null,
+        patron: datos.tipoSeguridad === 'patron' ? datos.patronSecuencia : null,
+        servicios: datos.servicios,
+        total: datos.total,
+        adelanto: datos.adelanto,
+        saldo: datos.saldo,
+        fotos: datos.fotos.filter(f => f && f.dataUrl).map(f => f.dataUrl)
+      };
+
+      const exito = await generarPDFUnificado(paquete, 'guardar_en_nube');
+      
+      if (exito) {
+        document.getElementById('successNumero').textContent = numeroRecibo;
+        document.getElementById('successModal')?.classList.add('show');
+        window._ultimoRecibo = paquete; 
+        configurarWhatsApp();
+      }
+    } catch (error) {
+      console.error("Error al generar:", error);
+    } finally {
+      generando = false;
+      btn.innerHTML = textoOriginal;
+      btn.style.opacity = '1';
+    }
+  });
 }
 
 /* ============================================================
