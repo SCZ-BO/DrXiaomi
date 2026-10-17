@@ -1,7 +1,8 @@
 /* ============================================================
    DR. XIAOMI · CLIENTE (Wizard de nuevo recibo)
    Archivo: js/cliente.js
-   Versión: TODO IGUAL + PDF PRO con enlaces clickeables
+   Contiene: Wizard, fotos, sumas, header, vista previa
+   ⚠️ NO contiene código de PDF (eso está en cliente-pdf.js)
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -10,12 +11,14 @@ import {
   escapeHtml, formatBs, showLoading, hideLoading
 } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
-import {
-  collection, addDoc, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, addDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* ⬇️ Importamos el generador de PDF desde su propio archivo ⬇️ */
+import { generarPDF, configurarPDF } from '/js/cliente-pdf.js';
 
 /* ============================================================
-   CONFIGURACIÓN
+   CONFIGURACIÓN GENERAL
    ============================================================ */
 const CONFIG = {
   nombreTienda: 'DR. XIAOMI SCZ',
@@ -25,39 +28,17 @@ const CONFIG = {
   horario: 'Lunes a Sábado 9:00 - 20:00',
   web: 'xiaomi.scz.red',
   urlApp: 'https://xiaomi.scz.red',
-  logoUrl: 'https://xiaomi.scz.red/img/logo1.png',
-  condiciones: [
-    'Conserve este recibo para retirar su equipo.',
-    'Entrega sujeta a disponibilidad de repuestos.',
-    'Retiro dentro de 10 días posteriores al aviso.',
-    'Pasados 20 días, el equipo se considera abandonado.',
-    'Garantía: 30 días repuestos / 60 días mano de obra.'
-  ]
+  logoUrl: 'https://xiaomi.scz.red/img/logo1.png'
 };
 
 /* ============================================================
-   COLORES DE MARCA (solo para el PDF)
+   ESTADO (exportado para que cliente-pdf.js lo use)
    ============================================================ */
-const COLOR = {
-  naranja: [255, 105, 0],
-  naranjaClaro: [255, 140, 60],
-  naranjaSuave: [255, 244, 235],
-  grisFondo: [248, 248, 248],
-  grisSuave: [235, 235, 235],
-  textoOscuro: [30, 30, 30],
-  textoMedio: [80, 80, 80],
-  textoClaro: [120, 120, 120],
-  blanco: [255, 255, 255]
-};
-
-/* ============================================================
-   ESTADO
-   ============================================================ */
-let sesion = null;
+export let sesion = null;
 let pasoActual = 1;
 const TOTAL_PASOS = 7;
 
-const datos = {
+export const datos = {
   nombre: '', telefono: '',
   marca: '', modelo: '', imei: '', enciende: '',
   estado: '', falla: '',
@@ -66,61 +47,20 @@ const datos = {
   servicios: [], total: 0, adelanto: 0, saldo: 0
 };
 
-/* ============================================================
-   CARGA DINÁMICA DE LIBRERÍAS GLOBALES
-   ============================================================ */
-async function cargarLibrerias() {
-  if (!window.jspdf) {
-    await new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-      script.onload = resolve;
-      script.onerror = () => reject(new Error('No se pudo cargar JSPDF'));
-      document.head.appendChild(script);
-    });
-  }
-
-  if (!window.jspdf?.jsPDF?.API?.autoTable) {
-    await new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js';
-      script.onload = resolve;
-      script.onerror = () => reject(new Error('No se pudo cargar AutoTable'));
-      document.head.appendChild(script);
-    });
-  }
-
-  if (!window.QRCode) {
-    await new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-      script.onload = resolve;
-      script.onerror = () => reject(new Error('No se pudo cargar QRCode'));
-      document.head.appendChild(script);
-    });
-  }
-
-  console.log('✅ Librerías cargadas correctamente');
-}
+export const CONSTANTES = { CONFIG, TOTAL_PASOS };
+export { generarNumeroRecibo, showLoading, hideLoading, toast, haptic, formatBs, escapeHtml, db, collection, addDoc, serverTimestamp };
 
 /* ============================================================
    INICIALIZACIÓN
    ============================================================ */
 initTheme();
 
-requireAuth(async (s) => {
+requireAuth((s) => {
   sesion = s;
-  await iniciar();
+  iniciar();
 });
 
-async function iniciar() {
-  try {
-    await cargarLibrerias();
-  } catch (err) {
-    console.error('Error cargando librerías:', err);
-    toast('Error al cargar librerías. Recarga la página.', 'error', 5000);
-  }
-
+function iniciar() {
   const userInfo = document.getElementById('userInfo');
   if (userInfo) userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
 
@@ -133,7 +73,7 @@ async function iniciar() {
   configurarServicios();
   configurarAdelanto();
   configurarCharCounters();
-  configurarPDF();
+  configurarPDF(); // ⬅️ Viene de cliente-pdf.js
   actualizarBotonesRemove();
   actualizarBarraProgreso();
   actualizarBotones();
@@ -142,7 +82,7 @@ async function iniciar() {
 }
 
 /* ============================================================
-   HEADER (SIN CAMBIOS — el que ya te funcionaba)
+   HEADER
    ============================================================ */
 function configurarHeader() {
   document.getElementById('backToPanelBtn')?.addEventListener('click', () => {
@@ -549,13 +489,6 @@ function configurarFotos() {
   const inputGaleria = document.getElementById('inputGaleria');
   const sheet = document.getElementById('fotoSheet');
 
-  console.log('🔍 configurarFotos:', {
-    grid: !!grid,
-    inputCamara: !!inputCamara,
-    inputGaleria: !!inputGaleria,
-    sheet: !!sheet
-  });
-
   if (!grid) {
     console.warn('⚠️ #fotosGrid no existe');
     return;
@@ -755,7 +688,7 @@ function actualizarBotonesRemove() {
   });
 }
 
-function calcularTotal() {
+export function calcularTotal() {
   let total = 0;
   document.querySelectorAll('.servicio-costo').forEach(input => {
     total += parseFloat(input.value) || 0;
@@ -790,7 +723,7 @@ function configurarAdelanto() {
   input.addEventListener('input', actualizarSaldo);
 }
 
-function actualizarSaldo() {
+export function actualizarSaldo() {
   const total = parseFloat(document.getElementById('costoTotal')?.value) || 0;
   const adelanto = parseFloat(document.getElementById('adelanto')?.value) || 0;
   const saldo = Math.max(0, total - adelanto);
@@ -814,7 +747,7 @@ function configurarCharCounters() {
 }
 
 /* ============================================================
-   VISTA PREVIA
+   VISTA PREVIA (paso 7)
    ============================================================ */
 function generarVistaPrevia() {
   guardarDatosPaso(6);
@@ -952,623 +885,9 @@ function generarVistaPrevia() {
 }
 
 /* ============================================================
-   PDF — CONFIGURACIÓN
-   ============================================================ */
-function configurarPDF() {
-  document.getElementById('btnGenerate')?.addEventListener('click', generarPDF);
-  document.getElementById('backToPanelBtn2')?.addEventListener('click', () => {
-    window.location.href = '/app/';
-  });
-  document.getElementById('downloadPdfBtn')?.addEventListener('click', () => {
-    haptic(15);
-    if (window._ultimoPDF) {
-      try {
-        window._ultimoPDF.save(window._ultimoNombrePDF || 'recibo.pdf');
-        toast('PDF descargado', 'success', 2000);
-      } catch (err) {
-        console.error('Error descargando PDF:', err);
-        toast('Error al descargar el PDF', 'error');
-      }
-    } else {
-      toast('Genera el recibo primero', 'warning');
-    }
-  });
-}
-
-function generarNumeroRecibo() {
-  const f = new Date();
-  const dd = String(f.getDate()).padStart(2, '0');
-  const mm = String(f.getMonth() + 1).padStart(2, '0');
-  const yy = String(f.getFullYear()).slice(-2);
-  const hh = String(f.getHours()).padStart(2, '0');
-  const mi = String(f.getMinutes()).padStart(2, '0');
-  const ss = String(f.getSeconds()).padStart(2, '0');
-  return `REC-${dd}${mm}${yy}-${hh}${mi}${ss}`;
-}
-
-async function generarQRDataUrl(texto) {
-  return new Promise((resolve) => {
-    if (typeof QRCode === 'undefined') {
-      resolve('');
-      return;
-    }
-    const div = document.createElement('div');
-    div.style.position = 'absolute';
-    div.style.left = '-9999px';
-    document.body.appendChild(div);
-    try {
-      new QRCode(div, {
-        text: texto,
-        width: 256,
-        height: 256,
-        colorDark: '#000000',
-        colorLight: '#FFFFFF',
-        correctLevel: QRCode.CorrectLevel.M
-      });
-      setTimeout(() => {
-        const canvas = div.querySelector('canvas');
-        const img = div.querySelector('img');
-        let dataUrl = '';
-        if (canvas) dataUrl = canvas.toDataURL('image/png');
-        else if (img && img.src) dataUrl = img.src;
-        div.remove();
-        resolve(dataUrl);
-      }, 200);
-    } catch (e) {
-      div.remove();
-      resolve('');
-    }
-  });
-}
-
-async function cargarLogoDataUrl() {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
-      } catch (e) {
-        resolve('');
-      }
-    };
-    img.onerror = () => resolve('');
-    img.src = CONFIG.logoUrl;
-  });
-}
-
-/* ============================================================
-   PDF PRO CON ENLACES CLICKEABLES
-   ⚠️ SOLO ESTA FUNCIÓN FUE MEJORADA
-   ============================================================ */
-async function generarPDF() {
-  guardarDatosPaso(6);
-  const numeroRecibo = generarNumeroRecibo();
-  showLoading('Generando PDF...');
-  haptic(20);
-
-  try {
-    const [logoDataUrl, qrDataUrl] = await Promise.all([
-      cargarLogoDataUrl(),
-      generarQRDataUrl(`${CONFIG.urlApp}/?recibo=${numeroRecibo}`)
-    ]);
-
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-    const W = 210, H = 297, M = 14;
-    const CW = W - M * 2;
-    let y = 0;
-
-    /* ---------- MARCA DE AGUA ---------- */
-    pdf.saveGraphicsState();
-    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setFont('helvetica', 'bold');
-    try {
-      // @ts-ignore
-      pdf.setGState(new pdf.GState({ opacity: 0.05 }));
-    } catch (e) { /* ignore si no soporta opacity */ }
-    pdf.setFontSize(70);
-    pdf.text('DR. XIAOMI', W / 2, H / 2 - 20, { align: 'center', angle: 45 });
-    pdf.setFontSize(50);
-    pdf.text('SCZ', W / 2 + 10, H / 2 + 30, { align: 'center', angle: 45 });
-    pdf.restoreGraphicsState();
-
-    /* ---------- HEADER NARANJA ---------- */
-    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.rect(0, 0, W, 34, 'F');
-    pdf.setFillColor(COLOR.naranjaClaro[0], COLOR.naranjaClaro[1], COLOR.naranjaClaro[2]);
-    pdf.rect(0, 34, W, 1.5, 'F');
-
-    if (logoDataUrl) {
-      try {
-        pdf.setFillColor(255, 255, 255);
-        pdf.circle(M + 11, 17, 12, 'F');
-        pdf.addImage(logoDataUrl, 'PNG', M + 1, 7, 20, 20);
-      } catch (e) { console.error('Error logo:', e); }
-    }
-
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(20);
-    pdf.text(CONFIG.nombreTienda, M + 28, 14);
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(9);
-    pdf.text(CONFIG.eslogan, M + 28, 20);
-
-    pdf.setFontSize(8);
-    pdf.text(CONFIG.direccion, M + 28, 26);
-
-    const telLabel = ' · Tel: ';
-    const telLabelX = M + 28 + pdf.getTextWidth(CONFIG.direccion);
-    pdf.text(telLabel, telLabelX, 26);
-    pdf.textWithLink(CONFIG.telefono, telLabelX + pdf.getTextWidth(telLabel), 26, {
-      url: `tel:+591${CONFIG.telefono}`
-    });
-
-    pdf.setFillColor(255, 255, 255);
-    try {
-      // @ts-ignore
-      pdf.setGState(new pdf.GState({ opacity: 0.15 }));
-    } catch (e) { /* ignore */ }
-    pdf.roundedRect(W - M - 55, 6, 55, 22, 2, 2, 'F');
-    try {
-      // @ts-ignore
-      pdf.setGState(new pdf.GState({ opacity: 1 }));
-    } catch (e) { /* ignore */ }
-
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('RECIBO N°', W - M - 4, 11, { align: 'right' });
-    pdf.setFontSize(11);
-    pdf.text(numeroRecibo, W - M - 4, 17, { align: 'right' });
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7);
-    const fecha = new Date();
-    const fechaStr = `${String(fecha.getDate()).padStart(2,'0')}/${String(fecha.getMonth()+1).padStart(2,'0')}/${fecha.getFullYear()} ${String(fecha.getHours()).padStart(2,'0')}:${String(fecha.getMinutes()).padStart(2,'0')}`;
-    pdf.text(fechaStr, W - M - 4, 22, { align: 'right' });
-    pdf.text(`Atendido: ${sesion.nombre}`, W - M - 4, 26, { align: 'right' });
-
-    y = 40;
-
-    /* ---------- BANNER RECIBIDO ---------- */
-    pdf.setFillColor(COLOR.grisSuave[0], COLOR.grisSuave[1], COLOR.grisSuave[2]);
-    pdf.roundedRect(M, y, CW, 10, 2, 2, 'F');
-    pdf.setTextColor(COLOR.textoOscuro[0], COLOR.textoOscuro[1], COLOR.textoOscuro[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
-    pdf.text('RECIBIDO', M + 4, y + 6.5);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
-    pdf.text('Recibo de servicio técnico', W - M - 4, y + 6.5, { align: 'right' });
-    y += 14;
-
-    /* ---------- CLIENTE Y EQUIPO ---------- */
-    const colW = (CW - 4) / 2;
-
-    pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
-    pdf.roundedRect(M, y, colW, 26, 2, 2, 'F');
-    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.rect(M, y, 1.5, 26, 'F');
-
-    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('CLIENTE', M + 5, y + 6);
-
-    pdf.setTextColor(COLOR.textoOscuro[0], COLOR.textoOscuro[1], COLOR.textoOscuro[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(11);
-    pdf.text(datos.nombre.slice(0, 28), M + 5, y + 13);
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
-    pdf.text('Tel: ', M + 5, y + 18);
-    pdf.textWithLink(datos.telefono, M + 5 + pdf.getTextWidth('Tel: '), y + 18, {
-      url: `tel:+591${datos.telefono}`
-    });
-    pdf.text('Cliente', M + 5, y + 23);
-
-    pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
-    pdf.roundedRect(M + colW + 4, y, colW, 26, 2, 2, 'F');
-    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.rect(M + colW + 4, y, 1.5, 26, 'F');
-
-    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('EQUIPO', M + colW + 9, y + 6);
-
-    pdf.setTextColor(COLOR.textoOscuro[0], COLOR.textoOscuro[1], COLOR.textoOscuro[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(11);
-    pdf.text(`${datos.marca} ${datos.modelo}`.slice(0, 28), M + colW + 9, y + 13);
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
-    if (datos.imei) {
-      pdf.text(`IMEI: ${datos.imei}`, M + colW + 9, y + 18);
-    }
-    pdf.text(`Enciende: ${datos.enciende}`, M + colW + 9, y + 23);
-
-    y += 30;
-
-    /* ---------- ESTADO Y CLAVE ---------- */
-    pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
-    pdf.roundedRect(M, y, colW, 26, 2, 2, 'F');
-    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.rect(M, y, 1.5, 26, 'F');
-
-    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('ESTADO / FALLA', M + 5, y + 6);
-
-    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    let yy = y + 12;
-    if (datos.estado) {
-      const lineas = pdf.splitTextToSize(datos.estado, colW - 10);
-      pdf.text(lineas.slice(0, 2), M + 5, yy);
-      yy += lineas.slice(0, 2).length * 3.5;
-    }
-    if (datos.falla) {
-      const lineas = pdf.splitTextToSize(datos.falla, colW - 10);
-      pdf.text(lineas.slice(0, 2), M + 5, yy);
-    }
-
-    pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
-    pdf.roundedRect(M + colW + 4, y, colW, 26, 2, 2, 'F');
-    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.rect(M + colW + 4, y, 1.5, 26, 'F');
-
-    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('CLAVE DE ACCESO', M + colW + 9, y + 6);
-
-    let patronTexto = '';
-    if (datos.tipoSeguridad === 'patron' && datos.patronSecuencia) {
-      patronTexto = datos.patronSecuencia.split(',').join('-');
-    }
-
-    let segInfo = '';
-    if (datos.tipoSeguridad === 'pin') segInfo = `PIN: ${datos.pin}`;
-    else if (datos.tipoSeguridad === 'patron' && patronTexto) segInfo = `Patrón: ${patronTexto}`;
-    else segInfo = 'Sin clave';
-
-    pdf.setTextColor(COLOR.textoOscuro[0], COLOR.textoOscuro[1], COLOR.textoOscuro[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(12);
-    pdf.text(segInfo.slice(0, 25), M + colW + 9, y + 16);
-
-    y += 30;
-
-    /* ---------- SERVICIOS ---------- */
-    if (y > 220) { pdf.addPage(); y = 20; }
-
-    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.roundedRect(M, y, CW, 9, 1.5, 1.5, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.text('SERVICIOS Y COSTOS', M + 4, y + 6);
-    y += 12;
-
-    const serviciosData = datos.servicios.map(s => [s.desc, formatBs(s.costo)]);
-    pdf.autoTable({
-      startY: y,
-      head: [['Descripción', 'Costo']],
-      body: serviciosData,
-      styles: {
-        fontSize: 9,
-        cellPadding: 3.5,
-        textColor: COLOR.textoOscuro,
-        lineColor: [230, 230, 230],
-        lineWidth: 0.2
-      },
-      headStyles: {
-        fillColor: COLOR.naranja,
-        textColor: 255,
-        fontStyle: 'bold',
-        fontSize: 9
-      },
-      alternateRowStyles: { fillColor: [255, 250, 245] },
-      columnStyles: {
-        0: { cellWidth: CW - 40 },
-        1: { halign: 'right', cellWidth: 40, fontStyle: 'bold', textColor: COLOR.naranja }
-      },
-      margin: { left: M, right: M },
-      theme: 'grid'
-    });
-
-    y = pdf.lastAutoTable.finalY + 5;
-
-    /* ---------- TOTALES ---------- */
-    const boxW = 85;
-    const boxX = M + CW - boxW;
-    const boxAlto = datos.adelanto > 0 ? 28 : 20;
-
-    pdf.setFillColor(COLOR.grisFondo[0], COLOR.grisFondo[1], COLOR.grisFondo[2]);
-    pdf.roundedRect(boxX, y, boxW, boxAlto, 2, 2, 'F');
-    pdf.setDrawColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setLineWidth(0.4);
-    pdf.roundedRect(boxX, y, boxW, boxAlto, 2, 2, 'S');
-
-    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(9);
-    pdf.text('Total:', boxX + 5, y + 7);
-    pdf.setTextColor(COLOR.textoOscuro[0], COLOR.textoOscuro[1], COLOR.textoOscuro[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
-    pdf.text(formatBs(datos.total), boxX + boxW - 5, y + 7, { align: 'right' });
-
-    let rowY = y + 7;
-    if (datos.adelanto > 0) {
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(9);
-      pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
-      pdf.text('Adelanto:', boxX + 5, y + 14);
-      pdf.setTextColor(COLOR.textoOscuro[0], COLOR.textoOscuro[1], COLOR.textoOscuro[2]);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`- ${formatBs(datos.adelanto)}`, boxX + boxW - 5, y + 14, { align: 'right' });
-      rowY = y + 14;
-    }
-
-    pdf.setDrawColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setLineWidth(0.5);
-    pdf.line(boxX + 5, rowY + 4, boxX + boxW - 5, rowY + 4);
-
-    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.text('SALDO:', boxX + 5, rowY + 11);
-    pdf.setFontSize(13);
-    pdf.text(formatBs(datos.saldo), boxX + boxW - 5, rowY + 11, { align: 'right' });
-
-    y += boxAlto + 6;
-
-    /* ---------- FOTOS ---------- */
-    const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
-    if (fotosValidas.length > 0) {
-      if (y > 235) { pdf.addPage(); y = 20; }
-
-      pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-      pdf.roundedRect(M, y, CW, 8, 1.5, 1.5, 'F');
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(8);
-      pdf.text('FOTOS DEL EQUIPO', M + 4, y + 5.5);
-      y += 11;
-
-      const fotoW = (CW - 9) / 4;
-      const fotoH = fotoW * 0.75;
-      let x = M;
-      for (let i = 0; i < Math.min(fotosValidas.length, 4); i++) {
-        try {
-          pdf.setFillColor(240, 240, 240);
-          pdf.roundedRect(x + 0.5, y + 0.5, fotoW, fotoH, 1, 1, 'F');
-          pdf.setFillColor(255, 255, 255);
-          pdf.roundedRect(x, y, fotoW, fotoH, 1, 1, 'F');
-          pdf.addImage(fotosValidas[i].dataUrl, 'JPEG', x + 1, y + 1, fotoW - 2, fotoH - 2, undefined, 'FAST');
-        } catch (e) { console.error('Error foto:', e); }
-        x += fotoW + 3;
-      }
-      y += fotoH + 6;
-    }
-
-    /* ---------- QR + URL ---------- */
-    if (y > 215) { pdf.addPage(); y = 20; }
-
-    pdf.setFillColor(COLOR.naranjaSuave[0], COLOR.naranjaSuave[1], COLOR.naranjaSuave[2]);
-    pdf.roundedRect(M, y, CW, 32, 2, 2, 'F');
-    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.rect(M, y, 1.5, 32, 'F');
-
-    if (qrDataUrl) {
-      try {
-        pdf.setFillColor(255, 255, 255);
-        pdf.roundedRect(M + 5, y + 5, 22, 22, 1.5, 1.5, 'F');
-        pdf.addImage(qrDataUrl, 'PNG', M + 6, y + 6, 20, 20);
-      } catch (e) { console.error('Error QR:', e); }
-    }
-
-    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
-    pdf.text('Consulta el estado de tu reparación', M + 32, y + 10);
-
-    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.text('Escanea el código QR o visita:', M + 32, y + 16);
-
-    const urlTexto = `${CONFIG.web}/?recibo=${numeroRecibo}`;
-    const urlCompleta = `${CONFIG.urlApp}/?recibo=${numeroRecibo}`;
-    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.textWithLink(urlTexto, M + 32, y + 23, { url: urlCompleta });
-
-    const urlWidth = pdf.getTextWidth(urlTexto);
-    pdf.setDrawColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setLineWidth(0.3);
-    pdf.line(M + 32, y + 24.5, M + 32 + urlWidth, y + 24.5);
-
-    y += 38;
-
-    /* ---------- BANNER WEB ---------- */
-    if (y > 240) { pdf.addPage(); y = 20; }
-
-    pdf.setFillColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.roundedRect(M, y, CW, 34, 2, 2, 'F');
-    pdf.setFillColor(COLOR.naranjaClaro[0], COLOR.naranjaClaro[1], COLOR.naranjaClaro[2]);
-    pdf.rect(M, y, CW, 2, 'F');
-
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(9);
-    pdf.text('VISITA NUESTRA PÁGINA WEB', M + 8, y + 10);
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(22);
-    pdf.textWithLink(CONFIG.web, M + 8, y + 21, { url: CONFIG.urlApp });
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7);
-    pdf.text('Toca el enlace o escanea el código QR', M + 8, y + 28);
-
-    if (qrDataUrl) {
-      try {
-        pdf.setFillColor(255, 255, 255);
-        pdf.roundedRect(W - M - 30, y + 4, 26, 26, 1.5, 1.5, 'F');
-        pdf.addImage(qrDataUrl, 'PNG', W - M - 28.5, y + 5.5, 23, 23);
-      } catch (e) { console.error('Error QR grande:', e); }
-    }
-
-    y += 40;
-
-    /* ---------- CONDICIONES ---------- */
-    if (y > 245) { pdf.addPage(); y = 20; }
-
-    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7.5);
-    pdf.text('CONDICIONES:', M, y + 4);
-
-    pdf.setTextColor(COLOR.textoMedio[0], COLOR.textoMedio[1], COLOR.textoMedio[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(6.5);
-
-    const condColW = CW / 2 - 3;
-    CONFIG.condiciones.forEach((txt, i) => {
-      const col = i < 3 ? 0 : 1;
-      const row = i < 3 ? i : i - 3;
-      const xPos = M + col * (condColW + 6);
-      const yPos = y + 9 + row * 3.5;
-      const lineas = pdf.splitTextToSize(`${i + 1}. ${txt}`, condColW);
-      pdf.text(lineas[0], xPos, yPos);
-    });
-
-    /* ---------- FOOTER ---------- */
-    pdf.setDrawColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setLineWidth(0.6);
-    pdf.line(M, H - 15, W - M, H - 15);
-
-    pdf.setFontSize(6.5);
-    pdf.setTextColor(COLOR.textoClaro[0], COLOR.textoClaro[1], COLOR.textoClaro[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(
-      `© ${new Date().getFullYear()} ${CONFIG.nombreTienda} · Todos los derechos reservados`,
-      W / 2,
-      H - 10,
-      { align: 'center' }
-    );
-
-    pdf.setFontSize(7);
-    const footerY = H - 6;
-    const webText = CONFIG.web;
-    const sepText = '  ·  ';
-    const telText = `Tel: ${CONFIG.telefono}`;
-    const webW = pdf.getTextWidth(webText);
-    const sepW = pdf.getTextWidth(sepText);
-    const telW = pdf.getTextWidth(telText);
-    const totalW = webW + sepW + telW;
-    const startX = (W - totalW) / 2;
-
-    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.textWithLink(webText, startX, footerY, { url: CONFIG.urlApp });
-
-    pdf.setTextColor(COLOR.textoClaro[0], COLOR.textoClaro[1], COLOR.textoClaro[2]);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(sepText, startX + webW, footerY);
-
-    pdf.setTextColor(COLOR.naranja[0], COLOR.naranja[1], COLOR.naranja[2]);
-    pdf.setFont('helvetica', 'bold');
-    pdf.textWithLink(telText, startX + webW + sepW, footerY, {
-      url: `tel:+591${CONFIG.telefono}`
-    });
-
-    /* ---------- GUARDAR PDF ---------- */
-    const nombreArchivo = `Recibo_${numeroRecibo}_${datos.nombre.split(' ')[0]}.pdf`;
-    window._ultimoPDF = pdf;
-    window._ultimoNombrePDF = nombreArchivo;
-    pdf.save(nombreArchivo);
-
-    /* ---------- FIRESTORE ---------- */
-    try {
-      await addDoc(collection(db, 'recibos'), {
-        numeroRecibo,
-        cliente: datos.nombre,
-        telefono: datos.telefono,
-        marca: datos.marca,
-        modelo: datos.modelo,
-        imei: datos.imei || null,
-        enciende: datos.enciende,
-        estadoEquipo: datos.estado || '-',
-        falla: datos.falla || '-',
-        tipoSeguridad: datos.tipoSeguridad,
-        pin: datos.tipoSeguridad === 'pin' ? datos.pin : null,
-        patron: datos.tipoSeguridad === 'patron' ? datos.patronSecuencia : null,
-        servicios: datos.servicios,
-        total: datos.total,
-        adelanto: datos.adelanto,
-        saldo: datos.saldo,
-        fotos: datos.fotos.filter(f => f && f.dataUrl).map(f => f.dataUrl),
-        estadoOrden: 'recibido',
-        creadoPor: sesion.nombre,
-        creadoPorRol: sesion.rol,
-        fecha: serverTimestamp()
-      });
-      console.log('✅ Recibo guardado en Firestore');
-    } catch (err) {
-      console.error('❌ Error guardando en Firestore:', err);
-      toast('Recibo generado pero no se pudo guardar en la nube', 'warning', 4000);
-    }
-
-    /* ---------- MODAL ÉXITO ---------- */
-    const successNumero = document.getElementById('successNumero');
-    if (successNumero) successNumero.textContent = numeroRecibo;
-    const successModal = document.getElementById('successModal');
-    if (successModal) successModal.classList.add('show');
-
-    window._ultimoRecibo = {
-      numeroRecibo,
-      cliente: datos.nombre,
-      telefono: datos.telefono,
-      marca: datos.marca,
-      modelo: datos.modelo,
-      total: datos.total,
-      saldo: datos.saldo
-    };
-
-    configurarWhatsApp();
-
-  } catch (err) {
-    console.error('Error generando PDF:', err);
-    toast('Error al generar el PDF: ' + err.message, 'error', 5000);
-  } finally {
-    hideLoading();
-  }
-}
-
-/* ============================================================
    WHATSAPP
    ============================================================ */
-function configurarWhatsApp() {
+export function configurarWhatsApp() {
   const btn = document.getElementById('sendWhatsappBtn');
   if (!btn) return;
 
@@ -1599,4 +918,18 @@ Tel: ${CONFIG.telefono}`;
     const url = `https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   });
+}
+
+/* ============================================================
+   UTILIDADES EXPORTADAS PARA EL PDF
+   ============================================================ */
+export function generarNumeroRecibo() {
+  const f = new Date();
+  const dd = String(f.getDate()).padStart(2, '0');
+  const mm = String(f.getMonth() + 1).padStart(2, '0');
+  const yy = String(f.getFullYear()).slice(-2);
+  const hh = String(f.getHours()).padStart(2, '0');
+  const mi = String(f.getMinutes()).padStart(2, '0');
+  const ss = String(f.getSeconds()).padStart(2, '0');
+  return `REC-${dd}${mm}${yy}-${hh}${mi}${ss}`;
 }
