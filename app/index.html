@@ -233,28 +233,32 @@
         limit(LIMITE_POR_PAGINA)
       );
 
-      unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
-        const source = snapshot.metadata.fromCache ? '💾 Caché' : '☁️ Servidor';
-        console.log(`📡 Recibos cargados desde: ${source}`);
-        
-        ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
-        
-        if (snapshot.docs.length > 0) {
-          ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
-        }
+      unsubscribe = onSnapshot(q, 
+        { includeMetadataChanges: true },
+        (snapshot) => {
+          const source = snapshot.metadata.fromCache ? '💾 Caché' : '☁️ Servidor';
+          console.log(`📡 Recibos cargados desde: ${source}`);
+          
+          ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
+          
+          if (snapshot.docs.length > 0) {
+            ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
+          }
 
-        renderizarOrdenes();
-        actualizarStats();
-      }, (error) => {
-        console.error('❌ Error cargando órdenes:', error);
-        document.getElementById('listaOrdenes').innerHTML = `
-          <div class="empty-state">
-            <i class="fas fa-exclamation-triangle" style="color: #EF4444;"></i>
-            <h3>Error al cargar</h3>
-            <p>${error.message}</p>
-          </div>`;
-      });
+          renderizarOrdenes();
+          actualizarStats();
+        }, 
+        (error) => {
+          console.error('❌ Error cargando órdenes:', error);
+          document.getElementById('listaOrdenes').innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-exclamation-triangle" style="color: #EF4444;"></i>
+              <h3>Error al cargar</h3>
+              <p>${error.message}</p>
+            </div>`;
+        }
+      );
     }
 
     async function cargarMasOrdenes() {
