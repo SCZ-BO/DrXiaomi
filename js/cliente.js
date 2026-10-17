@@ -34,11 +34,11 @@ const CONFIG = {
 /* ============================================================
    ESTADO (exportado para que cliente-pdf.js lo use)
    ============================================================ */
-export let sesion = null;
+let sesion = null;
 let pasoActual = 1;
 const TOTAL_PASOS = 7;
 
-export const datos = {
+const datos = {
   nombre: '', telefono: '',
   marca: '', modelo: '', imei: '', enciende: '',
   estado: '', falla: '',
@@ -47,8 +47,26 @@ export const datos = {
   servicios: [], total: 0, adelanto: 0, saldo: 0
 };
 
-export const CONSTANTES = { CONFIG, TOTAL_PASOS };
-export { generarNumeroRecibo, showLoading, hideLoading, toast, haptic, formatBs, escapeHtml, db, collection, addDoc, serverTimestamp };
+/* ============================================================
+   EXPORTS ÚNICOS (una sola vez cada nombre)
+   ============================================================ */
+export {
+  sesion,
+  datos,
+  CONFIG,
+  generarNumeroRecibo,
+  configurarWhatsApp,
+  showLoading,
+  hideLoading,
+  toast,
+  haptic,
+  formatBs,
+  escapeHtml,
+  db,
+  collection,
+  addDoc,
+  serverTimestamp
+};
 
 /* ============================================================
    INICIALIZACIÓN
@@ -73,7 +91,7 @@ function iniciar() {
   configurarServicios();
   configurarAdelanto();
   configurarCharCounters();
-  configurarPDF(); // ⬅️ Viene de cliente-pdf.js
+  configurarPDF();
   actualizarBotonesRemove();
   actualizarBarraProgreso();
   actualizarBotones();
@@ -688,7 +706,7 @@ function actualizarBotonesRemove() {
   });
 }
 
-export function calcularTotal() {
+function calcularTotal() {
   let total = 0;
   document.querySelectorAll('.servicio-costo').forEach(input => {
     total += parseFloat(input.value) || 0;
@@ -723,7 +741,7 @@ function configurarAdelanto() {
   input.addEventListener('input', actualizarSaldo);
 }
 
-export function actualizarSaldo() {
+function actualizarSaldo() {
   const total = parseFloat(document.getElementById('costoTotal')?.value) || 0;
   const adelanto = parseFloat(document.getElementById('adelanto')?.value) || 0;
   const saldo = Math.max(0, total - adelanto);
@@ -887,7 +905,7 @@ function generarVistaPrevia() {
 /* ============================================================
    WHATSAPP
    ============================================================ */
-export function configurarWhatsApp() {
+function configurarWhatsApp() {
   const btn = document.getElementById('sendWhatsappBtn');
   if (!btn) return;
 
@@ -923,7 +941,7 @@ Tel: ${CONFIG.telefono}`;
 /* ============================================================
    UTILIDADES EXPORTADAS PARA EL PDF
    ============================================================ */
-export function generarNumeroRecibo() {
+function generarNumeroRecibo() {
   const f = new Date();
   const dd = String(f.getDate()).padStart(2, '0');
   const mm = String(f.getMonth() + 1).padStart(2, '0');
