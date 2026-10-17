@@ -40,7 +40,6 @@
     .skeleton-line { height: 12px; background: var(--bg-elev-2); border-radius: 6px; margin-bottom: 8px; }
     @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     
-    /* Animación de la flecha de refrescar */
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
     .btn-load-more { width: 100%; padding: 16px; border-radius: var(--radius-md); background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-2); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; margin-top: 10px; margin-bottom: 20px; }
@@ -54,10 +53,43 @@
     .chip-estado[data-estado="entregado"] { background: rgba(34, 197, 94, 0.15); color: #22C55E; }
     .chip-estado[data-estado="devuelto"] { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
     .metodo-pago { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 6px; color: #22C55E; }
-    .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 99999; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; }
-    .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
-    .sheet { background: var(--bg-elev-1); border-radius: 24px; padding: 24px; width: 90%; max-width: 400px; transform: translateY(20px) scale(0.95); opacity: 0; transition: 0.3s; border: 1px solid var(--border-1); position: relative; }
-    .sheet-backdrop.show .sheet { transform: translateY(0) scale(1); opacity: 1; }
+    
+    /* ============================================================ */
+    /* BOTTOM SHEET (FORZADO AL CENTRO)                             */
+    /* ============================================================ */
+    .sheet-backdrop { 
+      position: fixed !important; 
+      inset: 0 !important; 
+      width: 100vw !important; 
+      height: 100vh !important;
+      background: rgba(0,0,0,0.7) !important; 
+      backdrop-filter: blur(8px) !important; 
+      z-index: 999999 !important; 
+      opacity: 0; 
+      pointer-events: none; 
+      display: flex !important; 
+      align-items: center !important; 
+      justify-content: center !important; 
+    }
+    .sheet-backdrop.show { opacity: 1 !important; pointer-events: auto !important; }
+    
+    .sheet { 
+      background: var(--bg-elev-1) !important; 
+      border-radius: 24px !important; 
+      padding: 24px !important; 
+      width: 90% !important; 
+      max-width: 400px !important; 
+      transform: translateY(20px) scale(0.95) !important; 
+      opacity: 0; 
+      transition: 0.3s !important; 
+      border: 1px solid var(--border-1) !important; 
+      position: relative !important; 
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
+      max-height: 90vh !important;
+      overflow-y: auto !important;
+    }
+    .sheet-backdrop.show .sheet { transform: translateY(0) scale(1) !important; opacity: 1 !important; }
+    
     .btn-close-sheet { position: absolute; top: 20px; right: 20px; background: var(--bg-elev-2); border: none; color: var(--text-3); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .btn-sheet { width: 100%; padding: 16px; border-radius: 12px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
     .btn-sheet-primary { background: var(--brand-500); color: white; }
@@ -81,12 +113,9 @@
         </div>
       </div>
       <div class="header-actions" style="display: flex; gap: 4px;">
-        
-        <!-- 🔥 BOTÓN REFRESCAR -->
         <button class="icon-btn" id="btnRefresh" title="Actualizar" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
           <i class="fas fa-rotate" id="iconRefresh" style="color: var(--brand-500); font-size: 16px;"></i>
         </button>
-
         <button class="icon-btn" id="preciosBtn" title="Buscar precio" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
           <img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
         </button>
@@ -121,7 +150,6 @@
 
       <div class="cards-list" id="listaOrdenes">
         <div class="skeleton-card"><div class="skeleton-line" style="width: 40%; height: 18px;"></div><div class="skeleton-line" style="width: 70%;"></div><div class="skeleton-line" style="width: 30%;"></div></div>
-        <div class="skeleton-card"><div class="skeleton-line" style="width: 40%; height: 18px;"></div><div class="skeleton-line" style="width: 70%;"></div><div class="skeleton-line" style="width: 30%;"></div></div>
       </div>
 
       <button id="btnCargarMas" class="btn-load-more" style="display: none;"><i class="fas fa-chevron-down"></i> Cargar más recibos</button>
@@ -132,6 +160,7 @@
     </button>
   </div>
 
+  <!-- BOTTOM SHEET (FUERA DEL APP-CONTAINER) -->
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
       <button class="btn-close-sheet" id="btnCloseSheet"><i class="fas fa-times"></i></button>
@@ -152,7 +181,7 @@
     let busquedaActual = '';
     let unsubscribe = null;
     
-    const LIMITE_POR_PAGINA = 10; // 🔥 Límite bajo para velocidad
+    const LIMITE_POR_PAGINA = 10;
     let ultimoDocumento = null;
     let hayMasRecibos = true;
 
@@ -160,7 +189,6 @@
     const sheetContent = document.getElementById('sheetContent');
     const btnCargarMas = document.getElementById('btnCargarMas');
 
-    // La sesión es instantánea (localStorage)
     requireAuth((s) => {
       sesion = s;
       iniciarApp();
@@ -201,79 +229,52 @@
       reciboSheet?.addEventListener('click', (e) => { if (e.target === reciboSheet) cerrarSheet(); });
       btnCargarMas?.addEventListener('click', cargarMasOrdenes);
 
-      // 🔥 EVENTO DEL BOTÓN REFRESCAR
       document.getElementById('btnRefresh')?.addEventListener('click', () => {
         haptic(15);
         const icon = document.getElementById('iconRefresh');
-        icon.style.animation = 'spin 0.8s linear infinite'; // Gira mientras carga
-        
-        // Forzamos una nueva conexión
+        icon.style.animation = 'spin 0.8s linear infinite';
         if (unsubscribe) unsubscribe();
         cargarOrdenes();
-        
-        // Detener animación después de 1.5s
-        setTimeout(() => { 
-          icon.style.animation = 'none'; 
-          toast('Lista actualizada', 'success', 1500);
-        }, 1500);
+        setTimeout(() => { icon.style.animation = 'none'; toast('Lista actualizada', 'success', 1500); }, 1500);
       });
     }
 
     function cargarOrdenes() {
       if (unsubscribe) unsubscribe();
 
-      const q = query(
-        collection(db, 'recibos'), 
-        orderBy('fecha', 'desc'), 
-        limit(LIMITE_POR_PAGINA)
-      );
+      const q = query(collection(db, 'recibos'), orderBy('fecha', 'desc'), limit(LIMITE_POR_PAGINA));
 
-      // 🔥 includeMetadataChanges hace la magia del caché
-      unsubscribe = onSnapshot(q, 
-        { includeMetadataChanges: true },
-        (snapshot) => {
-          const source = snapshot.metadata.fromCache ? '💾 Caché (Rápido)' : '☁️ Servidor (Lento)';
-          console.log(`📡 Recibos cargados desde: ${source}`);
-          
-          ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
-          
-          if (snapshot.docs.length > 0) {
-            ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
-          }
+      unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
+        const source = snapshot.metadata.fromCache ? '💾 Caché' : '☁️ Servidor';
+        console.log(`📡 ${snapshot.docs.length} recibos desde: ${source}`);
+        
+        ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
+        
+        if (snapshot.docs.length > 0) ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
 
-          renderizarOrdenes();
-          actualizarStats();
-        }, 
-        (error) => {
-          console.error('❌ Error cargando órdenes:', error);
-          document.getElementById('listaOrdenes').innerHTML = `
-            <div class="empty-state">
-              <i class="fas fa-exclamation-triangle" style="color: #EF4444;"></i>
-              <h3>Error al cargar</h3>
-              <p>${error.message}</p>
-              <button onclick="location.reload()" style="margin-top:12px; padding:10px 20px; border-radius:10px; background:var(--brand-500); color:white; border:none; font-weight:bold;">Reintentar</button>
-            </div>`;
-        }
-      );
+        renderizarOrdenes();
+        actualizarStats();
+      }, (error) => {
+        console.error('❌ Error cargando órdenes:', error);
+        document.getElementById('listaOrdenes').innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-exclamation-triangle" style="color: #EF4444;"></i>
+            <h3>Error al cargar</h3>
+            <p>${error.message}</p>
+          </div>`;
+      });
     }
 
     async function cargarMasOrdenes() {
       if (!ultimoDocumento) return;
-
       haptic(10);
       const textoOriginal = btnCargarMas.innerHTML;
       btnCargarMas.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
       btnCargarMas.disabled = true;
 
       try {
-        const q = query(
-          collection(db, 'recibos'), 
-          orderBy('fecha', 'desc'), 
-          startAfter(ultimoDocumento),
-          limit(LIMITE_POR_PAGINA)
-        );
-
+        const q = query(collection(db, 'recibos'), orderBy('fecha', 'desc'), startAfter(ultimoDocumento), limit(LIMITE_POR_PAGINA));
         const snapshot = await getDocs(q);
         const nuevosRecibos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         
@@ -283,7 +284,6 @@
 
         renderizarOrdenes();
         actualizarStats();
-
       } catch (error) {
         console.error('Error cargando más:', error);
         toast('No se pudieron cargar más recibos', 'error');
@@ -425,12 +425,9 @@
         try {
           await updateDoc(doc(db, 'recibos', id), { estadoOrden: nuevoEstado });
           toast('Estado actualizado', 'success');
-          
-          // Actualización local instantánea
-          orden.estadoOrden = nuevoEstado; 
-          renderizarOrdenes(); 
+          orden.estadoOrden = nuevoEstado;
+          renderizarOrdenes();
           actualizarStats();
-          
           cerrarSheet();
         } catch (err) { console.error(err); toast('Error al actualizar', 'error'); }
       });
@@ -460,6 +457,5 @@
       if (reciboSheet) reciboSheet.classList.remove('show');
     }
   </script>
-
 </body>
 </html>
