@@ -7,7 +7,6 @@
   <meta name="mobile-web-app-capable" content="yes">
   <title>DR. Xiaomi · Panel</title>
 
-  <!-- Favicons -->
   <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32x32.png">
   <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
   <link rel="icon" type="image/x-icon" href="/imagenes/favicon.ico">
@@ -22,7 +21,6 @@
   <link rel="stylesheet" href="/css/app-components.css">
   <link rel="stylesheet" href="/css/app-layouts.css">
 
-  <!-- PWA -->
   <link rel="manifest" href="/app/manifest.json">
   <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
 
@@ -35,7 +33,6 @@
       --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 4px 12px rgba(0,0,0,0.08); --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
     }
 
-    /* Header (Logo y botones) */
     .brand-logo-limpio {
       width: 44px; height: 44px; border-radius: 50%; overflow: hidden;
       display: flex; align-items: center; justify-content: center;
@@ -53,7 +50,7 @@
     .icon-btn:active .icon-img { transform: scale(0.9); }
 
     /* ============================================================ */
-    /* TARJETAS DE ESTADÍSTICAS                                     */
+    /* ESTADÍSTICAS                                                 */
     /* ============================================================ */
     .stats-grid {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px;
@@ -71,7 +68,29 @@
     .stat-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* ============================================================ */
-    /* TARJETAS DE RECIBOS (DISEÑO MINIMALISTA)                     */
+    /* SKELETON Y BOTÓN CARGAR MÁS                                  */
+    /* ============================================================ */
+    .skeleton-card {
+      background: var(--bg-elev-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px;
+      border: 1px solid var(--border-1); animation: pulse 1.5s infinite ease-in-out;
+    }
+    .skeleton-line { height: 12px; background: var(--bg-elev-2); border-radius: 6px; margin-bottom: 8px; }
+    .skeleton-line.title { width: 40%; height: 18px; margin-bottom: 12px; }
+    .skeleton-line.sub { width: 70%; }
+    .skeleton-line.short { width: 30%; }
+    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+    .btn-load-more {
+      width: 100%; padding: 16px; border-radius: var(--radius-md); background: var(--bg-elev-2);
+      color: var(--text-1); border: 1px solid var(--border-2); font-weight: 700; font-size: 14px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      cursor: pointer; margin-top: 10px; margin-bottom: 20px; transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-load-more:active { background: var(--border-2); transform: scale(0.98); }
+
+    /* ============================================================ */
+    /* TARJETAS DE RECIBOS                                          */
     /* ============================================================ */
     .orden-card {
       position: relative; transition: all 0.2s ease; cursor: pointer;
@@ -81,7 +100,6 @@
     }
     .orden-card:active { transform: scale(0.98); background: var(--bg-elev-2) !important; }
     
-    /* Chip de estado minimalista */
     .chip-estado {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 6px 12px; border-radius: 20px; font-size: 11px;
@@ -94,13 +112,11 @@
     .chip-estado[data-estado="entregado"] { background: rgba(34, 197, 94, 0.15); color: #22C55E; }
     .chip-estado[data-estado="devuelto"] { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
     
-    /* Para el modo claro (si lo usas) */
     [data-theme="light"] .chip-estado[data-estado="recibido"] { background: rgba(0,0,0,0.05); }
-
     .metodo-pago { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 6px; color: #22C55E; }
 
     /* ============================================================ */
-    /* BOTTOM SHEET (CENTRADO Y FLOTANTE)                           */
+    /* BOTTOM SHEET                                                 */
     /* ============================================================ */
     .sheet-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.6);
@@ -126,8 +142,6 @@
       display: flex; align-items: center; justify-content: center; cursor: pointer;
       transition: 0.2s;
     }
-    .btn-close-sheet:hover { background: var(--border-2); color: var(--text-1); }
-    
     .btn-sheet {
       width: 100%; padding: 16px; border-radius: 12px; font-size: 14px; font-weight: 700;
       border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -139,7 +153,6 @@
     .btn-sheet-danger { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
     .btn-sheet-edit { background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-2); }
     
-    /* Select Estilizado */
     .custom-select {
       width: 100%; padding: 14px; border-radius: 10px; 
       background-color: var(--bg-1) !important; color: var(--text-1) !important; 
@@ -154,20 +167,17 @@
 <body>
 
   <div class="app-container">
-
     <!-- HEADER -->
     <header class="app-header">
       <div class="brand">
         <div class="brand-logo-limpio">
-          <img src="/img/logo1.png" alt="DR. Xiaomi"
-               onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:20px;&quot;></i>';">
+          <img src="/img/logo1.png" alt="DR. Xiaomi" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:20px;&quot;></i>';">
         </div>
         <div class="brand-text">
           <h1 style="font-size: 18px; font-weight: 800; letter-spacing: -0.5px;">DR. XIAOMI</h1>
           <p id="userInfo" style="font-size: 12px; color: var(--text-3);">Cargando...</p>
         </div>
       </div>
-
       <div class="header-actions" style="display: flex; gap: 4px;">
         <button class="icon-btn" id="preciosBtn" title="Buscar precio" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
           <img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
@@ -183,21 +193,17 @@
 
     <!-- CONTENIDO -->
     <main class="app-content">
-
-      <!-- Stats -->
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-value" id="statActivas">—</div><div class="stat-label">Activas</div></div>
         <div class="stat-card"><div class="stat-value success" id="statListas">—</div><div class="stat-label">Listas</div></div>
         <div class="stat-card"><div class="stat-value brand" id="statHoy">—</div><div class="stat-label">Hoy</div></div>
       </div>
 
-      <!-- Buscador -->
       <div class="search-bar">
         <i class="fas fa-search"></i>
         <input type="search" id="buscador" placeholder="Buscar cliente o recibo..." autocomplete="off">
       </div>
 
-      <!-- Filtros -->
       <div class="filters-row" id="filtros">
         <button class="chip chip-interactive active" data-filtro="todos">Todas</button>
         <button class="chip chip-interactive" data-filtro="recibido">Recibidas</button>
@@ -209,9 +215,22 @@
 
       <!-- Lista -->
       <div class="cards-list" id="listaOrdenes">
-        <div class="empty-state"><div class="spinner" style="margin: 20px auto;"></div><p>Cargando órdenes...</p></div>
+        <div class="skeleton-card">
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line sub"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line sub"></div>
+          <div class="skeleton-line short"></div>
+        </div>
       </div>
 
+      <!-- BOTÓN CARGAR MÁS -->
+      <button id="btnCargarMas" class="btn-load-more" style="display: none;">
+        <i class="fas fa-chevron-down"></i> Cargar más recibos
+      </button>
     </main>
 
     <!-- FAB -->
@@ -234,7 +253,9 @@
     import { requireAuth, logout } from '/js/app-auth.js';
     import { toast, haptic, initTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
     import { db } from '/js/firebase.js';
-    import { collection, query, orderBy, onSnapshot, limit, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { 
+      collection, query, orderBy, onSnapshot, limit, doc, updateDoc, deleteDoc, startAfter, getDocs 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     initTheme();
     let sesion = null;
@@ -243,8 +264,14 @@
     let busquedaActual = '';
     let unsubscribe = null;
     
+    // Variables para paginación
+    const LIMITE_POR_PAGINA = 20;
+    let ultimoDocumento = null; // Guarda el último recibo para saber dónde seguir
+    let hayMasRecibos = true;   // Bandera para saber si mostrar el botón
+
     const reciboSheet = document.getElementById('reciboSheet');
     const sheetContent = document.getElementById('sheetContent');
+    const btnCargarMas = document.getElementById('btnCargarMas');
 
     requireAuth((s) => {
       sesion = s;
@@ -259,7 +286,6 @@
       }
       configurarEventos();
       cargarOrdenes();
-      toast(`Bienvenido, ${sesion.nombre}`, 'success', 2000);
     }
 
     function configurarEventos() {
@@ -285,23 +311,99 @@
 
       document.getElementById('btnCloseSheet')?.addEventListener('click', cerrarSheet);
       reciboSheet?.addEventListener('click', (e) => { if (e.target === reciboSheet) cerrarSheet(); });
+
+      btnCargarMas?.addEventListener('click', cargarMasOrdenes);
     }
 
+    // 🔥 1. CARGA INICIAL (Solo 20 recibos)
     function cargarOrdenes() {
-      const q = query(collection(db, 'recibos'), orderBy('fecha', 'desc'), limit(200));
-      unsubscribe = onSnapshot(q, (snapshot) => {
-        ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (unsubscribe) unsubscribe();
+
+      const q = query(
+        collection(db, 'recibos'), 
+        orderBy('fecha', 'desc'), 
+        limit(LIMITE_POR_PAGINA)
+      );
+
+      unsubscribe = onSnapshot(q, 
+        { includeMetadataChanges: true },
+        (snapshot) => {
+          const source = snapshot.metadata.fromCache ? '💾 Caché' : '☁️ Servidor';
+          console.log(`📡 Cargados ${snapshot.docs.length} recibos desde: ${source}`);
+          
+          ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          
+          // Si devolvió exactamente el límite, significa que probablemente haya más en la base de datos
+          hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
+          
+          // Guardamos el último documento de esta página
+          if (snapshot.docs.length > 0) {
+            ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
+          }
+
+          renderizarOrdenes();
+          actualizarStats();
+        }, 
+        (error) => {
+          console.error('❌ Error cargando órdenes:', error);
+          document.getElementById('listaOrdenes').innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-exclamation-triangle" style="color: #EF4444;"></i>
+              <h3>Error al cargar</h3>
+              <p>${error.message}</p>
+            </div>`;
+        }
+      );
+    }
+
+    // 🔥 2. CARGAR MÁS RECIBOS (Paginación)
+    async function cargarMasOrdenes() {
+      if (!ultimoDocumento) return;
+
+      haptic(10);
+      const textoOriginal = btnCargarMas.innerHTML;
+      btnCargarMas.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+      btnCargarMas.disabled = true;
+
+      try {
+        const q = query(
+          collection(db, 'recibos'), 
+          orderBy('fecha', 'desc'), 
+          startAfter(ultimoDocumento), // Empieza después del último que ya tenemos
+          limit(LIMITE_POR_PAGINA)
+        );
+
+        const snapshot = await getDocs(q);
+        
+        const nuevosRecibos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        
+        // Agregamos los nuevos al array global
+        ordenes = [...ordenes, ...nuevosRecibos];
+        
+        // Actualizamos el puntero al último documento
+        if (snapshot.docs.length > 0) {
+          ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
+        }
+        
+        // Verificamos si hay más
+        hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
+
         renderizarOrdenes();
         actualizarStats();
-      }, (error) => {
-        console.error('❌ Error cargando órdenes:', error);
-        document.getElementById('listaOrdenes').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Error</h3><p>${error.message}</p></div>`;
-      });
+
+      } catch (error) {
+        console.error('Error cargando más:', error);
+        toast('No se pudieron cargar más recibos', 'error');
+      } finally {
+        btnCargarMas.innerHTML = textoOriginal;
+        btnCargarMas.disabled = false;
+      }
     }
 
     function renderizarOrdenes() {
       const lista = document.getElementById('listaOrdenes');
       let filtradas = ordenes;
+      
       if (filtroActual !== 'todos') filtradas = filtradas.filter(o => (o.estadoOrden || 'recibido') === filtroActual);
       if (busquedaActual) {
         filtradas = filtradas.filter(o => {
@@ -309,11 +411,23 @@
           return texto.includes(busquedaActual);
         });
       }
+      
       if (filtradas.length === 0) {
         lista.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><h3>${busquedaActual ? 'Sin resultados' : 'No hay órdenes'}</h3><p>${busquedaActual ? 'Prueba otra búsqueda' : 'Crea el primer recibo tocando +'}</p></div>`;
+        btnCargarMas.style.display = 'none';
         return;
       }
+      
       lista.innerHTML = filtradas.map(o => renderCard(o)).join('');
+      
+      // Mostrar u ocultar el botón de "Cargar más"
+      // Solo lo mostramos si no estamos buscando y si la base de datos tiene más
+      if (hayMasRecibos && !busquedaActual && filtroActual === 'todos') {
+        btnCargarMas.style.display = 'flex';
+      } else {
+        btnCargarMas.style.display = 'none';
+      }
+
       lista.querySelectorAll('.orden-card').forEach(card => {
         card.addEventListener('click', () => { haptic(10); abrirSheet(card.dataset.id); });
       });
@@ -334,7 +448,9 @@
       const total = Number(o.total) || 0;
       const metodoPago = o.metodoPago ? o.metodoPago.replace(/\(.*\)/, '').trim() : '';
       let serviciosTexto = '';
-      if (Array.isArray(o.servicios) && o.servicios.length > 0) serviciosTexto = o.servicios.map(s => s.desc).filter(d => d && d.trim() !== '' && d.trim() !== 'Sin descripción').join(' · ');
+      if (Array.isArray(o.servicios) && o.servicios.length > 0) {
+        serviciosTexto = o.servicios.map(s => s.desc).filter(d => d && d.trim() !== '' && d.trim() !== 'Sin descripción').join(' · ');
+      }
 
       return `
         <div class="orden-card" data-id="${o.id}" data-estado="${estadoActual}">
@@ -368,10 +484,12 @@
     }
 
     function actualizarStats() {
+      // Las estadísticas se calculan solo con los recibos cargados actualmente en memoria
       const activas = ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
       const listas = ordenes.filter(o => o.estadoOrden === 'listo').length;
       const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
       const hoyCount = ordenes.filter(o => { if (!o.fecha) return false; const d = o.fecha.toDate ? o.fecha.toDate() : new Date(o.fecha); return d >= hoy; }).length;
+      
       document.getElementById('statActivas').textContent = activas;
       document.getElementById('statListas').textContent = listas;
       document.getElementById('statHoy').textContent = hoyCount;
@@ -422,6 +540,12 @@
         try {
           await updateDoc(doc(db, 'recibos', id), { estadoOrden: nuevoEstado });
           toast('Estado actualizado', 'success');
+          
+          // Actualizamos el objeto local para que no tenga que recargar toda la lista
+          orden.estadoOrden = nuevoEstado; 
+          renderizarOrdenes(); 
+          actualizarStats();
+          
           cerrarSheet();
         } catch (err) { console.error(err); toast('Error al actualizar', 'error'); }
       });
@@ -438,6 +562,10 @@
           try {
             await deleteDoc(doc(db, 'recibos', id));
             toast('Recibo eliminado', 'success');
+            // Lo quitamos del array local
+            ordenes = ordenes.filter(o => o.id !== id);
+            renderizarOrdenes();
+            actualizarStats();
             cerrarSheet();
           } catch (err) { toast('Error al eliminar', 'error'); }
         }
