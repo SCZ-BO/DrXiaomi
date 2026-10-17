@@ -52,7 +52,6 @@ const datos = {
   servicios: [], total: 0, adelanto: 0, saldo: 0
 };
 
-// Exportamos para que el PDF pueda usar estos datos si es necesario
 export {
   sesion, datos, CONFIG, generarNumeroRecibo, configurarWhatsApp,
   showLoading, hideLoading, toast, haptic, formatBs, escapeHtml,
@@ -83,7 +82,6 @@ function iniciar() {
   configurarAdelanto();
   configurarCharCounters();
   
-  // 🔥 Configuramos el botón de generar PDF con protección
   configurarBotonGenerarPDF();
 
   actualizarBotonesRemove();
@@ -665,7 +663,7 @@ function generarVistaPrevia() {
 }
 
 /* ============================================================
-   CONFIGURACIÓN DEL BOTÓN DE PDF (NUEVA VERSIÓN BLINDADA)
+   CONFIGURACIÓN DEL BOTÓN DE PDF
    ============================================================ */
 function configurarBotonGenerarPDF() {
   const btn = document.getElementById('btnGenerate');
