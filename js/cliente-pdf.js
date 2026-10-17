@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · PDF DEL RECIBO (DISEÑO PRO)
+   DR. XIAOMI · PDF DEL RECIBO (DISEÑO PRO BLINDADO)
    Archivo: js/cliente-pdf.js
    ============================================================ */
 
@@ -23,27 +23,46 @@ const COLOR = {
   verde: [34, 197, 94]
 };
 
+// Función auxiliar para cargar scripts de forma segura y esperar a que estén disponibles
+function cargarScript(url) {
+  return new Promise((resolve, reject) => {
+    // Si ya existe en el DOM, resolvemos
+    if (document.querySelector(`script[src="${url}"]`)) {
+      resolve();
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = url;
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error(`Error al descargar: ${url}`));
+    document.head.appendChild(s);
+  });
+}
+
 async function cargarLibreriasPDF() {
+  // 1. Cargar jsPDF
   if (!window.jspdf) {
-    await new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-      s.onload = resolve; s.onerror = () => reject(new Error('No JSPDF')); document.head.appendChild(s);
-    });
+    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    // Pequeña pausa para que el navegador procese el script
+    await new Promise(r => setTimeout(r, 100));
   }
-  if (!window.jspdf?.jsPDF?.API?.autoTable) {
-    await new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js';
-      s.onload = resolve; s.onerror = () => reject(new Error('No AutoTable')); document.head.appendChild(s);
-    });
+  
+  // Verificación estricta
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    throw new Error("jsPDF no se inicializó correctamente. Revisa tu conexión a internet.");
   }
+
+  // 2. Cargar AutoTable
+  if (!window.jspdf.jsPDF.API.autoTable) {
+    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js');
+    await new Promise(r => setTimeout(r, 100));
+  }
+
+  // 3. Cargar QRCode
   if (!window.QRCode) {
-    await new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-      s.onload = resolve; s.onerror = () => reject(new Error('No QRCode')); document.head.appendChild(s);
-    });
+    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
+    await new Promise(r => setTimeout(r, 100));
   }
 }
 
@@ -88,11 +107,16 @@ async function cargarLogoDataUrl() {
 
 export async function generarPDF() {
   const numeroRecibo = generarNumeroRecibo();
-  showLoading('Generando PDF PRO...'); haptic(20);
+  showLoading('Generando PDF...'); haptic(20);
+  
   try {
+    // 1. Cargar librerías de forma segura
     await cargarLibreriasPDF();
+    
+    // 2. Cargar Logo y QR
     const [logoDataUrl, qrDataUrl] = await Promise.all([cargarLogoDataUrl(), generarQRDataUrl(`${CONFIG.urlApp}/?recibo=${numeroRecibo}`)]);
 
+    // 3. Inicializar jsPDF (Ahora sí estamos 100% seguros de que existe)
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     const W = 210, H = 297, M = 15, CW = W - M * 2; let y = 0;
@@ -379,27 +403,12 @@ export async function generarPDF() {
 
     try {
       await addDoc(collection(db, 'recibos'), {
-        numeroRecibo, 
-        cliente: datos.nombre, 
-        telefono: datos.telefono, 
-        marca: datos.marca, 
-        modelo: datos.modelo, 
-        imei: datos.imei || null, 
-        enciende: datos.enciende, 
-        estadoEquipo: datos.estado || '-', 
-        falla: datos.falla || '-', 
-        tipoSeguridad: datos.tipoSeguridad, 
-        pin: datos.tipoSeguridad === 'pin' ? datos.pin : null, 
-        patron: datos.tipoSeguridad === 'patron' ? datos.patronSecuencia : null, 
-        servicios: datos.servicios, 
-        total: datos.total, 
-        adelanto: datos.adelanto, 
-        saldo: datos.saldo, 
-        fotos: datos.fotos.filter(f => f && f.dataUrl).map(f => f.dataUrl), 
-        estadoOrden: 'recibido', 
-        creadoPor: sesion.nombre, 
-        creadoPorRol: sesion.rol, 
-        fecha: serverTimestamp()
+        numeroRecibo, cliente: datos.nombre, telefono: datos.telefono, marca: datos.marca, modelo: datos.modelo, 
+        imei: datos.imei || null, enciende: datos.enciende, estadoEquipo: datos.estado || '-', falla: datos.falla || '-', 
+        tipoSeguridad: datos.tipoSeguridad, pin: datos.tipoSeguridad === 'pin' ? datos.pin : null, patron: datos.tipoSeguridad === 'patron' ? datos.patronSecuencia : null, 
+        servicios: datos.servicios, total: datos.total, adelanto: datos.adelanto, saldo: datos.saldo, 
+        fotos: datos.fotos.filter(f => f && f.dataUrl).map(f => f.dataUrl), estadoOrden: 'recibido', 
+        creadoPor: sesion.nombre, creadoPorRol: sesion.rol, fecha: serverTimestamp()
       });
     } catch (err) { toast('Recibo generado, pero no se guardó en la nube', 'warning'); }
 
