@@ -1,12 +1,12 @@
 /* ============================================================
-   DR. XIAOMI · CONFIGURACIÓN FIREBASE (ORIGINAL)
+   DR. XIAOMI · FIREBASE (CONEXIÓN DIRECTA)
    Archivo: js/firebase.js
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { initializeFirestore, memoryLocalCache } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+// ⚠️ NO importamos getAuth
 
 const firebaseConfig = {
   apiKey: "AIzaSyAZ_bLmFDWK_UTclkGeS0kShsKLGucTM4",
@@ -20,9 +20,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+// 🔥 CONEXIÓN DIRECTA A FIRESTORE (sin pasar por Auth)
+export const db = initializeFirestore(app, {
+  localCache: memoryLocalCache()
+});
+
 export const storage = getStorage(app);
 export { app };
 
-console.log('🔥 Firebase inicializado (Modo Original):', firebaseConfig.projectId);
+console.log('🔥 Firebase inicializado (Conexión Directa a Firestore):', firebaseConfig.projectId);
