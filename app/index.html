@@ -57,9 +57,7 @@
     
     .metodo-pago { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 6px; color: #22C55E; }
 
-    /* ============================================================ */
-    /* BOTTOM SHEET (CORREGIDO Y SUAVE)                             */
-    /* ============================================================ */
+    /* BOTTOM SHEET (CENTRADO Y BLINDADO) */
     .sheet-backdrop { 
       position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important;
       background: rgba(0,0,0,0.7) !important; backdrop-filter: blur(8px) !important; z-index: 999999 !important; 
@@ -220,22 +218,29 @@
         haptic(15);
         const icon = document.getElementById('iconRefresh');
         icon.style.animation = 'spin 0.8s linear infinite';
-        
-        // 🔥 CORREGIDO: No crea doble escucha
         if (unsubscribe) {
           unsubscribe();
           unsubscribe = null;
         }
         cargarOrdenes();
-        
-        setTimeout(() => { 
-          icon.style.animation = 'none'; 
-          toast('Lista actualizada', 'success', 1500); 
-        }, 1500);
+        setTimeout(() => { icon.style.animation = 'none'; toast('Lista actualizada', 'success', 1500); }, 1500);
       });
     }
 
     function cargarOrdenes() {
+      // ⏱️ TIMEOUT DE SEGURIDAD (4 segundos)
+      const timeoutId = setTimeout(() => {
+        if (ordenes.length === 0) {
+          document.getElementById('listaOrdenes').innerHTML = `
+            <div style="text-align:center; padding:20px; color:var(--text-3);">
+              <i class="fas fa-wifi" style="font-size:30px; color:#EF4444; margin-bottom:10px;"></i>
+              <p style="margin-bottom:10px;">Conexión lenta. Revisa tu internet.</p>
+              <button onclick="location.reload()" style="padding:10px 20px; border-radius:8px; background:var(--brand-500); color:white; border:none; font-weight:bold;">Reintentar</button>
+            </div>
+          `;
+        }
+      }, 4000);
+
       const q = query(
         collection(db, 'recibos'), 
         orderBy('fecha', 'desc'), 
@@ -243,6 +248,7 @@
       );
 
       unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
+        clearTimeout(timeoutId);
         const source = snapshot.metadata.fromCache ? '💾 Caché' : '☁️ Servidor';
         console.log(`📡 Recibos cargados desde: ${source}`);
         
@@ -256,6 +262,7 @@
         renderizarOrdenes();
         actualizarStats();
       }, (error) => {
+        clearTimeout(timeoutId);
         console.error('❌ Error cargando órdenes:', error);
         document.getElementById('listaOrdenes').innerHTML = `
           <div class="empty-state">
