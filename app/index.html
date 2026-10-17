@@ -28,90 +28,99 @@
 
   <style>
     /* ============================================================ */
-    /* ESTILOS ORIGINALES DE TU PANEL                               */
+    /* VARIABLES Y ESTILOS BASE                                     */
     /* ============================================================ */
+    :root {
+      --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px;
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 4px 12px rgba(0,0,0,0.08); --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    /* Header (Logo y botones) */
     .brand-logo-limpio {
-      width: 46px; height: 46px; border-radius: 50%; overflow: hidden;
+      width: 44px; height: 44px; border-radius: 50%; overflow: hidden;
       display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; background: transparent; box-shadow: 0 4px 12px rgba(255, 105, 0, 0.35);
+      flex-shrink: 0; background: var(--bg-elev-2); box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-1);
     }
     .brand-logo-limpio img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
 
     .icon-btn .icon-img {
-      width: 22px; height: 22px; object-fit: contain; display: block;
-      pointer-events: none; opacity: 0.85; transition: opacity 0.2s ease, transform 0.15s ease;
+      width: 20px; height: 20px; object-fit: contain; display: block;
+      pointer-events: none; opacity: 0.7; transition: opacity 0.2s ease, transform 0.15s ease;
     }
     .icon-btn .icon-img.blanco { filter: brightness(0) invert(1); }
     .icon-btn:hover .icon-img { opacity: 1; }
     .icon-btn:active .icon-img { transform: scale(0.9); }
 
-    .orden-card { position: relative; transition: all 0.2s ease; cursor: pointer; }
-    .orden-card:active { transform: scale(0.99); background: var(--bg-elev-2) !important; }
-    .orden-card:hover { background: var(--bg-elev-2); }
-
-    .orden-card .chip-estado {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 4px 10px; border-radius: 20px; font-size: 10px;
-      font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;
+    /* ============================================================ */
+    /* TARJETAS DE ESTADÍSTICAS                                     */
+    /* ============================================================ */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px;
     }
-    .orden-card .chip-estado[data-estado="recibido"] { background: #FFFFFF !important; color: #1a1a1a !important; border: 1px solid #E5E5E5 !important; }
-    .orden-card .chip-estado[data-estado="reparacion"] { background: #FF6900 !important; color: #FFFFFF !important; border: 1px solid #FF6900 !important; }
-    .orden-card .chip-estado[data-estado="espera-repuesto"] { background: #3B82F6 !important; color: #FFFFFF !important; border: 1px solid #3B82F6 !important; }
-    .orden-card .chip-estado[data-estado="listo"] { background: #FBBF24 !important; color: #1a1a1a !important; border: 1px solid #FBBF24 !important; }
-    .orden-card .chip-estado[data-estado="entregado"] { background: #22C55E !important; color: #FFFFFF !important; border: 1px solid #22C55E !important; }
-    .orden-card .chip-estado[data-estado="devuelto"] { background: #EF4444 !important; color: #FFFFFF !important; border: 1px solid #EF4444 !important; }
+    .stat-card {
+      background: var(--bg-elev-1); border: 1px solid var(--border-1);
+      border-radius: var(--radius-lg); padding: 16px 12px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      box-shadow: var(--shadow-sm); transition: transform 0.2s ease;
+    }
+    .stat-card:active { transform: scale(0.97); }
+    .stat-value { font-size: 24px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 4px; }
+    .stat-value.success { color: #22C55E; }
+    .stat-value.brand { color: var(--brand-500); }
+    .stat-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .orden-card[data-estado="recibido"] { border-left: 4px solid #FFFFFF !important; }
-    .orden-card[data-estado="reparacion"] { border-left: 4px solid #FF6900 !important; }
-    .orden-card[data-estado="espera-repuesto"] { border-left: 4px solid #3B82F6 !important; }
-    .orden-card[data-estado="listo"] { border-left: 4px solid #FBBF24 !important; }
-    .orden-card[data-estado="entregado"] { border-left: 4px solid #22C55E !important; }
-    .orden-card[data-estado="devuelto"] { border-left: 4px solid #EF4444 !important; }
+    /* ============================================================ */
+    /* TARJETAS DE RECIBOS (DISEÑO MINIMALISTA)                     */
+    /* ============================================================ */
+    .orden-card {
+      position: relative; transition: all 0.2s ease; cursor: pointer;
+      background: var(--bg-elev-1); border: 1px solid var(--border-1);
+      border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .orden-card:active { transform: scale(0.98); background: var(--bg-elev-2) !important; }
+    
+    /* Chip de estado minimalista */
+    .chip-estado {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 20px; font-size: 11px;
+      font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase;
+    }
+    .chip-estado[data-estado="recibido"] { background: rgba(255, 255, 255, 0.1); color: var(--text-1); }
+    .chip-estado[data-estado="reparacion"] { background: rgba(255, 105, 0, 0.15); color: var(--brand-500); }
+    .chip-estado[data-estado="espera-repuesto"] { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
+    .chip-estado[data-estado="listo"] { background: rgba(251, 191, 36, 0.15); color: #FBBF24; }
+    .chip-estado[data-estado="entregado"] { background: rgba(34, 197, 94, 0.15); color: #22C55E; }
+    .chip-estado[data-estado="devuelto"] { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
+    
+    /* Para el modo claro (si lo usas) */
+    [data-theme="light"] .chip-estado[data-estado="recibido"] { background: rgba(0,0,0,0.05); }
 
-    .metodo-pago { font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 4px; }
+    .metodo-pago { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 6px; color: #22C55E; }
 
     /* ============================================================ */
     /* BOTTOM SHEET (CENTRADO Y FLOTANTE)                           */
     /* ============================================================ */
     .sheet-backdrop {
-      position: fixed; inset: 0; 
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px); 
-      z-index: 99999; 
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.25s; 
-      
-      /* Esto asegura que cubra TODA la pantalla, sin importar el contenedor */
-      width: 100vw; height: 100vh;
-      top: 0; left: 0;
-
-      display: flex; 
-      align-items: center; /* Lo centra verticalmente */
-      justify-content: center; /* Lo centra horizontalmente */
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px); z-index: 99999; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease; display: flex; align-items: center; justify-content: center;
     }
     .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
     
     .sheet {
-      background: var(--bg-1); 
-      border-radius: 24px; /* Bordes redondos en todas las esquinas porque está flotando */
-      padding: 24px;
-      width: 90%; 
-      max-width: 400px; 
-      
-      transform: translateY(20px);
-      opacity: 0;
+      background: var(--bg-elev-1); border-radius: 24px; padding: 24px;
+      width: 90%; max-width: 400px;
+      transform: translateY(20px) scale(0.95); opacity: 0;
       transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1); 
-      border: 1px solid var(--border-1);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border: 1px solid var(--border-1); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
       position: relative;
     }
-    .sheet-backdrop.show .sheet { 
-      transform: translateY(0); 
-      opacity: 1;
-    }
+    .sheet-backdrop.show .sheet { transform: translateY(0) scale(1); opacity: 1; }
     
     .btn-close-sheet {
-      position: absolute; top: 16px; right: 16px; 
+      position: absolute; top: 20px; right: 20px; 
       background: var(--bg-elev-2); border: none; color: var(--text-3); 
       width: 32px; height: 32px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -120,14 +129,26 @@
     .btn-close-sheet:hover { background: var(--border-2); color: var(--text-1); }
     
     .btn-sheet {
-      width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700;
+      width: 100%; padding: 16px; border-radius: 12px; font-size: 14px; font-weight: 700;
       border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: all 0.2s; font-family: inherit; margin-bottom: 8px;
+      transition: all 0.2s; font-family: inherit; margin-bottom: 10px;
     }
-    .btn-sheet-primary { background: var(--brand-500); color: white; }
+    .btn-sheet:active { transform: scale(0.98); }
+    .btn-sheet-primary { background: var(--brand-500); color: white; box-shadow: 0 4px 12px rgba(255,105,0,0.3); }
     .btn-sheet-whatsapp { background: #25D366; color: white; }
     .btn-sheet-danger { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
     .btn-sheet-edit { background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-2); }
+    
+    /* Select Estilizado */
+    .custom-select {
+      width: 100%; padding: 14px; border-radius: 10px; 
+      background-color: var(--bg-1) !important; color: var(--text-1) !important; 
+      border: 1px solid var(--border-1); outline: none; font-family: inherit; font-weight: 600; font-size: 14px;
+      appearance: none; -webkit-appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg fill=\"%239CA3AF\" height=\"24\" viewBox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/><path d=\"M0 0h24v24H0z\" fill=\"none\"/></svg>');
+      background-repeat: no-repeat; background-position: right 10px center;
+    }
+    .custom-select option { background: var(--bg-1); color: var(--text-1); }
   </style>
 </head>
 <body>
@@ -139,26 +160,23 @@
       <div class="brand">
         <div class="brand-logo-limpio">
           <img src="/img/logo1.png" alt="DR. Xiaomi"
-               onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:22px; width:46px; height:46px; display:flex; align-items:center; justify-content:center;&quot;></i>';">
+               onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:20px;&quot;></i>';">
         </div>
         <div class="brand-text">
-          <h1>DR. XIAOMI</h1>
-          <p id="userInfo">Cargando...</p>
+          <h1 style="font-size: 18px; font-weight: 800; letter-spacing: -0.5px;">DR. XIAOMI</h1>
+          <p id="userInfo" style="font-size: 12px; color: var(--text-3);">Cargando...</p>
         </div>
       </div>
 
-      <div class="header-actions">
-        <button class="icon-btn" id="preciosBtn" title="Buscar precio" aria-label="Buscar precio">
-          <img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img blanco"
-               onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
+      <div class="header-actions" style="display: flex; gap: 4px;">
+        <button class="icon-btn" id="preciosBtn" title="Buscar precio" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
+          <img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
         </button>
-        <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;">
-          <img src="/imagenes/icon-reportes.png" alt="Reportes" class="icon-img blanco"
-               onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
+        <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none; width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
+          <img src="/imagenes/icon-reportes.png" alt="Reportes" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
         </button>
-        <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
-          <img src="/imagenes/icon-salir.png" alt="Salir" class="icon-img blanco"
-               onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
+        <button class="icon-btn" id="logoutBtn" title="Cerrar sesión" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
+          <img src="/imagenes/icon-salir.png" alt="Salir" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
         </button>
       </div>
     </header>
@@ -167,7 +185,7 @@
     <main class="app-content">
 
       <!-- Stats -->
-      <div class="stats-grid" style="margin-bottom: 20px;">
+      <div class="stats-grid">
         <div class="stat-card"><div class="stat-value" id="statActivas">—</div><div class="stat-label">Activas</div></div>
         <div class="stat-card"><div class="stat-value success" id="statListas">—</div><div class="stat-label">Listas</div></div>
         <div class="stat-card"><div class="stat-value brand" id="statHoy">—</div><div class="stat-label">Hoy</div></div>
@@ -176,7 +194,7 @@
       <!-- Buscador -->
       <div class="search-bar">
         <i class="fas fa-search"></i>
-        <input type="search" id="buscador" placeholder="Buscar por cliente, teléfono o recibo..." autocomplete="off">
+        <input type="search" id="buscador" placeholder="Buscar cliente o recibo..." autocomplete="off">
       </div>
 
       <!-- Filtros -->
@@ -197,12 +215,12 @@
     </main>
 
     <!-- FAB -->
-    <button class="btn-fab" id="nuevoReciboBtn" title="Nuevo recibo">
+    <button class="btn-fab" id="nuevoReciboBtn" title="Nuevo recibo" style="position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px; border-radius: 50%; background: var(--brand-500); color: white; border: none; box-shadow: 0 4px 16px rgba(255,105,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 90; transition: transform 0.2s;">
       <i class="fas fa-plus"></i>
     </button>
   </div>
 
-  <!-- BOTTOM SHEET: ACCIONES DEL RECIBO (FUERA DEL APP-CONTAINER) -->
+  <!-- BOTTOM SHEET -->
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
       <button class="btn-close-sheet" id="btnCloseSheet"><i class="fas fa-times"></i></button>
@@ -304,14 +322,14 @@
     function renderCard(o) {
       const estadoActual = o.estadoOrden || 'recibido';
       const estadoInfo = {
-        recibido: { texto: 'RECIBIDO', emoji: '📦' },
-        reparacion: { texto: 'EN REPARACIÓN', emoji: '🔧' },
-        'espera-repuesto': { texto: 'ESPERANDO REPUESTO', emoji: '⏳' },
-        listo: { texto: 'LISTO PARA ENTREGAR', emoji: '✅' },
-        entregado: { texto: 'ENTREGADO', emoji: '🤝' },
-        devuelto: { texto: 'DEVUELTO', emoji: '↩️' },
-        cancelado: { texto: 'CANCELADO', emoji: '⛔' }
-      }[estadoActual] || { texto: estadoActual.toUpperCase(), emoji: '📋' };
+        recibido: { texto: 'Recibido', emoji: '📦' },
+        reparacion: { texto: 'En Reparación', emoji: '🔧' },
+        'espera-repuesto': { texto: 'Esperando Repuesto', emoji: '⏳' },
+        listo: { texto: 'Listo', emoji: '✅' },
+        entregado: { texto: 'Entregado', emoji: '🤝' },
+        devuelto: { texto: 'Devuelto', emoji: '↩️' },
+        cancelado: { texto: 'Cancelado', emoji: '⛔' }
+      }[estadoActual] || { texto: estadoActual, emoji: '📋' };
 
       const total = Number(o.total) || 0;
       const metodoPago = o.metodoPago ? o.metodoPago.replace(/\(.*\)/, '').trim() : '';
@@ -319,21 +337,21 @@
       if (Array.isArray(o.servicios) && o.servicios.length > 0) serviciosTexto = o.servicios.map(s => s.desc).filter(d => d && d.trim() !== '' && d.trim() !== 'Sin descripción').join(' · ');
 
       return `
-        <div class="card card-interactive orden-card" data-id="${o.id}" data-estado="${estadoActual}">
-          <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px; padding-left: 16px;">
+        <div class="orden-card" data-id="${o.id}" data-estado="${estadoActual}">
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
                 <span class="chip-estado" data-estado="${estadoActual}">${estadoInfo.emoji} ${estadoInfo.texto}</span>
-                <span style="font-size: 10px; color: var(--text-3); font-weight: 700; font-family: monospace;">${o.numeroRecibo || '—'}</span>
+                <span style="font-size: 11px; color: var(--text-3); font-weight: 600; font-family: monospace;">${o.numeroRecibo || '—'}</span>
               </div>
-              <div style="font-size: 17px; font-weight: 800; color: var(--text-1); margin-bottom: 6px; letter-spacing: -0.3px;">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
-              ${o.cliente ? `<div style="font-size: 12px; color: var(--text-2); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;"><span style="font-size: 13px;">👤</span><span>${escapeHtml(o.cliente)}</span></div>` : ''}
-              ${serviciosTexto ? `<div style="font-size: 11px; color: var(--text-3); margin-bottom: 4px; line-height: 1.4; display: flex; align-items: start; gap: 6px;"><span style="font-size: 12px; flex-shrink: 0;">🔧</span><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">${escapeHtml(serviciosTexto)}</span></div>` : ''}
-              <div style="font-size: 10px; color: var(--text-3); margin-top: 8px; display: flex; align-items: center; gap: 4px;"><i class="far fa-clock"></i> ${tiempoRelativo(o.fecha)}</div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--text-1); margin-bottom: 4px;">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
+              ${o.cliente ? `<div style="font-size: 13px; color: var(--text-2); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;"><span style="font-size: 14px;">👤</span><span>${escapeHtml(o.cliente)}</span></div>` : ''}
+              ${serviciosTexto ? `<div style="font-size: 12px; color: var(--text-3); margin-bottom: 4px; display: flex; align-items: start; gap: 6px;"><span style="font-size: 13px; flex-shrink: 0;">🔧</span><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">${escapeHtml(serviciosTexto)}</span></div>` : ''}
+              <div style="font-size: 11px; color: var(--text-3); margin-top: 10px; display: flex; align-items: center; gap: 4px;"><i class="far fa-clock"></i> ${tiempoRelativo(o.fecha)}</div>
             </div>
             <div style="text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: end; gap: 4px;">
-              <div style="font-size: 20px; font-weight: 900; color: var(--brand-500); letter-spacing: -0.5px;">${formatBs(total)}</div>
-              ${metodoPago ? `<div class="metodo-pago" style="color: #22C55E;">${getIconoMetodo(metodoPago)} ${escapeHtml(metodoPago)}</div>` : (estadoActual === 'entregado' ? `<div class="metodo-pago" style="color: #22C55E;">✓ Pagado</div>` : '')}
+              <div style="font-size: 18px; font-weight: 800; color: var(--brand-500);">${formatBs(total)}</div>
+              ${metodoPago ? `<div class="metodo-pago">${getIconoMetodo(metodoPago)} ${escapeHtml(metodoPago)}</div>` : (estadoActual === 'entregado' ? `<div class="metodo-pago">✓ Pagado</div>` : '')}
             </div>
           </div>
         </div>
@@ -364,20 +382,18 @@
       if (!orden) return;
 
       sheetContent.innerHTML = `
-        <div style="margin-bottom: 20px; padding-right: 30px;">
-          <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1); margin: 0 0 4px 0;">${escapeHtml(orden.numeroRecibo)}</h3>
-          <p style="font-size: 13px; color: var(--text-2); margin: 0;">${escapeHtml(orden.cliente)} · ${escapeHtml(orden.marca)} ${escapeHtml(orden.modelo)}</p>
+        <div style="margin-bottom: 24px; padding-right: 30px;">
+          <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1); margin: 0 0 6px 0; letter-spacing: -0.5px;">${escapeHtml(orden.numeroRecibo)}</h3>
+          <p style="font-size: 14px; color: var(--text-2); margin: 0; font-weight: 500;">${escapeHtml(orden.cliente)} · ${escapeHtml(orden.marca)} ${escapeHtml(orden.modelo)}</p>
         </div>
 
-        <!-- BOTÓN PARA EDITAR LA ORDEN COMPLETA -->
         <button class="btn-sheet btn-sheet-edit" id="btnEditarOrden">
-          <i class="fas fa-edit"></i> Editar / Ver Orden Completa
+          <i class="fas fa-edit"></i> Editar Orden Completa
         </button>
 
-        <!-- Cambiar Estado -->
-        <div style="background: var(--bg-elev-2); padding: 12px; border-radius: 12px; margin: 16px 0;">
-          <label style="font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px; display: block;">Cambiar Estado</label>
-          <select id="selectEstado" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-1); color: var(--text-1); border: 1px solid var(--border-1); outline: none; font-family: inherit; font-weight: 600;">
+        <div style="background: var(--bg-elev-2); padding: 16px; border-radius: var(--radius-md); margin: 20px 0;">
+          <label style="font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; margin-bottom: 10px; display: block; letter-spacing: 0.5px;">Cambiar Estado</label>
+          <select id="selectEstado" class="custom-select">
             <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
             <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
             <option value="espera-repuesto" ${orden.estadoOrden === 'espera-repuesto' ? 'selected' : ''}>⏳ Esperando repuesto</option>
@@ -387,7 +403,6 @@
           </select>
         </div>
 
-        <!-- Acciones -->
         <div style="display: flex; flex-direction: column;">
           <button class="btn-sheet btn-sheet-primary" id="btnActualizarEstado"><i class="fas fa-save"></i> Guardar Cambios</button>
           <button class="btn-sheet btn-sheet-whatsapp" id="btnWhatsApp"><i class="fab fa-whatsapp"></i> Reenviar por WhatsApp</button>
