@@ -12,7 +12,7 @@ initTheme();
 let sesion = null;
 let rangoActual = 'hoy';
 
-// Elementos del DOM (los IDs exactos de tu HTML)
+// Elementos del DOM (IDs exactos de tu HTML)
 const headerSubtitle = document.getElementById('headerSubtitle');
 const totalMontoEl = document.getElementById('totalMonto');
 const totalEntregasEl = document.getElementById('totalEntregas');
@@ -65,7 +65,7 @@ function configurarEventos() {
 }
 
 async function cargarReporte(rango, desdeFecha, hastaFecha) {
-  // Mostramos estado de carga en los campos
+  // Mostramos estado de carga
   totalMontoEl.textContent = '...';
   totalEntregasEl.textContent = 'Buscando...';
   listaMovimientos.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-3);">⏳ Cargando datos...</div>';
@@ -100,20 +100,22 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
     const opcionesFecha = { day: '2-digit', month: 'short' };
     headerSubtitle.textContent = `${inicio.toLocaleDateString('es-BO', opcionesFecha)} - ${fin.toLocaleDateString('es-BO', opcionesFecha)}`;
 
-    // 🔥 CONSULTA SENCILLA: Traemos los recibos sin where (para evitar índices)
+    // 🔥 CONSULTA: Traemos TODOS los recibos (sin filtros en la nube)
     const snapshot = await getDocs(collection(db, 'recibos'));
-    console.log(`📡 Recibos descargados: ${snapshot.size}`);
+    console.log(`📡 Recibos descargados de la nube: ${snapshot.size}`);
 
     const datos = [];
 
-    // Recorremos y filtramos manualmente en el celular
     snapshot.forEach(doc => {
       const d = doc.data();
       
-      // Solo procesamos los entregados
-      if (d.estadoOrden !== 'entregado') return;
+      // 🔥 VALIDACIÓN BLINDADA: Acepta 'entregado', 'Entregado', 'ENTREGADO'
+      const estado = (d.estadoOrden || '').toLowerCase().trim();
+      if (estado !== 'entregado') return;
 
-      // Fecha válida
+      console.log('📦 Procesando recibo entregado:', d.numeroRecibo);
+
+      // Fecha válida (respaldo: fechaEntrega o fecha de creación)
       let fechaValida = d.fechaEntrega || d.fecha;
       let fechaD = new Date();
       if (fechaValida) {
@@ -138,12 +140,12 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
 
     // Ordenar del más reciente al más antiguo
     datos.sort((a, b) => b.fechaReal - a.fechaReal);
-    console.log(`✅ Entregas encontradas en rango: ${datos.length}`);
+    console.log(`✅ Entregas filtradas en este rango: ${datos.length}`);
 
     renderizarReporte(datos);
 
   } catch (error) {
-    console.error('Error al cargar reporte:', error);
+    console.error('❌ Error al cargar reporte:', error);
     totalMontoEl.textContent = 'Bs. 0.00';
     totalEntregasEl.textContent = 'Error';
     listaMovimientos.innerHTML = `
@@ -236,7 +238,7 @@ function renderizarReporte(datos) {
   listaMovimientos.innerHTML = movimientosHtml;
 }
 
-// Exportar CSV
+// Exportar CSV (Compatible con Safari y Chrome)
 function exportarCSV(datos) {
   haptic(15);
   if (datos.length === 0) return toast('No hay datos para exportar', 'warning');
