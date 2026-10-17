@@ -1,11 +1,11 @@
 /* ============================================================
-   DR. XIAOMI · CONFIGURACIÓN FIREBASE (RESTAURADA)
+   DR. XIAOMI · CONFIGURACIÓN FIREBASE (ORIGINAL)
    Archivo: js/firebase.js
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { initializeFirestore, memoryLocalCache } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"; // 🔥 Volvemos a importar Auth
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -20,14 +20,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// 🔥 RESTAURAMOS los servicios que Firestore necesita para no bloquearse
-export const db = initializeFirestore(app, {
-  localCache: memoryLocalCache()
-});
-
-export const auth = getAuth(app); // 🔥 Esto es lo que faltaba
+export const db = getFirestore(app);
+export const auth = getAuth(app);
 export const storage = getStorage(app);
-
 export { app };
 
-console.log('🔥 Firebase inicializado correctamente:', firebaseConfig.projectId);
+console.log('🔥 Firebase inicializado (Modo Original):', firebaseConfig.projectId);
