@@ -1,18 +1,19 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (SIN ÍNDICES, FILTRA EN CELULAR)
+   DR. XIAOMI · REPORTES (CACHÉ + NUBE EN TIEMPO REAL)
    Archivo: app/reportes/reportes.js
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
 import { toast, haptic, initTheme, formatBs, escapeHtml } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, query, where, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 initTheme();
 let sesion = null;
 let rangoActual = 'hoy';
+let unsubscribe = null;
 
-// Elementos del DOM (IDs exactos de tu HTML)
+// Elementos del DOM
 const headerSubtitle = document.getElementById('headerSubtitle');
 const totalMontoEl = document.getElementById('totalMonto');
 const totalEntregasEl = document.getElementById('totalEntregas');
@@ -67,7 +68,12 @@ function configurarEventos() {
 }
 
 async function cargarReporte(rango, desdeFecha, hastaFecha) {
-  // Estado de carga
+  // Detenemos cualquier escucha anterior
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
+  }
+
   totalMontoEl.textContent = '...';
   totalEntregasEl.textContent = 'Buscando...';
   listaMovimientos.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-3);">⏳ Cargando datos...</div>';
@@ -76,7 +82,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
     let inicio = new Date();
     let fin = new Date();
 
-    // Calcular fechas
     if (rango === 'hoy') {
       inicio.setHours(0, 0, 0, 0);
       fin.setHours(23, 59, 59, 999);
@@ -102,61 +107,65 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
     const opcionesFecha = { day: '2-digit', month: 'short' };
     headerSubtitle.textContent = `${inicio.toLocaleDateString('es-BO', opcionesFecha)} - ${fin.toLocaleDateString('es-BO', opcionesFecha)}`;
 
-    // 🔥 CONSULTA SENCILLA: Traemos TODOS los recibos sin where (evita índices)
-    const snapshot = await getDocs(collection(db, 'recibos'));
-    console.log(`📡 Recibos descargados de la nube: ${snapshot.size}`);
+    // 🔥 CONSULTA OPTIMIZADA CON CACHÉ + TIEMPO REAL
+    const q = query(
+      collection(db, 'recibos'),
+      where('estadoOrden', '==', 'entregado'),
+      limit(500)
+    );
 
-    const datos = [];
+    unsubscribe = onSnapshot(q, 
+      { includeMetadataChanges: true },
+      (snapshot) => {
+        const source = snapshot.metadata.fromCache ? '💾 Caché' : '☁️ Servidor';
+        console.log(`📡 Reportes cargados desde: ${source} (${snapshot.size} entregados)`);
 
-    // Recorremos y filtramos manualmente en el celular
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      
-      // Filtro blindado (acepta mayúsculas y minúsculas)
-      const estado = (d.estadoOrden || '').toLowerCase().trim();
-      if (estado !== 'entregado') return;
+        const datos = [];
 
-      // Fecha válida (respaldo: fechaEntrega o fecha de creación)
-      let fechaValida = d.fechaEntrega || d.fecha;
-      let fechaD = new Date();
-      if (fechaValida) {
-        if (typeof fechaValida.toDate === 'function') fechaD = fechaValida.toDate();
-        else fechaD = new Date(fechaValida);
-      }
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          
+          let fechaValida = d.fechaEntrega || d.fecha;
+          let fechaD = new Date();
+          if (fechaValida) {
+            if (typeof fechaValida.toDate === 'function') fechaD = fechaValida.toDate();
+            else fechaD = new Date(fechaValida);
+          }
 
-      // Filtramos por el rango de fechas
-      if (fechaD >= inicio && fechaD <= fin) {
-        datos.push({
-          numeroRecibo: d.numeroRecibo,
-          cliente: d.cliente,
-          marca: d.marca,
-          modelo: d.modelo,
-          montoCobrado: Number(d.montoCobrado) || 0,
-          costoRepuesto: Number(d.costoRepuesto) || 0,
-          metodoPago: d.metodoPago || 'Efectivo',
-          fechaReal: fechaD
+          if (fechaD >= inicio && fechaD <= fin) {
+            datos.push({
+              numeroRecibo: d.numeroRecibo,
+              cliente: d.cliente,
+              marca: d.marca,
+              modelo: d.modelo,
+              montoCobrado: Number(d.montoCobrado) || 0,
+              costoRepuesto: Number(d.costoRepuesto) || 0,
+              metodoPago: d.metodoPago || 'Efectivo',
+              fechaReal: fechaD
+            });
+          }
         });
+
+        datos.sort((a, b) => b.fechaReal - a.fechaReal);
+        renderizarReporte(datos);
+      },
+      (error) => {
+        console.error('❌ Error al cargar reporte:', error);
+        totalMontoEl.textContent = 'Bs. 0.00';
+        totalEntregasEl.textContent = 'Error';
+        listaMovimientos.innerHTML = `
+          <div style="text-align:center; padding:20px; color:#EF4444;">
+            <i class="fas fa-exclamation-triangle" style="font-size:30px; margin-bottom:10px;"></i>
+            <h3>Error de conexión</h3>
+            <p style="font-size:12px;">${error.message}</p>
+            <button onclick="location.reload()" style="margin-top:10px; padding:10px 20px; border-radius:8px; background:var(--brand-500); color:white; border:none; font-weight:bold;">Reintentar</button>
+          </div>
+        `;
       }
-    });
-
-    // Ordenar del más reciente al más antiguo
-    datos.sort((a, b) => b.fechaReal - a.fechaReal);
-    console.log(`✅ Entregas encontradas en este rango: ${datos.length}`);
-
-    renderizarReporte(datos);
+    );
 
   } catch (error) {
-    console.error('❌ Error al cargar reporte:', error);
-    totalMontoEl.textContent = 'Bs. 0.00';
-    totalEntregasEl.textContent = 'Error';
-    listaMovimientos.innerHTML = `
-      <div style="text-align:center; padding:20px; color:#EF4444;">
-        <i class="fas fa-exclamation-triangle" style="font-size:30px; margin-bottom:10px;"></i>
-        <h3>Error de conexión</h3>
-        <p style="font-size:12px;">${error.message}</p>
-        <button onclick="location.reload()" style="margin-top:10px; padding:10px 20px; border-radius:8px; background:var(--brand-500); color:white; border:none; font-weight:bold;">Reintentar</button>
-      </div>
-    `;
+    console.error('❌ Error al configurar reporte:', error);
   }
 }
 
@@ -220,7 +229,6 @@ function renderizarReporte(datos) {
   const margen = totalMonto > 0 ? (totalGanancia / totalMonto) * 100 : 0;
   const promedio = totalMonto / datos.length;
 
-  // Inyectar en el HTML
   totalMontoEl.textContent = formatBs(totalMonto);
   totalEntregasEl.textContent = `${datos.length} entregas`;
   totalCostoEl.textContent = formatBs(totalCosto);
