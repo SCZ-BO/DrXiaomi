@@ -27,7 +27,7 @@
 
   <style>
     /* ============================================================ */
-    /* VARIABLES Y RESET                                            */
+    /* 1. VARIABLES Y RESET                                         */
     /* ============================================================ */
     :root {
       --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px;
@@ -44,18 +44,18 @@
       --text-main: #111827; --text-mute: #6B7280; --border: #E5E7EB;
     }
 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
       background-color: var(--bg-main); color: var(--text-main);
       font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased;
-      margin: 0; padding: 0;
       transition: background-color 0.3s, color 0.3s;
     }
 
-    /* Contenedor maestro centrado */
     .wizard-container {
       max-width: 600px;
       margin: 0 auto;
-      padding: 0 16px 100px 16px; /* Espacio extra abajo para el footer fijo */
+      padding: 0 16px 100px 16px;
     }
 
     .hidden-file-input {
@@ -63,7 +63,7 @@
     }
 
     /* ============================================================ */
-    /* HEADER                                                       */
+    /* 2. HEADER                                                    */
     /* ============================================================ */
     .app-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -92,7 +92,7 @@
     .icon-btn:active { transform: scale(0.95); }
 
     /* ============================================================ */
-    /* BARRA DE PROGRESO                                            */
+    /* 3. BARRA DE PROGRESO                                         */
     /* ============================================================ */
     .wizard-progress { padding: 16px 0; background: var(--bg-main); }
     .wizard-steps { display: flex; justify-content: space-between; margin-bottom: 12px; }
@@ -112,7 +112,7 @@
     .wizard-bar-fill { height: 100%; background: var(--brand); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
 
     /* ============================================================ */
-    /* CONTENIDO Y PANELES                                          */
+    /* 4. CONTENIDO Y PANELES                                       */
     /* ============================================================ */
     .panel-header h2 { font-size: 22px; font-weight: 800; margin: 0 0 4px 0; letter-spacing: -0.5px; }
     .panel-header p { font-size: 13px; color: var(--text-mute); margin: 0 0 20px 0; }
@@ -124,7 +124,7 @@
     }
 
     /* ============================================================ */
-    /* INPUTS Y FORMULARIOS PRO                                     */
+    /* 5. INPUTS Y FORMULARIOS PRO                                  */
     /* ============================================================ */
     .field { position: relative; margin-bottom: 16px; }
     .field input, .field textarea {
@@ -173,7 +173,7 @@
     [data-theme="dark"] .radio-option.active { background: rgba(255, 105, 0, 0.15); }
 
     /* ============================================================ */
-    /* FOTOS                                                        */
+    /* 6. FOTOS                                                     */
     /* ============================================================ */
     .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .foto-slot { aspect-ratio: 4/3; border-radius: var(--radius-md); border: 2px dashed var(--border); background: var(--bg-elev); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-mute); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
@@ -184,7 +184,7 @@
     .foto-remove { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; backdrop-filter: blur(4px); }
 
     /* ============================================================ */
-    /* SERVICIOS Y COSTOS                                           */
+    /* 7. SERVICIOS Y COSTOS                                        */
     /* ============================================================ */
     .servicio-item { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
     .servicio-item .dictado-wrap { flex: 1; margin-bottom: 0; }
@@ -200,7 +200,7 @@
     .resumen-saldo strong { color: var(--brand); font-size: 20px; }
 
     /* ============================================================ */
-    /* BOTTOM SHEET (FOTOS Y MODALES)                               */
+    /* 8. BOTTOM SHEET (FOTOS Y MODALES)                            */
     /* ============================================================ */
     .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.25s; display: flex; align-items: flex-end; justify-content: center; }
     .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
@@ -209,7 +209,7 @@
     .sheet-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
 
     /* ============================================================ */
-    /* FOOTER (CORREGIDO Y CENTRADO)                                */
+    /* 9. FOOTER (CORREGIDO Y CENTRADO)                             */
     /* ============================================================ */
     .wizard-footer {
       position: fixed; 
@@ -248,7 +248,7 @@
     #btnNext, #btnGenerate { flex: 1; }
 
     /* ============================================================ */
-    /* VISTA PREVIA (PASO 7)                                        */
+    /* 10. VISTA PREVIA (PASO 7)                                    */
     /* ============================================================ */
     .preview-recibo { background: white; color: #1a1a1a; border-radius: var(--radius-lg); padding: 20px; font-family: 'Inter', sans-serif; font-size: 12px; line-height: 1.5; box-shadow: var(--shadow-md); overflow: hidden; }
     .preview-header { background: linear-gradient(135deg, var(--brand), #FF8A3C); color: white; margin: -20px -20px 16px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
@@ -267,7 +267,7 @@
     .preview-fotos-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; }
 
     /* ============================================================ */
-    /* MODAL ÉXITO                                                  */
+    /* 11. MODAL ÉXITO                                              */
     /* ============================================================ */
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 10000; }
     .modal-backdrop.show { opacity: 1; pointer-events: auto; }
