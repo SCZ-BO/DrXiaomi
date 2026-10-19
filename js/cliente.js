@@ -1,18 +1,14 @@
 /* ============================================================
-   DR. XIAOMI · CLIENTE (Wizard de nuevo recibo)
+   DR. XIAOMI · CLIENTE (Wizard PRO)
    Archivo: js/cliente.js
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
-import {
-  toast, haptic, initTheme,
-  escapeHtml, formatBs, showLoading, hideLoading
-} from '/js/app-ui.js';
+import { toast, haptic, initTheme, escapeHtml, formatBs, showLoading, hideLoading } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
-import { collection, addDoc, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ⬇️ Importamos el generador de PDF unificado
+// Importamos el generador de PDF que ya tienes
 import { generarPDFUnificado } from '/js/cliente-pdf.js';
 
 /* ============================================================
@@ -23,17 +19,9 @@ const CONFIG = {
   eslogan: 'Servicio Técnico Especializado',
   direccion: 'Centro Comercial Cañoto #K1, Santa Cruz',
   telefono: '75959450',
-  horario: 'Lunes a Sábado 9:00 - 20:00',
   web: 'xiaomi.scz.red',
   urlApp: 'https://xiaomi.scz.red',
-  logoUrl: 'https://xiaomi.scz.red/img/logo1.png',
-  condiciones: [
-    'Conserve este recibo. Solo con él puede retirar su equipo.',
-    'La fecha de entrega está sujeta a disponibilidad de repuestos.',
-    'El retiro debe hacerse dentro de los 10 días posteriores al aviso.',
-    'Pasados 20 días sin retiro, el equipo se considera abandonado.',
-    'Garantía: 30 días en repuestos / 60 días en mano de obra.'
-  ]
+  logoUrl: 'https://xiaomi.scz.red/img/logo1.png'
 };
 
 /* ============================================================
@@ -45,8 +33,8 @@ const TOTAL_PASOS = 7;
 
 const datos = {
   nombre: '', telefono: '',
-  marca: '', modelo: '', imei: '', enciende: '',
-  estado: '', falla: '',
+  marca: '', modelo: '', color: '', imei: '', enciende: '',
+  accesorios: '', estado: '', falla: '', plazoEntrega: 'Hoy mismo',
   tipoSeguridad: 'patron', pin: '', patronSecuencia: '',
   fotos: [null, null, null, null],
   servicios: [], total: 0, adelanto: 0, saldo: 0
@@ -71,51 +59,116 @@ requireAuth((s) => {
 function iniciar() {
   const userInfo = document.getElementById('userInfo');
   if (userInfo) userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
+  
+  // 1. Intentar recuperar borrador antes de configurar todo
+  const hayBorrador = cargarBorrador();
 
+  // 2. Configurar todos los módulos
   configurarHeader();
   configurarWizard();
   configurarMarca();
   configurarRadioGroups();
+  configurarLogicaInteligente();
   configurarPattern();
   configurarFotos();
   configurarServicios();
-  configurarAdelanto();
-  configurarCharCounters();
-  
   configurarBotonGenerarPDF();
 
-  actualizarBotonesRemove();
+  // 3. Eventos para guardado automático
+  const content = document.getElementById('wizardContent');
+  if (content) {
+    content.addEventListener('input', guardarBorradorDebounce);
+    content.addEventListener('change', guardarBorradorDebounce);
+  }
+
+  // 4. Iniciar en el paso 1 si no hay borrador
+  if (!hayBorrador) irAPaso(1);
+  
   actualizarBarraProgreso();
   actualizarBotones();
-
-  console.log('✅ Wizard inicializado correctamente');
 }
 
 /* ============================================================
-   HEADER
+   PERSISTENCIA (BORRADOR ANTI-PÉRDIDA)
+   ============================================================ */
+let timerGuardado = null;
+
+function guardarBorrador() {
+  try {
+    localStorage.setItem('drxiaomi_borrador', JSON.stringify(datos));
+  } catch (e) {
+    console.warn('No se pudo guardar el borrador', e);
+  }
+}
+
+function guardarBorradorDebounce() {
+  clearTimeout(timerGuardado);
+  timerGuardado = setTimeout(guardarBorrador, 500);
+}
+
+function cargarBorrador() {
+  try {
+    const guardado = localStorage.getItem('drxiaomi_borrador');
+    if (!guardado) return false;
+    
+    const d = JSON.parse(guardado);
+    if (!d.nombre) return false; // Si no hay nombre, no hay borrador útil
+    
+    // Restauramos el estado
+    Object.assign(datos, d);
+    
+    // Rellenar inputs visuales
+    if (datos.nombre) document.getElementById('nombre').value = datos.nombre;
+    if (datos.telefono) document.getElementById('telefono').value = datos.telefono;
+    if (datos.modelo) document.getElementById('modelo').value = datos.modelo;
+    if (datos.imei) document.getElementById('imei').value = datos.imei;
+    if (datos.color) document.getElementById('color').value = datos.color;
+    if (datos.falla) document.getElementById('fallaDetalle').value = datos.falla;
+    
+    toast('Borrador recuperado', 'info', 2000);
+    irAPaso(2); // Lo mandamos al paso 2 para que continúe
+    return true;
+  } catch (e) {
+    console.error('Error al cargar borrador', e);
+    return false;
+  }
+}
+
+function limpiarBorrador() {
+  if (confirm('¿Borrar todo y empezar un recibo nuevo?')) {
+    localStorage.removeItem('drxiaomi_borrador');
+    window.location.reload();
+  }
+}
+
+/* ============================================================
+   HEADER Y WIZARD
    ============================================================ */
 function configurarHeader() {
   document.getElementById('backToPanelBtn')?.addEventListener('click', () => {
     haptic(10);
-    if (confirm('¿Salir? Los datos no guardados se perderán.')) window.location.href = '/app/';
+    if (confirm('¿Salir? Tu borrador se guardará automáticamente.')) window.location.href = '/app/';
   });
-  document.getElementById('homeBtn')?.addEventListener('click', () => {
+  
+  document.getElementById('clearDraftBtn')?.addEventListener('click', () => {
     haptic(15);
-    window.location.href = '/app/';
+    limpiarBorrador();
   });
-  document.getElementById('preciosBtn')?.addEventListener('click', () => {
-    haptic(15);
-    window.location.href = '/precio/';
-  });
+
   document.getElementById('logoutBtn')?.addEventListener('click', () => {
     haptic(20);
     if (confirm('¿Cerrar sesión?')) logout();
   });
+
+  // Toggle de tema
+  document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
+    const html = document.documentElement;
+    const nuevo = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', nuevo);
+    localStorage.setItem('theme', nuevo);
+  });
 }
 
-/* ============================================================
-   WIZARD
-   ============================================================ */
 function configurarWizard() {
   document.getElementById('btnPrev')?.addEventListener('click', irPasoAnterior);
   document.getElementById('btnNext')?.addEventListener('click', irPasoSiguiente);
@@ -136,10 +189,20 @@ function irAPaso(nuevoPaso) {
   haptic(10);
   pasoActual = nuevoPaso;
 
-  document.querySelectorAll('.wizard-panel').forEach(p => p.classList.add('hidden'));
-  const panelActual = document.querySelector(`[data-panel="${pasoActual}"]`);
-  if (panelActual) {
-    panelActual.classList.remove('hidden');
+  document.querySelectorAll('.wizard-panel').forEach(p => {
+    p.classList.add('hidden');
+    p.setAttribute('aria-hidden', 'true');
+  });
+  
+  const panel = document.querySelector(`[data-panel="${pasoActual}"]`);
+  if (panel) {
+    panel.classList.remove('hidden');
+    panel.setAttribute('aria-hidden', 'false');
+    
+    // Mover el foco al primer elemento interactivo
+    const primerInput = panel.querySelector('input:not([type="hidden"]), textarea, button:not(.btn)');
+    if (primerInput) primerInput.focus();
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -157,6 +220,9 @@ function actualizarBarraProgreso() {
   });
   const fill = document.getElementById('wizardBarFill');
   if (fill) fill.style.width = `${(pasoActual / TOTAL_PASOS) * 100}%`;
+  
+  const prog = document.getElementById('wizardProgress');
+  if (prog) prog.setAttribute('aria-valuenow', pasoActual);
 }
 
 function actualizarBotones() {
@@ -176,97 +242,65 @@ function actualizarBotones() {
 }
 
 /* ============================================================
-   VALIDACIÓN Y GUARDADO
+   VALIDACIONES Y GUARDADO DE PASOS
    ============================================================ */
 function validarPaso(paso) {
-  switch (paso) {
-    case 1: return validarCliente();
-    case 2: return validarEquipo();
-    case 4: return validarSeguridad();
-    case 6: return validarCostos();
-    default: return true;
+  if (paso === 1) {
+    if (!document.getElementById('nombre')?.value.trim()) { toast('Falta el nombre del cliente', 'error'); return false; }
+    if (document.getElementById('telefono')?.value.length < 7) { toast('El teléfono debe tener al menos 7 dígitos', 'error'); return false; }
   }
-}
-
-function validarCliente() {
-  const nombreEl = document.getElementById('nombre');
-  const telefonoEl = document.getElementById('telefono');
-  const nombre = nombreEl?.value.trim() || '';
-  const telefono = telefonoEl?.value.trim() || '';
-
-  if (!nombre) { toast('Ingresa el nombre del cliente', 'error'); nombreEl?.focus(); return false; }
-  if (!telefono || telefono.length < 7) { toast('Ingresa un teléfono válido', 'error'); telefonoEl?.focus(); return false; }
-  return true;
-}
-
-function validarEquipo() {
-  const marca = document.getElementById('marca')?.value || '';
-  const modelo = document.getElementById('modelo')?.value.trim() || '';
-  const enciende = document.getElementById('enciende')?.value || '';
-
-  if (!marca) { toast('Selecciona la marca', 'error'); return false; }
-  if (!modelo) { toast('Ingresa el modelo', 'error'); document.getElementById('modelo')?.focus(); return false; }
-  if (!enciende) { toast('Indica si el equipo enciende', 'error'); return false; }
-  return true;
-}
-
-function validarSeguridad() {
-  const tipo = document.getElementById('tipoSeguridad')?.value || 'patron';
-  if (tipo === 'pin') {
-    const pin = document.getElementById('pinInput')?.value.trim() || '';
-    if (!pin) { toast('Ingresa el PIN del equipo', 'error'); return false; }
+  if (paso === 2) {
+    if (!document.getElementById('marca')?.value) { toast('Selecciona una marca', 'error'); return false; }
+    if (!document.getElementById('modelo')?.value.trim()) { toast('Falta el modelo del equipo', 'error'); return false; }
+    if (!document.getElementById('enciende')?.value) { toast('Indica si el equipo enciende', 'error'); return false; }
   }
-  if (tipo === 'patron') {
-    const patron = document.getElementById('patronSecuencia')?.value || '';
-    if (!patron) { toast('Dibuja el patrón del equipo', 'error'); return false; }
+  if (paso === 3) {
+    if (!document.getElementById('fallaDetalle')?.value.trim()) { toast('Describe o selecciona la falla', 'error'); return false; }
   }
-  return true;
-}
-
-function validarCostos() {
-  const servicios = document.querySelectorAll('.servicio-item');
-  let hayValido = false;
-  servicios.forEach(item => {
-    const desc = item.querySelector('.servicio-desc')?.value.trim() || '';
-    const costo = parseFloat(item.querySelector('.servicio-costo')?.value) || 0;
-    if (desc && costo > 0) hayValido = true;
-  });
-  if (!hayValido) { toast('Agrega al menos un servicio con descripción y costo', 'error'); return false; }
+  if (paso === 4) {
+    const tipo = document.getElementById('tipoSeguridad')?.value;
+    if (tipo === 'patron' && !document.getElementById('patronSecuencia')?.value) { toast('Dibuja el patrón', 'error'); return false; }
+    if (tipo === 'pin' && !document.getElementById('pinInput')?.value.trim()) { toast('Ingresa el PIN', 'error'); return false; }
+  }
+  if (paso === 6) {
+    let hayServicio = false;
+    document.querySelectorAll('.servicio-item').forEach(item => {
+      if (item.querySelector('.servicio-desc').value && parseFloat(item.querySelector('.servicio-costo').value) > 0) hayServicio = true;
+    });
+    if (!hayServicio) { toast('Añade al menos un costo de reparación', 'error'); return false; }
+  }
   return true;
 }
 
 function guardarDatosPaso(paso) {
-  switch (paso) {
-    case 1:
-      datos.nombre = document.getElementById('nombre')?.value.trim() || '';
-      datos.telefono = document.getElementById('telefono')?.value.trim() || '';
-      break;
-    case 2:
-      datos.marca = document.getElementById('marca')?.value || '';
-      datos.modelo = document.getElementById('modelo')?.value.trim() || '';
-      datos.imei = document.getElementById('imei')?.value.trim() || '';
-      datos.enciende = document.getElementById('enciende')?.value || '';
-      break;
-    case 3:
-      datos.estado = document.getElementById('estado')?.value.trim() || '';
-      datos.falla = document.getElementById('falla')?.value.trim() || '';
-      break;
-    case 4:
-      datos.tipoSeguridad = document.getElementById('tipoSeguridad')?.value || 'patron';
-      datos.pin = document.getElementById('pinInput')?.value.trim() || '';
-      datos.patronSecuencia = document.getElementById('patronSecuencia')?.value || '';
-      break;
-    case 6:
-      recolectarServicios();
-      datos.total = parseFloat(document.getElementById('costoTotal')?.value) || 0;
-      datos.adelanto = parseFloat(document.getElementById('adelanto')?.value) || 0;
-      datos.saldo = Math.max(0, datos.total - datos.adelanto);
-      break;
+  if (paso === 1) {
+    datos.nombre = document.getElementById('nombre')?.value.trim() || '';
+    datos.telefono = document.getElementById('telefono')?.value.trim() || '';
+  }
+  if (paso === 2) {
+    datos.marca = document.getElementById('marca')?.value || '';
+    datos.modelo = document.getElementById('modelo')?.value.trim() || '';
+    datos.color = document.getElementById('color')?.value.trim() || '';
+    datos.imei = document.getElementById('imei')?.value.trim() || '';
+    datos.enciende = document.getElementById('enciende')?.value || '';
+    datos.accesorios = document.getElementById('accesorios')?.value || '';
+  }
+  if (paso === 3) {
+    datos.falla = document.getElementById('fallaDetalle')?.value.trim() || '';
+    datos.plazoEntrega = document.getElementById('plazoEntrega')?.value || 'Hoy mismo';
+  }
+  if (paso === 4) {
+    datos.tipoSeguridad = document.getElementById('tipoSeguridad')?.value || 'patron';
+    datos.pin = document.getElementById('pinInput')?.value.trim() || '';
+    datos.patronSecuencia = document.getElementById('patronSecuencia')?.value || '';
+  }
+  if (paso === 6) {
+    recolectarServicios();
   }
 }
 
 /* ============================================================
-   MARCA Y RADIOS
+   LÓGICA INTELIGENTE Y BOTONES RÁPIDOS
    ============================================================ */
 function configurarMarca() {
   const grid = document.getElementById('marcasGrid');
@@ -282,6 +316,7 @@ function configurarMarca() {
 }
 
 function configurarRadioGroups() {
+  // Si el equipo enciende o no (Lógica condicional)
   const enciendeGroup = document.getElementById('enciendeGroup');
   if (enciendeGroup) {
     enciendeGroup.addEventListener('click', (e) => {
@@ -291,9 +326,21 @@ function configurarRadioGroups() {
       enciendeGroup.querySelectorAll('.radio-option').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('enciende').value = btn.dataset.value;
+
+      // Mostrar el grupo de fallas correcto
+      const grupoApagado = document.getElementById('grupoApagado');
+      const grupoEncendido = document.getElementById('grupoEncendido');
+      if (btn.dataset.value === 'Sí') {
+        grupoApagado?.classList.add('hidden');
+        grupoEncendido?.classList.remove('hidden');
+      } else {
+        grupoEncendido?.classList.add('hidden');
+        grupoApagado?.classList.remove('hidden');
+      }
     });
   }
 
+  // Tipo de seguridad
   const tipoGroup = document.getElementById('tipoSeguridadGroup');
   if (tipoGroup) {
     tipoGroup.addEventListener('click', (e) => {
@@ -306,6 +353,51 @@ function configurarRadioGroups() {
       document.getElementById('tipoSeguridad').value = tipo;
       document.getElementById('pinContainer')?.classList.toggle('hidden', tipo !== 'pin');
       document.getElementById('patronContainer')?.classList.toggle('hidden', tipo !== 'patron');
+    });
+  }
+
+  // Accesorios
+  const accGroup = document.getElementById('accesoriosGroup');
+  if (accGroup) {
+    accGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip-btn');
+      if (!btn) return;
+      haptic(8);
+      btn.classList.toggle('active');
+      const val = Array.from(accGroup.querySelectorAll('.chip-btn.active')).map(b => b.dataset.value).join(', ');
+      document.getElementById('accesorios').value = val;
+    });
+  }
+}
+
+function configurarLogicaInteligente() {
+  // Guardar fallas de los botones en el textarea
+  const guardarFallaEnTexto = () => {
+    const activas = Array.from(document.querySelectorAll('#fallasApagadoGroup .chip-btn.active, #fallasEncendidoGroup .chip-btn.active')).map(b => b.dataset.value);
+    if (activas.length > 0) {
+      document.getElementById('fallaDetalle').value = activas.join(', ');
+    }
+  };
+
+  document.getElementById('fallasApagadoGroup')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip-btn');
+    if (btn) { haptic(8); btn.classList.toggle('active'); guardarFallaEnTexto(); }
+  });
+  document.getElementById('fallasEncendidoGroup')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip-btn');
+    if (btn) { haptic(8); btn.classList.toggle('active'); guardarFallaEnTexto(); }
+  });
+
+  // Plazo de entrega
+  const plazoGroup = document.getElementById('plazoGroup');
+  if (plazoGroup) {
+    plazoGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip-btn');
+      if (!btn) return;
+      haptic(8);
+      plazoGroup.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('plazoEntrega').value = btn.dataset.value;
     });
   }
 }
@@ -326,15 +418,9 @@ function configurarPattern() {
 
   const bgc = bgCanvas.getContext('2d');
   const lnc = lineCanvas.getContext('2d');
-  const size = 300, r = 22, margin = 30, cols = 3, rows = 3;
-  const sepX = (size - 2 * margin) / (cols - 1);
-  const sepY = (size - 2 * margin) / (rows - 1);
-
-  const pts = [];
-  let id = 1;
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) pts.push({ id: id++, x: margin + sepX * x, y: margin + sepY * y, sel: false });
-  }
+  const size = 300, r = 22, margin = 30;
+  const pts = []; let id = 1;
+  for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) pts.push({ id: id++, x: margin + 120 * x, y: margin + 120 * y, sel: false });
 
   let path = [], drawing = false;
 
@@ -342,25 +428,19 @@ function configurarPattern() {
     bgc.clearRect(0, 0, size, size);
     pts.forEach(p => {
       bgc.beginPath(); bgc.arc(p.x, p.y, r, 0, 2 * Math.PI);
-      bgc.fillStyle = p.sel ? '#FF6900' : 'transparent'; bgc.fill();
-      bgc.strokeStyle = p.sel ? '#FF6900' : '#4b5563'; bgc.lineWidth = 3; bgc.stroke();
+      bgc.fillStyle = p.sel ? '#E65100' : 'transparent'; bgc.fill();
+      bgc.strokeStyle = p.sel ? '#E65100' : '#555'; bgc.lineWidth = 3; bgc.stroke();
     });
   }
 
   function drawLines(current) {
     lnc.clearRect(0, 0, size, size);
     if (path.length === 0) return;
-    lnc.strokeStyle = '#FF6900'; lnc.lineWidth = 6; lnc.lineCap = 'round'; lnc.lineJoin = 'round';
+    lnc.strokeStyle = '#E65100'; lnc.lineWidth = 6; lnc.lineCap = 'round'; lnc.lineJoin = 'round';
     lnc.beginPath(); lnc.moveTo(path[0].x, path[0].y);
     path.forEach(p => lnc.lineTo(p.x, p.y));
     if (drawing && current) lnc.lineTo(current.x, current.y);
     lnc.stroke();
-    path.forEach((p, i) => {
-      lnc.beginPath(); lnc.arc(p.x, p.y, 10, 0, 2 * Math.PI);
-      lnc.fillStyle = '#FF6900'; lnc.fill();
-      lnc.fillStyle = 'white'; lnc.font = 'bold 11px Inter';
-      lnc.textAlign = 'center'; lnc.textBaseline = 'middle'; lnc.fillText(i + 1, p.x, p.y);
-    });
   }
 
   function getPos(e) {
@@ -371,40 +451,32 @@ function configurarPattern() {
 
   function hit(p) { return pts.find(pt => !pt.sel && Math.hypot(pt.x - p.x, pt.y - p.y) < r + 12); }
 
-  function start(e) {
-    e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false);
-    lnc.clearRect(0, 0, size, size); updateSequence(); drawBase();
-  }
-
-  function move(e) {
-    if (!drawing) return;
-    e.preventDefault(); const p = getPos(e); const h = hit(p);
-    if (h) { h.sel = true; path.push(h); haptic(5); drawBase(); }
-    drawLines(p);
-  }
-
-  function end() {
-    if (!drawing) return;
-    drawing = false; drawLines(); updateSequence();
-  }
-
-  function updateSequence() {
+  function updateSeq() {
     const seq = path.map(p => p.id).join(',');
     document.getElementById('patronSecuencia').value = seq;
     const display = document.getElementById('pattern-sequence');
-    if (display) {
-      display.textContent = seq ? 'Patrón: ' + path.map(p => p.id).join(' → ') : 'Sin patrón';
-      display.style.color = seq ? 'var(--brand-500)' : 'var(--text-3)';
-    }
+    if (display) display.textContent = seq ? path.map(p => p.id).join(' → ') : 'Sin patrón';
   }
 
-  lineCanvas.addEventListener('mousedown', start); lineCanvas.addEventListener('mousemove', move); lineCanvas.addEventListener('mouseup', end);
-  lineCanvas.addEventListener('mouseleave', end);
-  lineCanvas.addEventListener('touchstart', start, { passive: false }); lineCanvas.addEventListener('touchmove', move, { passive: false }); lineCanvas.addEventListener('touchend', end);
+  lineCanvas.addEventListener('mousedown', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); });
+  lineCanvas.addEventListener('mousemove', (e) => {
+    if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
+    if (h) { h.sel = true; path.push(h); haptic(5); drawBase(); }
+    drawLines(p);
+  });
+  lineCanvas.addEventListener('mouseup', () => { drawing = false; drawLines(); });
+  lineCanvas.addEventListener('mouseleave', () => { drawing = false; drawLines(); });
+
+  lineCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); }, { passive: false });
+  lineCanvas.addEventListener('touchmove', (e) => {
+    if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
+    if (h) { h.sel = true; path.push(h); haptic(5); drawBase(); }
+    drawLines(p);
+  }, { passive: false });
+  lineCanvas.addEventListener('touchend', () => { drawing = false; drawLines(); });
 
   document.getElementById('clearPattern')?.addEventListener('click', () => {
-    haptic(10); path = []; pts.forEach(p => p.sel = false); drawBase();
-    lnc.clearRect(0, 0, size, size); updateSequence();
+    haptic(10); path = []; pts.forEach(p => p.sel = false); drawBase(); lnc.clearRect(0, 0, size, size); updateSeq();
   });
 
   drawBase();
@@ -416,7 +488,6 @@ function configurarPattern() {
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
   const sheet = document.getElementById('fotoSheet');
-  
   if (!grid) return;
 
   let slotActual = null;
@@ -441,54 +512,39 @@ function configurarFotos() {
   const cerrarSheet = () => sheet?.classList.remove('show');
   document.getElementById('btnCancelarFoto')?.addEventListener('click', cerrarSheet);
 
-  // TRUCO: Creamos el input dinámicamente en el momento exacto del clic
-  const dispararCamara = (usarCamara) => {
+  const dispararInput = (usarCamara) => {
     const tempInput = document.createElement('input');
     tempInput.type = 'file';
     tempInput.accept = 'image/*';
     if (usarCamara) tempInput.capture = 'environment';
-
-    tempInput.style.position = 'absolute';
-    tempInput.style.top = '-9999px';
-    tempInput.style.opacity = '0';
+    tempInput.style.position = 'absolute'; tempInput.style.top = '-9999px';
 
     tempInput.addEventListener('change', async (event) => {
       const file = event.target.files[0];
       if (file && slotActual !== null) {
         haptic(10);
         try {
-          const dataUrl = await comprimirImagen(file, 1000, 0.75);
+          const dataUrl = await comprimirImagen(file);
           datos.fotos[slotActual] = { file, dataUrl };
-          renderSlots(); 
-          toast('Foto añadida', 'success', 1500);
-        } catch (err) { 
-          toast('Error al procesar la imagen', 'error'); 
-        }
+          renderSlots(); toast('Foto añadida', 'success', 1500); guardarBorradorDebounce();
+        } catch (err) { toast('Error al procesar imagen', 'error'); }
       }
       slotActual = null;
       document.body.removeChild(tempInput);
     });
-
     document.body.appendChild(tempInput);
     tempInput.click();
   };
 
-  document.getElementById('btnTomarFoto')?.addEventListener('click', () => {
-    cerrarSheet();
-    dispararCamara(true);
-  });
-
-  document.getElementById('btnSubirFoto')?.addEventListener('click', () => {
-    cerrarSheet();
-    dispararCamara(false);
-  });
+  document.getElementById('btnTomarFoto')?.addEventListener('click', () => { cerrarSheet(); dispararInput(true); });
+  document.getElementById('btnSubirFoto')?.addEventListener('click', () => { cerrarSheet(); dispararInput(false); });
 
   function renderSlots() {
     grid.querySelectorAll('.foto-slot').forEach((slot, i) => {
-      const foto = datos.fotos[i];
-      if (foto && foto.dataUrl) {
+      const f = datos.fotos[i];
+      if (f && f.dataUrl) {
         slot.classList.add('filled');
-        slot.innerHTML = `<img src="${foto.dataUrl}" alt="Foto ${i + 1}"><button type="button" class="foto-remove"><i class="fas fa-times"></i></button>`;
+        slot.innerHTML = `<img src="${f.dataUrl}" alt="Foto"><button type="button" class="foto-remove"><i class="fas fa-times"></i></button>`;
       } else {
         slot.classList.remove('filled');
         slot.innerHTML = `<i class="fas fa-camera"></i><span>Añadir</span>`;
@@ -498,19 +554,18 @@ function configurarFotos() {
   renderSlots();
 }
 
-async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
+async function comprimirImagen(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
-        let { width, height } = img;
-        if (width > height && width > maxSize) { height = (height * maxSize) / width; width = maxSize; }
-        else if (height > maxSize) { width = (width * maxSize) / height; height = maxSize; }
+        let w = img.width, h = img.height;
+        if (w > 1000) { h = h * 1000 / w; w = 1000; }
         const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
       };
       img.onerror = reject; img.src = e.target.result;
     };
@@ -524,6 +579,7 @@ async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
 function configurarServicios() {
   const list = document.getElementById('serviciosList');
   const btnAdd = document.getElementById('addServicio');
+  const preciosGroup = document.getElementById('preciosRapidosGroup');
   if (!list || !btnAdd) return;
 
   list.addEventListener('input', (e) => {
@@ -531,47 +587,61 @@ function configurarServicios() {
   });
 
   list.addEventListener('click', (e) => {
-    if (e.target.closest('.removeServicio')) eliminarServicio(e.target.closest('.servicio-item'));
+    if (e.target.closest('.removeServicio')) {
+      haptic(15);
+      const item = e.target.closest('.servicio-item');
+      if (list.querySelectorAll('.servicio-item').length > 1) {
+        item.remove(); calcularTotal();
+      }
+    }
   });
 
   btnAdd.addEventListener('click', () => {
     haptic(10);
-    const item = crearServicioItem();
+    const item = crearServicioItem('', '');
     list.appendChild(item);
-    actualizarBotonesRemove();
-    item.querySelector('.servicio-desc')?.focus();
+    item.querySelector('.servicio-desc').focus();
   });
 
-  calcularTotal();
+  if (preciosGroup) {
+    preciosGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip-btn');
+      if (!btn) return;
+      haptic(8);
+      const precio = btn.dataset.precio;
+      let llenado = false;
+      
+      document.querySelectorAll('.servicio-costo').forEach(input => {
+        if (!input.value && !llenado) {
+          input.value = precio;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          llenado = true;
+        }
+      });
+
+      if (!llenado) {
+        const item = crearServicioItem('Reparación extra', precio);
+        list.appendChild(item);
+        calcularTotal();
+      }
+    });
+  }
+
+  document.getElementById('adelanto')?.addEventListener('input', calcularTotal);
+  
+  // Iniciar con un servicio vacío si la lista está vacía
+  if (list.children.length === 0) list.appendChild(crearServicioItem('', ''));
 }
 
-function crearServicioItem() {
+function crearServicioItem(desc, costo) {
   const div = document.createElement('div');
   div.className = 'servicio-item';
   div.innerHTML = `
-    <div class="dictado-wrap">
-      <input type="text" class="servicio-desc" placeholder="Descripción del servicio" maxlength="100" data-dictado>
-    </div>
-    <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0" inputmode="decimal">
+    <input type="text" class="servicio-desc" placeholder="Servicio" value="${desc}">
+    <input type="number" class="servicio-costo" placeholder="Bs." value="${costo}" step="0.01" min="0">
     <button type="button" class="removeServicio"><i class="fas fa-times"></i></button>
   `;
-  if (window.__dictadoIniciar) setTimeout(() => window.__dictadoIniciar(), 50);
   return div;
-}
-
-function eliminarServicio(item) {
-  haptic(15);
-  const list = document.getElementById('serviciosList');
-  if (!list || list.querySelectorAll('.servicio-item').length <= 1) return;
-  item.remove(); calcularTotal(); actualizarBotonesRemove();
-}
-
-function actualizarBotonesRemove() {
-  const items = document.querySelectorAll('.servicio-item');
-  items.forEach(item => {
-    const btn = item.querySelector('.removeServicio');
-    if (btn) btn.style.display = items.length > 1 ? 'flex' : 'none';
-  });
 }
 
 function calcularTotal() {
@@ -579,11 +649,15 @@ function calcularTotal() {
   document.querySelectorAll('.servicio-costo').forEach(input => {
     total += parseFloat(input.value) || 0;
   });
-  const costoTotal = document.getElementById('costoTotal');
-  if (costoTotal) costoTotal.value = total.toFixed(2);
-  const display = document.getElementById('costoTotalDisplay');
-  if (display) display.textContent = formatBs(total);
-  actualizarSaldo();
+  
+  const adelanto = parseFloat(document.getElementById('adelanto')?.value) || 0;
+  const totalDisplay = document.getElementById('costoTotalDisplay');
+  const saldoDisplay = document.getElementById('saldoDisplay');
+  const costoTotalInput = document.getElementById('costoTotal');
+  
+  if (costoTotalInput) costoTotalInput.value = total.toFixed(2);
+  if (totalDisplay) totalDisplay.textContent = formatBs(total);
+  if (saldoDisplay) saldoDisplay.textContent = formatBs(Math.max(0, total - adelanto));
 }
 
 function recolectarServicios() {
@@ -591,125 +665,110 @@ function recolectarServicios() {
   document.querySelectorAll('.servicio-item').forEach(item => {
     const desc = item.querySelector('.servicio-desc')?.value.trim() || '';
     const costo = parseFloat(item.querySelector('.servicio-costo')?.value) || 0;
-    if (desc || costo > 0) datos.servicios.push({ desc: desc || 'Sin descripción', costo });
+    if (desc || costo > 0) {
+      datos.servicios.push({ desc: desc || 'Reparación', costo });
+    }
   });
+  datos.total = parseFloat(document.getElementById('costoTotal')?.value) || 0;
+  datos.adelanto = parseFloat(document.getElementById('adelanto')?.value) || 0;
+  datos.saldo = Math.max(0, datos.total - datos.adelanto);
 }
 
 /* ============================================================
-   ADELANTO Y SALDO
+   VISTA PREVIA (PASO 7)
    ============================================================ */
-function configurarAdelanto() {
-  document.getElementById('adelanto')?.addEventListener('input', actualizarSaldo);
-}
-
-function actualizarSaldo() {
-  const total = parseFloat(document.getElementById('costoTotal')?.value) || 0;
-  const adelanto = parseFloat(document.getElementById('adelanto')?.value) || 0;
-  const display = document.getElementById('saldoDisplay');
-  if (display) display.textContent = formatBs(Math.max(0, total - adelanto));
-}
-
-/* ============================================================
-   CHAR COUNTERS Y VISTA PREVIA
-   ============================================================ */
-function configurarCharCounters() {
-  document.querySelectorAll('.char-counter').forEach(counter => {
-    const input = document.getElementById(counter.dataset.for);
-    if (!input) return;
-    const max = input.maxLength;
-    const update = () => { counter.textContent = `${input.value.length}/${max}`; };
-    update(); input.addEventListener('input', update);
-  });
-}
-
 function generarVistaPrevia() {
   guardarDatosPaso(6);
   const cont = document.getElementById('previewContainer');
   if (!cont) return;
 
-  let patronTexto = (datos.tipoSeguridad === 'patron' && datos.patronSecuencia) ? datos.patronSecuencia.split(',').join('-') : '';
-  const serviciosHtml = datos.servicios.map(s => `<tr><td>${escapeHtml(s.desc)}</td><td class="costo">${formatBs(s.costo)}</td></tr>`).join('');
+  const serviciosHtml = datos.servicios.map(s => 
+    `<tr><td>${escapeHtml(s.desc)}</td><td style="text-align:right">${formatBs(s.costo)}</td></tr>`
+  ).join('');
+
   const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
-  const fotosHtml = fotosValidas.length > 0 ? `<div class="preview-section"><div class="preview-section-title">Fotos</div><div class="preview-fotos-grid">${fotosValidas.map(f => `<img src="${f.dataUrl}">`).join('')}</div></div>` : '';
+  const fotosHtml = fotosValidas.length > 0 
+    ? `<div class="preview-section" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">${fotosValidas.map(f => `<img src="${f.dataUrl}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">`).join('')}</div>` 
+    : '';
 
   cont.innerHTML = `
     <div class="preview-recibo">
       <div class="preview-header">
         <img src="${CONFIG.logoUrl}" onerror="this.style.display='none'">
-        <div class="preview-header-text"><h3>${CONFIG.nombreTienda}</h3><p>${CONFIG.eslogan}</p></div>
-        <div class="preview-header-recibo"><strong>RECIBO</strong> DE INGRESO</div>
-      </div>
-      <div class="preview-fecha">
-        <span>Fecha: <strong>${new Date().toLocaleString('es-BO')}</strong></span>
-        <span>Por: <strong>${escapeHtml(sesion.nombre)}</strong></span>
-      </div>
-      <div class="preview-section">
-        <div class="preview-section-title">Cliente</div>
-        <div class="preview-row"><span>Nombre:</span><span>${escapeHtml(datos.nombre)}</span></div>
-        <div class="preview-row"><span>Teléfono:</span><span>${escapeHtml(datos.telefono)}</span></div>
-      </div>
-      <div class="preview-section">
-        <div class="preview-section-title">Equipo</div>
-        <div class="preview-row"><span>Marca / Modelo:</span><span>${escapeHtml(datos.marca)} ${escapeHtml(datos.modelo)}</span></div>
-        ${datos.imei ? `<div class="preview-row"><span>IMEI:</span><span>${escapeHtml(datos.imei)}</span></div>` : ''}
-        <div class="preview-row"><span>Enciende:</span><span>${escapeHtml(datos.enciende)}</span></div>
-      </div>
-      <div class="preview-section">
-        <div class="preview-section-title">Servicios y costos</div>
-        <table class="preview-servicios-table">
-          <thead><tr><th>Descripción</th><th style="text-align:right;">Costo</th></tr></thead>
-          <tbody>${serviciosHtml}</tbody>
-        </table>
-        <div class="preview-totales">
-          <div class="total-row"><span>Total:</span><strong>${formatBs(datos.total)}</strong></div>
-          ${datos.adelanto > 0 ? `<div class="total-row"><span>Adelanto:</span><strong>${formatBs(datos.adelanto)}</strong></div>` : ''}
-          <div class="saldo-row"><span>SALDO A PAGAR:</span><span>${formatBs(datos.saldo)}</span></div>
+        <div>
+          <h3 style="margin:0;font-size:16px;">${CONFIG.nombreTienda}</h3>
+          <p style="margin:0;font-size:10px;">Recibo de Ingreso</p>
         </div>
       </div>
+      
+      <div class="preview-section">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>CLIENTE:</strong> <span>${escapeHtml(datos.nombre)}</span></div>
+        <div style="display:flex;justify-content:space-between;"><strong>TELÉFONO:</strong> <span>${escapeHtml(datos.telefono)}</span></div>
+      </div>
+
+      <div class="preview-section">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>EQUIPO:</strong> <span>${escapeHtml(datos.marca)} ${escapeHtml(datos.modelo)} (${escapeHtml(datos.color || 'N/A')})</span></div>
+        <div style="display:flex;justify-content:space-between;"><strong>ENTREGA:</strong> <span>${escapeHtml(datos.plazoEntrega)}</span></div>
+      </div>
+
+      <div class="preview-section">
+        <div><strong>FALLA:</strong> ${escapeHtml(datos.falla)}</div>
+        <div style="margin-top:4px;"><strong>ACCESORIOS:</strong> ${escapeHtml(datos.accesorios || 'Ninguno')}</div>
+      </div>
+
+      <table style="width:100%; font-size:11px; margin-top:10px; border-collapse:collapse;">
+        <thead><tr style="border-bottom:1px solid #ddd;"><th align="left" style="padding:6px 0;">Servicio</th><th align="right" style="padding:6px 0;">Costo</th></tr></thead>
+        <tbody>${serviciosHtml}</tbody>
+      </table>
+
+      <div class="preview-totales">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Total:</span><b>${formatBs(datos.total)}</b></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Adelanto:</span><b>${formatBs(datos.adelanto)}</b></div>
+        <div style="display:flex;justify-content:space-between;color:#E65100;font-size:14px;margin-top:8px;"><span>SALDO A PAGAR:</span><b>${formatBs(datos.saldo)}</b></div>
+      </div>
+
       ${fotosHtml}
     </div>
   `;
 }
 
 /* ============================================================
-   CONFIGURACIÓN DEL BOTÓN DE PDF
+   GENERACIÓN DE PDF Y WHATSAPP
    ============================================================ */
 function configurarBotonGenerarPDF() {
   const btn = document.getElementById('btnGenerate');
   if (!btn) return;
-
   let generando = false;
 
   btn.addEventListener('click', async () => {
     if (generando) return;
+    if (!validarPaso(6)) return;
+    
     generando = true;
-
-    if (!validarCostos()) {
-      generando = false;
-      return;
-    }
     guardarDatosPaso(6);
-
+    
     const textoOriginal = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
     btn.style.opacity = '0.7';
 
     try {
-      const numeroRecibo = generarNumeroRecibo();
-      
+      const num = generarNumeroRecibo();
       const paquete = {
-        numeroRecibo: numeroRecibo,
+        numeroRecibo: num,
         cliente: datos.nombre,
         telefono: datos.telefono,
         marca: datos.marca,
         modelo: datos.modelo,
+        color: datos.color,
         imei: datos.imei,
         enciende: datos.enciende,
-        estadoEquipo: datos.estado || '-',
-        falla: datos.falla || '-',
+        estadoEquipo: datos.estado,
+        falla: datos.falla,
+        plazoEntrega: datos.plazoEntrega,
+        accesorios: datos.accesorios,
         tipoSeguridad: datos.tipoSeguridad,
-        pin: datos.tipoSeguridad === 'pin' ? datos.pin : null,
-        patron: datos.tipoSeguridad === 'patron' ? datos.patronSecuencia : null,
+        pin: datos.pin,
+        patron: datos.patronSecuencia,
         servicios: datos.servicios,
         total: datos.total,
         adelanto: datos.adelanto,
@@ -720,31 +779,41 @@ function configurarBotonGenerarPDF() {
       const exito = await generarPDFUnificado(paquete, 'guardar_en_nube');
       
       if (exito) {
-        document.getElementById('successNumero').textContent = numeroRecibo;
-        document.getElementById('successModal')?.classList.add('show');
-        window._ultimoRecibo = paquete; 
+        localStorage.removeItem('drxiaomi_borrador'); // Limpiamos el borrador exitoso
+        document.getElementById('successNumero').textContent = num;
+        document.getElementById('successModal').classList.add('show');
+        window._ultimoRecibo = paquete;
         configurarWhatsApp();
       }
     } catch (error) {
       console.error("Error al generar:", error);
+      toast('Error al generar el PDF', 'error');
     } finally {
       generando = false;
       btn.innerHTML = textoOriginal;
       btn.style.opacity = '1';
     }
   });
+
+  document.getElementById('backToPanelBtn2')?.addEventListener('click', () => {
+    window.location.href = '/app/';
+  });
 }
 
-/* ============================================================
-   WHATSAPP Y UTILIDADES
-   ============================================================ */
 function configurarWhatsApp() {
   const btn = document.getElementById('sendWhatsappBtn');
   if (!btn) return;
-  const newBtn = btn.cloneNode(true); btn.parentNode.replaceChild(newBtn, btn);
+  
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  
   newBtn.addEventListener('click', () => {
-    const recibo = window._ultimoRecibo; if (!recibo) return; haptic(15);
+    const recibo = window._ultimoRecibo;
+    if (!recibo) return;
+    
+    haptic(15);
     const mensaje = `Hola ${recibo.cliente.split(' ')[0]},\n\nRecibo de ingreso generado.\n\nN Recibo: ${recibo.numeroRecibo}\nEquipo: ${recibo.marca} ${recibo.modelo}\nTotal: ${formatBs(recibo.total)}\n${recibo.saldo > 0 ? `Saldo pendiente: ${formatBs(recibo.saldo)}` : ''}\n\nConsulta el estado en: ${CONFIG.urlApp}/?recibo=${recibo.numeroRecibo}\n\n${CONFIG.nombreTienda}\nTel: ${CONFIG.telefono}`;
+    
     window.open(`https://wa.me/591${recibo.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`, '_blank');
   });
 }
