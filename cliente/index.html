@@ -20,36 +20,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
-    /* ============================================================ */
-    /* VARIABLES (TEMA PREMIUM MINIMALISTA)                         */
-    /* ============================================================ */
-    :root { 
-      --radius-sm: 6px; 
-      --radius-md: 10px; 
-      --radius-lg: 14px; 
-      --brand: #E65100; 
-      --brand-hover: #BF360C; 
-      --brand-light: rgba(230, 81, 0, 0.1); 
-    }
-    [data-theme="dark"] { 
-      --bg-main: #0E0E0E; 
-      --bg-card: #181818; 
-      --bg-elev: #242424; 
-      --text-main: #F5F5F5; 
-      --text-mute: #888888; 
-      --border: #2A2A2A; 
-    }
-    [data-theme="light"] { 
-      --bg-main: #F9F9F9; 
-      --bg-card: #FFFFFF; 
-      --bg-elev: #F0F0F0; 
-      --text-main: #111111; 
-      --text-mute: #666666; 
-      --border: #E0E0E0; 
-    }
+    /* VARIABLES */
+    :root { --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --brand: #E65100; --brand-hover: #BF360C; --brand-light: rgba(230, 81, 0, 0.1); }
+    [data-theme="dark"] { --bg-main: #0E0E0E; --bg-card: #181818; --bg-elev: #242424; --text-main: #F5F5F5; --text-mute: #888888; --border: #2A2A2A; }
+    [data-theme="light"] { --bg-main: #F9F9F9; --bg-card: #FFFFFF; --bg-elev: #F0F0F0; --text-main: #111111; --text-mute: #666666; --border: #E0E0E0; }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background-color: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+    body { background-color: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
     .wizard-container { max-width: 600px; margin: 0 auto; padding: 0 16px 100px 16px; }
 
     /* HEADER */
@@ -57,11 +34,10 @@
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand-logo { width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
-    .brand-text h1 { font-size: 15px; font-weight: 700; margin: 0; letter-spacing: -0.3px; }
+    .brand-text h1 { font-size: 15px; font-weight: 700; margin: 0; }
     .brand-text p { font-size: 12px; color: var(--text-mute); margin: 0; }
     .header-actions { display: flex; gap: 6px; }
-    .icon-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); background: transparent; border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-    .icon-btn:hover { background: var(--bg-elev); }
+    .icon-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); background: transparent; border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
     /* PROGRESO */
     .wizard-progress { padding: 24px 0; }
@@ -96,31 +72,31 @@
     .radio-option.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
     .radio-option i { font-size: 18px; }
 
-    /* CHIPS Y CHECKLIST */
+    /* CHIPS Y CHECKLIST (COMPACTADOS) */
     .chips-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
     .chip-btn { padding: 10px 16px; border-radius: var(--radius-sm); background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
     .chip-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
 
-    /* CHECKLIST SEMÁFORO */
-    .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    /* CHECKLIST SEMÁFORO (MÁS COMPACTO) */
+    .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .check-item { 
-      padding: 14px 8px; 
+      padding: 8px 4px; 
       background: var(--bg-elev); 
       border: 1px solid var(--border); 
       border-radius: var(--radius-sm); 
       color: var(--text-main); 
-      font-size: 12px; 
+      font-size: 11px; 
       font-weight: 500; 
       cursor: pointer; 
       display: flex; 
       flex-direction: column;
       align-items: center; 
       justify-content: center; 
-      gap: 6px; 
+      gap: 4px; 
       transition: all 0.2s; 
       text-align: center;
     }
-    .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 16px; }
+    .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 14px; }
     .check-item.ok { background: rgba(34, 197, 94, 0.1); border-color: #22C55E; color: #22C55E; }
     .check-item.ok::before { content: '✓'; color: #22C55E; }
     .check-item.falla { background: rgba(239, 68, 68, 0.1); border-color: #EF4444; color: #EF4444; }
@@ -128,12 +104,11 @@
 
     /* FOTOS */
     .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .foto-slot { aspect-ratio: 4/3; border-radius: var(--radius-sm); border: 1px dashed var(--border); background: var(--bg-elev); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text-mute); font-size: 13px; cursor: pointer; position: relative; overflow: hidden; transition: 0.2s; }
-    .foto-slot:hover { border-color: var(--brand); color: var(--brand); }
+    .foto-slot { aspect-ratio: 4/3; border-radius: var(--radius-sm); border: 1px dashed var(--border); background: var(--bg-elev); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text-mute); font-size: 13px; cursor: pointer; position: relative; overflow: hidden; }
     .foto-slot img { width: 100%; height: 100%; object-fit: cover; }
     .foto-remove { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: var(--radius-sm); background: rgba(0,0,0,0.7); color: white; border: none; display: flex; align-items: center; justify-content: center; }
 
-    /* SERVICIOS */
+    /* SERVICIOS Y COSTOS */
     .servicio-item { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
     .servicio-item input.servicio-desc { flex: 1; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); }
     .servicio-item input.servicio-costo { width: 90px; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--brand); font-weight: 700; text-align: right; }
@@ -159,11 +134,12 @@
     .modal { background: var(--bg-card); padding: 24px; border-radius: var(--radius-md); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
     .hidden { display: none !important; }
 
-    /* VISTA PREVIA */
-    .preview-recibo { background: white; color: #1a1a1a; border-radius: var(--radius-sm); padding: 24px; font-size: 12px; }
-    .preview-header { border-bottom: 2px solid var(--brand); margin: -24px -24px 20px; padding: 20px 24px; display: flex; align-items: center; gap: 12px; }
-    .preview-section { background: #f9fafb; border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px; border: 1px solid #eee; }
-    .preview-totales { border-top: 1px solid #ddd; margin-top: 12px; padding-top: 12px; }
+    /* VISTA PREVIA LIMPIA (PASO 7) */
+    .preview-recibo { background: white; color: #1a1a1a; border-radius: var(--radius-sm); padding: 20px; font-size: 12px; }
+    .preview-header { border-bottom: 2px solid var(--brand); margin: -20px -20px 16px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; background: #f9fafb;}
+    .preview-header img { width: 40px; height: 40px; object-fit: contain; }
+    .preview-section { background: #f9fafb; border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px; border: 1px solid #eee; }
+    .preview-totales { border-top: 1px solid #ddd; margin-top: 8px; padding-top: 8px; }
   </style>
 </head>
 <body>
@@ -232,24 +208,13 @@
         </div>
 
         <div class="card">
-          <label class="field-title">Modelo *</label>
-          <div class="chips-group" id="modelosRapidosGroup" style="margin-bottom: 12px;">
-            <button type="button" class="chip-btn" data-modelo="Redmi Note 12">Redmi Note 12</button>
-            <button type="button" class="chip-btn" data-modelo="Redmi Note 13">Redmi Note 13</button>
-            <button type="button" class="chip-btn" data-modelo="Poco X3">Poco X3</button>
-            <button type="button" class="chip-btn" data-modelo="Galaxy A14">Galaxy A14</button>
-            <button type="button" class="chip-btn" data-modelo="Galaxy A54">Galaxy A54</button>
-          </div>
-          <div class="field" style="margin-bottom: 0;">
+          <div class="field" style="margin-bottom: 16px;">
             <input type="text" id="modelo" placeholder=" " required>
-            <label for="modelo">O escribe el modelo aquí</label>
+            <label for="modelo">Modelo del equipo *</label>
           </div>
-        </div>
-
-        <div class="card">
           <div class="field" style="margin-bottom: 0;">
             <input type="text" id="color" placeholder=" ">
-            <label for="color">Color del equipo</label>
+            <label for="color">Color (opcional)</label>
           </div>
         </div>
 
@@ -289,14 +254,14 @@
 
         <div class="card">
           <label class="field-title">Auditoría del Equipo</label>
-          <p style="font-size: 12px; color: var(--text-mute); margin-bottom: 16px;">Toca cada punto: <b>OK</b> (Verde) → <b>Falla</b> (Rojo) → <b>Sin verificar</b>.</p>
+          <p style="font-size: 12px; color: var(--text-mute); margin-bottom: 12px;">Toca cada punto: <b>OK</b> → <b>Falla</b> → <b>Sin verificar</b>.</p>
           
           <div class="checklist-grid" id="checklistGroup">
             <button type="button" class="check-item" data-item="Enciende"><span>Enciende</span></button>
             <button type="button" class="check-item" data-item="Pantalla / táctil"><span>Pantalla / táctil</span></button>
             <button type="button" class="check-item" data-item="Cámaras"><span>Cámaras</span></button>
             <button type="button" class="check-item" data-item="Carga"><span>Carga</span></button>
-            <button type="button" class="check-item" data-item="Audio y micrófono"><span>Audio y micrófono</span></button>
+            <button type="button" class="check-item" data-item="Audio y micrófono"><span>Audio / mic</span></button>
             <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
             <button type="button" class="check-item" data-item="Wi-Fi / señal"><span>Wi-Fi / señal</span></button>
             <button type="button" class="check-item" data-item="Tapa trasera"><span>Tapa trasera</span></button>
@@ -358,12 +323,12 @@
         </div>
       </section>
 
-      <!-- PASO 6: COSTOS -->
+      <!-- PASO 6: COSTOS (CON DESCRIPCIÓN) -->
       <section class="wizard-panel hidden" data-panel="6" aria-hidden="true">
-        <div class="panel-header"><h2>Costos</h2><p>Asigna los precios</p></div>
+        <div class="panel-header"><h2>Costos</h2><p>Describe el servicio y asigna el precio</p></div>
         <div class="card">
           <div class="servicios-container" id="serviciosList"></div>
-          <button type="button" id="addServicio" class="btn btn-secondary" style="width: 100%; margin-top: 10px; font-size: 13px;"><i class="fas fa-plus"></i> Añadir servicio extra</button>
+          <button type="button" id="addServicio" class="btn btn-secondary" style="width: 100%; margin-top: 10px; font-size: 13px;"><i class="fas fa-plus"></i> Añadir otro servicio</button>
           
           <div style="margin-top: 16px;">
             <label class="field-title" style="font-size: 11px;">Precios rápidos</label>
