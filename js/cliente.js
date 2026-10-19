@@ -411,7 +411,7 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS
+   FOTOS (¡CORREGIDO PARA ANDROID!)
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
@@ -447,15 +447,16 @@ function configurarFotos() {
   document.getElementById('btnCancelarFoto')?.addEventListener('click', cerrarSheet);
   sheet?.addEventListener('click', (e) => { if (e.target === sheet) cerrarSheet(); });
 
+  // 🚨 AQUÍ ESTABA EL ERROR: ELIMINADO EL setTimeout
   document.getElementById('btnTomarFoto')?.addEventListener('click', () => {
     cerrarSheet();
-    if (inputCamara) setTimeout(() => inputCamara.click(), 150);
+    if (inputCamara) inputCamara.click(); // Clic inmediato, sin setTimeout
     else toast('Cámara no disponible.', 'error');
   });
 
   document.getElementById('btnSubirFoto')?.addEventListener('click', () => {
     cerrarSheet();
-    if (inputGaleria) setTimeout(() => inputGaleria.click(), 150);
+    if (inputGaleria) inputGaleria.click(); // Clic inmediato, sin setTimeout
     else toast('Galería no disponible.', 'error');
   });
 
