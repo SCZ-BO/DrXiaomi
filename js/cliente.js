@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · CLIENTE (Wizard PRO)
+   DR. XIAOMI · CLIENTE (Wizard PRO - Código Unificado)
    Archivo: js/cliente.js
    ============================================================ */
 
@@ -8,7 +8,7 @@ import { toast, haptic, initTheme, escapeHtml, formatBs, showLoading, hideLoadin
 import { db } from '/js/firebase.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Importamos el generador de PDF que ya tienes
+// Importamos tu generador de PDF
 import { generarPDFUnificado } from '/js/cliente-pdf.js';
 
 /* ============================================================
@@ -25,7 +25,7 @@ const CONFIG = {
 };
 
 /* ============================================================
-   ESTADO
+   ESTADO GLOBAL
    ============================================================ */
 let sesion = null;
 let pasoActual = 1;
@@ -33,8 +33,8 @@ const TOTAL_PASOS = 7;
 
 const datos = {
   nombre: '', telefono: '',
-  marca: '', modelo: '', color: '', imei: '', enciende: '',
-  accesorios: '', estado: '', falla: '', plazoEntrega: 'Hoy mismo',
+  marca: '', modelo: '', color: '', enciende: '',
+  motivoIngreso: '', falla: '', checklist: '', plazoEntrega: 'Hoy mismo',
   tipoSeguridad: 'patron', pin: '', patronSecuencia: '',
   fotos: [null, null, null, null],
   servicios: [], total: 0, adelanto: 0, saldo: 0
@@ -60,7 +60,7 @@ function iniciar() {
   const userInfo = document.getElementById('userInfo');
   if (userInfo) userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
   
-  // 1. Intentar recuperar borrador antes de configurar todo
+  // 1. Intentar recuperar borrador anti-pérdida
   const hayBorrador = cargarBorrador();
 
   // 2. Configurar todos los módulos
@@ -68,20 +68,21 @@ function iniciar() {
   configurarWizard();
   configurarMarca();
   configurarRadioGroups();
-  configurarLogicaInteligente();
+  configurarChecklistSemáforo();
+  configurarMotivosYPlazos();
   configurarPattern();
   configurarFotos();
   configurarServicios();
   configurarBotonGenerarPDF();
 
-  // 3. Eventos para guardado automático
+  // 3. Guardado automático en cada tecla
   const content = document.getElementById('wizardContent');
   if (content) {
     content.addEventListener('input', guardarBorradorDebounce);
     content.addEventListener('change', guardarBorradorDebounce);
   }
 
-  // 4. Iniciar en el paso 1 si no hay borrador
+  // 4. Iniciar en el paso 1 si es nuevo
   if (!hayBorrador) irAPaso(1);
   
   actualizarBarraProgreso();
@@ -96,42 +97,34 @@ let timerGuardado = null;
 function guardarBorrador() {
   try {
     localStorage.setItem('drxiaomi_borrador', JSON.stringify(datos));
-  } catch (e) {
-    console.warn('No se pudo guardar el borrador', e);
-  }
+  } catch (e) {}
 }
 
 function guardarBorradorDebounce() {
   clearTimeout(timerGuardado);
-  timerGuardado = setTimeout(guardarBorrador, 500);
+  timerGuardado = setTimeout(guardarBorrador, 500); // Guarda medio segundo después de dejar de escribir
 }
 
 function cargarBorrador() {
   try {
     const guardado = localStorage.getItem('drxiaomi_borrador');
     if (!guardado) return false;
-    
     const d = JSON.parse(guardado);
-    if (!d.nombre) return false; // Si no hay nombre, no hay borrador útil
+    if (!d.nombre) return false;
     
-    // Restauramos el estado
     Object.assign(datos, d);
     
     // Rellenar inputs visuales
     if (datos.nombre) document.getElementById('nombre').value = datos.nombre;
     if (datos.telefono) document.getElementById('telefono').value = datos.telefono;
     if (datos.modelo) document.getElementById('modelo').value = datos.modelo;
-    if (datos.imei) document.getElementById('imei').value = datos.imei;
     if (datos.color) document.getElementById('color').value = datos.color;
     if (datos.falla) document.getElementById('fallaDetalle').value = datos.falla;
     
     toast('Borrador recuperado', 'info', 2000);
-    irAPaso(2); // Lo mandamos al paso 2 para que continúe
+    irAPaso(2); 
     return true;
-  } catch (e) {
-    console.error('Error al cargar borrador', e);
-    return false;
-  }
+  } catch (e) { return false; }
 }
 
 function limpiarBorrador() {
@@ -160,7 +153,6 @@ function configurarHeader() {
     if (confirm('¿Cerrar sesión?')) logout();
   });
 
-  // Toggle de tema
   document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
     const html = document.documentElement;
     const nuevo = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -198,11 +190,6 @@ function irAPaso(nuevoPaso) {
   if (panel) {
     panel.classList.remove('hidden');
     panel.setAttribute('aria-hidden', 'false');
-    
-    // Mover el foco al primer elemento interactivo
-    const primerInput = panel.querySelector('input:not([type="hidden"]), textarea, button:not(.btn)');
-    if (primerInput) primerInput.focus();
-
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -220,9 +207,6 @@ function actualizarBarraProgreso() {
   });
   const fill = document.getElementById('wizardBarFill');
   if (fill) fill.style.width = `${(pasoActual / TOTAL_PASOS) * 100}%`;
-  
-  const prog = document.getElementById('wizardProgress');
-  if (prog) prog.setAttribute('aria-valuenow', pasoActual);
 }
 
 function actualizarBotones() {
@@ -255,7 +239,9 @@ function validarPaso(paso) {
     if (!document.getElementById('enciende')?.value) { toast('Indica si el equipo enciende', 'error'); return false; }
   }
   if (paso === 3) {
-    if (!document.getElementById('fallaDetalle')?.value.trim()) { toast('Describe o selecciona la falla', 'error'); return false; }
+    const motivo = document.getElementById('motivoIngreso')?.value;
+    const falla = document.getElementById('fallaDetalle')?.value.trim();
+    if (!motivo && !falla) { toast('Selecciona un motivo o escribe una falla', 'error'); return false; }
   }
   if (paso === 4) {
     const tipo = document.getElementById('tipoSeguridad')?.value;
@@ -281,12 +267,12 @@ function guardarDatosPaso(paso) {
     datos.marca = document.getElementById('marca')?.value || '';
     datos.modelo = document.getElementById('modelo')?.value.trim() || '';
     datos.color = document.getElementById('color')?.value.trim() || '';
-    datos.imei = document.getElementById('imei')?.value.trim() || '';
     datos.enciende = document.getElementById('enciende')?.value || '';
-    datos.accesorios = document.getElementById('accesorios')?.value || '';
   }
   if (paso === 3) {
+    datos.motivoIngreso = document.getElementById('motivoIngreso')?.value || '';
     datos.falla = document.getElementById('fallaDetalle')?.value.trim() || '';
+    datos.checklist = document.getElementById('checklistResultados')?.value || '';
     datos.plazoEntrega = document.getElementById('plazoEntrega')?.value || 'Hoy mismo';
   }
   if (paso === 4) {
@@ -300,7 +286,7 @@ function guardarDatosPaso(paso) {
 }
 
 /* ============================================================
-   LÓGICA INTELIGENTE Y BOTONES RÁPIDOS
+   LÓGICA: MARCAS Y RADIOS (PASO 2 Y 4)
    ============================================================ */
 function configurarMarca() {
   const grid = document.getElementById('marcasGrid');
@@ -316,7 +302,7 @@ function configurarMarca() {
 }
 
 function configurarRadioGroups() {
-  // Si el equipo enciende o no (Lógica condicional)
+  // Si el equipo enciende
   const enciendeGroup = document.getElementById('enciendeGroup');
   if (enciendeGroup) {
     enciendeGroup.addEventListener('click', (e) => {
@@ -326,21 +312,10 @@ function configurarRadioGroups() {
       enciendeGroup.querySelectorAll('.radio-option').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('enciende').value = btn.dataset.value;
-
-      // Mostrar el grupo de fallas correcto
-      const grupoApagado = document.getElementById('grupoApagado');
-      const grupoEncendido = document.getElementById('grupoEncendido');
-      if (btn.dataset.value === 'Sí') {
-        grupoApagado?.classList.add('hidden');
-        grupoEncendido?.classList.remove('hidden');
-      } else {
-        grupoEncendido?.classList.add('hidden');
-        grupoApagado?.classList.remove('hidden');
-      }
     });
   }
 
-  // Tipo de seguridad
+  // Tipo de seguridad (Patrón / PIN / Ninguno)
   const tipoGroup = document.getElementById('tipoSeguridadGroup');
   if (tipoGroup) {
     tipoGroup.addEventListener('click', (e) => {
@@ -355,38 +330,57 @@ function configurarRadioGroups() {
       document.getElementById('patronContainer')?.classList.toggle('hidden', tipo !== 'patron');
     });
   }
+}
 
-  // Accesorios
-  const accGroup = document.getElementById('accesoriosGroup');
-  if (accGroup) {
-    accGroup.addEventListener('click', (e) => {
+/* ============================================================
+   LÓGICA: CHECKLIST SEMÁFORO Y BOTONES (PASO 3)
+   ============================================================ */
+function configurarChecklistSemáforo() {
+  const checkGroup = document.getElementById('checklistGroup');
+  if (!checkGroup) return;
+
+  checkGroup.addEventListener('click', (e) => {
+    const btn = e.target.closest('.check-item');
+    if (!btn) return;
+    haptic(10);
+    
+    // Rotación: ? -> OK (verde) -> Falla (rojo) -> ?
+    if (!btn.classList.contains('ok') && !btn.classList.contains('falla')) {
+      btn.classList.add('ok'); 
+    } else if (btn.classList.contains('ok')) {
+      btn.classList.remove('ok');
+      btn.classList.add('falla');
+    } else {
+      btn.classList.remove('falla');
+    }
+    
+    actualizarResultadosChecklist();
+  });
+
+  function actualizarResultadosChecklist() {
+    const resultados = [];
+    document.querySelectorAll('#checklistGroup .check-item').forEach(btn => {
+      const item = btn.dataset.item;
+      if (btn.classList.contains('ok')) resultados.push(`${item}: OK`);
+      if (btn.classList.contains('falla')) resultados.push(`${item}: FALLA`);
+    });
+    document.getElementById('checklistResultados').value = resultados.join(', ');
+  }
+}
+
+function configurarMotivosYPlazos() {
+  // Motivo de Ingreso
+  const motivoGroup = document.getElementById('motivoIngresoGroup');
+  if (motivoGroup) {
+    motivoGroup.addEventListener('click', (e) => {
       const btn = e.target.closest('.chip-btn');
       if (!btn) return;
       haptic(8);
       btn.classList.toggle('active');
-      const val = Array.from(accGroup.querySelectorAll('.chip-btn.active')).map(b => b.dataset.value).join(', ');
-      document.getElementById('accesorios').value = val;
+      const activos = Array.from(motivoGroup.querySelectorAll('.chip-btn.active')).map(b => b.dataset.value);
+      document.getElementById('motivoIngreso').value = activos.join(', ');
     });
   }
-}
-
-function configurarLogicaInteligente() {
-  // Guardar fallas de los botones en el textarea
-  const guardarFallaEnTexto = () => {
-    const activas = Array.from(document.querySelectorAll('#fallasApagadoGroup .chip-btn.active, #fallasEncendidoGroup .chip-btn.active')).map(b => b.dataset.value);
-    if (activas.length > 0) {
-      document.getElementById('fallaDetalle').value = activas.join(', ');
-    }
-  };
-
-  document.getElementById('fallasApagadoGroup')?.addEventListener('click', (e) => {
-    const btn = e.target.closest('.chip-btn');
-    if (btn) { haptic(8); btn.classList.toggle('active'); guardarFallaEnTexto(); }
-  });
-  document.getElementById('fallasEncendidoGroup')?.addEventListener('click', (e) => {
-    const btn = e.target.closest('.chip-btn');
-    if (btn) { haptic(8); btn.classList.toggle('active'); guardarFallaEnTexto(); }
-  });
 
   // Plazo de entrega
   const plazoGroup = document.getElementById('plazoGroup');
@@ -403,7 +397,7 @@ function configurarLogicaInteligente() {
 }
 
 /* ============================================================
-   PATTERN LOCK
+   PATTERN LOCK (DIBUJO)
    ============================================================ */
 function configurarPattern() {
   const bgCanvas = document.getElementById('bgCanvas');
@@ -483,7 +477,7 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS (MÉTODO INFALIBLE DE CLONACIÓN)
+   FOTOS (CÁMARA Y GALERÍA)
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
@@ -574,7 +568,7 @@ async function comprimirImagen(file) {
 }
 
 /* ============================================================
-   SERVICIOS Y COSTOS
+   SERVICIOS Y COSTOS (PASO 6)
    ============================================================ */
 function configurarServicios() {
   const list = document.getElementById('serviciosList');
@@ -629,7 +623,6 @@ function configurarServicios() {
 
   document.getElementById('adelanto')?.addEventListener('input', calcularTotal);
   
-  // Iniciar con un servicio vacío si la lista está vacía
   if (list.children.length === 0) list.appendChild(crearServicioItem('', ''));
 }
 
@@ -712,8 +705,9 @@ function generarVistaPrevia() {
       </div>
 
       <div class="preview-section">
-        <div><strong>FALLA:</strong> ${escapeHtml(datos.falla)}</div>
-        <div style="margin-top:4px;"><strong>ACCESORIOS:</strong> ${escapeHtml(datos.accesorios || 'Ninguno')}</div>
+        <div><strong>MOTIVO:</strong> ${escapeHtml(datos.motivoIngreso || 'No especificado')}</div>
+        <div style="margin-top:4px;"><strong>DETALLES:</strong> ${escapeHtml(datos.falla || '-')}</div>
+        <div style="margin-top:4px; font-size:10px; color:#666;"><strong>CHECKLIST:</strong> ${escapeHtml(datos.checklist || 'Todo OK')}</div>
       </div>
 
       <table style="width:100%; font-size:11px; margin-top:10px; border-collapse:collapse;">
@@ -741,7 +735,7 @@ function configurarBotonGenerarPDF() {
   let generando = false;
 
   btn.addEventListener('click', async () => {
-    if (generando) return;
+    if (generando) return; // Evita doble clic
     if (!validarPaso(6)) return;
     
     generando = true;
@@ -760,12 +754,11 @@ function configurarBotonGenerarPDF() {
         marca: datos.marca,
         modelo: datos.modelo,
         color: datos.color,
-        imei: datos.imei,
         enciende: datos.enciende,
-        estadoEquipo: datos.estado,
         falla: datos.falla,
+        motivoIngreso: datos.motivoIngreso,
+        checklist: datos.checklist,
         plazoEntrega: datos.plazoEntrega,
-        accesorios: datos.accesorios,
         tipoSeguridad: datos.tipoSeguridad,
         pin: datos.pin,
         patron: datos.patronSecuencia,
@@ -776,17 +769,18 @@ function configurarBotonGenerarPDF() {
         fotos: datos.fotos.filter(f => f && f.dataUrl).map(f => f.dataUrl)
       };
 
+      // LLAMADA A TU GENERADOR DE PDF
       const exito = await generarPDFUnificado(paquete, 'guardar_en_nube');
       
       if (exito) {
-        localStorage.removeItem('drxiaomi_borrador'); // Limpiamos el borrador exitoso
+        localStorage.removeItem('drxiaomi_borrador'); 
         document.getElementById('successNumero').textContent = num;
         document.getElementById('successModal').classList.add('show');
         window._ultimoRecibo = paquete;
         configurarWhatsApp();
       }
     } catch (error) {
-      console.error("Error al generar:", error);
+      console.error("Error al generar PDF:", error);
       toast('Error al generar el PDF', 'error');
     } finally {
       generando = false;
@@ -804,6 +798,7 @@ function configurarWhatsApp() {
   const btn = document.getElementById('sendWhatsappBtn');
   if (!btn) return;
   
+  // Clonamos el botón para quitarle el evento anterior y que no se dispare dos veces
   const newBtn = btn.cloneNode(true);
   btn.parentNode.replaceChild(newBtn, btn);
   
