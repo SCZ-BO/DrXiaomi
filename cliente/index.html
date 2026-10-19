@@ -22,8 +22,13 @@
   <link rel="stylesheet" href="/css/app-layouts.css">
   <link rel="stylesheet" href="/css/cliente.css">
 
-  <link rel="manifest" href="/app/manifest.json">
+  <link rel="manifest" href="/manifest.json"> <!-- Corregido: Manifest correcto -->
   <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
+
+  <!-- LIBRERÍAS PARA EL PDF (Cargadas estáticamente para evitar el error "undefined") -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     /* ============================================================ */
@@ -58,8 +63,15 @@
       padding: 0 16px 100px 16px;
     }
 
+    /* CORRECCIÓN CRÍTICA PARA LA CÁMARA EN ANDROID */
+    /* En lugar de ocultarlo fuera de pantalla, lo hacemos invisible pero presente */
     .hidden-file-input {
-      position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; overflow: hidden;
+      position: absolute; 
+      width: 1px; 
+      height: 1px; 
+      opacity: 0; 
+      overflow: hidden;
+      z-index: -1;
     }
 
     /* ============================================================ */
@@ -243,7 +255,6 @@
     .btn-whatsapp { background: #25D366; color: white; }
     .btn-download { background: #3B82F6; color: white; }
 
-    /* ANCHO FIJO PARA EL BOTÓN ATRÁS, EL RESTO PARA EL SIGUIENTE */
     #btnPrev { flex: 0 0 60px; padding: 16px 0; }
     #btnNext, #btnGenerate { flex: 1; }
 
@@ -503,9 +514,10 @@
     </div>
   </div>
 
-  <!-- INPUTS DE ARCHIVO OCULTOS -->
-  <input type="file" id="inputCamara" accept="image/*" capture="environment" class="hidden-file-input">
-  <input type="file" id="inputGaleria" accept="image/*" class="hidden-file-input">
+  <!-- INPUTS DE ARCHIVO OCULTOS (AHORA CON EL TRUCO PARA ANDROID) -->
+  <!-- El accept incluye un tipo falso para forzar a Android a mostrar el menú de opciones -->
+  <input type="file" id="inputCamara" accept="image/*,dummy/allowAndroidCamera" capture="environment" class="hidden-file-input">
+  <input type="file" id="inputGaleria" accept="image/*,dummy/allowAndroidCamera" class="hidden-file-input">
 
   <!-- SCRIPTS -->
   <script>
