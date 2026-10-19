@@ -20,33 +20,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
-    /* ============================================================ */
-    /* 1. VARIABLES (TEMA MATE Y MINIMALISTA)                       */
-    /* ============================================================ */
-    :root {
-      --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px;
-      --brand: #E65100; /* Naranja mate, sin brillo */
-      --brand-hover: #BF360C;
-      --brand-light: #2C1A10;
-    }
-
-    [data-theme="dark"] {
-      --bg-main: #121212; --bg-card: #1E1E1E; --bg-elev: #2C2C2C;
-      --text-main: #E0E0E0; --text-mute: #9E9E9E; --border: #333333;
-    }
-    [data-theme="light"] {
-      --bg-main: #F5F5F5; --bg-card: #FFFFFF; --bg-elev: #EEEEEE;
-      --text-main: #212121; --text-mute: #757575; --border: #E0E0E0;
-    }
+    :root { --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --brand: #E65100; --brand-hover: #BF360C; --brand-light: #2C1A10; }
+    [data-theme="dark"] { --bg-main: #121212; --bg-card: #1E1E1E; --bg-elev: #2C2C2C; --text-main: #E0E0E0; --text-mute: #9E9E9E; --border: #333333; }
+    [data-theme="light"] { --bg-main: #F5F5F5; --bg-card: #FFFFFF; --bg-elev: #EEEEEE; --text-main: #212121; --text-mute: #757575; --border: #E0E0E0; }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background-color: var(--bg-main); color: var(--text-main); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
-    
     .wizard-container { max-width: 600px; margin: 0 auto; padding: 0 16px 100px 16px; }
 
-    /* ============================================================ */
-    /* 2. HEADER Y PROGRESO                                         */
-    /* ============================================================ */
+    /* HEADER */
     .app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: var(--bg-main); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand-logo { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -55,7 +37,8 @@
     .brand-text p { font-size: 12px; color: var(--text-mute); margin: 0; }
     .header-actions { display: flex; gap: 8px; }
     .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    
+
+    /* PROGRESO */
     .wizard-progress { padding: 20px 0; }
     .wizard-steps { display: flex; justify-content: space-between; margin-bottom: 12px; }
     .wizard-step { display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: 0.3; transition: 0.3s; }
@@ -66,13 +49,10 @@
     .wizard-bar { height: 3px; background: var(--bg-elev); border-radius: 3px; overflow: hidden; }
     .wizard-bar-fill { height: 100%; background: var(--brand); transition: width 0.4s; }
 
-    /* ============================================================ */
-    /* 3. CONTENIDO Y FORMULARIOS                                   */
-    /* ============================================================ */
+    /* FORMULARIOS */
     .panel-header h2 { font-size: 22px; font-weight: 700; margin: 0 0 4px 0; }
     .panel-header p { font-size: 14px; color: var(--text-mute); margin: 0 0 20px 0; }
     .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
-
     .field { position: relative; margin-bottom: 16px; }
     .field input, .field textarea { width: 100%; padding: 16px 14px; background: var(--bg-elev); border: 1.5px solid transparent; border-radius: var(--radius-md); color: var(--text-main); font-size: 15px; font-family: inherit; transition: 0.2s; outline: none; }
     .field input:focus, .field textarea:focus { border-color: var(--brand); background: var(--bg-card); }
@@ -80,6 +60,7 @@
     .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label, .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label { top: 6px; font-size: 11px; font-weight: 600; color: var(--brand); }
 
     /* MARCAS Y RADIOS */
+    .field-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; display: block; color: var(--text-main); }
     .marcas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
     .marca-btn { padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; font-size: 12px; cursor: pointer; }
     .marca-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
@@ -89,14 +70,13 @@
     .radio-option.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
     .radio-option i { font-size: 18px; }
 
-    /* CHIPS (BOTONES DE SELECCIÓN RÁPIDA) */
+    /* CHIPS Y CHECKLIST */
     .chips-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
     .chip-btn { padding: 8px 14px; border-radius: 20px; background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
     .chip-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
 
-    /* CHECKLIST SEMÁFORO */
     .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .check-item { padding: 10px 4px; background: var(--bg-elev); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; }
+    .check-item { padding: 10px 4px; background: var(--bg-elev); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; user-select: none; }
     .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 14px; }
     .check-item.ok { background: rgba(34, 197, 94, 0.15); border-color: #22C55E; color: #22C55E; }
     .check-item.ok::before { content: '✓'; color: #22C55E; }
@@ -115,13 +95,10 @@
     .servicio-item input.servicio-costo { width: 90px; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-elev); color: var(--brand); font-weight: 700; text-align: right; }
     .removeServicio { width: 40px; height: 40px; border-radius: var(--radius-md); background: rgba(239, 68, 68, 0.1); color: #EF4444; border: none; cursor: pointer; }
 
-    /* RESUMEN PAGO */
     .resumen-row { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 500; margin-bottom: 12px; }
     .resumen-saldo { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px; color: var(--brand); font-size: 18px; font-weight: 700; }
 
-    /* ============================================================ */
-    /* 4. FOOTER Y BOTONES                                          */
-    /* ============================================================ */
+    /* FOOTER Y BOTONES */
     .wizard-footer { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); background: var(--bg-main); border-top: 1px solid var(--border); display: flex; gap: 12px; z-index: 100; }
     .btn { padding: 16px; border-radius: var(--radius-md); font-size: 15px; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
     .btn-primary { background: var(--brand); color: white; }
@@ -130,14 +107,14 @@
     #btnPrev { flex: 0 0 60px; padding: 16px 0; }
     #btnNext, #btnGenerate { flex: 1; }
 
-    /* MODALES Y SHEETS */
+    /* MODALES */
     .sheet-backdrop, .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 9999; }
     .sheet-backdrop { align-items: flex-end; }
     .sheet-backdrop.show, .modal-backdrop.show { opacity: 1; pointer-events: auto; }
     .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 24px; width: 100%; max-width: 550px; border-top: 1px solid var(--border); }
     .modal { background: var(--bg-card); padding: 24px; border-radius: var(--radius-lg); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
     .hidden { display: none !important; }
-    
+
     /* VISTA PREVIA */
     .preview-recibo { background: white; color: #1a1a1a; border-radius: var(--radius-md); padding: 20px; font-size: 12px; }
     .preview-header { border-bottom: 2px solid var(--brand); margin: -20px -20px 16px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
@@ -147,7 +124,6 @@
 </head>
 <body>
 
-  <!-- HEADER -->
   <header class="app-header">
     <div class="brand">
       <button class="icon-btn" id="backToPanelBtn"><i class="fas fa-arrow-left"></i></button>
@@ -167,7 +143,6 @@
   </header>
 
   <div class="wizard-container">
-    <!-- PROGRESO -->
     <div class="wizard-progress" id="wizardProgress" role="progressbar">
       <div class="wizard-steps">
         <div class="wizard-step active" data-step="1"><div class="step-circle">1</div><div class="step-label">Cliente</div></div>
@@ -193,7 +168,7 @@
 
       <!-- PASO 2: EQUIPO -->
       <section class="wizard-panel hidden" data-panel="2" aria-hidden="true">
-        <div class="panel-header"><h2>Datos del equipo</h2><p>Información y accesorios</p></div>
+        <div class="panel-header"><h2>Datos del equipo</h2><p>Información del dispositivo</p></div>
         
         <div class="card">
           <label class="field-title">Marca *</label>
@@ -216,7 +191,6 @@
             <button type="button" class="chip-btn" data-modelo="Redmi Note 12">Redmi Note 12</button>
             <button type="button" class="chip-btn" data-modelo="Redmi Note 13">Redmi Note 13</button>
             <button type="button" class="chip-btn" data-modelo="Poco X3">Poco X3</button>
-            <button type="button" class="chip-btn" data-modelo="Poco X5">Poco X5</button>
             <button type="button" class="chip-btn" data-modelo="Galaxy A14">Galaxy A14</button>
             <button type="button" class="chip-btn" data-modelo="Galaxy A54">Galaxy A54</button>
           </div>
@@ -227,20 +201,9 @@
         </div>
 
         <div class="card">
-          <label class="field-title">Color</label>
-          <div class="chips-group" id="coloresGroup">
-            <button type="button" class="chip-btn" data-color="Negro">⚫ Negro</button>
-            <button type="button" class="chip-btn" data-color="Blanco">⚪ Blanco</button>
-            <button type="button" class="chip-btn" data-color="Azul">🔵 Azul</button>
-            <button type="button" class="chip-btn" data-color="Verde">🟢 Verde</button>
-            <button type="button" class="chip-btn" data-color="Morado">🟣 Morado</button>
-            <button type="button" class="chip-btn" data-color="Gris">⚙️ Gris</button>
-          </div>
-          <input type="hidden" id="color" value="">
-
-          <div class="field" style="margin-top: 12px; margin-bottom: 0;">
-            <input type="text" id="imei" placeholder=" " inputmode="numeric">
-            <label for="imei">IMEI / Serie (Opcional)</label>
+          <div class="field" style="margin-bottom: 0;">
+            <input type="text" id="color" placeholder=" ">
+            <label for="color">Color del equipo</label>
           </div>
         </div>
 
@@ -252,17 +215,6 @@
             <button type="button" class="radio-option" data-value="A veces"><i class="fas fa-circle-half-stroke"></i><span>A veces</span></button>
           </div>
           <input type="hidden" id="enciende" required>
-
-          <label class="field-title" style="margin-top:16px;">Accesorios que deja</label>
-          <div class="chips-group" id="accesoriosGroup">
-            <button type="button" class="chip-btn" data-value="Cargador">🔌 Cargador</button>
-            <button type="button" class="chip-btn" data-value="Cable">🔗 Cable</button>
-            <button type="button" class="chip-btn" data-value="Funda">📱 Funda</button>
-            <button type="button" class="chip-btn" data-value="Chip SIM">💳 Chip</button>
-            <button type="button" class="chip-btn" data-value="Memoria">💾 Memoria</button>
-            <button type="button" class="chip-btn" data-value="Caja">📦 Caja</button>
-          </div>
-          <input type="hidden" id="accesorios" value="">
         </div>
       </section>
 
@@ -395,14 +347,12 @@
     </main>
   </div>
 
-  <!-- FOOTER -->
   <footer class="wizard-footer" id="wizardFooter">
     <button type="button" class="btn btn-secondary" id="btnPrev" style="display: none;"><i class="fas fa-arrow-left"></i></button>
     <button type="button" class="btn btn-primary" id="btnNext">Siguiente <i class="fas fa-arrow-right"></i></button>
     <button type="button" class="btn btn-primary" id="btnGenerate" style="display: none;"><i class="fas fa-file-pdf"></i> Generar Recibo</button>
   </footer>
 
-  <!-- MODAL ÉXITO -->
   <div class="modal-backdrop" id="successModal">
     <div class="modal">
       <div style="font-size: 48px; color: #22C55E; margin-bottom: 16px;"><i class="fas fa-check-circle"></i></div>
@@ -415,7 +365,6 @@
     </div>
   </div>
 
-  <!-- BOTTOM SHEET FOTOS -->
   <div class="sheet-backdrop" id="fotoSheet">
     <div class="sheet">
       <h3 style="margin-bottom: 20px; text-align: center;">Añadir foto</h3>
