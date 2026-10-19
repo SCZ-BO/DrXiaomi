@@ -1,30 +1,72 @@
 /* ============================================================
-   DR. XIAOMI · GENERADOR DE PDF ÚNICO (ESTILO PREMIUM)
+   DR. XIAOMI · PDF DEL RECIBO (MOTOR CENTRAL BLINDADO)
    Archivo: js/cliente-pdf.js
    ============================================================ */
 
-import { CONFIG } from '/js/cliente.js';
-import { formatBs } from '/js/app-ui.js';
+import {
+  datos, sesion, CONFIG, generarNumeroRecibo, configurarWhatsApp,
+  db, collection, addDoc, serverTimestamp
+} from '/js/cliente.js';
 
-// Función interna para cargar el logo
-async function cargarLogoDataUrl() {
-  return new Promise((resolve) => {
-    const img = new Image(); img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try { 
-        const c = document.createElement('canvas'); 
-        c.width = img.width; c.height = img.height; 
-        c.getContext('2d').drawImage(img, 0, 0); 
-        resolve(c.toDataURL('image/png')); 
-      } catch (e) { resolve(''); }
-    };
-    img.onerror = () => resolve(''); 
-    img.src = '/imagenes/web-app-manifest-192x192.png';
+import { toast, haptic, formatBs, showLoading, hideLoading } from '/js/app-ui.js';
+
+const COLOR = {
+  naranja: [255, 105, 0], naranjaClaro: [255, 140, 60], naranjaSuave: [255, 244, 235],
+  grisFondo: [248, 248, 248], grisSuave: [235, 235, 235],
+  textoOscuro: [30, 30, 30], textoMedio: [100, 100, 100], textoClaro: [150, 150, 150], blanco: [255, 255, 255]
+};
+
+// 🔥 FUNCIÓN PARA CARGAR SCRIPTS DINÁMICAMENTE CON ESPERA
+function cargarScript(url) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${url}"]`)) {
+      resolve();
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = url;
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error(`Error al descargar: ${url}`));
+    document.head.appendChild(s);
   });
 }
 
-// Función interna para generar el QR
-async function generarQR(texto) {
+async function cargarLibreriasPDF() {
+  // 1. Cargar jsPDF
+  if (!window.jspdf) {
+    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    await new Promise(r => setTimeout(r, 150)); // Pausa de seguridad
+  }
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    throw new Error("jsPDF no se inicializó. Revisa tu conexión.");
+  }
+
+  // 2. Cargar AutoTable
+  if (!window.jspdf.jsPDF.API.autoTable) {
+    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js');
+    await new Promise(r => setTimeout(r, 150));
+  }
+
+  // 3. Cargar QRCode
+  if (!window.QRCode) {
+    await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
+    await new Promise(r => setTimeout(r, 150));
+  }
+}
+
+export function configurarPDF() {
+  document.getElementById('btnGenerate')?.addEventListener('click', generarPDF);
+  document.getElementById('backToPanelBtn2')?.addEventListener('click', () => window.location.href = '/app/');
+  document.getElementById('downloadPdfBtn')?.addEventListener('click', () => {
+    haptic(15);
+    if (window._ultimoPDF) {
+      try { window._ultimoPDF.save(window._ultimoNombrePDF || 'recibo.pdf'); toast('PDF descargado', 'success'); } catch (err) {}
+    } else toast('Genera el recibo primero', 'warning');
+  });
+}
+
+async function generarQRDataUrl(texto) {
   return new Promise((resolve) => {
     if (typeof QRCode === 'undefined') { resolve(''); return; }
     const div = document.createElement('div');
@@ -33,415 +75,311 @@ async function generarQR(texto) {
     try {
       new QRCode(div, { text: texto, width: 256, height: 256, correctLevel: QRCode.CorrectLevel.M });
       setTimeout(() => {
-        const canvas = div.querySelector('canvas');
-        const dataUrl = canvas ? canvas.toDataURL('image/png') : '';
+        const canvas = div.querySelector('canvas'), img = div.querySelector('img');
+        let dataUrl = canvas ? canvas.toDataURL('image/png') : (img && img.src ? img.src : '');
         div.remove(); resolve(dataUrl);
       }, 200);
     } catch (e) { div.remove(); resolve(''); }
   });
 }
 
-function formatFecha(fecha) {
-  if (!fecha) return '-';
-  let d;
-  if (fecha.toDate) d = fecha.toDate();
-  else if (fecha instanceof Date) d = fecha;
-  else d = new Date(fecha);
-  if (isNaN(d.getTime())) return '-';
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+async function cargarLogoDataUrl() {
+  return new Promise((resolve) => {
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0); resolve(c.toDataURL('image/png')); }
+      catch (e) { resolve(''); }
+    };
+    img.onerror = () => resolve(''); img.src = CONFIG.logoUrl;
+  });
 }
 
-// LA FUNCIÓN MAESTRA
-export async function generarPDFUnificado(datos, accion = 'guardar') {
+export async function generarPDFUnificado(paquete, accion = 'guardar') {
+  const numeroRecibo = paquete.numeroRecibo || generarNumeroRecibo();
+  showLoading('Generando PDF...'); haptic(20);
+  
   try {
-    if (!window.jspdf || !window.jspdf.jsPDF) throw new Error("Librerías cargando, espera...");
+    // 1. Cargar librerías de forma segura
+    await cargarLibreriasPDF();
+    
+    // 2. Cargar Logo y QR
+    const [logoDataUrl, qrDataUrl] = await Promise.all([cargarLogoDataUrl(), generarQRDataUrl(`${CONFIG.urlApp}/?recibo=${numeroRecibo}`)]);
 
+    // 3. Inicializar jsPDF
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-    const W = 210, H = 297, M = 10;
-    const CW = W - M * 2;
+    const W = 210, H = 297, M = 15, CW = W - M * 2; let y = 0;
 
-    /* FONDO BLANCO */
-    pdf.setFillColor(253, 250, 247);
-    pdf.rect(0, 0, W, H, 'F');
+    /* ================= HEADER ================= */
+    pdf.setFillColor(...COLOR.naranja);
+    pdf.rect(0, 0, W, 40, 'F');
+    pdf.setFillColor(...COLOR.naranjaClaro);
+    pdf.rect(0, 40, W, 2, 'F');
 
-    /* MARCA DE AGUA */
-    pdf.saveGraphicsState();
-    pdf.setGState(new pdf.GState({ opacity: 0.04 }));
-    pdf.setTextColor(255, 105, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(55);
-    for (let i = 0; i < 6; i++) {
-      pdf.text('DR. XIAOMI', 10, 50 + (i * 50), { angle: 25 });
-    }
-    pdf.restoreGraphicsState();
-
-    /* HEADER GRADIENTE */
-    const headerGradSteps = 40;
-    for (let i = 0; i < headerGradSteps; i++) {
-      const ratio = i / headerGradSteps;
-      pdf.setFillColor(255, 105 + (ratio * 30), ratio * 50);
-      pdf.rect((W / headerGradSteps) * i, 0, W / headerGradSteps + 0.5, 32, 'F');
-    }
-
-    pdf.setFillColor(255, 255, 255);
-    pdf.setGState(new pdf.GState({ opacity: 0.08 }));
-    pdf.circle(190, 8, 22, 'F');
-    pdf.circle(12, 32, 15, 'F');
-    pdf.setGState(new pdf.GState({ opacity: 1 }));
-
-    const logoDataUrl = await cargarLogoDataUrl();
     if (logoDataUrl) {
-      try { pdf.addImage(logoDataUrl, 'PNG', M + 3, 5, 24, 24); } catch (e) {}
+      try {
+        pdf.setFillColor(255, 255, 255);
+        pdf.circle(M + 12, 20, 11, 'F');
+        pdf.addImage(logoDataUrl, 'PNG', M + 2, 10, 20, 20);
+      } catch (e) {}
     }
 
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(18);
-    pdf.text(CONFIG.nombreTienda, M + 31, 13);
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.text('Servicio Técnico Especializado', M + 31, 18);
-    pdf.setFontSize(7);
-    pdf.text(CONFIG.direccion, M + 31, 22);
-    pdf.text(`Tel: ${CONFIG.telefono}  ·  ${CONFIG.web}`, M + 31, 26);
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('RECIBO N°', W - M - 3, 12, { align: 'right' });
-    pdf.setFontSize(11);
-    pdf.text(datos.numeroRecibo || '-', W - M - 3, 17, { align: 'right' });
-    pdf.setFontSize(7);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(formatFecha(datos.fecha), W - M - 3, 22, { align: 'right' });
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(`Atendió: ${(datos.creadoPor || '-').slice(0, 15)}`, W - M - 3, 27, { align: 'right' });
-
-    let y = 37;
-
-    /* ESTADO */
-    const estadoActual = datos.estadoOrden || 'recibido';
-    const estadosInfo = {
-      'recibido': { texto: 'RECIBIDO', color: [200, 200, 200] },
-      'reparacion': { texto: 'EN REPARACIÓN', color: [255, 105, 0] },
-      'espera-repuesto': { texto: 'ESPERANDO REPUESTO', color: [59, 130, 246] },
-      'listo': { texto: 'LISTO PARA ENTREGAR', color: [251, 191, 36] },
-      'entregado': { texto: 'ENTREGADO', color: [16, 185, 129] },
-      'devuelto': { texto: 'DEVUELTO', color: [239, 68, 68] }
-    };
-    const estadoInfo = estadosInfo[estadoActual] || estadosInfo.recibido;
-
-    pdf.setFillColor(...estadoInfo.color);
-    pdf.roundedRect(M, y, CW, 10, 2.5, 2.5, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
-    pdf.text(estadoInfo.texto, M + 4, y + 6.8);
-    pdf.setFontSize(8);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('Recibo de servicio técnico', W - M - 4, y + 6.8, { align: 'right' });
-    y += 14;
-
-    /* CLIENTE Y EQUIPO */
-    const colW = (CW - 3) / 2;
-
-    pdf.setFillColor(255, 255, 255);
-    pdf.roundedRect(M, y, colW, 28, 2.5, 2.5, 'F');
-    pdf.setDrawColor(255, 105, 0);
-    pdf.setLineWidth(0.4);
-    pdf.roundedRect(M, y, colW, 28, 2.5, 2.5, 'S');
-    pdf.setFillColor(255, 105, 0);
-    pdf.roundedRect(M, y, colW, 7, 2.5, 2.5, 'F');
-    pdf.rect(M, y + 3, colW, 4, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('CLIENTE', M + 3, y + 5);
-    pdf.setTextColor(30, 30, 30);
-    pdf.setFontSize(11);
-    pdf.text((datos.cliente || '-').slice(0, 22), M + 3, y + 14);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(80, 80, 80);
-    pdf.setFontSize(9);
-    pdf.text(`Tel: ${datos.telefono || '-'}`, M + 3, y + 21);
-
-    const x2 = M + colW + 3;
-    pdf.setFillColor(255, 255, 255);
-    pdf.roundedRect(x2, y, colW, 28, 2.5, 2.5, 'F');
-    pdf.setDrawColor(255, 105, 0);
-    pdf.roundedRect(x2, y, colW, 28, 2.5, 2.5, 'S');
-    pdf.setFillColor(255, 105, 0);
-    pdf.roundedRect(x2, y, colW, 7, 2.5, 2.5, 'F');
-    pdf.rect(x2, y + 3, colW, 4, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('EQUIPO', x2 + 3, y + 5);
-    pdf.setTextColor(30, 30, 30);
-    pdf.setFontSize(11);
-    pdf.text(`${datos.marca || ''} ${datos.modelo || ''}`.slice(0, 22), x2 + 3, y + 14);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(80, 80, 80);
-    pdf.setFontSize(9);
-    pdf.text(`Enciende: ${datos.enciende || '-'}`, x2 + 3, y + 21);
+    pdf.setFontSize(22);
+    pdf.text(CONFIG.nombreTienda, M + 28, 16);
     
-    y += 33;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.text(CONFIG.eslogan, M + 28, 22);
+    pdf.setFontSize(8);
+    pdf.text(`${CONFIG.direccion} · Tel: ${CONFIG.telefono}`, M + 28, 28);
 
-    /* ESTADO/FALLA + CLAVE */
-    const bloque1W = (CW - 3) / 2;
-
-    pdf.setFillColor(255, 250, 245);
-    pdf.roundedRect(M, y, bloque1W, 20, 2, 2, 'F');
-    pdf.setDrawColor(255, 200, 150);
-    pdf.setLineWidth(0.3);
-    pdf.roundedRect(M, y, bloque1W, 20, 2, 2, 'S');
-    pdf.setTextColor(255, 105, 0);
+    pdf.setFillColor(255, 255, 255);
+    pdf.roundedRect(W - M - 60, 8, 60, 24, 3, 3, 'F');
+    pdf.setTextColor(...COLOR.naranja);
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7);
-    pdf.text('ESTADO / FALLA', M + 3, y + 4);
-    pdf.setTextColor(50, 50, 50);
+    pdf.setFontSize(9);
+    pdf.text('RECIBO N°', W - M - 4, 14, { align: 'right' });
+    pdf.setFontSize(11);
+    pdf.text(numeroRecibo, W - M - 4, 20, { align: 'right' });
+    pdf.setTextColor(...COLOR.textoMedio);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
-    const estadoTxt = (datos.estadoEquipo || 'Sin observaciones').slice(0, 40);
-    const fallaTxt = (datos.falla || 'Sin falla reportada').slice(0, 40);
-    pdf.text(pdf.splitTextToSize(estadoTxt, bloque1W - 6), M + 3, y + 9);
-    pdf.text(pdf.splitTextToSize(fallaTxt, bloque1W - 6), M + 3, y + 15);
+    const f = new Date(); const fStr = `${String(f.getDate()).padStart(2,'0')}/${String(f.getMonth()+1).padStart(2,'0')}/${f.getFullYear()}`;
+    pdf.text(`${fStr} · ${sesion.nombre}`, W - M - 4, 26, { align: 'right' });
 
-    const x3 = M + bloque1W + 3;
-    pdf.setFillColor(255, 250, 245);
-    pdf.roundedRect(x3, y, bloque1W, 20, 2, 2, 'F');
-    pdf.setDrawColor(255, 200, 150);
-    pdf.roundedRect(x3, y, bloque1W, 20, 2, 2, 'S');
-    pdf.setTextColor(255, 105, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7);
-    pdf.text('CLAVE DE ACCESO', x3 + 3, y + 4);
+    y = 50;
 
-    let patronTexto = '';
-    if (datos.tipoSeguridad === 'patron' && datos.patron) {
-      patronTexto = datos.patron.split(',').join(' → ');
-    }
-    const segInfo = datos.tipoSeguridad === 'pin'
-      ? `PIN: ${datos.pin || '-'}`
-      : datos.tipoSeguridad === 'patron'
-        ? `Patrón: ${patronTexto || '-'}`
-        : 'Sin clave';
+    /* ================= CLIENTE / EQUIPO ================= */
+    const colW = (CW - 6) / 2;
 
-    pdf.setTextColor(40, 40, 40);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
-    pdf.text(segInfo, x3 + 3, y + 13);
-
-    y += 25;
-
-    /* SERVICIOS */
-    pdf.setTextColor(255, 105, 0);
+    pdf.setFillColor(...COLOR.grisFondo);
+    pdf.roundedRect(M, y, colW, 30, 3, 3, 'F');
+    pdf.setFillColor(...COLOR.naranja);
+    pdf.rect(M, y, 2, 30, 'F');
+    
+    pdf.setTextColor(...COLOR.naranja);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8);
-    pdf.text('SERVICIOS Y COSTOS', M, y + 2);
-    y += 4;
+    pdf.text('CLIENTE', M + 5, y + 7);
+    pdf.setTextColor(...COLOR.textoOscuro);
+    pdf.setFontSize(12);
+    pdf.text((paquete.cliente || '').slice(0, 25), M + 5, y + 15);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(...COLOR.textoMedio);
+    pdf.text(`Tel: ${paquete.telefono || ''}`, M + 5, y + 23);
 
-    const servicios = Array.isArray(datos.servicios) ? datos.servicios : [];
-    const serviciosData = servicios.length > 0
-      ? servicios.map(s => [s.desc || 'Sin descripción', formatBs(s.costo || 0)])
-      : [['Sin servicios registrados', '']];
+    pdf.setFillColor(...COLOR.grisFondo);
+    pdf.roundedRect(M + colW + 6, y, colW, 30, 3, 3, 'F');
+    pdf.setFillColor(...COLOR.naranja);
+    pdf.rect(M + colW + 6, y, 2, 30, 'F');
+    pdf.setTextColor(...COLOR.naranja);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('EQUIPO', M + colW + 11, y + 7);
+    pdf.setTextColor(...COLOR.textoOscuro);
+    pdf.setFontSize(12);
+    pdf.text(`${paquete.marca || ''} ${paquete.modelo || ''}`.slice(0, 25), M + colW + 11, y + 15);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(...COLOR.textoMedio);
+    if (paquete.imei) pdf.text(`IMEI: ${paquete.imei}`, M + colW + 11, y + 21);
+    pdf.text(`Enciende: ${paquete.enciende || ''}`, M + colW + 11, y + 26);
+
+    y += 36;
+
+    /* ================= FALLA / SEGURIDAD ================= */
+    pdf.setFillColor(...COLOR.grisFondo);
+    pdf.roundedRect(M, y, colW, 30, 3, 3, 'F');
+    pdf.setFillColor(...COLOR.naranja);
+    pdf.rect(M, y, 2, 30, 'F');
+    pdf.setTextColor(...COLOR.naranja);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('ESTADO / FALLA', M + 5, y + 7);
+    pdf.setTextColor(...COLOR.textoMedio);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    let fallaText = paquete.falla || paquete.estadoEquipo || 'No especificado';
+    pdf.text(pdf.splitTextToSize(fallaText, colW - 10), M + 5, y + 14);
+
+    pdf.setFillColor(...COLOR.grisFondo);
+    pdf.roundedRect(M + colW + 6, y, colW, 30, 3, 3, 'F');
+    pdf.setFillColor(...COLOR.naranja);
+    pdf.rect(M + colW + 6, y, 2, 30, 'F');
+    pdf.setTextColor(...COLOR.naranja);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('CLAVE DE ACCESO', M + colW + 11, y + 7);
+    
+    let segInfo = paquete.tipoSeguridad === 'pin' ? `PIN: ${paquete.pin}` : (paquete.patron ? `Patrón: ${paquete.patron.split(',').join('-')}` : 'Sin clave');
+    pdf.setTextColor(...COLOR.textoOscuro);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(12);
+    pdf.text(segInfo.slice(0, 25), M + colW + 11, y + 17);
+
+    y += 36;
+
+    /* ================= SERVICIOS Y COSTOS ================= */
+    pdf.setFillColor(...COLOR.naranja);
+    pdf.roundedRect(M, y, CW, 10, 3, 3, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.text('SERVICIOS Y COSTOS', M + 5, y + 6.5);
+    y += 14;
 
     pdf.autoTable({
       startY: y,
       head: [['Descripción', 'Costo']],
-      body: serviciosData,
-      styles: { fontSize: 8, cellPadding: 2, lineColor: [240, 240, 240], lineWidth: 0.2 },
-      headStyles: { fillColor: [255, 105, 0], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
-      bodyStyles: { textColor: [40, 40, 40], fillColor: [255, 255, 255] },
+      body: (paquete.servicios || []).map(s => [s.desc, formatBs(s.costo)]),
+      styles: { fontSize: 10, cellPadding: 4, textColor: COLOR.textoOscuro, lineColor: [230,230,230], lineWidth: 0.1 },
+      headStyles: { fillColor: COLOR.naranja, textColor: 255, fontStyle: 'bold', fontSize: 10 },
       alternateRowStyles: { fillColor: [255, 250, 245] },
       columnStyles: {
-        0: { cellWidth: CW - 32 },
-        1: { halign: 'right', cellWidth: 32, fontStyle: 'bold', textColor: [255, 105, 0] }
+        0: { cellWidth: CW - 40 },
+        1: { halign: 'right', cellWidth: 40, fontStyle: 'bold', textColor: COLOR.naranja }
       },
       margin: { left: M, right: M },
       theme: 'grid'
     });
 
-    y = pdf.lastAutoTable.finalY + 3;
+    y = pdf.lastAutoTable.finalY + 8;
 
-    /* TOTALES */
-    const boxW = 75;
-    const boxX = W - M - boxW;
-    const boxH = Number(datos.adelanto) > 0 ? 24 : 18;
+    /* ================= TOTALES ================= */
+    const boxW = 80;
+    const boxX = M + CW - boxW;
+    const boxAlto = paquete.adelanto > 0 ? 28 : 20;
 
-    const totalGradSteps = 30;
-    for (let i = 0; i < totalGradSteps; i++) {
-      const ratio = i / totalGradSteps;
-      pdf.setFillColor(255, 105 + (ratio * 30), ratio * 40);
-      pdf.rect(boxX + (boxW / totalGradSteps) * i, y, boxW / totalGradSteps + 0.5, boxH, 'F');
+    pdf.setFillColor(...COLOR.grisFondo);
+    pdf.roundedRect(boxX, y, boxW, boxAlto, 3, 3, 'F');
+    pdf.setDrawColor(...COLOR.naranja);
+    pdf.setLineWidth(0.5);
+    pdf.roundedRect(boxX, y, boxW, boxAlto, 3, 3, 'S');
+
+    pdf.setTextColor(...COLOR.textoMedio);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+    pdf.text('Total:', boxX + 5, y + 8);
+    pdf.setTextColor(...COLOR.textoOscuro);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(12);
+    pdf.text(formatBs(paquete.total || 0), boxX + boxW - 5, y + 8, { align: 'right' });
+
+    let rowY = y + 8;
+    if (paquete.adelanto > 0) {
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.setTextColor(...COLOR.textoMedio);
+      pdf.text('Adelanto:', boxX + 5, y + 15);
+      pdf.setTextColor(...COLOR.textoOscuro);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`- ${formatBs(paquete.adelanto)}`, boxX + boxW - 5, y + 15, { align: 'right' });
+      rowY = y + 15;
     }
 
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.text('Total:', boxX + 4, y + 6);
+    pdf.setDrawColor(...COLOR.naranja);
+    pdf.setLineWidth(0.3);
+    pdf.line(boxX + 5, rowY + 5, boxX + boxW - 5, rowY + 5);
+
+    pdf.setTextColor(...COLOR.naranja);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(10);
-    pdf.text(formatBs(datos.total || 0), W - M - 4, y + 6, { align: 'right' });
+    pdf.text('SALDO:', boxX + 5, rowY + 12);
+    pdf.setFontSize(14);
+    pdf.text(formatBs(paquete.saldo || 0), boxX + boxW - 5, rowY + 12, { align: 'right' });
 
-    if (Number(datos.adelanto) > 0) {
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(7);
-      pdf.text('Adelanto:', boxX + 4, y + 12);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`- ${formatBs(datos.adelanto)}`, W - M - 4, y + 12, { align: 'right' });
-    }
+    y += boxAlto + 8;
 
-    pdf.setDrawColor(255, 255, 255);
-    pdf.setLineWidth(0.3);
-    pdf.line(boxX + 3, y + boxH - 8, W - M - 3, y + boxH - 8);
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('SALDO:', boxX + 4, y + boxH - 3);
-    pdf.setFontSize(12);
-    pdf.text(formatBs(datos.saldo || 0), W - M - 4, y + boxH - 3, { align: 'right' });
-
-    y += boxH + 4;
-
-    /* FOTOS */
-    const fotosValidas = (Array.isArray(datos.fotos) ? datos.fotos : []).filter(f => f);
+    /* ================= FOTOS ================= */
+    const fotosValidas = (paquete.fotos || []).filter(f => f);
     if (fotosValidas.length > 0) {
-      pdf.setTextColor(255, 105, 0);
+      if (y > 220) { pdf.addPage(); y = 20; }
+      pdf.setFillColor(...COLOR.naranja);
+      pdf.roundedRect(M, y, CW, 10, 3, 3, 'F');
+      pdf.setTextColor(255, 255, 255);
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(8);
-      pdf.text('FOTOS DEL EQUIPO', M, y + 2);
-      y += 4;
+      pdf.setFontSize(9);
+      pdf.text('FOTOS DEL EQUIPO', M + 5, y + 6.5);
+      y += 14;
 
-      const fotoW = (CW - 6) / 4;
+      const fotoW = (CW - 12) / 4;
       const fotoH = fotoW * 0.75;
       let x = M;
       for (let i = 0; i < Math.min(fotosValidas.length, 4); i++) {
-        pdf.setFillColor(255, 255, 255);
-        pdf.roundedRect(x, y, fotoW, fotoH + 2, 1, 1, 'F');
-        pdf.setDrawColor(230, 230, 230);
-        pdf.setLineWidth(0.2);
-        pdf.roundedRect(x, y, fotoW, fotoH + 2, 1, 1, 'S');
         try {
-          pdf.addImage(fotosValidas[i], 'JPEG', x + 0.5, y + 0.5, fotoW - 1, fotoH - 1, undefined, 'FAST');
+          pdf.setFillColor(255, 255, 255);
+          pdf.roundedRect(x, y, fotoW, fotoH, 2, 2, 'F');
+          pdf.setDrawColor(220, 220, 220);
+          pdf.roundedRect(x, y, fotoW, fotoH, 2, 2, 'S');
+          pdf.addImage(fotosValidas[i], 'JPEG', x + 1, y + 1, fotoW - 2, fotoH - 2, undefined, 'FAST');
         } catch (e) {}
-        x += fotoW + 1.5;
+        x += fotoW + 3;
       }
-      y += fotoH + 5;
+      y += fotoH + 10;
     }
 
-    /* QR */
-    const qrDataUrl = await generarQR(`${CONFIG.web}/?recibo=${datos.numeroRecibo}`);
-    if (qrDataUrl && y < H - 75) {
-      pdf.setFillColor(255, 250, 245);
-      pdf.roundedRect(M, y, CW, 22, 2.5, 2.5, 'F');
-      pdf.setDrawColor(255, 105, 0);
-      pdf.setLineWidth(0.3);
-      pdf.roundedRect(M, y, CW, 22, 2.5, 2.5, 'S');
-
-      try { pdf.addImage(qrDataUrl, 'PNG', M + 3, y + 3, 16, 16); } catch (e) {}
-
-      pdf.setTextColor(255, 105, 0);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(9);
-      pdf.text('Consulta el estado de tu reparación', M + 23, y + 8);
-      pdf.setTextColor(60, 60, 60);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(7);
-      pdf.text('Escanea el código QR o visita:', M + 23, y + 13);
-      pdf.setTextColor(255, 105, 0);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(9);
-      pdf.text(`${CONFIG.web}/?recibo=${datos.numeroRecibo}`, M + 23, y + 18);
-
-      y += 26;
-    }
-
-    /* BANNER WEB */
-    if (y < H - 70) {
-      const linkY = H - 62;
-      const linkH = 26;
-
-      const linkGradSteps = 30;
-      for (let i = 0; i < linkGradSteps; i++) {
-        const ratio = i / linkGradSteps;
-        pdf.setFillColor(255, 105 + (ratio * 30), ratio * 40);
-        pdf.rect(M + (CW / linkGradSteps) * i, linkY, CW / linkGradSteps + 0.5, linkH, 'F');
-      }
-
-      pdf.setFillColor(255, 255, 255);
-      pdf.setGState(new pdf.GState({ opacity: 0.1 }));
-      pdf.circle(M + 20, linkY + linkH + 5, 15, 'F');
-      pdf.circle(M + CW - 10, linkY - 5, 10, 'F');
-      pdf.setGState(new pdf.GState({ opacity: 1 }));
-
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(14);
-      pdf.text('VISITA NUESTRA PÁGINA WEB', M + 6, linkY + 9);
-
-      pdf.setFontSize(20);
-      pdf.text(CONFIG.web, M + 6, linkY + 18);
-
-      if (qrDataUrl) {
-        try { pdf.addImage(qrDataUrl, 'PNG', M + CW - 24, linkY + 2, 22, 22); } catch (e) {}
-      }
-
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(7);
-      pdf.text('Escanea o visita el enlace', M + 6, linkY + 23);
-
-      pdf.link(M, linkY, CW, linkH, { url: CONFIG.urlApp });
-      pdf.link(M, linkY - 40, CW, 40, { url: CONFIG.urlApp });
-
-      y += linkH + 6;
-    }
-
-    /* CONDICIONES */
-    const condY = H - 30;
-    pdf.setFillColor(248, 248, 248);
-    pdf.roundedRect(M, condY, CW, 20, 2, 2, 'F');
-    pdf.setTextColor(255, 105, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(6);
-    pdf.text('CONDICIONES:', M + 2, condY + 3);
-    pdf.setTextColor(100, 100, 100);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(5.5);
+    /* ================= BANNER WEB ================= */
+    if (y > 215) { pdf.addPage(); y = 20; }
+    pdf.setFillColor(...COLOR.naranja);
+    pdf.roundedRect(M, y, CW, 35, 4, 4, 'F');
     
-    const condiciones = [
-      '1. Conserve este recibo para retirar su equipo.',
-      '2. Entrega sujeta a disponibilidad de repuestos.',
-      '3. Retiro dentro de 10 días posteriores al aviso.',
-      '4. Pasados 20 días, el equipo se considera abandonado.',
-      '5. Garantía: 30 días repuestos / 60 días mano de obra.'
-    ];
-    
-    pdf.text(condiciones[0], M + 2, condY + 7);
-    pdf.text(condiciones[1], M + 2, condY + 10.5);
-    pdf.text(condiciones[2], M + 2, condY + 14);
-    pdf.text(condiciones[3], M + CW / 2 + 2, condY + 7);
-    pdf.text(condiciones[4], M + CW / 2 + 2, condY + 10.5);
-
-    /* FOOTER */
-    pdf.setFillColor(255, 105, 0);
-    pdf.rect(0, H - 5, W, 5, 'F');
     pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.text('¡VISITA NUESTRA PÁGINA WEB!', M + 10, y + 10);
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(6);
-    pdf.text(`© ${new Date().getFullYear()} ${CONFIG.nombreTienda}  ·  ${CONFIG.web}  ·  Tel: ${CONFIG.telefono}`, W / 2, H - 2, { align: 'center' });
+    pdf.setFontSize(22);
+    pdf.textWithLink(CONFIG.web, M + 10, y + 22, { url: CONFIG.urlApp });
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.text('Toca el enlace o escanea el código QR', M + 10, y + 29);
 
-    /* GUARDAR */
-    const nombreArchivo = `Recibo_${datos.numeroRecibo || 'sin-numero'}_${(datos.cliente || 'Cliente').split(' ')[0]}.pdf`;
-    window._ultimoPDF = pdf;
-    window._ultimoNombrePDF = nombreArchivo;
-    pdf.save(nombreArchivo);
+    if (qrDataUrl) {
+      try {
+        pdf.setFillColor(255, 255, 255);
+        pdf.roundedRect(W - M - 35, y + 4, 28, 28, 2, 2, 'F');
+        pdf.addImage(qrDataUrl, 'PNG', W - M - 33, y + 6, 24, 24);
+      } catch (e) {}
+    }
+    y += 45;
+
+    /* ================= CONDICIONES ================= */
+    if (y > 245) { pdf.addPage(); y = 20; }
+    pdf.setFillColor(...COLOR.grisFondo);
+    pdf.roundedRect(M, y, CW, 30, 3, 3, 'F');
+    pdf.setTextColor(...COLOR.naranja);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('CONDICIONES DEL SERVICIO', M + 5, y + 6);
+    pdf.setTextColor(...COLOR.textoMedio);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7.5);
+    (CONFIG.condiciones || []).forEach((txt, i) => {
+      pdf.text(`${i + 1}. ${txt}`, M + 5, y + 12 + i * 3.5);
+    });
+
+    /* ================= GUARDAR Y FIRESTORE ================= */
+    const nombreArchivo = `Recibo_${numeroRecibo}_${(paquete.cliente || 'Cliente').split(' ')[0]}.pdf`;
+    window._ultimoPDF = pdf; window._ultimoNombrePDF = nombreArchivo; pdf.save(nombreArchivo);
+
+    if (accion === 'guardar_en_nube' && db) {
+      try {
+        await addDoc(collection(db, 'recibos'), {
+          numeroRecibo, cliente: paquete.cliente, telefono: paquete.telefono, marca: paquete.marca, modelo: paquete.modelo, 
+          imei: paquete.imei || null, enciende: paquete.enciende, estadoEquipo: paquete.estadoEquipo || '-', falla: paquete.falla || '-', 
+          tipoSeguridad: paquete.tipoSeguridad, pin: paquete.tipoSeguridad === 'pin' ? paquete.pin : null, patron: paquete.tipoSeguridad === 'patron' ? paquete.patron : null, 
+          servicios: paquete.servicios, total: paquete.total, adelanto: paquete.adelanto, saldo: paquete.saldo, 
+          fotos: paquete.fotos || [], estadoOrden: 'recibido', creadoPor: sesion.nombre, creadoPorRol: sesion.rol, fecha: serverTimestamp()
+        });
+      } catch (err) { toast('Recibo generado, pero no se guardó en la nube', 'warning'); }
+    }
 
     return true;
   } catch (err) {
-    console.error(err);
-    alert('Error al generar PDF: ' + err.message);
+    console.error(err); toast('Error al generar el PDF: ' + err.message, 'error', 5000);
     return false;
-  }
+  } finally { hideLoading(); }
 }
