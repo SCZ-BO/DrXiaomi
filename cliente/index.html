@@ -95,8 +95,17 @@
 
     /* CHIPS (BOTONES DE SELECCIÓN RÁPIDA) */
     .chips-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .chip-btn { padding: 8px 14px; border-radius: 20px; background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .chip-btn { padding: 8px 14px; border-radius: 20px; background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
     .chip-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
+
+    /* CHECKLIST SEMÁFORO */
+    .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .check-item { padding: 10px 4px; background: var(--bg-elev); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; }
+    .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 14px; }
+    .check-item.ok { background: rgba(34, 197, 94, 0.15); border-color: #22C55E; color: #22C55E; }
+    .check-item.ok::before { content: '✓'; color: #22C55E; }
+    .check-item.falla { background: rgba(239, 68, 68, 0.15); border-color: #EF4444; color: #EF4444; }
+    .check-item.falla::before { content: '✕'; color: #EF4444; }
 
     /* FOTOS */
     .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -225,39 +234,57 @@
         </div>
       </section>
 
-      <!-- PASO 3: DIAGNÓSTICO INTELIGENTE -->
+      <!-- PASO 3: DIAGNÓSTICO Y CHECKLIST -->
       <section class="wizard-panel hidden" data-panel="3" aria-hidden="true">
-        <div class="panel-header"><h2>Diagnóstico</h2><p>Selecciona las fallas</p></div>
+        <div class="panel-header"><h2>Recepción Técnica</h2><p>Motivo de ingreso y auditoría</p></div>
+        
+        <!-- BLOQUE 1: MOTIVO DE INGRESO -->
         <div class="card">
-          <!-- Lógica condicional: si no enciende -->
-          <div id="grupoApagado" class="hidden">
-            <label class="field-title">Problemas de Encendido</label>
-            <div class="chips-group" id="fallasApagadoGroup">
-              <button type="button" class="chip-btn" data-value="No enciende por completo">🔋 No enciende</button>
-              <button type="button" class="chip-btn" data-value="Se mojó (daño por líquido)">💧 Se mojó</button>
-              <button type="button" class="chip-btn" data-value="Problema de placa / corto">🔬 Falla de placa</button>
-            </div>
+          <label class="field-title">¿Por qué lo deja el cliente? (Motivo)</label>
+          <div class="chips-group" id="motivoIngresoGroup">
+            <button type="button" class="chip-btn" data-value="Cambio de pantalla">📱 Cambio pantalla</button>
+            <button type="button" class="chip-btn" data-value="Cambio de batería">🔋 Cambio batería</button>
+            <button type="button" class="chip-btn" data-value="Módulo de carga">🔌 Módulo carga</button>
+            <button type="button" class="chip-btn" data-value="Cambio de tapa">🪵 Tapa trasera</button>
+            <button type="button" class="chip-btn" data-value="Problema de placa">🔬 Placa</button>
+            <button type="button" class="chip-btn" data-value="Cambio de visor cámara">📸 Visor cámara</button>
+            <button type="button" class="chip-btn" data-value="No enciende">💀 No enciende</button>
           </div>
-          <!-- Lógica condicional: si enciende -->
-          <div id="grupoEncendido" class="hidden">
-            <label class="field-title">Fallas con el equipo encendido</label>
-            <div class="chips-group" id="fallasEncendidoGroup">
-              <button type="button" class="chip-btn" data-value="Pantalla rota / estrellada">📺 Pantalla rota</button>
-              <button type="button" class="chip-btn" data-value="Batería se descarga rápido">🪫 Batería dura poco</button>
-              <button type="button" class="chip-btn" data-value="No carga (módulo de carga)">🔌 No carga</button>
-              <button type="button" class="chip-btn" data-value="No da señal">📶 Sin señal</button>
-              <button type="button" class="chip-btn" data-value="Falla de cámara">📸 Cámara falla</button>
-            </div>
+          <input type="hidden" id="motivoIngreso" value="">
+          
+          <div class="field" style="margin-top: 12px; margin-bottom: 0;">
+            <textarea id="fallaDetalle" placeholder=" " rows="2"></textarea>
+            <label for="fallaDetalle">Detalles extra (opcional)</label>
           </div>
-          <div class="field"><textarea id="fallaDetalle" placeholder=" " rows="2"></textarea><label for="fallaDetalle">Detalles extra (opcional)</label></div>
         </div>
 
+        <!-- BLOQUE 2: CHECKLIST SEMÁFORO -->
+        <div class="card">
+          <label class="field-title">Revisión al recibir</label>
+          <p style="font-size: 12px; color: var(--text-mute); margin-bottom: 12px;">Tocá cada punto: <b>OK</b> → <b>Falla</b> → <b>Sin verificar</b>.</p>
+          
+          <div class="checklist-grid" id="checklistGroup">
+            <button type="button" class="check-item" data-item="Enciende"><span>Enciende</span></button>
+            <button type="button" class="check-item" data-item="Pantalla / táctil"><span>Pantalla / táctil</span></button>
+            <button type="button" class="check-item" data-item="Cámaras"><span>Cámaras</span></button>
+            <button type="button" class="check-item" data-item="Carga"><span>Carga</span></button>
+            <button type="button" class="check-item" data-item="Audio y micrófono"><span>Audio y micrófono</span></button>
+            <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
+            <button type="button" class="check-item" data-item="Wi-Fi / señal"><span>Wi-Fi / señal</span></button>
+            <button type="button" class="check-item" data-item="Tapa trasera"><span>Tapa trasera</span></button>
+            <button type="button" class="check-item" data-item="Bandeja SIM"><span>Bandeja SIM</span></button>
+          </div>
+          <input type="hidden" id="checklistResultados" value="">
+        </div>
+
+        <!-- BLOQUE 3: PLAZO -->
         <div class="card">
           <label class="field-title">Plazo de entrega estimado</label>
           <div class="chips-group" id="plazoGroup">
             <button type="button" class="chip-btn active" data-value="Hoy mismo">⚡ Hoy</button>
             <button type="button" class="chip-btn" data-value="Mañana">📅 Mañana</button>
             <button type="button" class="chip-btn" data-value="En 2 días">⏳ 2 días</button>
+            <button type="button" class="chip-btn" data-value="En 3 días">⏳ 3 días</button>
           </div>
           <input type="hidden" id="plazoEntrega" value="Hoy mismo">
         </div>
