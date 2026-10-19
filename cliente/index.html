@@ -20,7 +20,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
-    /* VARIABLES */
     :root { --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --brand: #E65100; --brand-hover: #BF360C; --brand-light: rgba(230, 81, 0, 0.1); }
     [data-theme="dark"] { --bg-main: #0E0E0E; --bg-card: #181818; --bg-elev: #242424; --text-main: #F5F5F5; --text-mute: #888888; --border: #2A2A2A; }
     [data-theme="light"] { --bg-main: #F9F9F9; --bg-card: #FFFFFF; --bg-elev: #F0F0F0; --text-main: #111111; --text-mute: #666666; --border: #E0E0E0; }
@@ -72,31 +71,15 @@
     .radio-option.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
     .radio-option i { font-size: 18px; }
 
-    /* CHIPS Y CHECKLIST (COMPACTADOS) */
+    /* CHIPS */
     .chips-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
     .chip-btn { padding: 10px 16px; border-radius: var(--radius-sm); background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
     .chip-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
 
-    /* CHECKLIST SEMÁFORO (MÁS COMPACTO) */
-    .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .check-item { 
-      padding: 8px 4px; 
-      background: var(--bg-elev); 
-      border: 1px solid var(--border); 
-      border-radius: var(--radius-sm); 
-      color: var(--text-main); 
-      font-size: 11px; 
-      font-weight: 500; 
-      cursor: pointer; 
-      display: flex; 
-      flex-direction: column;
-      align-items: center; 
-      justify-content: center; 
-      gap: 4px; 
-      transition: all 0.2s; 
-      text-align: center;
-    }
-    .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 14px; }
+    /* CHECKLIST SEMÁFORO (PÍLDORA) */
+    .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+    .check-item { padding: 10px 4px; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 20px; color: var(--text-main); font-size: 11px; font-weight: 500; cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; text-align: center; white-space: nowrap; }
+    .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 12px; }
     .check-item.ok { background: rgba(34, 197, 94, 0.1); border-color: #22C55E; color: #22C55E; }
     .check-item.ok::before { content: '✓'; color: #22C55E; }
     .check-item.falla { background: rgba(239, 68, 68, 0.1); border-color: #EF4444; color: #EF4444; }
@@ -134,7 +117,7 @@
     .modal { background: var(--bg-card); padding: 24px; border-radius: var(--radius-md); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
     .hidden { display: none !important; }
 
-    /* VISTA PREVIA LIMPIA (PASO 7) */
+    /* VISTA PREVIA (PASO 7) */
     .preview-recibo { background: white; color: #1a1a1a; border-radius: var(--radius-sm); padding: 20px; font-size: 12px; }
     .preview-header { border-bottom: 2px solid var(--brand); margin: -20px -20px 16px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; background: #f9fafb;}
     .preview-header img { width: 40px; height: 40px; object-fit: contain; }
@@ -229,45 +212,37 @@
         </div>
       </section>
 
-      <!-- PASO 3: DIAGNÓSTICO Y CHECKLIST -->
+      <!-- PASO 3: DIAGNÓSTICO Y CHECKLIST INTELIGENTE -->
       <section class="wizard-panel hidden" data-panel="3" aria-hidden="true">
-        <div class="panel-header"><h2>Recepción Técnica</h2><p>Motivo de ingreso y auditoría</p></div>
+        <div class="panel-header"><h2>Recepción Técnica</h2><p id="subtituloRecepcion">Completa la auditoría</p></div>
         
         <div class="card">
-          <label class="field-title">Motivo de Ingreso</label>
-          <div class="chips-group" id="motivoIngresoGroup">
-            <button type="button" class="chip-btn" data-value="Cambio de pantalla">📱 Cambio pantalla</button>
-            <button type="button" class="chip-btn" data-value="Cambio de batería">🔋 Cambio batería</button>
-            <button type="button" class="chip-btn" data-value="Módulo de carga">🔌 Módulo carga</button>
-            <button type="button" class="chip-btn" data-value="Cambio de tapa">🪵 Tapa trasera</button>
-            <button type="button" class="chip-btn" data-value="Problema de placa">🔬 Placa</button>
-            <button type="button" class="chip-btn" data-value="Cambio de visor cámara">📸 Visor cámara</button>
-            <button type="button" class="chip-btn" data-value="No enciende">💀 No enciende</button>
-          </div>
-          <input type="hidden" id="motivoIngreso" value="">
-          
-          <div class="field" style="margin-top: 16px; margin-bottom: 0;">
+          <label class="field-title">Falla Reportada</label>
+          <div class="field" style="margin-bottom:0;">
             <textarea id="fallaDetalle" placeholder=" " rows="2"></textarea>
-            <label for="fallaDetalle">Detalles extra (opcional)</label>
+            <label for="fallaDetalle">Describe el motivo por el que lo deja *</label>
           </div>
         </div>
 
+        <!-- AUDITORÍA FÍSICA (SIEMPRE VISIBLE) -->
         <div class="card">
-          <label class="field-title">Auditoría del Equipo</label>
-          <p style="font-size: 12px; color: var(--text-mute); margin-bottom: 12px;">Toca cada punto: <b>OK</b> → <b>Falla</b> → <b>Sin verificar</b>.</p>
-          
-          <div class="checklist-grid" id="checklistGroup">
-            <button type="button" class="check-item" data-item="Enciende"><span>Enciende</span></button>
-            <button type="button" class="check-item" data-item="Pantalla / táctil"><span>Pantalla / táctil</span></button>
-            <button type="button" class="check-item" data-item="Cámaras"><span>Cámaras</span></button>
-            <button type="button" class="check-item" data-item="Carga"><span>Carga</span></button>
-            <button type="button" class="check-item" data-item="Audio y micrófono"><span>Audio / mic</span></button>
-            <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
-            <button type="button" class="check-item" data-item="Wi-Fi / señal"><span>Wi-Fi / señal</span></button>
+          <label class="field-title">1. Estado Físico (Visual)</label>
+          <div class="checklist-grid" id="checklistFisicoGroup">
+            <button type="button" class="check-item" data-item="Pantalla"><span>Pantalla sana</span></button>
             <button type="button" class="check-item" data-item="Tapa trasera"><span>Tapa trasera</span></button>
-            <button type="button" class="check-item" data-item="Bandeja SIM"><span>Bandeja SIM</span></button>
+            <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
           </div>
-          <input type="hidden" id="checklistResultados" value="">
+        </div>
+
+        <!-- AUDITORÍA FUNCIONAL (SE MUESTRA SOLO SI ENCIENDE) -->
+        <div class="card hidden" id="cardAuditoriaFuncional">
+          <label class="field-title">2. Pruebas de Funcionamiento</label>
+          <div class="checklist-grid" id="checklistFuncionalGroup">
+            <button type="button" class="check-item" data-item="Cámaras"><span>Cámaras</span></button>
+            <button type="button" class="check-item" data-item="Audio / mic"><span>Audio / mic</span></button>
+            <button type="button" class="check-item" data-item="Wi-Fi / señal"><span>Wi-Fi / señal</span></button>
+            <button type="button" class="check-item" data-item="Táctil"><span>Táctil</span></button>
+          </div>
         </div>
 
         <div class="card">
@@ -298,7 +273,7 @@
           </div>
 
           <div id="patronContainer">
-            <div style="position: relative; width: 280px; margin: 0 auto; aspect-ratio: 1; background: var(--bg-elev); border-radius: var(--radius-sm);">
+            <div style="position: relative; width: 100%; max-width: 280px; margin: 0 auto; aspect-ratio: 1; background: var(--bg-elev); border-radius: var(--radius-sm);">
               <canvas id="bgCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
               <canvas id="lineCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
             </div>
@@ -323,7 +298,7 @@
         </div>
       </section>
 
-      <!-- PASO 6: COSTOS (CON DESCRIPCIÓN) -->
+      <!-- PASO 6: COSTOS -->
       <section class="wizard-panel hidden" data-panel="6" aria-hidden="true">
         <div class="panel-header"><h2>Costos</h2><p>Describe el servicio y asigna el precio</p></div>
         <div class="card">
