@@ -8,6 +8,7 @@ import { toast, haptic, initTheme, escapeHtml, formatBs, showLoading, hideLoadin
 import { db } from '/js/firebase.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// Importamos tu generador de PDF
 import { generarPDFUnificado } from '/js/cliente-pdf.js';
 
 /* ============================================================
@@ -117,9 +118,15 @@ function cargarBorrador() {
     if (datos.telefono) document.getElementById('telefono').value = datos.telefono;
     if (datos.modelo) document.getElementById('modelo').value = datos.modelo;
     if (datos.imei) document.getElementById('imei').value = datos.imei;
-    if (datos.color) document.getElementById('color').value = datos.color;
     if (datos.falla) document.getElementById('fallaDetalle').value = datos.falla;
     
+    // Si hay color, buscar el botón y activarlo
+    if (datos.color) {
+      const colorBtn = document.querySelector(`#coloresGroup .chip-btn[data-color="${datos.color}"]`);
+      if (colorBtn) colorBtn.classList.add('active');
+      document.getElementById('color').value = datos.color;
+    }
+
     toast('Borrador recuperado', 'info', 2000);
     irAPaso(2); // Mandar al paso 2 para continuar
     return true;
@@ -237,6 +244,11 @@ function validarPaso(paso) {
     if (!document.getElementById('modelo')?.value.trim()) { toast('Falta el modelo del equipo', 'error'); return false; }
     if (!document.getElementById('enciende')?.value) { toast('Indica si el equipo enciende', 'error'); return false; }
   }
+  if (paso === 3) {
+    const motivo = document.getElementById('motivoIngreso')?.value;
+    const falla = document.getElementById('fallaDetalle')?.value.trim();
+    if (!motivo && !falla) { toast('Selecciona el motivo o escribe una falla', 'error'); return false; }
+  }
   if (paso === 4) {
     const tipo = document.getElementById('tipoSeguridad')?.value;
     if (tipo === 'patron' && !document.getElementById('patronSecuencia')?.value) { toast('Dibuja el patrón', 'error'); return false; }
@@ -260,7 +272,7 @@ function guardarDatosPaso(paso) {
   if (paso === 2) {
     datos.marca = document.getElementById('marca')?.value || '';
     datos.modelo = document.getElementById('modelo')?.value.trim() || '';
-    datos.color = document.getElementById('color')?.value.trim() || '';
+    datos.color = document.getElementById('color')?.value || '';
     datos.imei = document.getElementById('imei')?.value.trim() || '';
     datos.enciende = document.getElementById('enciende')?.value || '';
     datos.accesorios = document.getElementById('accesorios')?.value || '';
@@ -282,7 +294,7 @@ function guardarDatosPaso(paso) {
 }
 
 /* ============================================================
-   LÓGICA: MARCAS, RADIOS Y CHECKLIST
+   LÓGICA: MARCAS, RADIOS, CHIPS Y CHECKLIST
    ============================================================ */
 function configurarMarca() {
   const grid = document.getElementById('marcasGrid');
@@ -339,6 +351,37 @@ function configurarRadioGroups() {
       document.getElementById('accesorios').value = val;
     });
   }
+
+  // Modelos Rápidos
+  const modelosGroup = document.getElementById('modelosRapidosGroup');
+  const inputModelo = document.getElementById('modelo');
+  if (modelosGroup && inputModelo) {
+    modelosGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip-btn');
+      if (!btn) return;
+      haptic(8);
+      inputModelo.value = btn.dataset.modelo;
+      modelosGroup.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  }
+
+  // Colores
+  const coloresGroup = document.getElementById('coloresGroup');
+  const inputColorHidden = document.getElementById('color');
+  if (coloresGroup && inputColorHidden) {
+    coloresGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip-btn');
+      if (!btn) return;
+      haptic(8);
+      btn.classList.toggle('active');
+      
+      if (btn.classList.contains('active')) {
+        coloresGroup.querySelectorAll('.chip-btn').forEach(b => { if (b !== btn) b.classList.remove('active'); });
+      }
+      inputColorHidden.value = btn.classList.contains('active') ? btn.dataset.color : '';
+    });
+  }
 }
 
 function configurarLogicaInteligente() {
@@ -361,10 +404,8 @@ function configurarLogicaInteligente() {
     checkGroup.addEventListener('click', (e) => {
       const btn = e.target.closest('.check-item');
       if (!btn) return;
-      
       haptic(10);
       
-      // Rotación: ? -> OK (verde) -> Falla (rojo) -> ?
       if (!btn.classList.contains('ok') && !btn.classList.contains('falla')) {
         btn.classList.add('ok'); 
       } else if (btn.classList.contains('ok')) {
@@ -373,7 +414,6 @@ function configurarLogicaInteligente() {
       } else {
         btn.classList.remove('falla');
       }
-      
       actualizarResultadosChecklist();
     });
   }
@@ -763,7 +803,7 @@ function configurarBotonGenerarPDF() {
         color: datos.color,
         imei: datos.imei,
         enciende: datos.enciende,
-        estadoEquipo: datos.estado, // Compatibilidad con PDF antiguo
+        estadoEquipo: datos.estado, // Compatibilidad
         falla: datos.falla,
         motivoIngreso: datos.motivoIngreso, // NUEVO
         checklist: datos.checklist,         // NUEVO
