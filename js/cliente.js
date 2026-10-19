@@ -411,14 +411,14 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS (¡CORREGIDO PARA ANDROID!)
+   FOTOS (¡NUEVA LÓGICA INFALIBLE PARA ANDROID!)
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
   const sheet = document.getElementById('fotoSheet');
   
-  const inputCamara = document.getElementById('inputCamara') || document.querySelector('input[type="file"][capture]');
-  const inputGaleria = document.getElementById('inputGaleria') || document.querySelector('input[type="file"]:not([capture])');
+  const inputCamara = document.getElementById('inputCamara');
+  const inputGaleria = document.getElementById('inputGaleria');
   
   if (!grid) return;
 
@@ -428,6 +428,7 @@ function configurarFotos() {
     const slot = e.target.closest('.foto-slot');
     if (!slot) return;
 
+    // Borrar foto
     if (e.target.closest('.foto-remove')) {
       e.stopPropagation(); haptic(15);
       const idx = parseInt(slot.dataset.slot);
@@ -435,29 +436,34 @@ function configurarFotos() {
     }
 
     const idx = parseInt(slot.dataset.slot);
-    if (datos.fotos[idx]) return;
+    if (datos.fotos[idx]) return; // Ya tiene foto
 
     slotActual = idx; haptic(10);
     
+    // Mostrar el menú
     if (sheet) sheet.classList.add('show');
-    else if (inputGaleria) inputGaleria.click();
   });
 
   const cerrarSheet = () => sheet?.classList.remove('show');
   document.getElementById('btnCancelarFoto')?.addEventListener('click', cerrarSheet);
-  sheet?.addEventListener('click', (e) => { if (e.target === sheet) cerrarSheet(); });
 
-  // 🚨 AQUÍ ESTABA EL ERROR: ELIMINADO EL setTimeout
+  // 🚨 TRUCO INFALIBLE: Al hacer clic, primero abrimos la cámara y LUEGO cerramos el menú
   document.getElementById('btnTomarFoto')?.addEventListener('click', () => {
-    cerrarSheet();
-    if (inputCamara) inputCamara.click(); // Clic inmediato, sin setTimeout
-    else toast('Cámara no disponible.', 'error');
+    if (inputCamara) {
+      inputCamara.click(); // 1. Abrimos la cámara inmediatamente
+      cerrarSheet();       // 2. Cerramos el menú de fondo
+    } else {
+      toast('Cámara no disponible.', 'error');
+    }
   });
 
   document.getElementById('btnSubirFoto')?.addEventListener('click', () => {
-    cerrarSheet();
-    if (inputGaleria) inputGaleria.click(); // Clic inmediato, sin setTimeout
-    else toast('Galería no disponible.', 'error');
+    if (inputGaleria) {
+      inputGaleria.click(); // 1. Abrimos la galería inmediatamente
+      cerrarSheet();        // 2. Cerramos el menú de fondo
+    } else {
+      toast('Galería no disponible.', 'error');
+    }
   });
 
   async function procesarFoto(e) {
@@ -469,11 +475,17 @@ function configurarFotos() {
       datos.fotos[slotActual] = { file, dataUrl };
       renderSlots(); toast('Foto añadida', 'success', 1500);
     } catch (err) { toast('Error al procesar la imagen', 'error'); }
-    e.target.value = ''; slotActual = null;
+    
+    e.target.value = ''; // Limpiar input
+    slotActual = null;
   }
 
   inputCamara?.addEventListener('change', procesarFoto);
   inputGaleria?.addEventListener('change', procesarFoto);
+
+  // Si el usuario cancela la cámara, reseteamos la variable
+  inputCamara?.addEventListener('cancel', () => { slotActual = null; });
+  inputGaleria?.addEventListener('cancel', () => { slotActual = null; });
 
   function renderSlots() {
     grid.querySelectorAll('.foto-slot').forEach((slot, i) => {
