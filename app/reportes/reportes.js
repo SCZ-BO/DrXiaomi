@@ -148,6 +148,9 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
 
         datos.sort((a, b) => b.fechaReal - a.fechaReal);
         renderizarReporte(datos);
+
+        // 🔥 APAGAMOS EL LOADER AQUÍ (Cuando ya cargaron los datos)
+        document.getElementById('appLoader')?.classList.add('hidden');
       },
       (error) => {
         console.error('❌ Error al cargar reporte:', error);
@@ -158,18 +161,25 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
             <i class="fas fa-exclamation-triangle" style="font-size:30px; margin-bottom:10px;"></i>
             <h3>Error de conexión</h3>
             <p style="font-size:12px;">${error.message}</p>
-            <button onclick="location.reload()" style="margin-top:10px; padding:10px 20px; border-radius:8px; background:var(--brand-500); color:white; border:none; font-weight:bold;">Reintentar</button>
+            <button onclick="location.reload()" style="margin-top:10px; padding:10px 20px; border-radius:8px; background:var(--brand); color:white; border:none; font-weight:bold;">Reintentar</button>
           </div>
         `;
+        // 🔥 APAGAMOS EL LOADER AQUÍ TAMBIÉN (En caso de error)
+        document.getElementById('appLoader')?.classList.add('hidden');
       }
     );
 
   } catch (error) {
     console.error('❌ Error al configurar reporte:', error);
+    // 🔥 APAGAMOS EL LOADER SI FALLA LA CONFIGURACIÓN
+    document.getElementById('appLoader')?.classList.add('hidden');
   }
 }
 
 function renderizarReporte(datos) {
+  // 🔥 APAGAMOS EL LOADER AL INICIO DE ESTA FUNCIÓN PARA ASEGURARNOS
+  document.getElementById('appLoader')?.classList.add('hidden');
+
   if (datos.length === 0) {
     totalMontoEl.textContent = 'Bs. 0.00';
     totalEntregasEl.textContent = '0 entregas';
@@ -180,7 +190,7 @@ function renderizarReporte(datos) {
     statMaximoEl.textContent = 'Bs. 0';
     metodosGrid.innerHTML = '';
     listaMovimientos.innerHTML = `
-      <div style="text-align:center; padding:40px 20px; color:var(--text-3);">
+      <div style="text-align:center; padding:40px 20px; color:var(--text-mute);">
         <i class="fas fa-inbox" style="font-size:40px; opacity:0.3; margin-bottom:10px; display:block;"></i>
         <h3 style="font-size:15px;">Sin movimientos</h3>
         <p style="font-size:12px;">No hay ventas entregadas en este período.</p>
