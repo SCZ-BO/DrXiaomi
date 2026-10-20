@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (RÁPIDO Y FUNCIONAL)
+   DR. XIAOMI · ORDEN (RÁPIDO Y FUNCIONAL - Estilo Minimalista)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -121,7 +121,7 @@ async function cargarOrden() {
 }
 
 /* ============================================================
-   RENDER PRINCIPAL
+   RENDER PRINCIPAL (ESTILO MINIMALISTA)
    ============================================================ */
 function renderOrden() {
   const estadoActual = orden.estadoOrden || 'recibido';
@@ -147,7 +147,7 @@ function renderOrden() {
           <td class="costo">${formatBs(s.costo)}</td>
         </tr>
       `).join('')
-    : '<tr><td colspan="2" style="text-align:center;color:var(--text-3);padding:12px;">Sin servicios registrados</td></tr>';
+    : '<tr><td colspan="2" style="text-align:center;color:var(--text-mute);padding:12px;">Sin servicios registrados</td></tr>';
 
   const fotosValidas = Array.isArray(orden.fotos) ? orden.fotos : [];
   const fotosHtml = fotosValidas.length > 0
@@ -179,7 +179,7 @@ function renderOrden() {
       </div>
 
       <div class="preview-estado-badge-wrap">
-        <span class="preview-estado-badge" style="background:${colorEstado}25;color:${colorEstado};border:1.5px solid ${colorEstado}60;">
+        <span class="preview-estado-badge" style="background:${colorEstado}25;color:${colorEstado};border:1px solid ${colorEstado}60;">
           <i class="fas ${estadoInfo.icono}"></i>
           ${estadoInfo.texto}
         </span>
@@ -198,7 +198,7 @@ function renderOrden() {
         </div>
         <div class="preview-row">
           <span>Teléfono:</span>
-          <span style="color:var(--brand-500);font-weight:700;">
+          <span style="color:var(--brand);font-weight:700;">
             ${escapeHtml(orden.telefono || '-')}
           </span>
         </div>
@@ -246,7 +246,7 @@ function renderOrden() {
           ${orden.tipoSeguridad === 'pin' && orden.pin ? `
             <div class="preview-row">
               <span>PIN:</span>
-              <span style="font-family:monospace;font-weight:800;color:var(--brand-500);">
+              <span style="font-family:monospace;font-weight:800;color:var(--brand);">
                 ${escapeHtml(orden.pin)}
               </span>
             </div>
@@ -254,7 +254,7 @@ function renderOrden() {
           ${patronTexto ? `
             <div class="preview-row">
               <span>Patrón:</span>
-              <span style="font-family:monospace;font-weight:800;color:var(--brand-500);">
+              <span style="font-family:monospace;font-weight:800;color:var(--brand);">
                 ${escapeHtml(patronTexto)}
               </span>
             </div>
@@ -326,7 +326,7 @@ function renderOrden() {
         <button class="btn btn-whatsapp" id="btnContactar" style="flex:1;">
           <i class="fab fa-whatsapp"></i> Contactar
         </button>
-        <button class="btn" id="btnRegenerarPDF" style="flex:1; background:linear-gradient(135deg,#FF6900,#FF8A3C); color:white; border:none; padding:14px; border-radius:14px; font-weight:700; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit;">
+        <button class="btn" id="btnRegenerarPDF" style="flex:1; background:var(--brand); color:white; border:none; padding:14px; border-radius:var(--radius-sm); font-weight:700; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit;">
           <i class="fas fa-file-pdf"></i> Enviar PDF
         </button>
       </div>
@@ -352,7 +352,7 @@ function renderOrden() {
         ${Number(orden.montoCobrado) > 0 ? `
           <div class="fila-info">
             <span class="label">Cobrado al cliente</span>
-            <span class="valor" style="color:var(--brand-500); font-weight:700;">${formatBs(orden.montoCobrado || 0)}</span>
+            <span class="valor" style="color:var(--brand); font-weight:700;">${formatBs(orden.montoCobrado || 0)}</span>
           </div>
           <div class="fila-info">
             <span class="label">Costo del repuesto</span>
@@ -360,14 +360,14 @@ function renderOrden() {
               ${Number(orden.costoRepuesto) > 0 ? formatBs(orden.costoRepuesto) : 'Sin asignar'}
             </span>
           </div>
-          <div class="fila-info" style="background:rgba(16,185,129,0.1); padding:8px; border-radius:8px; margin-top:8px;">
+          <div class="fila-info" style="background:rgba(16,185,129,0.1); padding:8px; border-radius:var(--radius-sm); margin-top:8px;">
             <span class="label" style="color:#10B981; font-weight:700;">Ganancia neta</span>
             <span class="valor" style="color:#10B981; font-weight:800; font-size:16px;">
               ${formatBs(ganancia)}
             </span>
           </div>
         ` : `
-          <p style="font-size:12px; color:var(--text-3); text-align:center; margin-bottom:12px;">
+          <p style="font-size:12px; color:var(--text-mute); text-align:center; margin-bottom:12px;">
             Esta orden aún no tiene cobro registrado.
           </p>
         `}
@@ -389,7 +389,7 @@ function renderOrden() {
             placeholder="Escribe o dicta una nota..."
             maxlength="500"
             data-dictado
-            style="width:100%; padding:12px; padding-right:52px; background:var(--input-bg); color:var(--text-1); border:1.5px solid var(--border-2); border-radius:12px; font-family:inherit; font-size:13px; resize:vertical; min-height:70px;"></textarea>
+            style="width:100%; padding:12px; padding-right:52px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:var(--radius-sm); font-family:inherit; font-size:13px; resize:vertical; min-height:70px;"></textarea>
         </div>
 
         <div class="foto-uploader" id="fotoUploader">
@@ -421,7 +421,7 @@ function renderOrden() {
     ` : ''}
 
     <!-- VOLVER AL PANEL -->
-    <button id="btnVolverPanelFinal" style="width:100%; margin-top:8px; margin-bottom:24px; padding:16px; background:linear-gradient(135deg,#FF6900,#FF8A3C); color:white; border:none; border-radius:14px; font-weight:800; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-family:inherit; box-shadow:0 6px 20px rgba(255,105,0,0.35);">
+    <button id="btnVolverPanelFinal" style="width:100%; margin-top:8px; margin-bottom:24px; padding:16px; background:var(--brand); color:white; border:none; border-radius:var(--radius-sm); font-weight:800; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-family:inherit;">
       <i class="fas fa-home"></i> VOLVER AL PANEL
     </button>
   `;
@@ -434,7 +434,7 @@ function renderOrden() {
 }
 
 /* ============================================================
-   BITÁCORA
+   BITÁCORA (SIN CAMBIOS DE LÓGICA)
    ============================================================ */
 function renderBitacora() {
   const bitacora = Array.isArray(orden.bitacora) ? orden.bitacora : [];
@@ -447,7 +447,7 @@ function renderBitacora() {
 
   if (ordenada.length === 0) {
     return `
-      <div style="text-align:center; padding:20px; color:var(--text-3); font-size:13px;">
+      <div style="text-align:center; padding:20px; color:var(--text-mute); font-size:13px;">
         <i class="fas fa-clipboard-list" style="font-size:24px; opacity:0.4; margin-bottom:8px; display:block;"></i>
         No hay entradas en la bitácora aún
       </div>
@@ -486,7 +486,7 @@ function renderBitacora() {
 }
 
 /* ============================================================
-   EVENTOS
+   EVENTOS (SIN CAMBIOS DE LÓGICA)
    ============================================================ */
 function configurarEventosOrden() {
   document.querySelectorAll('.estado-btn').forEach(btn => {
@@ -577,7 +577,7 @@ function configurarEventosOrden() {
 }
 
 /* ============================================================
-   CAMBIAR ESTADO
+   CAMBIAR ESTADO (LÓGICA INTACTA)
    ============================================================ */
 async function cambiarEstado(nuevoEstado) {
   if (!nuevoEstado || !ESTADOS[nuevoEstado]) return;
@@ -623,7 +623,7 @@ async function cambiarEstado(nuevoEstado) {
 }
 
 /* ============================================================
-   MODAL DE COBRO
+   MODAL DE COBRO (ESTILO MINIMALISTA)
    ============================================================ */
 function abrirModalCobro() {
   haptic(15);
@@ -636,17 +636,17 @@ function abrirModalCobro() {
   modal.className = 'modal-backdrop';
   modal.id = 'modalCobro';
   modal.innerHTML = `
-    <div class="modal" style="max-width: 420px;">
-      <h3 class="modal-title" style="color: var(--brand-500);">✅ Confirmar entrega</h3>
+    <div class="modal" style="max-width: 420px; border-radius: var(--radius-md);">
+      <h3 class="modal-title" style="color: var(--brand); font-weight: 800;">✅ Confirmar entrega</h3>
       <p class="modal-text" style="margin-bottom: 20px;">
         <strong>${escapeHtml(orden.cliente)}</strong><br>
-        <span style="font-size: 12px; color: var(--text-3);">
+        <span style="font-size: 12px; color: var(--text-mute);">
           Total: ${formatBs(total)}${saldo > 0 && saldo !== total ? ` · Saldo: ${formatBs(saldo)}` : ''}
         </span>
       </p>
 
       <div style="margin-bottom: 16px;">
-        <label style="display:block; font-size:12px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">
+        <label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">
           Monto cobrado
         </label>
         <input type="number"
@@ -655,11 +655,11 @@ function abrirModalCobro() {
                min="0"
                value="${montoSugerido.toFixed(2)}"
                inputmode="decimal"
-               style="width:100%; padding:14px; font-size:18px; font-weight:700; text-align:center; background:var(--input-bg); color:var(--text-1); border:1.5px solid var(--border-2); border-radius:12px; font-family:inherit;">
+               style="width:100%; padding:14px; font-size:18px; font-weight:700; text-align:center; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:var(--radius-sm); font-family:inherit;">
       </div>
 
       <div style="margin-bottom: 20px;">
-        <label style="display:block; font-size:12px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px;">
+        <label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px;">
           Método de pago
         </label>
         <div id="metodosPago" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
@@ -682,7 +682,7 @@ function abrirModalCobro() {
                  id="detalleMixto"
                  placeholder="Ej: 200 efectivo + 150 QR"
                  maxlength="100"
-                 style="width:100%; padding:12px; background:var(--input-bg); color:var(--text-1); border:1.5px solid var(--border-2); border-radius:12px; font-family:inherit; font-size:13px;">
+                 style="width:100%; padding:12px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:var(--radius-sm); font-family:inherit; font-size:13px;">
         </div>
 
         <div id="errorMetodo" style="color:#EF4444; font-size:12px; margin-top:8px; display:none;"></div>
@@ -712,12 +712,12 @@ function abrirModalCobro() {
         align-items: center;
         gap: 4px;
         padding: 12px 8px;
-        background: var(--bg-elev-2);
-        border: 2px solid var(--border-2);
-        border-radius: 12px;
-        color: var(--text-2);
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text-main);
         font-size: 12px;
-        font-weight: 700;
+        font-weight: 600;
         cursor: pointer;
         font-family: inherit;
         transition: all 0.15s ease;
@@ -725,10 +725,10 @@ function abrirModalCobro() {
       .metodo-btn i { font-size: 20px; }
       .metodo-btn:active { transform: scale(0.95); }
       .metodo-btn.activo {
-        background: var(--brand-500);
-        border-color: var(--brand-500);
-        color: white;
-        box-shadow: 0 4px 12px rgba(255,105,0,0.4);
+        background: var(--brand-light);
+        border-color: var(--brand);
+        color: var(--brand);
+        font-weight: 700;
       }
     `;
     document.head.appendChild(style);
@@ -830,7 +830,7 @@ async function confirmarCobro(monto, metodo) {
 }
 
 /* ============================================================
-   MODAL DE COSTO (admin)
+   MODAL DE COSTO (ESTILO MINIMALISTA)
    ============================================================ */
 function abrirModalCosto() {
   if (sesion.rol !== 'admin') return;
@@ -844,29 +844,29 @@ function abrirModalCosto() {
   modal.className = 'modal-backdrop';
   modal.id = 'modalCosto';
   modal.innerHTML = `
-    <div class="modal" style="max-width: 420px;">
-      <h3 class="modal-title" style="color: #10B981;">
+    <div class="modal" style="max-width: 420px; border-radius: var(--radius-md);">
+      <h3 class="modal-title" style="color: #10B981; font-weight: 800;">
         <i class="fas fa-calculator"></i> Registrar costo
       </h3>
 
-      <div style="background:var(--bg-elev-2); border-radius:12px; padding:12px; margin-bottom:1rem;">
-        <div style="font-size:11px; color:var(--text-3); margin-bottom:4px;">RECIBO</div>
+      <div style="background:var(--bg-elev); border-radius:var(--radius-sm); padding:12px; margin-bottom:1rem; border:1px solid var(--border);">
+        <div style="font-size:11px; color:var(--text-mute); margin-bottom:4px;">RECIBO</div>
         <div style="font-weight:700; font-size:13px;">${escapeHtml(orden.numeroRecibo || '-')}</div>
-        <div style="font-size:12px; color:var(--text-2); margin-top:4px;">${escapeHtml(orden.cliente || '-')}</div>
-        <div style="font-size:11px; color:var(--text-3); margin-top:2px;">${escapeHtml(orden.marca || '')} ${escapeHtml(orden.modelo || '')}</div>
+        <div style="font-size:12px; color:var(--text-main); margin-top:4px;">${escapeHtml(orden.cliente || '-')}</div>
+        <div style="font-size:11px; color:var(--text-mute); margin-top:2px;">${escapeHtml(orden.marca || '')} ${escapeHtml(orden.modelo || '')}</div>
       </div>
 
       <div style="margin-bottom:1rem;">
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">
+        <label style="display:block; font-size:11px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">
           Monto cobrado al cliente
         </label>
-        <div style="background:var(--bg-elev-2); border:1.5px solid var(--border-2); border-radius:12px; padding:14px; font-size:18px; font-weight:800; text-align:center; color:var(--brand-500);">
+        <div style="background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; font-size:18px; font-weight:800; text-align:center; color:var(--brand);">
           ${formatBs(monto)}
         </div>
       </div>
 
       <div style="margin-bottom:1rem;">
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">
+        <label style="display:block; font-size:11px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">
           Costo del repuesto
         </label>
         <input type="number"
@@ -876,16 +876,16 @@ function abrirModalCosto() {
                value="${costoActual > 0 ? costoActual.toFixed(2) : ''}"
                inputmode="decimal"
                placeholder="0.00"
-               style="width:100%; padding:14px; font-size:20px; font-weight:800; text-align:center; background:var(--input-bg); color:#FF9500; border:1.5px solid var(--border-2); border-radius:12px; font-family:inherit;">
+               style="width:100%; padding:14px; font-size:20px; font-weight:800; text-align:center; background:var(--bg-elev); color:#F59E0B; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:inherit;">
         <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-          <button type="button" class="costo-preset" data-pct="0.7" style="flex:1; padding:8px; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:8px; color:var(--text-2); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">70%</button>
-          <button type="button" class="costo-preset" data-pct="0.5" style="flex:1; padding:8px; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:8px; color:var(--text-2); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">50%</button>
-          <button type="button" class="costo-preset" data-pct="0.4" style="flex:1; padding:8px; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:8px; color:var(--text-2); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">40%</button>
+          <button type="button" class="costo-preset" data-pct="0.7" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">70%</button>
+          <button type="button" class="costo-preset" data-pct="0.5" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">50%</button>
+          <button type="button" class="costo-preset" data-pct="0.4" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">40%</button>
         </div>
       </div>
 
-      <div style="background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(0,255,200,0.1)); border:1.5px solid rgba(16,185,129,0.4); border-radius:12px; padding:16px; margin-bottom:1.2rem; text-align:center;">
-        <div style="font-size:11px; color:var(--text-3); text-transform:uppercase; font-weight:700; letter-spacing:0.6px; margin-bottom:4px;">Ganancia neta</div>
+      <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:var(--radius-sm); padding:16px; margin-bottom:1.2rem; text-align:center;">
+        <div style="font-size:11px; color:var(--text-mute); text-transform:uppercase; font-weight:700; letter-spacing:0.6px; margin-bottom:4px;">Ganancia neta</div>
         <div id="gananciaPreview" style="font-size:26px; font-weight:900; color:#10B981; line-height:1;">
           ${formatBs(gananciaInicial)}
         </div>
@@ -911,7 +911,7 @@ function abrirModalCosto() {
     const costo = parseFloat(costoInput.value) || 0;
     const ganancia = monto - costo;
     gananciaPreview.textContent = formatBs(ganancia);
-    gananciaPreview.style.color = ganancia >= 0 ? '#10B981' : '#FF4D6D';
+    gananciaPreview.style.color = ganancia >= 0 ? '#10B981' : '#EF4444';
   }
 
   costoInput.addEventListener('input', actualizarPreview);
@@ -979,7 +979,7 @@ function cerrarModalCosto() {
 }
 
 /* ============================================================
-   WHATSAPP - CONTACTAR
+   WHATSAPP
    ============================================================ */
 function contactarCliente() {
   if (!orden.telefono) {
@@ -998,7 +998,7 @@ function contactarCliente() {
 }
 
 /* ============================================================
-   REGENERAR PDF (Ahora usa el motor central)
+   REGENERAR PDF
    ============================================================ */
 async function regenerarYEnviarPDF() {
   if (!orden.telefono) {
@@ -1010,7 +1010,6 @@ async function regenerarYEnviarPDF() {
   haptic(20);
 
   try {
-    // 🔥 Llamamos al motor central que unificamos
     const exito = await generarPDFUnificado(orden, 'guardar');
     
     if (exito) {
@@ -1024,7 +1023,6 @@ async function regenerarYEnviarPDF() {
         toast('PDF descargado · Adjúntalo en WhatsApp', 'success', 4000);
       }, 600);
       
-      // Registrar en bitácora
       try {
         const entrada = {
           tipo: 'whatsapp',
