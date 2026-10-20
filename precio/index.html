@@ -255,14 +255,8 @@
     .scroll-top-btn.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
     .scroll-top-btn:active { transform: scale(0.9); }
 
-    /* ============ FICHA TÉCNICA ============ */
+    /* ============ FICHA TÉCNICA (IA) ============ */
     #modalSpecs .modal-content { max-height: 85vh; overflow-y: auto; padding-bottom: calc(20px + var(--safe-bottom)); }
-    .spec-section { margin-bottom: 14px; border-bottom: 1px solid var(--border-soft); padding-bottom: 10px; }
-    .spec-section:last-child { border-bottom: none; }
-    .spec-section h4 { font-size: 11px; font-weight: 800; color: var(--xiaomi-orange); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-    .spec-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; font-size: 12px; }
-    .spec-label { color: var(--text-tertiary); font-weight: 500; flex-shrink: 0; }
-    .spec-value { color: var(--text-primary); font-weight: 600; text-align: right; word-break: break-word; }
     .spec-loading { text-align: center; padding: 30px; color: var(--text-tertiary); font-size: 13px; }
 
     @media (min-width: 640px) {
@@ -275,7 +269,7 @@
 </head>
 <body>
 
-<!-- LOADER NATIVO (Mismo que el panel) -->
+<!-- LOADER NATIVO -->
 <div class="splash" id="splash">
   <div class="loader-logo-container">
     <div class="loader-ring"></div>
@@ -350,7 +344,6 @@
   </button>
 </div>
 
-<!-- EL MISMO SCRIPT DE ANTES (No cambia nada) -->
 <script>
   const CONFIG = {
     dataSources: [
@@ -895,7 +888,9 @@
     haptic(20);
   };
 
-  // FICHA TÉCNICA
+  // ============================================================
+  // 🧠 FICHA TÉCNICA (AHORA CON GEMINI AI)
+  // ============================================================
   window.openFicha = async function(id) {
     const p = filteredData.find(x => x.id === id) || allData.find(x => x.id === id);
     if (!p) return showToast("Producto no encontrado");
@@ -910,11 +905,11 @@
         <div class="sheet-handle"></div>
         <h3 style="display:flex;align-items:center;gap:8px;">
           <i class="fas fa-info-circle" style="color:var(--xiaomi-orange);"></i>
-          Ficha Técnica
+          Ficha Técnica (IA)
         </h3>
         <div id="specsContent" class="spec-loading">
           <div class="search-loader" style="margin:0 auto 10px;"></div>
-          Buscando "${escapeHtml(p.modelo)}"...
+          Generando ficha con IA para "${escapeHtml(p.modelo)}"...
         </div>
         <div class="modal-buttons" style="margin-top:16px;">
           <button onclick="window.cerrarFicha()" style="background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border);">Cerrar</button>
@@ -924,74 +919,53 @@
     document.body.appendChild(modal);
 
     try {
-      const searchTerm = `${p.modelo} ${p.marca}`.trim();
-      const searchRes = await fetch(`${CONFIG.specsApiBase}/search?query=${encodeURIComponent(searchTerm)}`);
-      const searchData = await searchRes.json();
+      // 🔥 TU LLAVE API AQUÍ
+      const GEMINI_API_KEY = "AQ.Ab8RN6LGWz6t8ZIMcO8zW1eT7xW_I8YWEB2TEyeVuNQzJndZ6g"; 
+      
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-      if (!searchData.status || !searchData.data || !searchData.data.phones || !searchData.data.phones.length) {
-        document.getElementById('specsContent').innerHTML = `
-          <div style="text-align:center;padding:30px;color:var(--text-tertiary);">
-            <i class="fas fa-search" style="font-size:32px;opacity:0.3;margin-bottom:10px;display:block;"></i>
-            <p>No se encontró ficha técnica para</p>
-            <p style="font-weight:700;color:var(--text-secondary);">${escapeHtml(p.modelo)}</p>
-          </div>
-        `;
-        return;
+      const prompt = `Eres un experto técnico en reparación de celulares en Bolivia. Genera una ficha técnica breve y útil para un técnico sobre el modelo: ${p.marca} ${p.modelo}. 
+      Incluye: Pantalla, Batería, Procesador, RAM/Almacenamiento, y un consejo de reparación. 
+      Usa un formato de lista limpia, sin markdown complejo (solo texto y saltos de línea). Si no estás seguro de un dato, indícalo como "No confirmado".`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error.message || "Error en la API de Gemini");
+      }
+      
+      if (!data.candidates || !data.candidates[0].content.parts[0].text) {
+        throw new Error("La IA no devolvió respuesta.");
       }
 
-      const phone = searchData.data.phones[0];
-      const specsRes = await fetch(`${CONFIG.specsApiBase}/${phone.slug}`);
-      const specsData = await specsRes.json();
-
-      if (!specsData.status || !specsData.data) throw new Error('Sin datos');
-
-      const d = specsData.data;
-
-      let specsHtml = '';
-
-      if (d.phone_images && d.phone_images[0]) {
-        specsHtml += `<div style="text-align:center;margin-bottom:14px;">
-          <img src="${d.phone_images[0]}" alt="${escapeHtml(d.phone_name)}"
-               style="max-width:120px;border-radius:6px;border:1px solid var(--border);">
-        </div>`;
-      }
-
-      specsHtml += `<div style="text-align:center;margin-bottom:16px;">
-        <div style="font-size:16px;font-weight:700;">${escapeHtml(d.phone_name)}</div>
-        <div style="font-size:12px;color:var(--text-tertiary);">${escapeHtml(d.brand || '')}</div>
-      </div>`;
-
-      if (Array.isArray(d.specifications)) {
-        d.specifications.forEach(section => {
-          specsHtml += `<div class="spec-section">
-            <h4>${escapeHtml(section.title)}</h4>
-            ${section.specs.map(s => `
-              <div class="spec-row">
-                <span class="spec-label">${escapeHtml(s.key)}</span>
-                <span class="spec-value">${escapeHtml(s.val)}</span>
-              </div>
-            `).join('')}
-          </div>`;
-        });
-      }
+      const textoIA = data.candidates[0].content.parts[0].text;
+      const textoHTML = textoIA.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
       const content = document.getElementById('specsContent');
       if (content) {
-        content.innerHTML = specsHtml;
+        content.innerHTML = `<div style="font-size:13px; line-height:1.6; color:var(--text-secondary); text-align:left;">${textoHTML}</div>`;
         content.classList.remove('spec-loading');
       }
 
       haptic(15);
 
     } catch (err) {
-      console.error('Error ficha técnica:', err);
+      console.error('Error con Gemini:', err);
       const content = document.getElementById('specsContent');
       if (content) {
         content.innerHTML = `
           <div style="text-align:center;padding:30px;color:var(--text-tertiary);">
             <i class="fas fa-exclamation-triangle" style="font-size:32px;opacity:0.3;margin-bottom:10px;display:block;"></i>
-            <p>Error al cargar la ficha técnica</p>
-            <p style="font-size:11px;">Revisa tu conexión e intenta de nuevo</p>
+            <p>Error al generar la ficha con IA</p>
+            <p style="font-size:11px; color:#EF4444;">${err.message}</p>
           </div>
         `;
       }
