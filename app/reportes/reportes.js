@@ -1,12 +1,12 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (CACHÉ + NUBE EN TIEMPO REAL)
+   DR. XIAOMI · REPORTES (UNIFICADO: RECIBOS + CIERRES)
    Archivo: app/reportes/reportes.js
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
 import { toast, haptic, initTheme, formatBs, escapeHtml } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
-import { collection, query, where, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, query, where, onSnapshot, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 initTheme();
 let sesion = null;
@@ -68,7 +68,6 @@ function configurarEventos() {
 }
 
 async function cargarReporte(rango, desdeFecha, hastaFecha) {
-  // Detenemos cualquier escucha anterior
   if (unsubscribe) {
     unsubscribe();
     unsubscribe = null;
@@ -107,82 +106,119 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
     const opcionesFecha = { day: '2-digit', month: 'short' };
     headerSubtitle.textContent = `${inicio.toLocaleDateString('es-BO', opcionesFecha)} - ${fin.toLocaleDateString('es-BO', opcionesFecha)}`;
 
-    // 🔥 CONSULTA OPTIMIZADA CON CACHÉ + TIEMPO REAL
-    const q = query(
+    // 🔥 1. TRAER RECIBOS (Reparaciones + Ventas Directas)
+    const qRecibos = query(
       collection(db, 'recibos'),
       where('estadoOrden', '==', 'entregado'),
       limit(500)
     );
 
-    unsubscribe = onSnapshot(q, 
-      { includeMetadataChanges: true },
-      (snapshot) => {
-        const source = snapshot.metadata.fromCache ? '💾 Caché' : '☁️ Servidor';
-        console.log(`📡 Reportes cargados desde: ${source} (${snapshot.size} entregados)`);
+    // 🔥 2. TRAER CIERRES (Accesorios + Extras)
+    const qCierres = query(collection(db, 'cierres'), limit(500));
 
-        const datos = [];
+    // Escuchamos ambos en tiempo real
+    let datosRecibos = [];
+    let datosCierres = [];
 
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          
-          let fechaValida = d.fechaEntrega || d.fecha;
-          let fechaD = new Date();
-          if (fechaValida) {
-            if (typeof fechaValida.toDate === 'function') fechaD = fechaValida.toDate();
-            else fechaD = new Date(fechaValida);
-          }
+    const unsubRecibos = onSnapshot(qRecibos, (snap) => {
+      datosRecibos = [];
+      snap.forEach(doc => {
+        const d = doc.data();
+        let fechaD = d.fechaEntrega || d.fecha;
+        if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
+        else if (fechaD) fechaD = new Date(fechaD);
 
-          if (fechaD >= inicio && fechaD <= fin) {
-            datos.push({
-              numeroRecibo: d.numeroRecibo,
-              cliente: d.cliente,
-              marca: d.marca,
-              modelo: d.modelo,
-              montoCobrado: Number(d.montoCobrado) || 0,
-              costoRepuesto: Number(d.costoRepuesto) || 0,
-              metodoPago: d.metodoPago || 'Efectivo',
-              fechaReal: fechaD
+        if (fechaD >= inicio && fechaD <= fin) {
+          datosRecibos.push({
+            tipo: 'recibo',
+            numeroRecibo: d.numeroRecibo,
+            cliente: d.cliente,
+            marca: d.marca,
+            modelo: d.modelo,
+            montoCobrado: Number(d.montoCobrado) || 0,
+            costoRepuesto: Number(d.costoRepuesto) || 0,
+            metodoPago: d.metodoPago || 'Efectivo',
+            fechaReal: fechaD
+          });
+        }
+      });
+      unificarYRenderizar(datosRecibos, datosCierres);
+    });
+
+    const unsubCierres = onSnapshot(qCierres, (snap) => {
+      datosCierres = [];
+      snap.forEach(doc => {
+        const d = doc.data();
+        let fechaD = d.fecha;
+        if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
+        else if (fechaD) fechaD = new Date(fechaD);
+
+        if (fechaD >= inicio && fechaD <= fin) {
+          // Agregamos un movimiento por cada accesorio vendido
+          if (d.ventasInventario && d.ventasInventario.length > 0) {
+            d.ventasInventario.forEach(v => {
+              datosCierres.push({
+                tipo: 'accesorio',
+                cliente: 'Cierre de Caja',
+                marca: 'Accesorio',
+                modelo: `${v.cantidad}x ${v.nombre}`,
+                montoCobrado: Number(v.precio * v.cantidad) || 0,
+                costoRepuesto: 0, // No hay costo registrado en el cierre
+                metodoPago: 'Efectivo', // Asumimos efectivo por defecto
+                fechaReal: fechaD
+              });
             });
           }
-        });
+          // Agregamos un movimiento por cada venta extra manual
+          if (d.extras && d.extras.length > 0) {
+            d.extras.forEach(e => {
+              if (e.monto > 0) {
+                datosCierres.push({
+                  tipo: 'extra',
+                  cliente: 'Cierre de Caja',
+                  marca: 'Venta Extra',
+                  modelo: e.desc || 'Venta',
+                  montoCobrado: Number(e.monto) || 0,
+                  costoRepuesto: 0,
+                  metodoPago: 'Efectivo',
+                  fechaReal: fechaD
+                });
+              }
+            });
+          }
+        }
+      });
+      unificarYRenderizar(datosRecibos, datosCierres);
+    });
 
-        datos.sort((a, b) => b.fechaReal - a.fechaReal);
-        renderizarReporte(datos);
-
-        // 🔥 APAGAMOS EL LOADER AQUÍ (Cuando ya cargaron los datos)
-        document.getElementById('appLoader')?.classList.add('hidden');
-      },
-      (error) => {
-        console.error('❌ Error al cargar reporte:', error);
-        totalMontoEl.textContent = 'Bs. 0.00';
-        totalEntregasEl.textContent = 'Error';
-        listaMovimientos.innerHTML = `
-          <div style="text-align:center; padding:20px; color:#EF4444;">
-            <i class="fas fa-exclamation-triangle" style="font-size:30px; margin-bottom:10px;"></i>
-            <h3>Error de conexión</h3>
-            <p style="font-size:12px;">${error.message}</p>
-            <button onclick="location.reload()" style="margin-top:10px; padding:10px 20px; border-radius:8px; background:var(--brand); color:white; border:none; font-weight:bold;">Reintentar</button>
-          </div>
-        `;
-        // 🔥 APAGAMOS EL LOADER AQUÍ TAMBIÉN (En caso de error)
-        document.getElementById('appLoader')?.classList.add('hidden');
-      }
-    );
+    // Guardamos las funciones de desuscripción para limpiarlas luego
+    unsubscribe = () => {
+      unsubRecibos();
+      unsubCierres();
+    };
 
   } catch (error) {
     console.error('❌ Error al configurar reporte:', error);
-    // 🔥 APAGAMOS EL LOADER SI FALLA LA CONFIGURACIÓN
     document.getElementById('appLoader')?.classList.add('hidden');
   }
 }
 
+// 🔥 UNIFICAR Y RENDERIZAR
+function unificarYRenderizar(recibos, cierres) {
+  document.getElementById('appLoader')?.classList.add('hidden');
+  
+  const todosLosDatos = [...recibos, ...cierres];
+  todosLosDatos.sort((a, b) => b.fechaReal - a.fechaReal);
+  
+  renderizarReporte(todosLosDatos);
+}
+
 function renderizarReporte(datos) {
-  // 🔥 APAGAMOS EL LOADER AL INICIO DE ESTA FUNCIÓN PARA ASEGURARNOS
   document.getElementById('appLoader')?.classList.add('hidden');
 
   if (datos.length === 0) {
     totalMontoEl.textContent = 'Bs. 0.00';
-    totalEntregasEl.textContent = '0 entregas';
+    totalEntregasEl.textContent = '0 ventas';
     totalCostoEl.textContent = 'Bs. 0';
     totalGananciaEl.textContent = 'Bs. 0';
     totalMargenEl.textContent = '0%';
@@ -240,7 +276,7 @@ function renderizarReporte(datos) {
   const promedio = totalMonto / datos.length;
 
   totalMontoEl.textContent = formatBs(totalMonto);
-  totalEntregasEl.textContent = `${datos.length} entregas`;
+  totalEntregasEl.textContent = `${datos.length} ventas`;
   totalCostoEl.textContent = formatBs(totalCosto);
   totalGananciaEl.textContent = formatBs(totalGanancia);
   totalMargenEl.textContent = `${margen.toFixed(1)}%`;
