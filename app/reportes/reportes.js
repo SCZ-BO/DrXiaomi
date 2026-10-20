@@ -1,7 +1,6 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v7)
+   DR. XIAOMI · REPORTES (VERSIÓN DEFINITIVA v9 - LIMPIA)
    Archivo: app/reportes/reportes.js
-   CAMBIO: Ahora escucha la colección 'ventas' generada desde el panel.
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -14,9 +13,10 @@ let sesion = null;
 let rangoActual = 'hoy';
 let unsubscribeRecibos = null;
 let unsubscribeCierres = null;
-let unsubscribeVentas = null; // 🔥 NUEVO LISTENER
+let unsubscribeVentas = null; 
 let datosActuales = [];
 
+// Elementos del DOM
 const headerSubtitle = document.getElementById('headerSubtitle');
 const totalMontoEl = document.getElementById('totalMonto');
 const totalEntregasEl = document.getElementById('totalEntregas');
@@ -71,6 +71,15 @@ function configurarEventos() {
   document.getElementById('btnExportar')?.addEventListener('click', exportarCSV);
 }
 
+// 🔥 FUNCIÓN BLINDADA PARA LEER CUALQUIER TIPO DE FECHA
+function parsearFecha(fechaObj) {
+  if (!fechaObj) return null;
+  if (typeof fechaObj.toDate === 'function') return fechaObj.toDate();
+  if (fechaObj.seconds !== undefined) return new Date(fechaObj.seconds * 1000);
+  const d = new Date(fechaObj);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 /* ============================================================
    CARGAR REPORTE
    ============================================================ */
@@ -117,7 +126,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
 
     let datosRecibos = [];
     let datosCierres = [];
-    let datosVentas = []; // 🔥 NUEVO ARRAY
+    let datosVentas = [];
 
     const procesarYRenderizar = () => {
       const todosLosDatos = [...datosRecibos, ...datosCierres, ...datosVentas];
@@ -129,7 +138,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
 
     // 1. Escuchar Recibos
     const qRecibos = query(collection(db, 'recibos'), limit(500));
-
     unsubscribeRecibos = onSnapshot(qRecibos, (snapshot) => {
       datosRecibos = [];
       snapshot.forEach(doc => {
@@ -138,18 +146,8 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         const estaEntregado = d.estadoOrden === 'entregado';
         if (!estaEntregado && montoCobrado <= 0) return;
 
-        let fechaD = null;
-        if (d.fechaEditada) {
-          if (typeof d.fechaEditada.toDate === 'function') fechaD = d.fechaEditada.toDate();
-          else if (d.fechaEditada.seconds !== undefined) fechaD = new Date(d.fechaEditada.seconds * 1000);
-          else fechaD = new Date(d.fechaEditada);
-        } else if (d.fechaEntrega) {
-          fechaD = typeof d.fechaEntrega.toDate === 'function' ? d.fechaEntrega.toDate() : new Date(d.fechaEntrega);
-        } else if (d.fecha) {
-          fechaD = typeof d.fecha.toDate === 'function' ? d.fecha.toDate() : new Date(d.fecha);
-        }
-
-        if (!fechaD || isNaN(fechaD.getTime())) return;
+        const fechaD = parsearFecha(d.fechaEditada) || parsearFecha(d.fechaEntrega) || parsearFecha(d.fecha);
+        if (!fechaD) return;
 
         const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
@@ -169,14 +167,14 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
-    // 2. 🔥 Escuchar Ventas Rápidas (Panel)
+    // 2. Escuchar Ventas Rápidas (EL PANEL)
     const qVentas = query(collection(db, 'ventas'), limit(500));
     unsubscribeVentas = onSnapshot(qVentas, (snapshot) => {
       datosVentas = [];
       snapshot.forEach(doc => {
         const d = doc.data();
-        let fechaD = d.fecha ? (typeof d.fecha.toDate === 'function' ? d.fecha.toDate() : new Date(d.fecha)) : null;
-        if (!fechaD || isNaN(fechaD.getTime())) return;
+        const fechaD = parsearFecha(d.fecha);
+        if (!fechaD) return;
 
         const diaVenta = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaVenta >= diaInicio && diaVenta <= diaFin) {
@@ -185,7 +183,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
             cliente: 'Venta Rápida',
             detalle: d.concepto,
             montoCobrado: Number(d.monto) || 0,
-            costoRepuesto: 0, // Las ventas rápidas no tienen costo de repuesto
+            costoRepuesto: 0,
             metodoPago: d.metodoPago || 'Efectivo',
             fechaReal: fechaD,
             numeroRecibo: '',
@@ -196,14 +194,14 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
-    // 3. Escuchar Cierres (Antiguos)
+    // 3. Escuchar Cierres
     const qCierres = query(collection(db, 'cierres'), limit(500));
     unsubscribeCierres = onSnapshot(qCierres, (snapshot) => {
       datosCierres = [];
       snapshot.forEach(doc => {
         const d = doc.data();
-        let fechaD = d.fecha ? (typeof d.fecha.toDate === 'function' ? d.fecha.toDate() : new Date(d.fecha)) : null;
-        if (!fechaD || isNaN(fechaD.getTime())) return;
+        const fechaD = parsearFecha(d.fecha);
+        if (!fechaD) return;
 
         const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
@@ -302,7 +300,7 @@ function renderizarReporte(datos) {
 
     let icono = '🔧';
     if (d.origen === 'cierre') icono = '🛒';
-    else if (d.origen === 'venta_panel') icono = '⚡'; // Icono para venta rápida
+    else if (d.origen === 'venta_panel') icono = '⚡';
 
     movimientosHtml += `
       <div class="movimiento">
