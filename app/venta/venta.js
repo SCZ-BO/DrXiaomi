@@ -1,43 +1,56 @@
 /* ============================================================
-   DR. XIAOMI · VENTA DIRECTA (CON FECHA RETROACTIVA)
+   DR. XIAOMI · VENTA DIRECTA (CON STOCK Y FECHA RETROACTIVA)
    Archivo: app/venta/venta.js
    ============================================================ */
 
 import { requireAuth } from '/js/app-auth.js';
 import { toast, haptic, initTheme, formatBs, escapeHtml } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { 
+  collection, addDoc, serverTimestamp, 
+  getDocs, updateDoc, doc, increment // 🔥 Importamos esto para el stock
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 initTheme();
 let sesion = null;
 let metodoPago = 'Efectivo';
 let ventaActual = null;
+let inventario = []; // 🔥 Guardaremos los productos aquí
 
-requireAuth((s) => {
+requireAuth(async (s) => {
   sesion = s;
   document.getElementById('userInfo').textContent = sesion.nombre;
 
-  // 🔥 Poner la fecha de hoy por defecto en el input
+  // Poner la fecha de hoy por defecto en el input
   const hoy = new Date().toISOString().split('T')[0];
   document.getElementById('fechaVenta').value = hoy;
 
+  await cargarInventario(); // 🔥 Cargamos los productos
   configurarEventos();
   agregarServicio();
 });
 
+// 🔥 NUEVA FUNCIÓN: Leer productos de la nube
+async function cargarInventario() {
+  try {
+    const snapshot = await getDocs(collection(db, 'productos'));
+    inventario = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error("Error al cargar inventario:", error);
+    toast('No se pudo cargar el inventario', 'error');
+  }
+}
+
 function configurarEventos() {
-  // Botón Volver
   document.getElementById('backBtn')?.addEventListener('click', () => {
     if (confirm('¿Salir? Los datos no guardados se perderán.')) window.location.href = '/app/';
   });
 
-  // Botón Añadir otro producto
   document.getElementById('addServicio')?.addEventListener('click', () => {
     haptic(10);
     agregarServicio();
   });
 
-  // Botones de método de pago
   document.getElementById('metodosGroup')?.addEventListener('click', (e) => {
     const btn = e.target.closest('.metodo-btn');
     if (!btn) return;
@@ -48,31 +61,23 @@ function configurarEventos() {
     document.getElementById('metodoPago').value = metodoPago;
   });
 
-  // Registrar Venta
   document.getElementById('btnGenerarVenta')?.addEventListener('click', registrarVenta);
 
-  // Cerrar Modal (Venta Rápida) - LIMPIA LOS CAMPOS
   document.getElementById('btnCerrarModal')?.addEventListener('click', () => {
     haptic(10);
     document.getElementById('clienteNombre').value = '';
     document.getElementById('clienteTelefono').value = '';
-    
-    // Restaurar la fecha a hoy por si era retroactiva
     const hoy = new Date().toISOString().split('T')[0];
     document.getElementById('fechaVenta').value = hoy;
-
     document.getElementById('serviciosList').innerHTML = '';
     agregarServicio();
     calcularTotal();
     window.location.href = '/app/';
   });
 
-  // Generar PDF (desde el modal)
   document.getElementById('btnGenerarPDF')?.addEventListener('click', () => {
     haptic(15);
-    if (ventaActual) {
-      generarPDFVenta(ventaActual);
-    }
+    if (ventaActual) generarPDFVenta(ventaActual);
   });
 }
 
@@ -80,12 +85,34 @@ function agregarServicio() {
   const list = document.getElementById('serviciosList');
   const div = document.createElement('div');
   div.className = 'servicio-item';
+  div.style.position = 'relative';
+
+  // 🔥 Creamos un datalist único para este input para autocompletar
+  const listId = `inv-${Date.now()}-${Math.floor(Math.random() * 100)}`;
+  let opciones = inventario.filter(p => (Number(p.stock) || 0) > 0).map(p => `
+    <option value="${escapeHtml(p.nombre)}" data-precio="${p.precio}" data-id="${p.id}"></option>
+  `).join('');
+
   div.innerHTML = `
-    <input type="text" class="servicio-desc" placeholder="Ej. Cargador 20W">
+    <input type="text" class="servicio-desc" placeholder="Ej. Cargador 20W" list="${listId}" autocomplete="off">
+    <datalist id="${listId}">${opciones}</datalist>
     <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0">
     <button type="button" class="removeServicio"><i class="fas fa-times"></i></button>
   `;
   
+  const inputDesc = div.querySelector('.servicio-desc');
+  const inputCosto = div.querySelector('.servicio-costo');
+
+  // 🔥 MAGIA: Si selecciona un producto del datalist, ponemos su precio
+  inputDesc.addEventListener('input', (e) => {
+    const valor = e.target.value;
+    const prod = inventario.find(p => p.nombre === valor);
+    if (prod && !inputCosto.value) {
+      inputCosto.value = prod.precio;
+      calcularTotal();
+    }
+  });
+
   div.querySelector('.removeServicio').addEventListener('click', () => {
     if (list.querySelectorAll('.servicio-item').length > 1) {
       haptic(10);
@@ -94,10 +121,9 @@ function agregarServicio() {
     }
   });
 
-  div.querySelector('.servicio-costo').addEventListener('input', calcularTotal);
-
+  inputCosto.addEventListener('input', calcularTotal);
   list.appendChild(div);
-  div.querySelector('.servicio-desc').focus();
+  inputDesc.focus();
 }
 
 function calcularTotal() {
@@ -111,7 +137,7 @@ function calcularTotal() {
 async function registrarVenta() {
   const clienteNombre = document.getElementById('clienteNombre').value.trim() || 'Cliente Ocasional';
   const clienteTelefono = document.getElementById('clienteTelefono').value.trim();
-  const fechaSeleccionada = document.getElementById('fechaVenta').value; // 🔥 Fecha del input
+  const fechaSeleccionada = document.getElementById('fechaVenta').value;
 
   if (!fechaSeleccionada) {
     toast('Selecciona una fecha válida', 'error');
@@ -120,6 +146,7 @@ async function registrarVenta() {
 
   let servicios = [];
   let total = 0;
+  let itemsVendidos = []; // 🔥 Para saber qué descontar del stock
 
   document.querySelectorAll('.servicio-item').forEach(item => {
     const desc = item.querySelector('.servicio-desc').value.trim();
@@ -127,6 +154,12 @@ async function registrarVenta() {
     if (desc && costo > 0) {
       servicios.push({ desc, costo });
       total += costo;
+      
+      // Si el texto coincide con un producto del inventario, lo guardamos para descontar
+      const prodInventario = inventario.find(p => p.nombre === desc);
+      if (prodInventario) {
+        itemsVendidos.push(prodInventario.id);
+      }
     }
   });
 
@@ -141,13 +174,12 @@ async function registrarVenta() {
   btn.disabled = true;
 
   try {
-    // 🔥 Usar la fecha seleccionada (Retroactiva o de Hoy)
     const fechaObj = new Date(fechaSeleccionada + 'T12:00:00'); 
     const numeroRecibo = `VNT-${String(fechaObj.getDate()).padStart(2,'0')}${String(fechaObj.getMonth()+1).padStart(2,'0')}${String(fechaObj.getFullYear()).slice(-2)}-${String(new Date().getHours()).padStart(2,'0')}${String(new Date().getMinutes()).padStart(2,'0')}`;
 
     ventaActual = { numeroRecibo, cliente: clienteNombre, telefono: clienteTelefono, servicios, total, metodoPago, fechaReal: fechaObj };
 
-    // Guardar en Firebase
+    // 1. Guardar en Firebase (Recibo)
     await addDoc(collection(db, 'recibos'), {
       ...ventaActual,
       marca: 'Venta Directa',
@@ -157,10 +189,19 @@ async function registrarVenta() {
       estadoOrden: 'entregado',
       tipo: 'venta_directa',
       montoCobrado: total,
-      fechaEntrega: fechaObj, // 🔥 Fecha seleccionada
-      fecha: fechaObj,        // 🔥 Fecha seleccionada
+      fechaEntrega: fechaObj,
+      fecha: fechaObj,
       creadoPor: sesion.nombre
     });
+
+    // 2. 🔥 RESTAR EL STOCK
+    if (itemsVendidos.length > 0) {
+      const promesasStock = itemsVendidos.map(id => 
+        updateDoc(doc(db, 'productos', id), { stock: increment(-1) })
+      );
+      await Promise.all(promesasStock);
+      console.log(`✅ Stock actualizado para ${itemsVendidos.length} producto(s)`);
+    }
 
     // Mostrar Modal de Éxito
     document.getElementById('successTotal').textContent = `Total: ${formatBs(total)}`;
@@ -178,14 +219,13 @@ async function registrarVenta() {
 }
 
 // ============================================================
-// GENERACIÓN DE PDF (Solo si el cliente lo pide)
+// GENERACIÓN DE PDF
 // ============================================================
 async function generarPDFVenta(venta) {
   try {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     
-    // Encabezado
     pdf.setFillColor(230, 81, 0);
     pdf.rect(0, 0, 210, 30, 'F');
     pdf.setTextColor(255, 255, 255);
@@ -194,7 +234,6 @@ async function generarPDFVenta(venta) {
     pdf.setFontSize(10);
     pdf.text('Comprobante de Venta Directa', 14, 22);
 
-    // Datos del Cliente
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(12);
     pdf.text('Cliente:', 14, 45);
@@ -209,12 +248,10 @@ async function generarPDFVenta(venta) {
     pdf.text('Recibo N°:', 14, 59);
     pdf.text(venta.numeroRecibo, 40, 59);
 
-    // 🔥 Fecha del PDF (la fecha seleccionada, no la de hoy)
     pdf.text('Fecha:', 14, 66);
     const fechaStr = venta.fechaReal.toLocaleDateString('es-BO');
     pdf.text(fechaStr, 40, 66);
 
-    // Tabla de Productos
     const body = venta.servicios.map(s => [s.desc, formatBs(s.costo)]);
     pdf.autoTable({
       startY: 75,
@@ -225,7 +262,6 @@ async function generarPDFVenta(venta) {
       columnStyles: { 1: { halign: 'right' } }
     });
 
-    // Total
     let finalY = pdf.lastAutoTable.finalY + 10;
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
@@ -235,7 +271,6 @@ async function generarPDFVenta(venta) {
     pdf.setFont('helvetica', 'normal');
     pdf.text(`Método de pago: ${venta.metodoPago}`, 14, finalY);
 
-    // Footer
     pdf.setFontSize(8);
     pdf.setTextColor(120, 120, 120);
     pdf.text('Gracias por su compra · DR. XIAOMI SCZ', 105, 280, { align: 'center' });
