@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (UNIFICADO + EXPORTACIÓN CSV)
+   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA)
    Archivo: app/reportes/reportes.js
    ============================================================ */
 
@@ -69,6 +69,37 @@ function configurarEventos() {
   document.getElementById('btnExportar')?.addEventListener('click', exportarCSV);
 }
 
+/* ============================================================
+   CONVERTIR CUALQUIER FECHA A DATE
+   ============================================================ */
+function convertirFecha(fecha) {
+  if (!fecha) return null;
+  
+  // Timestamp de Firestore
+  if (typeof fecha.toDate === 'function') {
+    return fecha.toDate();
+  }
+  
+  // Objeto con seconds/nanoseconds
+  if (typeof fecha === 'object' && fecha.seconds !== undefined) {
+    return new Date(fecha.seconds * 1000 + Math.floor((fecha.nanoseconds || 0) / 1000000));
+  }
+  
+  // Date de JavaScript
+  if (fecha instanceof Date) {
+    return fecha;
+  }
+  
+  // String o número
+  const d = new Date(fecha);
+  if (!isNaN(d.getTime())) return d;
+  
+  return null;
+}
+
+/* ============================================================
+   CARGAR REPORTE
+   ============================================================ */
 async function cargarReporte(rango, desdeFecha, hastaFecha) {
   if (unsubscribeRecibos) unsubscribeRecibos();
   if (unsubscribeCierres) unsubscribeCierres();
@@ -103,6 +134,10 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       fin = new Date(hastaFecha + 'T23:59:59');
     }
 
+    // 🔥 COMPARAMOS SOLO POR DÍA (sin hora)
+    const diaInicio = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
+    const diaFin = new Date(fin.getFullYear(), fin.getMonth(), fin.getDate());
+
     const opcionesFecha = { day: '2-digit', month: 'short' };
     headerSubtitle.textContent = `${inicio.toLocaleDateString('es-BO', opcionesFecha)} - ${fin.toLocaleDateString('es-BO', opcionesFecha)}`;
 
@@ -129,20 +164,19 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       snapshot.forEach(doc => {
         const d = doc.data();
         
-        // 🔥 DEBUG: Ver qué fechas llegan
-        console.log('📅 Recibo:', d.numeroRecibo, '| fecha:', d.fecha, '| fechaEntrega:', d.fechaEntrega, '| fechaEditada:', d.fechaEditada);
+        // 🔥 CONVERTIR CUALQUIER FORMATO DE FECHA
+        let fechaD = convertirFecha(d.fechaEditada) 
+                  || convertirFecha(d.fechaEntrega) 
+                  || convertirFecha(d.fecha);
         
-        // 🔥 PRIORIDAD ABSOLUTA: fechaEditada > fechaEntrega > fecha
-        let fechaD = null;
-        if (d.fechaEditada) {
-          fechaD = d.fechaEditada.toDate ? d.fechaEditada.toDate() : new Date(d.fechaEditada);
-        } else if (d.fechaEntrega) {
-          fechaD = d.fechaEntrega.toDate ? d.fechaEntrega.toDate() : new Date(d.fechaEntrega);
-        } else if (d.fecha) {
-          fechaD = d.fecha.toDate ? d.fecha.toDate() : new Date(d.fecha);
-        }
+        if (!fechaD) return;
 
-        if (fechaD && fechaD >= inicio && fechaD <= fin) {
+        // 🔥 LOG PARA DEPURAR
+        console.log('📅 Recibo:', d.numeroRecibo, '| fechaEditada:', d.fechaEditada, '| fechaD:', fechaD);
+
+        // 🔥 COMPARAMOS SOLO POR DÍA
+        const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
+        if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
           datosRecibos.push({
             origen: 'recibo',
             cliente: d.cliente,
@@ -164,11 +198,11 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       datosCierres = [];
       snapshot.forEach(doc => {
         const d = doc.data();
-        let fechaD = d.fecha;
-        if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
-        else if (fechaD) fechaD = new Date(fechaD);
+        let fechaD = convertirFecha(d.fecha);
+        if (!fechaD) return;
 
-        if (fechaD >= inicio && fechaD <= fin) {
+        const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
+        if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
           if (d.ventasInventario && d.ventasInventario.length > 0) {
             d.ventasInventario.forEach(v => {
               datosCierres.push({
@@ -208,6 +242,9 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
   }
 }
 
+/* ============================================================
+   RENDERIZAR REPORTE
+   ============================================================ */
 function renderizarReporte(datos) {
   document.getElementById('appLoader')?.classList.add('hidden');
 
@@ -291,6 +328,9 @@ function renderizarReporte(datos) {
   listaMovimientos.innerHTML = movimientosHtml;
 }
 
+/* ============================================================
+   EXPORTAR CSV
+   ============================================================ */
 function exportarCSV() {
   haptic(15);
 
