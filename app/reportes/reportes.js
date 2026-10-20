@@ -1,12 +1,14 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v5)
+   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v6)
    Archivo: app/reportes/reportes.js
+   CAMBIO: Trae TODOS los recibos (no solo entregados) para que
+   los editados aparezcan y se ordenen por fechaEditada.
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
 import { toast, haptic, initTheme, formatBs, escapeHtml } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
-import { collection, query, where, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, query, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 initTheme();
 let sesion = null;
@@ -117,25 +119,28 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
 
     const procesarYRenderizar = () => {
       const todosLosDatos = [...datosRecibos, ...datosCierres];
+      // 🔥 ORDEN: por fechaReal (fechaEditada si existe, si no fechaEntrega, si no fecha)
       todosLosDatos.sort((a, b) => b.fechaReal - a.fechaReal);
       datosActuales = todosLosDatos;
       renderizarReporte(todosLosDatos);
       document.getElementById('appLoader')?.classList.add('hidden');
     };
 
-    // 1. Escuchar Recibos
-    const qRecibos = query(
-      collection(db, 'recibos'),
-      where('estadoOrden', '==', 'entregado'),
-      limit(500)
-    );
+    // 1. Escuchar TODOS los recibos (sin filtrar por estado en Firestore)
+    //    Filtramos en cliente por fecha, para que los editados aparezcan siempre
+    const qRecibos = query(collection(db, 'recibos'), limit(500));
 
     unsubscribeRecibos = onSnapshot(qRecibos, (snapshot) => {
       datosRecibos = [];
       snapshot.forEach(doc => {
         const d = doc.data();
-        
-        // 🔥 FORZAMOS A LEER fechaEditada
+
+        // Solo mostramos recibos que tengan algún cobro o estén entregados
+        const montoCobrado = Number(d.montoCobrado) || 0;
+        const estaEntregado = d.estadoOrden === 'entregado';
+        if (!estaEntregado && montoCobrado <= 0) return;
+
+        // 🔥 PRIORIDAD: fechaEditada > fechaEntrega > fecha
         let fechaD = null;
         if (d.fechaEditada) {
           if (typeof d.fechaEditada.toDate === 'function') {
@@ -151,9 +156,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
           fechaD = typeof d.fecha.toDate === 'function' ? d.fecha.toDate() : new Date(d.fecha);
         }
 
-        if (!fechaD) return;
-
-        console.log('📅 Recibo:', d.numeroRecibo, '| fechaEditada (raw):', d.fechaEditada, '| fechaD (Date):', fechaD);
+        if (!fechaD || isNaN(fechaD.getTime())) return;
 
         const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
@@ -161,10 +164,12 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
             origen: 'recibo',
             cliente: d.cliente,
             detalle: `${d.marca || ''} ${d.modelo || ''}`,
-            montoCobrado: Number(d.montoCobrado) || 0,
+            montoCobrado: montoCobrado,
             costoRepuesto: Number(d.costoRepuesto) || 0,
             metodoPago: d.metodoPago || 'Efectivo',
-            fechaReal: fechaD
+            fechaReal: fechaD,
+            numeroRecibo: d.numeroRecibo || '',
+            estadoOrden: d.estadoOrden || 'recibido'
           });
         }
       });
@@ -179,7 +184,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       snapshot.forEach(doc => {
         const d = doc.data();
         let fechaD = d.fecha ? (typeof d.fecha.toDate === 'function' ? d.fecha.toDate() : new Date(d.fecha)) : null;
-        if (!fechaD) return;
+        if (!fechaD || isNaN(fechaD.getTime())) return;
 
         const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
@@ -192,7 +197,9 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
                 montoCobrado: Number(v.precio * v.cantidad) || 0,
                 costoRepuesto: 0,
                 metodoPago: 'Efectivo',
-                fechaReal: fechaD
+                fechaReal: fechaD,
+                numeroRecibo: '',
+                estadoOrden: 'entregado'
               });
             });
           }
@@ -206,7 +213,9 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
                   montoCobrado: Number(e.monto) || 0,
                   costoRepuesto: 0,
                   metodoPago: 'Efectivo',
-                  fechaReal: fechaD
+                  fechaReal: fechaD,
+                  numeroRecibo: '',
+                  estadoOrden: 'entregado'
                 });
               }
             });
@@ -257,7 +266,7 @@ function renderizarReporte(datos) {
     const d = datos[i];
     const monto = d.montoCobrado;
     const costo = d.costoRepuesto;
-    const metodo = d.metodoPago.toLowerCase();
+    const metodo = (d.metodoPago || '').toLowerCase();
 
     totalMonto += monto;
     totalCosto += costo;
@@ -270,16 +279,17 @@ function renderizarReporte(datos) {
 
     const fechaD = d.fechaReal;
     const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
+    const fechaStr = `${String(fechaD.getDate()).padStart(2, '0')}/${String(fechaD.getMonth() + 1).padStart(2, '0')}`;
 
     let icono = '🔧';
     if (d.origen === 'cierre') icono = '🛒';
 
     movimientosHtml += `
       <div class="movimiento">
-        <div class="hora">${horaStr}</div>
+        <div class="hora">${fechaStr}<br>${horaStr}</div>
         <div class="info">
           <div class="cliente">${icono} ${escapeHtml(d.cliente || 'Cliente')}</div>
-          <div class="detalle">${escapeHtml(d.detalle || '')} · ${escapeHtml(d.metodoPago)}</div>
+          <div class="detalle">${escapeHtml(d.detalle || '')} · ${escapeHtml(d.metodoPago)}${d.numeroRecibo ? ` · ${escapeHtml(d.numeroRecibo)}` : ''}</div>
         </div>
         <div class="monto">${formatBs(monto)}</div>
       </div>
@@ -319,7 +329,7 @@ function exportarCSV() {
     return;
   }
 
-  let csv = 'Fecha;Hora;Tipo;Cliente;Detalle;Metodo Pago;Monto\n';
+  let csv = 'Fecha;Hora;Tipo;Cliente;Detalle;Metodo Pago;Monto;Recibo\n';
 
   datosActuales.forEach(d => {
     const fechaD = d.fechaReal;
@@ -331,8 +341,9 @@ function exportarCSV() {
     const detalle = String(d.detalle || '').replace(/;/g, ',');
     const metodo = String(d.metodoPago || '').replace(/;/g, ',');
     const monto = Number(d.montoCobrado).toFixed(2);
+    const recibo = String(d.numeroRecibo || '').replace(/;/g, ',');
 
-    csv += `${fechaStr};${horaStr};${tipo};${cliente};${detalle};${metodo};${monto}\n`;
+    csv += `${fechaStr};${horaStr};${tipo};${cliente};${detalle};${metodo};${monto};${recibo}\n`;
   });
 
   const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
