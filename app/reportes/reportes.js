@@ -1,8 +1,7 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v6)
+   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v7)
    Archivo: app/reportes/reportes.js
-   CAMBIO: Trae TODOS los recibos (no solo entregados) para que
-   los editados aparezcan y se ordenen por fechaEditada.
+   CAMBIO: Ahora escucha la colección 'ventas' generada desde el panel.
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -15,6 +14,7 @@ let sesion = null;
 let rangoActual = 'hoy';
 let unsubscribeRecibos = null;
 let unsubscribeCierres = null;
+let unsubscribeVentas = null; // 🔥 NUEVO LISTENER
 let datosActuales = [];
 
 const headerSubtitle = document.getElementById('headerSubtitle');
@@ -77,6 +77,7 @@ function configurarEventos() {
 async function cargarReporte(rango, desdeFecha, hastaFecha) {
   if (unsubscribeRecibos) unsubscribeRecibos();
   if (unsubscribeCierres) unsubscribeCierres();
+  if (unsubscribeVentas) unsubscribeVentas();
 
   totalMontoEl.textContent = '...';
   totalEntregasEl.textContent = 'Buscando...';
@@ -116,40 +117,32 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
 
     let datosRecibos = [];
     let datosCierres = [];
+    let datosVentas = []; // 🔥 NUEVO ARRAY
 
     const procesarYRenderizar = () => {
-      const todosLosDatos = [...datosRecibos, ...datosCierres];
-      // 🔥 ORDEN: por fechaReal (fechaEditada si existe, si no fechaEntrega, si no fecha)
+      const todosLosDatos = [...datosRecibos, ...datosCierres, ...datosVentas];
       todosLosDatos.sort((a, b) => b.fechaReal - a.fechaReal);
       datosActuales = todosLosDatos;
       renderizarReporte(todosLosDatos);
       document.getElementById('appLoader')?.classList.add('hidden');
     };
 
-    // 1. Escuchar TODOS los recibos (sin filtrar por estado en Firestore)
-    //    Filtramos en cliente por fecha, para que los editados aparezcan siempre
+    // 1. Escuchar Recibos
     const qRecibos = query(collection(db, 'recibos'), limit(500));
 
     unsubscribeRecibos = onSnapshot(qRecibos, (snapshot) => {
       datosRecibos = [];
       snapshot.forEach(doc => {
         const d = doc.data();
-
-        // Solo mostramos recibos que tengan algún cobro o estén entregados
         const montoCobrado = Number(d.montoCobrado) || 0;
         const estaEntregado = d.estadoOrden === 'entregado';
         if (!estaEntregado && montoCobrado <= 0) return;
 
-        // 🔥 PRIORIDAD: fechaEditada > fechaEntrega > fecha
         let fechaD = null;
         if (d.fechaEditada) {
-          if (typeof d.fechaEditada.toDate === 'function') {
-            fechaD = d.fechaEditada.toDate();
-          } else if (d.fechaEditada.seconds !== undefined) {
-            fechaD = new Date(d.fechaEditada.seconds * 1000);
-          } else {
-            fechaD = new Date(d.fechaEditada);
-          }
+          if (typeof d.fechaEditada.toDate === 'function') fechaD = d.fechaEditada.toDate();
+          else if (d.fechaEditada.seconds !== undefined) fechaD = new Date(d.fechaEditada.seconds * 1000);
+          else fechaD = new Date(d.fechaEditada);
         } else if (d.fechaEntrega) {
           fechaD = typeof d.fechaEntrega.toDate === 'function' ? d.fechaEntrega.toDate() : new Date(d.fechaEntrega);
         } else if (d.fecha) {
@@ -176,9 +169,35 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
-    // 2. Escuchar Cierres
-    const qCierres = query(collection(db, 'cierres'), limit(500));
+    // 2. 🔥 Escuchar Ventas Rápidas (Panel)
+    const qVentas = query(collection(db, 'ventas'), limit(500));
+    unsubscribeVentas = onSnapshot(qVentas, (snapshot) => {
+      datosVentas = [];
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        let fechaD = d.fecha ? (typeof d.fecha.toDate === 'function' ? d.fecha.toDate() : new Date(d.fecha)) : null;
+        if (!fechaD || isNaN(fechaD.getTime())) return;
 
+        const diaVenta = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
+        if (diaVenta >= diaInicio && diaVenta <= diaFin) {
+          datosVentas.push({
+            origen: 'venta_panel',
+            cliente: 'Venta Rápida',
+            detalle: d.concepto,
+            montoCobrado: Number(d.monto) || 0,
+            costoRepuesto: 0, // Las ventas rápidas no tienen costo de repuesto
+            metodoPago: d.metodoPago || 'Efectivo',
+            fechaReal: fechaD,
+            numeroRecibo: '',
+            estadoOrden: 'entregado'
+          });
+        }
+      });
+      procesarYRenderizar();
+    });
+
+    // 3. Escuchar Cierres (Antiguos)
+    const qCierres = query(collection(db, 'cierres'), limit(500));
     unsubscribeCierres = onSnapshot(qCierres, (snapshot) => {
       datosCierres = [];
       snapshot.forEach(doc => {
@@ -283,6 +302,7 @@ function renderizarReporte(datos) {
 
     let icono = '🔧';
     if (d.origen === 'cierre') icono = '🛒';
+    else if (d.origen === 'venta_panel') icono = '⚡'; // Icono para venta rápida
 
     movimientosHtml += `
       <div class="movimiento">
@@ -335,7 +355,10 @@ function exportarCSV() {
     const fechaD = d.fechaReal;
     const fechaStr = `${String(fechaD.getDate()).padStart(2, '0')}/${String(fechaD.getMonth() + 1).padStart(2, '0')}/${fechaD.getFullYear()}`;
     const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
-    const tipo = d.origen === 'cierre' ? 'Accesorio/Extra' : 'Reparacion/Venta';
+    
+    let tipo = 'Reparacion/Venta';
+    if (d.origen === 'cierre') tipo = 'Accesorio/Extra';
+    else if (d.origen === 'venta_panel') tipo = 'Venta Rápida';
 
     const cliente = String(d.cliente || '').replace(/;/g, ',');
     const detalle = String(d.detalle || '').replace(/;/g, ',');
