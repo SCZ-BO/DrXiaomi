@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL - CORREGIDO v4)
+   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL - CORREGIDO v5)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -519,4 +519,341 @@ async function confirmarCobro(monto, metodo) {
     const entrada = { tipo: 'estado', texto: `Estado cambiado a: Entregado · Cobrado: ${formatBs(monto)} (${metodo})`, autor: sesion.nombre, fecha: new Date().toISOString() };
     await updateDoc(doc(db, 'recibos', ordenId), { estadoOrden: 'entregado', fechaEntrega: serverTimestamp(), montoCobrado: monto, metodoPago: metodo, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
     toast(`Entregado · ${formatBs(monto)} (${metodo})`, 'success', 2500);
-  } catch (err
+  } catch (err) { toast('Error al registrar entrega', 'error'); }
+  finally { hideLoading(); }
+}
+
+/* ============================================================
+   MODAL DE COSTO
+   ============================================================ */
+function abrirModalCosto() {
+  if (sesion.rol !== 'admin') return;
+  haptic(15);
+  const monto = Number(orden.montoCobrado) || 0;
+  const costoActual = Number(orden.costoRepuesto) || 0;
+  const gananciaInicial = monto - costoActual;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop';
+  modal.id = 'modalCosto';
+
+  modal.innerHTML = `
+    <div class="modal">
+      <h3 style="color:#10B981; font-weight:800; font-size:18px; margin-bottom:16px;"><i class="fas fa-calculator"></i> Registrar presupuesto</h3>
+      <div style="background:var(--bg-elev); border-radius:8px; padding:12px; margin-bottom:1rem; border:1px solid var(--border);">
+        <div style="font-size:11px; color:var(--text-mute); margin-bottom:4px;">RECIBO</div>
+        <div style="font-weight:700; font-size:13px;">${escapeHtml(orden.numeroRecibo || '-')}</div>
+        <div style="font-size:12px; color:var(--text-main); margin-top:4px;">${escapeHtml(orden.cliente || '-')}</div>
+        <div style="font-size:11px; color:var(--text-mute); margin-top:2px;">${escapeHtml(orden.marca || '')} ${escapeHtml(orden.modelo || '')}</div>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label>Monto cobrado al cliente</label>
+        <div style="background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; padding:14px; font-size:18px; font-weight:800; text-align:center; color:var(--brand);">${formatBs(monto)}</div>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label>Costo del repuesto</label>
+        <input type="number" id="costoInput" step="0.01" min="0" value="${costoActual > 0 ? costoActual.toFixed(2) : ''}" inputmode="decimal" placeholder="0.00" style="color:#F59E0B; font-weight:800; text-align:center;">
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button type="button" class="costo-preset" data-pct="0.7" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">70%</button>
+          <button type="button" class="costo-preset" data-pct="0.5" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">50%</button>
+          <button type="button" class="costo-preset" data-pct="0.4" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">40%</button>
+        </div>
+      </div>
+      <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:16px; margin-bottom:1.2rem; text-align:center;">
+        <div style="font-size:11px; color:var(--text-mute); text-transform:uppercase; font-weight:700; letter-spacing:0.6px; margin-bottom:4px;">Ganancia neta</div>
+        <div id="gananciaPreview" style="font-size:26px; font-weight:900; color:#10B981; line-height:1;">${formatBs(gananciaInicial)}</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="btnCancelarCosto" class="btn-modal-cancel">Cancelar</button>
+        <button type="button" id="btnGuardarCosto" class="btn-modal-confirm"><i class="fas fa-check"></i> Guardar</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+
+  setTimeout(() => {
+    modal.classList.add('show');
+  }, 10);
+
+  const costoInput = modal.querySelector('#costoInput');
+  const gananciaPreview = modal.querySelector('#gananciaPreview');
+
+  function actualizarPreview() {
+    const costo = parseFloat(costoInput.value) || 0;
+    const ganancia = monto - costo;
+    gananciaPreview.textContent = formatBs(ganancia);
+    gananciaPreview.style.color = ganancia >= 0 ? '#10B981' : '#EF4444';
+  }
+
+  costoInput.addEventListener('input', actualizarPreview);
+  costoInput.focus();
+
+  modal.querySelectorAll('.costo-preset').forEach(btn => {
+    btn.addEventListener('click', () => { const pct = parseFloat(btn.dataset.pct); costoInput.value = (monto * pct).toFixed(2); actualizarPreview(); haptic(8); });
+  });
+
+  document.getElementById('btnCancelarCosto').addEventListener('click', () => { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); });
+
+  document.getElementById('btnGuardarCosto').addEventListener('click', async () => {
+    const costo = parseFloat(costoInput.value) || 0;
+    haptic(20); showLoading('Guardando costo...');
+    try {
+      const ganancia = monto - costo;
+      const entrada = { tipo: 'cobro', texto: `Costo registrado: ${formatBs(costo)} · Ganancia: ${formatBs(ganancia)}`, autor: sesion.nombre, fecha: new Date().toISOString() };
+      await updateDoc(doc(db, 'recibos', ordenId), { costoRepuesto: costo, gananciaNeta: ganancia, costoActualizadoEn: serverTimestamp(), costoActualizadoPor: sesion.nombre, bitacora: arrayUnion(entrada) });
+      toast(`Costo guardado · Ganancia: ${formatBs(ganancia)}`, 'success', 2500);
+      modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
+    } catch (err) { toast('Error al guardar el costo', 'error'); }
+    finally { hideLoading(); }
+  });
+
+  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); } });
+}
+
+/* ============================================================
+   MODAL DE FECHA (CORREGIDO: SOBRESCRIBE 'fecha')
+   ============================================================ */
+function abrirModalFecha() {
+  if (sesion.rol !== 'admin') return;
+  haptic(15);
+  let fechaActualStr = '';
+  const fechaParaMostrar = orden.fechaEditada || orden.fecha;
+  if (fechaParaMostrar) {
+    const d = fechaParaMostrar.toDate ? fechaParaMostrar.toDate() : new Date(fechaParaMostrar);
+    if (!isNaN(d.getTime())) fechaActualStr = d.toISOString().split('T')[0];
+  }
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop';
+  modal.id = 'modalFecha';
+
+  modal.innerHTML = `
+    <div class="modal">
+      <h3 style="color:var(--brand); font-weight:800; font-size:18px; margin-bottom:8px;"><i class="fas fa-calendar-alt"></i> Editar Fecha</h3>
+      <p style="font-size:12px; color:var(--text-mute); margin-bottom:16px;">Esta acción cambiará la fecha en el panel y en los reportes.</p>
+      <div style="margin-bottom:20px;">
+        <label>Nueva Fecha</label>
+        <input type="date" id="inputFechaOrden" value="${fechaActualStr}">
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="btnCancelarFecha" class="btn-modal-cancel">Cancelar</button>
+        <button type="button" id="btnGuardarFecha" class="btn-modal-confirm"><i class="fas fa-save"></i> Guardar</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+
+  setTimeout(() => {
+    modal.classList.add('show');
+  }, 10);
+
+  document.getElementById('btnCancelarFecha').addEventListener('click', () => { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); });
+
+  document.getElementById('btnGuardarFecha').addEventListener('click', async () => {
+    const nuevaFechaStr = document.getElementById('inputFechaOrden').value;
+    if (!nuevaFechaStr) { toast('Selecciona una fecha válida', 'error'); return; }
+    haptic(20); showLoading('Actualizando fecha...');
+    try {
+      const nuevaFecha = new Date(nuevaFechaStr + 'T12:00:00');
+      const entrada = { tipo: 'nota', texto: `Fecha de ingreso editada a: ${nuevaFecha.toLocaleDateString('es-BO')}`, autor: sesion.nombre, fecha: new Date().toISOString() };
+      
+      // 🔥 SOBRESCRIBIMOS 'fecha' Y GUARDAMOS EN 'fechaEditada'
+      await updateDoc(doc(db, 'recibos', ordenId), { 
+        fecha: nuevaFecha,              // Sobrescribe fecha original
+        fechaEditada: nuevaFecha,       // Mantiene registro de la edición
+        bitacora: arrayUnion(entrada), 
+        actualizadoEn: serverTimestamp() 
+      });
+      
+      toast('Fecha actualizada correctamente', 'success', 2500);
+      modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
+    } catch (err) { toast('Error al actualizar la fecha', 'error'); }
+    finally { hideLoading(); }
+  });
+
+  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); } });
+}
+
+/* ============================================================
+   WHATSAPP
+   ============================================================ */
+function contactarCliente() {
+  if (!orden.telefono) { toast('La orden no tiene teléfono', 'error'); return; }
+  haptic(15);
+  const nombreCliente = (orden.cliente || '').split(' ')[0] || 'cliente';
+  const equipo = `${orden.marca || ''} ${orden.modelo || ''}`.trim();
+  const mensaje = `Hola ${nombreCliente}, le escribimos de ${CONFIG.nombreTienda} en relación a su ${equipo} (Recibo ${orden.numeroRecibo || '-'}).`;
+  const tel = orden.telefono.replace(/\D/g, '');
+  window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank', 'noopener,noreferrer');
+}
+
+/* ============================================================
+   REGENERAR PDF
+   ============================================================ */
+async function regenerarYEnviarPDF() {
+  if (!orden.telefono) { toast('La orden no tiene teléfono', 'error'); return; }
+  showLoading('Generando PDF...');
+  haptic(20);
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+    const W = 210, H = 297, M = 15, CW = W - M * 2;
+    let y = 0;
+
+    pdf.setFillColor(230, 81, 0); pdf.rect(0, 0, W, 40, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(22); pdf.text('DR. XIAOMI SCZ', M + 10, 16);
+    pdf.setFontSize(9); pdf.setFont('helvetica', 'normal'); pdf.text('Servicio Técnico Especializado', M + 10, 22);
+    pdf.setFontSize(8); pdf.text(`Centro Comercial Cañoto #K1 · Tel: 75959450`, M + 10, 28);
+
+    pdf.setFillColor(255, 255, 255); pdf.roundedRect(W - M - 60, 8, 60, 24, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text('RECIBO N°', W - M - 4, 14, { align: 'right' });
+    pdf.setFontSize(11); pdf.text(orden.numeroRecibo || '-', W - M - 4, 20, { align: 'right' });
+    pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); 
+    const fechaPdf = orden.fechaEditada || orden.fecha;
+    const fechaPdfStr = fechaPdf ? (fechaPdf.toDate ? fechaPdf.toDate() : new Date(fechaPdf)).toLocaleDateString('es-BO') : new Date().toLocaleDateString('es-BO');
+    pdf.text(`Fecha: ${fechaPdfStr}`, W - M - 4, 26, { align: 'right' });
+
+    y = 50;
+    const colW = (CW - 6) / 2;
+    pdf.setFillColor(248, 248, 248); pdf.roundedRect(M, y, colW, 30, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.text('CLIENTE', M + 5, y + 7);
+    pdf.setTextColor(30, 30, 30); pdf.setFontSize(12); pdf.text((orden.cliente || '').slice(0, 25), M + 5, y + 15);
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(100, 100, 100); pdf.text(`Tel: ${orden.telefono || ''}`, M + 5, y + 23);
+
+    pdf.setFillColor(248, 248, 248); pdf.roundedRect(M + colW + 6, y, colW, 30, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.text('EQUIPO', M + colW + 11, y + 7);
+    pdf.setTextColor(30, 30, 30); pdf.setFontSize(12); pdf.text(`${orden.marca || ''} ${orden.modelo || ''}`.slice(0, 25), M + colW + 11, y + 15);
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(100, 100, 100); pdf.text(`Enciende: ${orden.enciende || ''}`, M + colW + 11, y + 23);
+
+    y += 36;
+    pdf.setFillColor(248, 248, 248); pdf.roundedRect(M, y, colW, 30, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.text('ESTADO / FALLA', M + 5, y + 7);
+    pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.text(pdf.splitTextToSize(orden.falla || '-', colW - 10), M + 5, y + 14);
+
+    pdf.setFillColor(248, 248, 248); pdf.roundedRect(M + colW + 6, y, colW, 30, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.text('CLAVE DE ACCESO', M + colW + 11, y + 7);
+    pdf.setTextColor(30, 30, 30); pdf.setFontSize(12); let segInfo = orden.tipoSeguridad === 'pin' ? `PIN: ${orden.pin}` : (orden.patron ? `Patrón: ${orden.patron.split(',').join('-')}` : 'Sin clave'); pdf.text(segInfo.slice(0, 25), M + colW + 11, y + 17);
+
+    y += 36;
+    pdf.setFillColor(230, 81, 0); pdf.roundedRect(M, y, CW, 10, 3, 3, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10); pdf.text('SERVICIOS Y COSTOS', M + 5, y + 6.5); y += 14;
+
+    pdf.autoTable({ startY: y, head: [['Descripción', 'Costo']], body: (orden.servicios || []).map(s => [s.desc, formatBs(s.costo)]), styles: { fontSize: 10, cellPadding: 4 }, headStyles: { fillColor: [230, 81, 0] }, columnStyles: { 1: { halign: 'right' } }, margin: { left: M, right: M } });
+
+    y = pdf.lastAutoTable.finalY + 8;
+    const boxW = 80; const boxX = M + CW - boxW;
+    pdf.setFillColor(248, 248, 248); pdf.roundedRect(boxX, y, boxW, 20, 3, 3, 'F');
+    pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10); pdf.text('Total:', boxX + 5, y + 8);
+    pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.text(formatBs(orden.total || 0), boxX + boxW - 5, y + 8, { align: 'right' });
+    pdf.setTextColor(230, 81, 0); pdf.setFontSize(10); pdf.text('SALDO:', boxX + 5, y + 16);
+    pdf.setFontSize(14); pdf.text(formatBs(orden.saldo || 0), boxX + boxW - 5, y + 16, { align: 'right' });
+
+    const nombreArchivo = `Recibo_${orden.numeroRecibo || 'orden'}.pdf`;
+    pdf.save(nombreArchivo);
+
+    setTimeout(() => {
+      const nombreCliente = (orden.cliente || '').split(' ')[0] || 'cliente';
+      const equipo = `${orden.marca || ''} ${orden.modelo || ''}`.trim();
+      const mensaje = `Hola ${nombreCliente}, le adjuntamos el recibo de ingreso de su equipo.\n\nN° Recibo: ${orden.numeroRecibo || '-'}\nEquipo: ${equipo}\nTotal: ${formatBs(orden.total || 0)}\n${Number(orden.saldo) > 0 ? `Saldo pendiente: ${formatBs(orden.saldo)}` : ''}\n\nLe adjuntamos el PDF del recibo.`;
+      const tel = (orden.telefono || '').replace(/\D/g, '');
+      window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank');
+      toast('PDF descargado · Adjúntalo en WhatsApp', 'success', 4000);
+    }, 600);
+
+  } catch (err) {
+    console.error('Error regenerando PDF:', err);
+    toast('Error al generar el PDF: ' + err.message, 'error', 4000);
+  } finally {
+    hideLoading();
+  }
+}
+
+/* ============================================================
+   GUARDAR NOTA
+   ============================================================ */
+async function guardarNota() {
+  const notaInput = document.getElementById('nuevaNota');
+  const texto = (notaInput.value || '').trim();
+  if (!texto && fotosNuevas.length === 0) { toast('Escribe una nota o añade una foto', 'error'); return; }
+
+  haptic(15); showLoading('Guardando...');
+  try {
+    const entrada = { tipo: fotosNuevas.length > 0 && !texto ? 'foto' : 'nota', texto: texto || 'Foto añadida', fotos: fotosNuevas.slice(), autor: sesion.nombre, fecha: new Date().toISOString() };
+    await updateDoc(doc(db, 'recibos', ordenId), { bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
+    fotosNuevas = [];
+    toast('Añadido a la bitácora', 'success', 2000);
+  } catch (err) { toast('Error al guardar', 'error'); }
+  finally { hideLoading(); }
+}
+
+/* ============================================================
+   FOTOS
+   ============================================================ */
+function renderFotosNuevas() {
+  const cont = document.getElementById('fotoUploader');
+  if (!cont) return;
+  const btnAdd = cont.querySelector('#btnAddFoto');
+  cont.querySelectorAll('.foto-preview').forEach(el => el.remove());
+
+  fotosNuevas.forEach((dataUrl, i) => {
+    const div = document.createElement('div');
+    div.className = 'foto-preview';
+    div.innerHTML = `<img src="${dataUrl}" alt="preview"><button type="button" class="btn-remove" data-idx="${i}"><i class="fas fa-times"></i></button>`;
+    cont.insertBefore(div, btnAdd);
+  });
+
+  cont.querySelectorAll('.btn-remove').forEach(btn => {
+    btn.addEventListener('click', () => { const idx = parseInt(btn.dataset.idx); fotosNuevas.splice(idx, 1); renderFotosNuevas(); haptic(10); });
+  });
+}
+
+/* ============================================================
+   ELIMINAR
+   ============================================================ */
+async function eliminarOrden() {
+  if (sesion.rol !== 'admin') return;
+  const confirmar = confirm('¿Eliminar esta orden?\n\nEsta acción NO se puede deshacer.');
+  if (!confirmar) return;
+
+  haptic([50, 30, 50]); showLoading('Eliminando...');
+  try {
+    await deleteDoc(doc(db, 'recibos', ordenId));
+    toast('Orden eliminada', 'success', 2000);
+    setTimeout(() => window.location.href = '/app/', 1000);
+  } catch (err) { toast('Error al eliminar', 'error'); hideLoading(); }
+}
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+function formatFecha(fecha) {
+  if (!fecha) return '-';
+  let d;
+  if (fecha.toDate) d = fecha.toDate();
+  else if (fecha instanceof Date) d = fecha;
+  else d = new Date(fecha);
+  if (isNaN(d.getTime())) return '-';
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxSize) { height = (height * maxSize) / width; width = maxSize; }
+        else if (height > maxSize) { width = (width * maxSize) / height; height = maxSize; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject; img.src = e.target.result;
+    };
+    reader.onerror = reject; reader.readAsDataURL(file);
+  });
+}
