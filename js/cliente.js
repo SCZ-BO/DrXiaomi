@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · CLIENTE (Wizard PRO - Código Completo y Corregido)
+   DR. XIAOMI · CLIENTE (Wizard PRO - Código Completo)
    Archivo: js/cliente.js
    ============================================================ */
 
@@ -34,7 +34,7 @@ const TOTAL_PASOS = 7;
 const datos = {
   nombre: '', telefono: '',
   marca: '', modelo: '', color: '', enciende: '',
-  motivoIngreso: '', falla: '', checklist: '', plazoEntrega: 'Hoy mismo',
+  motivoIngreso: '', falla: '', checklist: '',
   tipoSeguridad: 'patron', pin: '', patronSecuencia: '',
   fotos: [null, null, null, null],
   servicios: [], total: 0, adelanto: 0, saldo: 0
@@ -60,29 +60,25 @@ function iniciar() {
   const userInfo = document.getElementById('userInfo');
   if (userInfo) userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
   
-  // 1. Intentar recuperar borrador anti-pérdida
   const hayBorrador = cargarBorrador();
 
-  // 2. Configurar todos los módulos
   configurarHeader();
   configurarWizard();
   configurarMarca();
   configurarRadioGroups();
   configurarChecklistSemáforo();
-  configurarMotivosYPlazos();
+  configurarMotivos();
   configurarPattern();
   configurarFotos();
   configurarServicios();
   configurarBotonGenerarPDF();
 
-  // 3. Guardado automático en cada tecla
   const content = document.getElementById('wizardContent');
   if (content) {
     content.addEventListener('input', guardarBorradorDebounce);
     content.addEventListener('change', guardarBorradorDebounce);
   }
 
-  // 4. Iniciar en el paso 1 si es nuevo
   if (!hayBorrador) irAPaso(1);
   
   actualizarBarraProgreso();
@@ -188,7 +184,7 @@ function irAPaso(nuevoPaso) {
     if (appBody) appBody.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // 🚨 ARREGLO: Forzar la lógica del Paso 3 al entrar
+  // Forzar la lógica del Paso 3 al entrar (evita el bug de las tarjetas ocultas)
   if (pasoActual === 3) {
     const valorEnciende = document.getElementById('enciende')?.value;
     const cardReparaciones = document.getElementById('cardReparaciones');
@@ -211,7 +207,6 @@ function irAPaso(nuevoPaso) {
   if (pasoActual === 7) generarVistaPrevia();
 }
 
-/* ACTUALIZACIÓN DE LA BARRA DE PROGRESO (PUNTOS) */
 function actualizarBarraProgreso() {
   const dots = document.querySelectorAll('.wizard-dot');
   dots.forEach((dot, index) => {
@@ -239,7 +234,7 @@ function actualizarBotones() {
 }
 
 /* ============================================================
-   VALIDACIONES INTELIGENTES
+   VALIDACIONES INTELIGENTES (CON SCROLL AUTOMÁTICO)
    ============================================================ */
 function validarPaso(paso) {
   const irAError = (idElemento, mensaje) => {
@@ -326,7 +321,6 @@ function guardarDatosPaso(paso) {
     datos.motivoIngreso = document.getElementById('motivoIngreso')?.value || '';
     datos.falla = document.getElementById('fallaDetalle')?.value.trim() || '';
     datos.checklist = document.getElementById('checklistResultados')?.value || '';
-    datos.plazoEntrega = document.getElementById('plazoEntrega')?.value || 'Hoy mismo';
   }
   if (paso === 4) {
     datos.tipoSeguridad = document.getElementById('tipoSeguridad')?.value || 'patron';
@@ -339,7 +333,7 @@ function guardarDatosPaso(paso) {
 }
 
 /* ============================================================
-   LÓGICA INTELIGENTE
+   LÓGICA INTELIGENTE: PASO 2 Y 3
    ============================================================ */
 function configurarMarca() {
   const grid = document.getElementById('marcasGrid');
@@ -399,7 +393,7 @@ function configurarRadioGroups() {
   }
 }
 
-function configurarMotivosYPlazos() {
+function configurarMotivos() {
   const motivoGroup = document.getElementById('motivoIngresoGroup');
   if (motivoGroup) {
     motivoGroup.addEventListener('click', (e) => {
@@ -409,18 +403,6 @@ function configurarMotivosYPlazos() {
       motivoGroup.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('motivoIngreso').value = btn.dataset.value;
-    });
-  }
-
-  const plazoGroup = document.getElementById('plazoGroup');
-  if (plazoGroup) {
-    plazoGroup.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip-btn');
-      if (!btn) return;
-      haptic(8);
-      plazoGroup.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('plazoEntrega').value = btn.dataset.value;
     });
   }
 }
@@ -462,7 +444,7 @@ function configurarChecklistSemáforo() {
 }
 
 /* ============================================================
-   PATTERN LOCK (BLINDADO PARA CELULARES)
+   PATTERN LOCK (DIBUJO CORREGIDO)
    ============================================================ */
 function configurarPattern() {
   const bgCanvas = document.getElementById('bgCanvas');
@@ -522,7 +504,6 @@ function configurarPattern() {
     if (display) display.textContent = seq ? path.map(p => p.id).join(' → ') : 'Sin patrón';
   }
 
-  // EVENTOS PC
   lineCanvas.addEventListener('mousedown', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); });
   lineCanvas.addEventListener('mousemove', (e) => {
     if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
@@ -532,7 +513,6 @@ function configurarPattern() {
   lineCanvas.addEventListener('mouseup', () => { drawing = false; drawLines(); updateSeq(); });
   lineCanvas.addEventListener('mouseleave', () => { drawing = false; drawLines(); updateSeq(); });
 
-  // EVENTOS CELULAR (ACTUALIZAN EN TIEMPO REAL)
   lineCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); }, { passive: false });
   lineCanvas.addEventListener('touchmove', (e) => {
     if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
@@ -549,7 +529,7 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS
+   FOTOS (CÁMARA Y GALERÍA)
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
@@ -756,6 +736,16 @@ function generarVistaPrevia() {
     ? `<div class="preview-section" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">${fotosValidas.map(f => `<img src="${f.dataUrl}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">`).join('')}</div>` 
     : '';
 
+  // Lógica para mostrar la clave o el patrón en la vista previa
+  let seguridadTexto = 'Ninguna';
+  if (datos.tipoSeguridad === 'pin' && datos.pin) {
+    seguridadTexto = `PIN: ${escapeHtml(datos.pin)}`;
+  } else if (datos.tipoSeguridad === 'patron' && datos.patronSecuencia) {
+    seguridadTexto = `Patrón: ${datos.patronSecuencia.split(',').join(' → ')}`;
+  } else if (datos.tipoSeguridad === 'ninguno') {
+    seguridadTexto = 'Sin bloqueo';
+  }
+
   cont.innerHTML = `
     <div class="preview-recibo">
       <div class="preview-header">
@@ -773,7 +763,7 @@ function generarVistaPrevia() {
 
       <div class="preview-section">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>EQUIPO:</strong> <span>${escapeHtml(datos.marca)} ${escapeHtml(datos.modelo)} (${escapeHtml(datos.color || 'N/A')})</span></div>
-        <div style="display:flex;justify-content:space-between;"><strong>ENTREGA:</strong> <span>${escapeHtml(datos.plazoEntrega)}</span></div>
+        <div style="display:flex;justify-content:space-between;color:#E65100;"><strong>DESBLOQUEO:</strong> <span>${seguridadTexto}</span></div>
       </div>
 
       <div class="preview-section">
@@ -826,7 +816,6 @@ function configurarBotonGenerarPDF() {
         falla: datos.falla,
         motivoIngreso: datos.motivoIngreso,
         checklist: datos.checklist,
-        plazoEntrega: datos.plazoEntrega,
         tipoSeguridad: datos.tipoSeguridad,
         pin: datos.pin,
         patron: datos.patronSecuencia,
