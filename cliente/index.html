@@ -20,125 +20,115 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
-    :root { --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --brand: #E65100; --brand-hover: #BF360C; --brand-light: rgba(230, 81, 0, 0.1); }
+    /* VARIABLES */
+    :root { 
+      --radius-sm: 4px; /* Más cuadrado */
+      --radius-md: 8px; 
+      --radius-lg: 12px; 
+      --brand: #E65100; 
+      --brand-hover: #BF360C; 
+      --brand-light: rgba(230, 81, 0, 0.1); 
+    }
     [data-theme="dark"] { --bg-main: #0E0E0E; --bg-card: #181818; --bg-elev: #242424; --text-main: #F5F5F5; --text-mute: #888888; --border: #2A2A2A; }
     [data-theme="light"] { --bg-main: #F9F9F9; --bg-card: #FFFFFF; --bg-elev: #F0F0F0; --text-main: #111111; --text-mute: #666666; --border: #E0E0E0; }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background-color: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
-    
-    /* CONTENEDOR PRINCIPAL: El padding-bottom es pequeño porque el footer ya no es fixed */
-    .wizard-container { max-width: 600px; margin: 0 auto; padding: 0 16px 16px 16px; }
+    .wizard-container { max-width: 600px; margin: 0 auto; padding: 0 12px 12px 12px; }
 
     /* HEADER */
-    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: var(--bg-main); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-logo { width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-main); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-logo { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
-    .brand-text h1 { font-size: 15px; font-weight: 700; margin: 0; }
-    .brand-text p { font-size: 12px; color: var(--text-mute); margin: 0; }
+    .brand-text h1 { font-size: 14px; font-weight: 700; margin: 0; }
+    .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
     .header-actions { display: flex; gap: 6px; }
-    .icon-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); background: transparent; border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .icon-btn { width: 30px; height: 30px; border-radius: var(--radius-sm); background: transparent; border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-    /* PROGRESO */
-    .wizard-progress { padding: 24px 0; }
-    .wizard-steps { display: flex; justify-content: space-between; margin-bottom: 12px; }
-    .wizard-step { display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: 0.3; transition: 0.3s; }
-    .wizard-step.active, .wizard-step.done { opacity: 1; }
-    .step-circle { width: 24px; height: 24px; border-radius: 50%; background: var(--bg-elev); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
-    .wizard-step.active .step-circle { background: var(--brand); color: white; border-color: var(--brand); }
-    .step-label { font-size: 10px; font-weight: 600; color: var(--text-mute); }
-    .wizard-bar { height: 2px; background: var(--bg-elev); border-radius: 2px; overflow: hidden; }
-    .wizard-bar-fill { height: 100%; background: var(--brand); transition: width 0.4s; }
+    /* PROGRESO SIMPLIFICADO A PUNTOS */
+    .wizard-progress { padding: 12px 0 16px 0; display: flex; justify-content: center; gap: 8px; }
+    .wizard-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg-elev); transition: 0.3s; }
+    .wizard-dot.active { background: var(--brand); transform: scale(1.2); }
+    .wizard-dot.done { background: var(--brand); opacity: 0.5; }
 
     /* FORMULARIOS */
-    .panel-header h2 { font-size: 24px; font-weight: 700; margin: 0 0 6px 0; letter-spacing: -0.5px; }
-    .panel-header p { font-size: 14px; color: var(--text-mute); margin: 0 0 24px 0; }
-    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; margin-bottom: 16px; }
+    .panel-header h2 { font-size: 20px; font-weight: 700; margin: 0 0 2px 0; letter-spacing: -0.5px; }
+    .panel-header p { font-size: 12px; color: var(--text-mute); margin: 0 0 12px 0; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; }
     
-    .field { position: relative; margin-bottom: 16px; }
-    .field input, .field textarea { width: 100%; padding: 16px 14px; background: var(--bg-elev); border: 1px solid transparent; border-radius: var(--radius-sm); color: var(--text-main); font-size: 15px; font-family: inherit; transition: 0.2s; outline: none; }
+    .field { position: relative; margin-bottom: 10px; }
+    .field input, .field textarea { width: 100%; padding: 12px 12px; background: var(--bg-elev); border: 1px solid transparent; border-radius: var(--radius-sm); color: var(--text-main); font-size: 14px; font-family: inherit; transition: 0.2s; outline: none; }
     .field input:focus, .field textarea:focus { border-color: var(--brand); background: var(--bg-card); }
-    .field label { position: absolute; left: 14px; top: 16px; font-size: 14px; color: var(--text-mute); transition: 0.2s; pointer-events: none; }
-    .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label, .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label { top: 6px; font-size: 10px; font-weight: 700; color: var(--brand); }
+    .field label { position: absolute; left: 12px; top: 12px; font-size: 13px; color: var(--text-mute); transition: 0.2s; pointer-events: none; }
+    .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label, .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label { top: 4px; font-size: 9px; font-weight: 700; color: var(--brand); }
 
-    /* MARCAS Y RADIOS */
-    .field-title { font-size: 13px; font-weight: 700; margin-bottom: 12px; display: block; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
-    .marcas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
-    .marca-btn { padding: 12px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; font-size: 12px; cursor: pointer; transition: 0.2s; }
+    /* BOTONES MÁS RECTANGULARES */
+    .field-title { font-size: 11px; font-weight: 700; margin-bottom: 8px; display: block; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
+    .marcas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+    .marca-btn { padding: 10px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; font-size: 11px; cursor: pointer; transition: 0.2s; }
     .marca-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
     
-    .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .radio-option { padding: 16px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; font-size: 13px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s; }
+    .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .radio-option { padding: 12px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: 0.2s; }
     .radio-option.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
-    .radio-option i { font-size: 18px; }
+    .radio-option i { font-size: 14px; }
 
-    /* CHIPS Y CHECKLIST */
-    .chips-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-    .chip-btn { padding: 10px 16px; border-radius: var(--radius-sm); background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+    .chips-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .chip-btn { padding: 10px 14px; border-radius: var(--radius-sm); background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
     .chip-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
 
-    .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
-    .check-item { padding: 10px 4px; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 20px; color: var(--text-main); font-size: 11px; font-weight: 500; cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; text-align: center; white-space: nowrap; }
-    .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 12px; }
+    /* CHECKLIST SEMÁFORO (RECTANGULAR) */
+    .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+    .check-item { padding: 10px 4px; background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); font-size: 10px; font-weight: 500; cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; text-align: center; white-space: nowrap; }
+    .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 11px; }
     .check-item.ok { background: rgba(34, 197, 94, 0.1); border-color: #22C55E; color: #22C55E; }
     .check-item.ok::before { content: '✓'; color: #22C55E; }
     .check-item.falla { background: rgba(239, 68, 68, 0.1); border-color: #EF4444; color: #EF4444; }
     .check-item.falla::before { content: '✕'; color: #EF4444; }
 
-    /* FOTOS */
-    .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .foto-slot { aspect-ratio: 4/3; border-radius: var(--radius-sm); border: 1px dashed var(--border); background: var(--bg-elev); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text-mute); font-size: 13px; cursor: pointer; position: relative; overflow: hidden; }
+    .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .foto-slot { aspect-ratio: 4/3; border-radius: var(--radius-sm); border: 1px dashed var(--border); background: var(--bg-elev); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-mute); font-size: 11px; cursor: pointer; position: relative; overflow: hidden; }
     .foto-slot img { width: 100%; height: 100%; object-fit: cover; }
-    .foto-remove { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: var(--radius-sm); background: rgba(0,0,0,0.7); color: white; border: none; display: flex; align-items: center; justify-content: center; }
+    .foto-remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: var(--radius-sm); background: rgba(0,0,0,0.7); color: white; border: none; display: flex; align-items: center; justify-content: center; }
 
-    /* SERVICIOS Y COSTOS */
-    .servicio-item { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
-    .servicio-item input.servicio-desc { flex: 1; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); }
-    .servicio-item input.servicio-costo { width: 90px; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--brand); font-weight: 700; text-align: right; }
-    .removeServicio { width: 44px; height: 44px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.2); cursor: pointer; }
+    .servicio-item { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+    .servicio-item input.servicio-desc { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); }
+    .servicio-item input.servicio-costo { width: 80px; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--brand); font-weight: 700; text-align: right; }
+    .removeServicio { width: 38px; height: 38px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.2); cursor: pointer; }
 
-    .resumen-row { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 500; margin-bottom: 16px; }
-    .resumen-saldo { border-top: 1px solid var(--border); padding-top: 20px; margin-top: 20px; color: var(--brand); font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    .resumen-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+    .resumen-saldo { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; color: var(--brand); font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
 
-    /* FOOTER (AL FINAL DEL SCROLL) */
     .wizard-footer { 
-      width: 100%; 
-      margin-top: 32px; 
-      padding: 16px; 
-      padding-bottom: calc(16px + env(safe-area-inset-bottom)); 
-      background: var(--bg-main); 
-      border-top: 1px solid var(--border); 
-      display: flex; 
-      gap: 12px; 
-      z-index: 100; 
+      width: 100%; margin-top: 16px; padding: 12px; 
+      padding-bottom: calc(12px + env(safe-area-inset-bottom)); 
+      background: var(--bg-main); border-top: 1px solid var(--border); 
+      display: flex; gap: 8px; z-index: 100; 
     }
-    .btn { padding: 16px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+    .btn { padding: 12px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
     .btn-primary { background: var(--brand); color: white; }
     .btn-primary:active { background: var(--brand-hover); transform: scale(0.98); }
     .btn-secondary { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); }
-    #btnPrev { flex: 0 0 60px; padding: 16px 0; }
+    #btnPrev { flex: 0 0 50px; padding: 12px 0; }
     #btnNext, #btnGenerate { flex: 1; }
 
-    /* MODALES */
     .sheet-backdrop, .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 9999; }
     .sheet-backdrop { align-items: flex-end; }
     .sheet-backdrop.show, .modal-backdrop.show { opacity: 1; pointer-events: auto; }
-    .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 24px; width: 100%; max-width: 550px; border-top: 1px solid var(--border); }
-    .modal { background: var(--bg-card); padding: 24px; border-radius: var(--radius-md); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
+    .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 20px; width: 100%; max-width: 550px; border-top: 1px solid var(--border); }
+    .modal { background: var(--bg-card); padding: 20px; border-radius: var(--radius-md); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
     .hidden { display: none !important; }
 
-    /* VISTA PREVIA */
-    .preview-recibo { background: white; color: #1a1a1a; border-radius: var(--radius-sm); padding: 20px; font-size: 12px; }
-    .preview-header { border-bottom: 2px solid var(--brand); margin: -20px -20px 16px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; background: #f9fafb;}
-    .preview-header img { width: 40px; height: 40px; object-fit: contain; }
-    .preview-section { background: #f9fafb; border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px; border: 1px solid #eee; }
-    .preview-totales { border-top: 1px solid #ddd; margin-top: 8px; padding-top: 8px; }
+    .preview-recibo { background: white; color: #1a1a1a; border-radius: var(--radius-sm); padding: 16px; font-size: 12px; }
+    .preview-header { border-bottom: 2px solid var(--brand); margin: -16px -16px 12px; padding: 12px 16px; display: flex; align-items: center; gap: 8px; background: #f9fafb;}
+    .preview-header img { width: 32px; height: 32px; object-fit: contain; }
+    .preview-section { background: #f9fafb; border-radius: var(--radius-sm); padding: 10px; margin-bottom: 10px; border: 1px solid #eee; }
+    .preview-totales { border-top: 1px solid #ddd; margin-top: 6px; padding-top: 6px; }
   </style>
 </head>
 <body>
 
-  <!-- HEADER -->
   <header class="app-header">
     <div class="brand">
       <button class="icon-btn" id="backToPanelBtn"><i class="fas fa-arrow-left"></i></button>
@@ -158,18 +148,15 @@
   </header>
 
   <div class="wizard-container">
-    <!-- PROGRESO -->
-    <div class="wizard-progress" id="wizardProgress" role="progressbar">
-      <div class="wizard-steps">
-        <div class="wizard-step active" data-step="1"><div class="step-circle">1</div><div class="step-label">Cliente</div></div>
-        <div class="wizard-step" data-step="2"><div class="step-circle">2</div><div class="step-label">Equipo</div></div>
-        <div class="wizard-step" data-step="3"><div class="step-circle">3</div><div class="step-label">Falla</div></div>
-        <div class="wizard-step" data-step="4"><div class="step-circle">4</div><div class="step-label">Clave</div></div>
-        <div class="wizard-step" data-step="5"><div class="step-circle">5</div><div class="step-label">Fotos</div></div>
-        <div class="wizard-step" data-step="6"><div class="step-circle">6</div><div class="step-label">Costos</div></div>
-        <div class="wizard-step" data-step="7"><div class="step-circle">7</div><div class="step-label">Listo</div></div>
-      </div>
-      <div class="wizard-bar"><div class="wizard-bar-fill" id="wizardBarFill" style="width: 14.28%;"></div></div>
+    <!-- BARRA DE PROGRESO SIMPLIFICADA A PUNTOS -->
+    <div class="wizard-progress" id="wizardProgress">
+      <div class="wizard-dot active"></div>
+      <div class="wizard-dot"></div>
+      <div class="wizard-dot"></div>
+      <div class="wizard-dot"></div>
+      <div class="wizard-dot"></div>
+      <div class="wizard-dot"></div>
+      <div class="wizard-dot"></div>
     </div>
 
     <main id="wizardContent">
@@ -202,7 +189,7 @@
         </div>
 
         <div class="card">
-          <div class="field" style="margin-bottom: 16px;">
+          <div class="field" style="margin-bottom: 10px;">
             <input type="text" id="modelo" placeholder=" " required>
             <label for="modelo">Modelo del equipo *</label>
           </div>
@@ -227,7 +214,6 @@
       <section class="wizard-panel hidden" data-panel="3" aria-hidden="true">
         <div class="panel-header"><h2>Recepción Técnica</h2><p id="subtituloRecepcion">Completa la auditoría</p></div>
         
-        <!-- BLOQUE A: SI ENCIENDE -->
         <div class="card hidden" id="cardReparaciones">
           <label class="field-title">1. Motivo de Reparación</label>
           <div class="chips-group" id="motivoIngresoGroup">
@@ -244,7 +230,6 @@
 
         <div class="card hidden" id="cardAuditoriaGeneral">
           <label class="field-title">2. Auditoría General (Pruebas)</label>
-          <p style="font-size: 12px; color: var(--text-mute); margin-bottom: 12px;">Toca cada punto: <b>OK</b> → <b>Falla</b>.</p>
           <div class="checklist-grid" id="checklistGeneralGroup">
             <button type="button" class="check-item" data-item="Cámaras"><span>Cámaras</span></button>
             <button type="button" class="check-item" data-item="Audio / mic"><span>Audio / mic</span></button>
@@ -254,10 +239,8 @@
           </div>
         </div>
 
-        <!-- BLOQUE B: SI NO ENCIENDE -->
         <div class="card hidden" id="cardAuditoriaFisica">
           <label class="field-title">Auditoría Física (Visual)</label>
-          <p style="font-size: 12px; color: var(--text-mute); margin-bottom: 12px;">Toca cada punto: <b>OK</b> → <b>Falla</b>.</p>
           <div class="checklist-grid" id="checklistFisicoGroup">
             <button type="button" class="check-item" data-item="Pantalla"><span>Pantalla sana</span></button>
             <button type="button" class="check-item" data-item="Tapa trasera"><span>Tapa trasera</span></button>
@@ -267,7 +250,6 @@
         
         <input type="hidden" id="checklistResultados" value="">
 
-        <!-- BLOQUE C: DETALLES EXTRA -->
         <div class="card">
           <label class="field-title">Detalles extra (opcional)</label>
           <div class="field" style="margin-bottom:0;">
@@ -276,7 +258,6 @@
           </div>
         </div>
 
-        <!-- BLOQUE D: PLAZO -->
         <div class="card">
           <label class="field-title">Plazo de entrega</label>
           <div class="chips-group" id="plazoGroup">
@@ -293,7 +274,7 @@
       <section class="wizard-panel hidden" data-panel="4" aria-hidden="true">
         <div class="panel-header"><h2>Seguridad</h2><p>Desbloqueo del equipo</p></div>
         <div class="card">
-          <div class="radio-group" id="tipoSeguridadGroup" style="margin-bottom:20px;">
+          <div class="radio-group" id="tipoSeguridadGroup" style="margin-bottom:12px;">
             <button type="button" class="radio-option active" data-value="patron"><i class="fas fa-braille"></i><span>Patrón</span></button>
             <button type="button" class="radio-option" data-value="pin"><i class="fas fa-hashtag"></i><span>PIN</span></button>
             <button type="button" class="radio-option" data-value="ninguno"><i class="fas fa-lock-open"></i><span>Ninguno</span></button>
@@ -305,14 +286,14 @@
           </div>
 
           <div id="patronContainer">
-            <div style="position: relative; width: 100%; max-width: 280px; margin: 0 auto; aspect-ratio: 1; background: var(--bg-elev); border-radius: var(--radius-sm);">
+            <div style="position: relative; width: 100%; max-width: 240px; margin: 0 auto; aspect-ratio: 1; background: var(--bg-elev); border-radius: var(--radius-sm);">
               <canvas id="bgCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
               <canvas id="lineCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
             </div>
-            <div style="text-align:center;margin:12px 0;">
-              <span id="pattern-sequence" style="font-size: 14px; font-weight: 700; color: var(--brand);">Sin patrón</span>
+            <div style="text-align:center;margin:8px 0;">
+              <span id="pattern-sequence" style="font-size: 12px; font-weight: 700; color: var(--brand);">Sin patrón</span>
             </div>
-            <button type="button" id="clearPattern" class="btn btn-secondary" style="width: 100%; padding:10px; font-size:13px;"><i class="fas fa-eraser"></i> Limpiar</button>
+            <button type="button" id="clearPattern" class="btn btn-secondary" style="width: 100%; padding:8px; font-size:12px;"><i class="fas fa-eraser"></i> Limpiar</button>
           </div>
         </div>
       </section>
@@ -335,11 +316,11 @@
         <div class="panel-header"><h2>Costos</h2><p>Describe el servicio y asigna el precio</p></div>
         <div class="card">
           <div class="servicios-container" id="serviciosList"></div>
-          <button type="button" id="addServicio" class="btn btn-secondary" style="width: 100%; margin-top: 10px; font-size: 13px;"><i class="fas fa-plus"></i> Añadir otro servicio</button>
+          <button type="button" id="addServicio" class="btn btn-secondary" style="width: 100%; margin-top: 6px; font-size: 12px; padding:10px;"><i class="fas fa-plus"></i> Añadir otro servicio</button>
           
-          <div style="margin-top: 16px;">
-            <label class="field-title" style="font-size: 11px;">Precios rápidos</label>
-            <div class="chips-group" id="preciosRapidosGroup">
+          <div style="margin-top: 12px;">
+            <label class="field-title" style="font-size: 10px;">Precios rápidos</label>
+            <div class="chips-group" id="preciosRapidosGroup" style="margin-bottom:0;">
               <button type="button" class="chip-btn" data-precio="50">Bs. 50</button>
               <button type="button" class="chip-btn" data-precio="100">Bs. 100</button>
               <button type="button" class="chip-btn" data-precio="200">Bs. 200</button>
@@ -365,14 +346,12 @@
     </main>
   </div>
 
-  <!-- FOOTER AL FINAL DEL SCROLL -->
   <footer class="wizard-footer" id="wizardFooter">
     <button type="button" class="btn btn-secondary" id="btnPrev" style="display: none;"><i class="fas fa-arrow-left"></i></button>
     <button type="button" class="btn btn-primary" id="btnNext">Siguiente <i class="fas fa-arrow-right"></i></button>
     <button type="button" class="btn btn-primary" id="btnGenerate" style="display: none;"><i class="fas fa-file-pdf"></i> Generar Recibo</button>
   </footer>
 
-  <!-- MODAL ÉXITO -->
   <div class="modal-backdrop" id="successModal">
     <div class="modal">
       <div style="font-size: 48px; color: #22C55E; margin-bottom: 16px;"><i class="fas fa-check-circle"></i></div>
@@ -385,12 +364,11 @@
     </div>
   </div>
 
-  <!-- BOTTOM SHEET FOTOS -->
   <div class="sheet-backdrop" id="fotoSheet">
     <div class="sheet">
-      <h3 style="margin-bottom: 20px; text-align: center;">Añadir foto</h3>
-      <button type="button" class="btn btn-primary" id="btnTomarFoto" style="width: 100%; margin-bottom: 12px;"><i class="fas fa-camera"></i> Cámara</button>
-      <button type="button" class="btn btn-secondary" id="btnSubirFoto" style="width: 100%; margin-bottom: 12px;"><i class="fas fa-image"></i> Galería</button>
+      <h3 style="margin-bottom: 16px; text-align: center;">Añadir foto</h3>
+      <button type="button" class="btn btn-primary" id="btnTomarFoto" style="width: 100%; margin-bottom: 10px;"><i class="fas fa-camera"></i> Cámara</button>
+      <button type="button" class="btn btn-secondary" id="btnSubirFoto" style="width: 100%; margin-bottom: 10px;"><i class="fas fa-image"></i> Galería</button>
       <button type="button" class="btn" id="btnCancelarFoto" style="width: 100%; background:transparent; color:var(--text-mute);">Cancelar</button>
     </div>
   </div>
