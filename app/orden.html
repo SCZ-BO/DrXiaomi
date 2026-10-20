@@ -6,29 +6,20 @@
   <meta name="theme-color" content="#0E0E0E">
   <title>DR. Xiaomi · Orden</title>
 
-  <!-- Favicons -->
   <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
-  <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- Librerías PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-  <link rel="manifest" href="/manifest.json">
-  <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
-
   <style>
     :root { 
-      --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; 
-      --brand: #E65100; --brand-hover: #BF360C; --brand-light: rgba(230, 81, 0, 0.1); 
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; 
+      --brand: #E65100; --brand-hover: #BF360C; --brand-light: rgba(230, 81, 0, 0.15); 
       --bg-main: #0E0E0E; --bg-card: #181818; --bg-elev: #242424; 
       --text-main: #F5F5F5; --text-mute: #888888; --border: #2A2A2A; 
     }
@@ -38,7 +29,6 @@
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    
     html, body { height: 100%; overflow: hidden; }
     body { background-color: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
     
@@ -55,69 +45,7 @@
     .icon-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
     .icon-btn:active { transform: scale(0.95); }
 
-    .section-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 12px; }
-    .section-block h3 { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-
-    .fila-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 12px; font-size: 13px; }
-    .fila-info:last-child { margin-bottom: 0; }
-    .fila-info .label { color: var(--text-mute); font-weight: 500; flex-shrink: 0; }
-    .fila-info .valor { color: var(--text-main); font-weight: 600; text-align: right; word-break: break-word; }
-
-    .chip-estado { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 700; text-transform: uppercase; }
-    .chip-estado[data-estado="recibido"] { background: rgba(255, 255, 255, 0.1); color: var(--text-main); }
-    .chip-estado[data-estado="reparacion"] { background: rgba(230, 81, 0, 0.15); color: var(--brand); }
-    .chip-estado[data-estado="espera-repuesto"] { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
-    .chip-estado[data-estado="listo"] { background: rgba(251, 191, 36, 0.15); color: #FBBF24; }
-    .chip-estado[data-estado="entregado"] { background: rgba(34, 197, 94, 0.15); color: #22C55E; }
-    .chip-estado[data-estado="devuelto"] { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
-
-    .estado-btn { 
-      display: flex; align-items: center; gap: 8px; padding: 12px 14px; 
-      background: var(--bg-elev); border: 1px solid var(--border); 
-      border-radius: var(--radius-sm); color: var(--text-main); 
-      font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; 
-      width: 100%; text-align: left; margin-bottom: 8px;
-    }
-    .estado-btn:active { transform: scale(0.98); }
-    .estado-btn.activo { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
-
-    /* 🔥 CONTENEDOR PARA MÉTODOS DE PAGO */
-    .pago-btn {
-      display: flex; align-items: center; gap: 8px; padding: 10px 14px;
-      background: var(--bg-elev); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); color: var(--text-main);
-      font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;
-      width: 100%; text-align: left; margin-bottom: 6px;
-    }
-    .pago-btn:active { transform: scale(0.98); }
-    .pago-btn.activo { background: rgba(34, 197, 94, 0.1); border-color: #22C55E; color: #22C55E; }
-
-    .bitacora-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-    .bitacora-item:last-child { border-bottom: none; }
-    .bitacora-icono { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
-    .bitacora-icono.estado { background: rgba(230, 81, 0, 0.15); color: var(--brand); }
-    .bitacora-icono.nota { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
-    .bitacora-icono.foto { background: rgba(139, 92, 246, 0.15); color: #8B5CF6; }
-    
-    .bitacora-content { flex: 1; min-width: 0; }
-    .bitacora-autor { font-size: 12px; font-weight: 700; color: var(--text-main); }
-    .bitacora-fecha { font-size: 10px; color: var(--text-mute); margin-left: 6px; }
-    .bitacora-texto { font-size: 12px; color: var(--text-mute); margin-top: 4px; line-height: 1.4; word-wrap: break-word; }
-    .bitacora-fotos { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-    .bitacora-fotos img { width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: zoom-in; }
-
-    .foto-uploader { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-    .foto-preview { position: relative; width: 60px; height: 60px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
-    .foto-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .foto-preview .btn-remove { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; background: #EF4444; color: white; border: none; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    .btn-add-foto { width: 60px; height: 60px; border-radius: var(--radius-sm); background: var(--bg-elev); border: 1px dashed var(--border); color: var(--text-mute); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; gap: 2px; cursor: pointer; }
-    .btn-add-foto i { font-size: 16px; }
-
-    .btn-grande { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; border: none; margin-top: 10px; transition: 0.2s; }
-    .btn-grande:active { transform: scale(0.98); }
-    .btn-whatsapp { background: #25D366; color: white; }
-    .btn-pdf { background: var(--brand); color: white; }
-
+    /* 🔥 DISEÑO DE RECIBO (Completo) */
     .preview-recibo { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 16px; }
     .preview-header { background: linear-gradient(135deg, var(--brand), #FF8A3C); color: white; padding: 14px 16px; display: flex; align-items: center; gap: 12px; position: relative; }
     .preview-header img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.15); flex-shrink: 0; }
@@ -138,6 +66,67 @@
     .preview-totales .total-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-mute); margin-bottom: 6px; }
     .preview-totales .saldo-row { display: flex; justify-content: space-between; background: var(--brand-light); padding: 10px 12px; border-radius: var(--radius-sm); margin-top: 10px; font-size: 14px; font-weight: 800; color: var(--brand); }
 
+    /* 🔥 BOTONES DE ESTADO (Cómodos para el pulgar) */
+    .estados-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .estado-btn { 
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      padding: 16px 10px; background: var(--bg-elev); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text-main); font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: 0.2s; text-align: center;
+    }
+    .estado-btn:active { transform: scale(0.96); }
+    .estado-btn.activo { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 800; }
+    .estado-btn i { font-size: 20px; }
+
+    /* 🔥 BOTONES DE PAGO (Grandes) */
+    .pagos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .pago-btn {
+      display: flex; align-items: center; gap: 10px; padding: 14px;
+      background: var(--bg-elev); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text-main);
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;
+      width: 100%; text-align: left;
+    }
+    .pago-btn:active { transform: scale(0.97); }
+    .pago-btn.activo { background: rgba(34, 197, 94, 0.15); border-color: #22C55E; color: #22C55E; }
+    .pago-btn i { font-size: 18px; }
+
+    /* 🔥 BITÁCORA (Estilo limpio) */
+    .bitacora-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .bitacora-item:last-child { border-bottom: none; }
+    .bitacora-icono { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
+    .bitacora-icono.estado { background: rgba(230, 81, 0, 0.15); color: var(--brand); }
+    .bitacora-icono.nota { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
+    .bitacora-icono.foto { background: rgba(139, 92, 246, 0.15); color: #8B5CF6; }
+    .bitacora-content { flex: 1; min-width: 0; }
+    .bitacora-autor { font-size: 12px; font-weight: 700; color: var(--text-main); }
+    .bitacora-fecha { font-size: 10px; color: var(--text-mute); margin-left: 6px; }
+    .bitacora-texto { font-size: 12px; color: var(--text-mute); margin-top: 4px; line-height: 1.4; word-wrap: break-word; }
+    .bitacora-fotos { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .bitacora-fotos img { width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: zoom-in; }
+
+    /* 🔥 FOTO UPLOADER */
+    .foto-uploader { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .foto-preview { position: relative; width: 60px; height: 60px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+    .foto-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .foto-preview .btn-remove { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; background: #EF4444; color: white; border: none; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .btn-add-foto { width: 60px; height: 60px; border-radius: var(--radius-sm); background: var(--bg-elev); border: 1px dashed var(--border); color: var(--text-mute); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; gap: 2px; cursor: pointer; }
+    .btn-add-foto i { font-size: 16px; }
+
+    /* 🔥 BOTONES GRANDES DE ACCIÓN */
+    .btn-grande { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; border: none; margin-top: 10px; transition: 0.2s; }
+    .btn-grande:active { transform: scale(0.98); }
+    .btn-whatsapp { background: #25D366; color: white; }
+    .btn-pdf { background: var(--brand); color: white; }
+
+    .section-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; }
+    .section-block h3 { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+
+    .fila-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 12px; font-size: 13px; }
+    .fila-info:last-child { margin-bottom: 0; }
+    .fila-info .label { color: var(--text-mute); font-weight: 500; flex-shrink: 0; }
+    .fila-info .valor { color: var(--text-main); font-weight: 600; text-align: right; word-break: break-word; }
+
     .loader-overlay { position: fixed; inset: 0; background: rgba(14, 14, 14, 0.95); backdrop-filter: blur(8px); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
     .loader-overlay.hidden { opacity: 0; pointer-events: none; }
     .loader-logo-container { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
@@ -156,7 +145,6 @@
 </head>
 <body>
 
-  <!-- LOADER PRO -->
   <div class="loader-overlay" id="appLoader">
     <div class="loader-logo-container">
       <div class="loader-ring"></div>
@@ -181,34 +169,32 @@
 
     <main class="app-content" id="contenido">
       
-      <!-- 🔥 CONTENEDOR PRINCIPAL (Aquí se inyecta todo desde orden.js) -->
-      
-      <!-- 1. Recibo / Detalle -->
+      <!-- 1. RECIBO (Lo inyecta orden.js) -->
       <div id="reciboDetalle"></div>
 
-      <!-- 2. Estados de la Orden -->
+      <!-- 2. CAMBIAR ESTADO (Botones grandes) -->
       <div class="section-block" id="estadosBlock">
         <h3><i class="fas fa-tasks"></i> Estado de la Orden</h3>
-        <div id="estadosContainer"></div>
+        <div class="estados-grid" id="estadosContainer"></div>
       </div>
 
-      <!-- 3. Métodos de Pago (Oculto hasta que se marque Entregado) -->
+      <!-- 3. MÉTODOS DE PAGO (Oculto por defecto) -->
       <div class="section-block" id="pagoBlock" style="display: none;">
         <h3><i class="fas fa-money-bill-wave"></i> Método de Pago</h3>
-        <div id="pagosContainer">
-          <button class="pago-btn" data-metodo="Efectivo">💵 Efectivo</button>
-          <button class="pago-btn" data-metodo="QR">📱 QR</button>
-          <button class="pago-btn" data-metodo="Transferencia">🏦 Transferencia</button>
-          <button class="pago-btn" data-metodo="Mixto">🔀 Mixto</button>
+        <div class="pagos-grid" id="pagosContainer">
+          <button class="pago-btn" data-metodo="Efectivo"><i class="fas fa-money-bill-wave"></i> Efectivo</button>
+          <button class="pago-btn" data-metodo="QR"><i class="fas fa-qrcode"></i> QR</button>
+          <button class="pago-btn" data-metodo="Transferencia"><i class="fas fa-building-columns"></i> Transferencia</button>
+          <button class="pago-btn" data-metodo="Mixto"><i class="fas fa-shuffle"></i> Mixto</button>
         </div>
       </div>
 
-      <!-- 4. Bitácora -->
+      <!-- 4. BITÁCORA (Ya no está en el recibo) -->
       <div class="section-block">
         <h3><i class="fas fa-history"></i> Bitácora</h3>
         <div id="bitacoraContainer"></div>
         <div style="display: flex; gap: 8px; margin-top: 12px;">
-          <input type="text" id="notaInput" placeholder="Escribe una nota..." style="flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main);">
+          <input type="text" id="notaInput" placeholder="Escribe o dicta una nota..." style="flex: 1; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-family: inherit; font-size: 13px;">
           <button class="icon-btn" id="btnAgregarNota" style="background: var(--brand); color: white;"><i class="fas fa-plus"></i></button>
         </div>
         <button class="btn-grande" id="btnAgregarFoto" style="background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); margin-top: 8px;">
@@ -219,7 +205,6 @@
     </main>
   </div>
 
-  <!-- VISOR DE IMÁGENES -->
   <div class="img-viewer" id="imgViewer">
     <button class="cerrar" id="imgViewerCerrar"><i class="fas fa-times"></i></button>
     <img src="" alt="Vista previa" id="imgViewerImg">
@@ -227,13 +212,11 @@
 
   <script type="module" src="./orden.js"></script>
 
-  <!-- 🔥 RED DE SEGURIDAD -->
   <script>
     setTimeout(() => {
       const loader = document.getElementById('appLoader');
       if (loader && !loader.classList.contains('hidden')) {
         loader.classList.add('hidden');
-        console.warn('⚠️ Loader apagado por seguridad (timeout de 2s).');
       }
     }, 2000);
   </script>
