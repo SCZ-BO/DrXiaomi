@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (RÁPIDO Y FUNCIONAL - Estilo Minimalista)
+   DR. XIAOMI · ORDEN (VERSIÓN FINAL)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -14,9 +14,6 @@ import {
   serverTimestamp, arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 🔥 IMPORTAMOS EL MOTOR CENTRAL DE PDF
-import { generarPDFUnificado } from '/js/cliente-pdf.js';
-
 import '/js/dictado.js';
 
 /* ============================================================
@@ -28,7 +25,8 @@ const CONFIG = {
   nombreTienda: 'DR. XIAOMI SCZ',
   direccion: 'Centro Comercial Cañoto #K1, Santa Cruz',
   telefono: '75959450',
-  web: 'xiaomi.scz.red'
+  web: 'xiaomi.scz.red',
+  urlApp: 'https://xiaomi.scz.red'
 };
 
 const ESTADOS = {
@@ -121,7 +119,7 @@ async function cargarOrden() {
 }
 
 /* ============================================================
-   RENDER PRINCIPAL (ESTILO MINIMALISTA)
+   RENDER PRINCIPAL
    ============================================================ */
 function renderOrden() {
   const estadoActual = orden.estadoOrden || 'recibido';
@@ -434,7 +432,7 @@ function renderOrden() {
 }
 
 /* ============================================================
-   BITÁCORA (SIN CAMBIOS DE LÓGICA)
+   BITÁCORA
    ============================================================ */
 function renderBitacora() {
   const bitacora = Array.isArray(orden.bitacora) ? orden.bitacora : [];
@@ -486,7 +484,7 @@ function renderBitacora() {
 }
 
 /* ============================================================
-   EVENTOS (SIN CAMBIOS DE LÓGICA)
+   EVENTOS
    ============================================================ */
 function configurarEventosOrden() {
   document.querySelectorAll('.estado-btn').forEach(btn => {
@@ -577,7 +575,7 @@ function configurarEventosOrden() {
 }
 
 /* ============================================================
-   CAMBIAR ESTADO (LÓGICA INTACTA)
+   CAMBIAR ESTADO
    ============================================================ */
 async function cambiarEstado(nuevoEstado) {
   if (!nuevoEstado || !ESTADOS[nuevoEstado]) return;
@@ -623,7 +621,7 @@ async function cambiarEstado(nuevoEstado) {
 }
 
 /* ============================================================
-   MODAL DE COBRO (ESTILO MINIMALISTA)
+   MODAL DE COBRO
    ============================================================ */
 function abrirModalCobro() {
   haptic(15);
@@ -830,7 +828,7 @@ async function confirmarCobro(monto, metodo) {
 }
 
 /* ============================================================
-   MODAL DE COSTO (ESTILO MINIMALISTA)
+   MODAL DE COSTO
    ============================================================ */
 function abrirModalCosto() {
   if (sesion.rol !== 'admin') return;
@@ -998,7 +996,7 @@ function contactarCliente() {
 }
 
 /* ============================================================
-   REGENERAR PDF
+   REGENERAR PDF (SIN IMPORTAR CLIENTE-PDF)
    ============================================================ */
 async function regenerarYEnviarPDF() {
   if (!orden.telefono) {
@@ -1010,33 +1008,153 @@ async function regenerarYEnviarPDF() {
   haptic(20);
 
   try {
-    const exito = await generarPDFUnificado(orden, 'guardar');
-    
-    if (exito) {
-      setTimeout(() => {
-        const nombreCliente = (orden.cliente || '').split(' ')[0] || 'cliente';
-        const equipo = `${orden.marca || ''} ${orden.modelo || ''}`.trim();
-        const mensaje = `Hola ${nombreCliente}, le adjuntamos el recibo de ingreso de su equipo.\n\nN° Recibo: ${orden.numeroRecibo || '-'}\nEquipo: ${equipo}\nTotal: ${formatBs(orden.total || 0)}\n${Number(orden.saldo) > 0 ? `Saldo pendiente: ${formatBs(orden.saldo)}` : ''}\n\nLe adjuntamos el PDF del recibo.`;
+    // Generamos el PDF aquí mismo usando las librerías cargadas en el HTML
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+    const W = 210, H = 297, M = 15, CW = W - M * 2;
+    let y = 0;
 
-        const tel = (orden.telefono || '').replace(/\D/g, '');
-        window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank');
-        toast('PDF descargado · Adjúntalo en WhatsApp', 'success', 4000);
-      }, 600);
-      
-      try {
-        const entrada = {
-          tipo: 'whatsapp',
-          texto: `Recibo PDF regenerado`,
-          autor: sesion.nombre,
-          fecha: new Date().toISOString()
-        };
-        await updateDoc(doc(db, 'recibos', ordenId), {
-          bitacora: arrayUnion(entrada),
-          actualizadoEn: serverTimestamp()
-        });
-        orden.bitacora = [...(orden.bitacora || []), entrada];
-      } catch (err) {}
-    }
+    // Header
+    pdf.setFillColor(230, 81, 0);
+    pdf.rect(0, 0, W, 40, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(22);
+    pdf.text('DR. XIAOMI SCZ', M + 10, 16);
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Servicio Técnico Especializado', M + 10, 22);
+    pdf.setFontSize(8);
+    pdf.text(`Centro Comercial Cañoto #K1 · Tel: 75959450`, M + 10, 28);
+
+    // Recibo N°
+    pdf.setFillColor(255, 255, 255);
+    pdf.roundedRect(W - M - 60, 8, 60, 24, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9);
+    pdf.text('RECIBO N°', W - M - 4, 14, { align: 'right' });
+    pdf.setFontSize(11);
+    pdf.text(orden.numeroRecibo || '-', W - M - 4, 20, { align: 'right' });
+    pdf.setTextColor(100, 100, 100);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, W - M - 4, 26, { align: 'right' });
+
+    y = 50;
+
+    // Cliente / Equipo
+    const colW = (CW - 6) / 2;
+    pdf.setFillColor(248, 248, 248);
+    pdf.roundedRect(M, y, colW, 30, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('CLIENTE', M + 5, y + 7);
+    pdf.setTextColor(30, 30, 30);
+    pdf.setFontSize(12);
+    pdf.text((orden.cliente || '').slice(0, 25), M + 5, y + 15);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(`Tel: ${orden.telefono || ''}`, M + 5, y + 23);
+
+    pdf.setFillColor(248, 248, 248);
+    pdf.roundedRect(M + colW + 6, y, colW, 30, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('EQUIPO', M + colW + 11, y + 7);
+    pdf.setTextColor(30, 30, 30);
+    pdf.setFontSize(12);
+    pdf.text(`${orden.marca || ''} ${orden.modelo || ''}`.slice(0, 25), M + colW + 11, y + 15);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(`Enciende: ${orden.enciende || ''}`, M + colW + 11, y + 23);
+
+    y += 36;
+
+    // Falla / Seguridad
+    pdf.setFillColor(248, 248, 248);
+    pdf.roundedRect(M, y, colW, 30, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('ESTADO / FALLA', M + 5, y + 7);
+    pdf.setTextColor(100, 100, 100);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.text(pdf.splitTextToSize(orden.falla || '-', colW - 10), M + 5, y + 14);
+
+    pdf.setFillColor(248, 248, 248);
+    pdf.roundedRect(M + colW + 6, y, colW, 30, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('CLAVE DE ACCESO', M + colW + 11, y + 7);
+    pdf.setTextColor(30, 30, 30);
+    pdf.setFontSize(12);
+    let segInfo = orden.tipoSeguridad === 'pin' ? `PIN: ${orden.pin}` : (orden.patron ? `Patrón: ${orden.patron.split(',').join('-')}` : 'Sin clave');
+    pdf.text(segInfo.slice(0, 25), M + colW + 11, y + 17);
+
+    y += 36;
+
+    // Servicios
+    pdf.setFillColor(230, 81, 0);
+    pdf.roundedRect(M, y, CW, 10, 3, 3, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.text('SERVICIOS Y COSTOS', M + 5, y + 6.5);
+    y += 14;
+
+    pdf.autoTable({
+      startY: y,
+      head: [['Descripción', 'Costo']],
+      body: (orden.servicios || []).map(s => [s.desc, formatBs(s.costo)]),
+      styles: { fontSize: 10, cellPadding: 4 },
+      headStyles: { fillColor: [230, 81, 0] },
+      columnStyles: { 1: { halign: 'right' } },
+      margin: { left: M, right: M }
+    });
+
+    y = pdf.lastAutoTable.finalY + 8;
+
+    // Totales
+    const boxW = 80;
+    const boxX = M + CW - boxW;
+    pdf.setFillColor(248, 248, 248);
+    pdf.roundedRect(boxX, y, boxW, 20, 3, 3, 'F');
+    pdf.setTextColor(100, 100, 100);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+    pdf.text('Total:', boxX + 5, y + 8);
+    pdf.setTextColor(30, 30, 30);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(formatBs(orden.total || 0), boxX + boxW - 5, y + 8, { align: 'right' });
+    
+    pdf.setTextColor(230, 81, 0);
+    pdf.setFontSize(10);
+    pdf.text('SALDO:', boxX + 5, y + 16);
+    pdf.setFontSize(14);
+    pdf.text(formatBs(orden.saldo || 0), boxX + boxW - 5, y + 16, { align: 'right' });
+
+    // Guardar
+    const nombreArchivo = `Recibo_${orden.numeroRecibo || 'orden'}.pdf`;
+    pdf.save(nombreArchivo);
+
+    // Enviar WhatsApp
+    setTimeout(() => {
+      const nombreCliente = (orden.cliente || '').split(' ')[0] || 'cliente';
+      const equipo = `${orden.marca || ''} ${orden.modelo || ''}`.trim();
+      const mensaje = `Hola ${nombreCliente}, le adjuntamos el recibo de ingreso de su equipo.\n\nN° Recibo: ${orden.numeroRecibo || '-'}\nEquipo: ${equipo}\nTotal: ${formatBs(orden.total || 0)}\n${Number(orden.saldo) > 0 ? `Saldo pendiente: ${formatBs(orden.saldo)}` : ''}\n\nLe adjuntamos el PDF del recibo.`;
+
+      const tel = (orden.telefono || '').replace(/\D/g, '');
+      window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank');
+      toast('PDF descargado · Adjúntalo en WhatsApp', 'success', 4000);
+    }, 600);
+
   } catch (err) {
     console.error('Error regenerando PDF:', err);
     toast('Error al generar el PDF: ' + err.message, 'error', 4000);
