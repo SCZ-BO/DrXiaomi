@@ -6,12 +6,13 @@
 import { requireAuth, logout } from '/js/app-auth.js';
 import { toast, haptic, initTheme, formatBs, escapeHtml } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
-import { collection, query, where, onSnapshot, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, query, where, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 initTheme();
 let sesion = null;
 let rangoActual = 'hoy';
-let unsubscribe = null;
+let unsubscribeRecibos = null;
+let unsubscribeCierres = null;
 
 // Elementos del DOM
 const headerSubtitle = document.getElementById('headerSubtitle');
@@ -68,14 +69,12 @@ function configurarEventos() {
 }
 
 async function cargarReporte(rango, desdeFecha, hastaFecha) {
-  if (unsubscribe) {
-    unsubscribe();
-    unsubscribe = null;
-  }
+  if (unsubscribeRecibos) unsubscribeRecibos();
+  if (unsubscribeCierres) unsubscribeCierres();
 
   totalMontoEl.textContent = '...';
   totalEntregasEl.textContent = 'Buscando...';
-  listaMovimientos.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-3);">⏳ Cargando datos...</div>';
+  listaMovimientos.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-mute);">⏳ Cargando datos...</div>';
 
   try {
     let inicio = new Date();
@@ -106,23 +105,26 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
     const opcionesFecha = { day: '2-digit', month: 'short' };
     headerSubtitle.textContent = `${inicio.toLocaleDateString('es-BO', opcionesFecha)} - ${fin.toLocaleDateString('es-BO', opcionesFecha)}`;
 
-    // 🔥 1. TRAER RECIBOS (Reparaciones + Ventas Directas)
+    let datosRecibos = [];
+    let datosCierres = [];
+
+    const procesarYRenderizar = () => {
+      const todosLosDatos = [...datosRecibos, ...datosCierres];
+      todosLosDatos.sort((a, b) => b.fechaReal - a.fechaReal);
+      renderizarReporte(todosLosDatos);
+      document.getElementById('appLoader')?.classList.add('hidden');
+    };
+
+    // 1. Escuchar Recibos (Reparaciones + Ventas Directas)
     const qRecibos = query(
       collection(db, 'recibos'),
       where('estadoOrden', '==', 'entregado'),
       limit(500)
     );
 
-    // 🔥 2. TRAER CIERRES (Accesorios + Extras)
-    const qCierres = query(collection(db, 'cierres'), limit(500));
-
-    // Escuchamos ambos en tiempo real
-    let datosRecibos = [];
-    let datosCierres = [];
-
-    const unsubRecibos = onSnapshot(qRecibos, (snap) => {
+    unsubscribeRecibos = onSnapshot(qRecibos, (snapshot) => {
       datosRecibos = [];
-      snap.forEach(doc => {
+      snapshot.forEach(doc => {
         const d = doc.data();
         let fechaD = d.fechaEntrega || d.fecha;
         if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
@@ -130,11 +132,9 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
 
         if (fechaD >= inicio && fechaD <= fin) {
           datosRecibos.push({
-            tipo: 'recibo',
-            numeroRecibo: d.numeroRecibo,
+            origen: 'recibo',
             cliente: d.cliente,
-            marca: d.marca,
-            modelo: d.modelo,
+            detalle: `${d.marca || ''} ${d.modelo || ''}`,
             montoCobrado: Number(d.montoCobrado) || 0,
             costoRepuesto: Number(d.costoRepuesto) || 0,
             metodoPago: d.metodoPago || 'Efectivo',
@@ -142,42 +142,43 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
           });
         }
       });
-      unificarYRenderizar(datosRecibos, datosCierres);
+      procesarYRenderizar();
     });
 
-    const unsubCierres = onSnapshot(qCierres, (snap) => {
+    // 2. Escuchar Cierres (Accesorios + Ventas Extras)
+    const qCierres = query(collection(db, 'cierres'), limit(500));
+
+    unsubscribeCierres = onSnapshot(qCierres, (snapshot) => {
       datosCierres = [];
-      snap.forEach(doc => {
+      snapshot.forEach(doc => {
         const d = doc.data();
         let fechaD = d.fecha;
         if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
         else if (fechaD) fechaD = new Date(fechaD);
 
         if (fechaD >= inicio && fechaD <= fin) {
-          // Agregamos un movimiento por cada accesorio vendido
+          // Agregar Ventas de Inventario
           if (d.ventasInventario && d.ventasInventario.length > 0) {
             d.ventasInventario.forEach(v => {
               datosCierres.push({
-                tipo: 'accesorio',
-                cliente: 'Cierre de Caja',
-                marca: 'Accesorio',
-                modelo: `${v.cantidad}x ${v.nombre}`,
+                origen: 'cierre',
+                cliente: 'Venta de Accesorio',
+                detalle: `${v.cantidad}x ${v.nombre}`,
                 montoCobrado: Number(v.precio * v.cantidad) || 0,
-                costoRepuesto: 0, // No hay costo registrado en el cierre
-                metodoPago: 'Efectivo', // Asumimos efectivo por defecto
+                costoRepuesto: 0,
+                metodoPago: 'Efectivo',
                 fechaReal: fechaD
               });
             });
           }
-          // Agregamos un movimiento por cada venta extra manual
+          // Agregar Ventas Extras Manuales
           if (d.extras && d.extras.length > 0) {
             d.extras.forEach(e => {
               if (e.monto > 0) {
                 datosCierres.push({
-                  tipo: 'extra',
-                  cliente: 'Cierre de Caja',
-                  marca: 'Venta Extra',
-                  modelo: e.desc || 'Venta',
+                  origen: 'cierre',
+                  cliente: 'Venta Extra',
+                  detalle: e.desc || 'Varios',
                   montoCobrado: Number(e.monto) || 0,
                   costoRepuesto: 0,
                   metodoPago: 'Efectivo',
@@ -188,29 +189,13 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
           }
         }
       });
-      unificarYRenderizar(datosRecibos, datosCierres);
+      procesarYRenderizar();
     });
-
-    // Guardamos las funciones de desuscripción para limpiarlas luego
-    unsubscribe = () => {
-      unsubRecibos();
-      unsubCierres();
-    };
 
   } catch (error) {
     console.error('❌ Error al configurar reporte:', error);
     document.getElementById('appLoader')?.classList.add('hidden');
   }
-}
-
-// 🔥 UNIFICAR Y RENDERIZAR
-function unificarYRenderizar(recibos, cierres) {
-  document.getElementById('appLoader')?.classList.add('hidden');
-  
-  const todosLosDatos = [...recibos, ...cierres];
-  todosLosDatos.sort((a, b) => b.fechaReal - a.fechaReal);
-  
-  renderizarReporte(todosLosDatos);
 }
 
 function renderizarReporte(datos) {
@@ -229,7 +214,7 @@ function renderizarReporte(datos) {
       <div style="text-align:center; padding:40px 20px; color:var(--text-mute);">
         <i class="fas fa-inbox" style="font-size:40px; opacity:0.3; margin-bottom:10px; display:block;"></i>
         <h3 style="font-size:15px;">Sin movimientos</h3>
-        <p style="font-size:12px;">No hay ventas entregadas en este período.</p>
+        <p style="font-size:12px;">No hay ventas en este período.</p>
       </div>
     `;
     return;
@@ -259,12 +244,15 @@ function renderizarReporte(datos) {
     const fechaD = d.fechaReal;
     const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
 
+    let icono = '🔧';
+    if (d.origen === 'cierre') icono = '🛒';
+
     movimientosHtml += `
       <div class="movimiento">
         <div class="hora">${horaStr}</div>
         <div class="info">
-          <div class="cliente">${escapeHtml(d.cliente || 'Cliente')}</div>
-          <div class="detalle">${escapeHtml(d.marca || '')} ${escapeHtml(d.modelo || '')} · ${escapeHtml(d.metodoPago)}</div>
+          <div class="cliente">${icono} ${escapeHtml(d.cliente || 'Cliente')}</div>
+          <div class="detalle">${escapeHtml(d.detalle || '')} · ${escapeHtml(d.metodoPago)}</div>
         </div>
         <div class="monto">${formatBs(monto)}</div>
       </div>
@@ -276,7 +264,7 @@ function renderizarReporte(datos) {
   const promedio = totalMonto / datos.length;
 
   totalMontoEl.textContent = formatBs(totalMonto);
-  totalEntregasEl.textContent = `${datos.length} ventas`;
+  totalEntregasEl.textContent = `${datos.length} ventas totales`;
   totalCostoEl.textContent = formatBs(totalCosto);
   totalGananciaEl.textContent = formatBs(totalGanancia);
   totalMargenEl.textContent = `${margen.toFixed(1)}%`;
