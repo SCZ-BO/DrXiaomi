@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (VERSIÓN FINAL)
+   DR. XIAOMI · ORDEN (VERSIÓN FINAL CON EDICIÓN DE FECHA)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -373,6 +373,11 @@ function renderOrden() {
           <i class="fas fa-calculator"></i>
           ${Number(orden.costoRepuesto) > 0 ? 'Editar costo' : 'Registrar costo'}
         </button>
+        
+        <!-- 🔥 NUEVO BOTÓN PARA EDITAR FECHA -->
+        <button id="btnEditarFecha" class="btn btn-secondary" style="margin-top:8px; border-color:var(--brand); color:var(--brand);">
+          <i class="fas fa-calendar-alt"></i> Editar fecha de ingreso
+        </button>
       </div>
     ` : ''}
 
@@ -522,7 +527,9 @@ function configurarEventosOrden() {
   document.getElementById('btnEliminar')?.addEventListener('click', eliminarOrden);
   document.getElementById('btnRegistrarCosto')?.addEventListener('click', abrirModalCosto);
   
-  // BOTÓN REGENERAR PDF
+  // 🔥 AÑADIDO: Botón para editar fecha
+  document.getElementById('btnEditarFecha')?.addEventListener('click', abrirModalFecha);
+  
   document.getElementById('btnRegenerarPDF')?.addEventListener('click', () => {
     haptic(15);
     regenerarYEnviarPDF();
@@ -977,6 +984,106 @@ function cerrarModalCosto() {
 }
 
 /* ============================================================
+   🔥 MODAL DE EDICIÓN DE FECHA (SOLO ADMIN)
+   ============================================================ */
+function abrirModalFecha() {
+  if (sesion.rol !== 'admin') return;
+  haptic(15);
+
+  let fechaActualStr = '';
+  if (orden.fecha) {
+    const d = orden.fecha.toDate ? orden.fecha.toDate() : new Date(orden.fecha);
+    if (!isNaN(d.getTime())) {
+      // Formato YYYY-MM-DD para el input type="date"
+      fechaActualStr = d.toISOString().split('T')[0];
+    }
+  }
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop';
+  modal.id = 'modalFecha';
+  modal.innerHTML = `
+    <div class="modal" style="max-width: 400px; border-radius: var(--radius-md);">
+      <h3 class="modal-title" style="color: var(--brand); font-weight: 800;">
+        <i class="fas fa-calendar-alt"></i> Editar Fecha
+      </h3>
+      <p class="modal-text" style="font-size: 12px; color: var(--text-mute); margin-bottom: 16px;">
+        Esta acción cambiará la fecha en el panel y en los reportes.
+      </p>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">
+          Nueva Fecha
+        </label>
+        <input type="date" id="inputFechaOrden" value="${fechaActualStr}"
+               style="width:100%; padding:14px; font-size:16px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:var(--radius-sm); font-family:inherit;">
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn btn-secondary" id="btnCancelarFecha" style="flex:1;">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardarFecha" style="flex:1;"><i class="fas fa-save"></i> Guardar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => modal.classList.add('show'));
+
+  document.getElementById('btnCancelarFecha').addEventListener('click', () => {
+    modal.classList.remove('show');
+    setTimeout(() => modal.remove(), 300);
+  });
+
+  document.getElementById('btnGuardarFecha').addEventListener('click', async () => {
+    const nuevaFechaStr = document.getElementById('inputFechaOrden').value;
+    if (!nuevaFechaStr) {
+      toast('Selecciona una fecha válida', 'error');
+      return;
+    }
+
+    haptic(20);
+    showLoading('Actualizando fecha...');
+
+    try {
+      const nuevaFecha = new Date(nuevaFechaStr + 'T12:00:00'); // Mediodía para evitar problemas de zona horaria
+
+      const entrada = {
+        tipo: 'nota',
+        texto: `Fecha de ingreso editada a: ${nuevaFecha.toLocaleDateString('es-BO')}`,
+        autor: sesion.nombre,
+        fecha: new Date().toISOString()
+      };
+
+      await updateDoc(doc(db, 'recibos', ordenId), {
+        fecha: nuevaFecha,
+        bitacora: arrayUnion(entrada),
+        actualizadoEn: serverTimestamp()
+      });
+
+      orden.fecha = nuevaFecha;
+      orden.bitacora = [...(orden.bitacora || []), entrada];
+
+      toast('Fecha actualizada correctamente', 'success', 2500);
+      modal.classList.remove('show');
+      setTimeout(() => modal.remove(), 300);
+      renderOrden();
+
+    } catch (err) {
+      console.error(err);
+      toast('Error al actualizar la fecha', 'error');
+    } finally {
+      hideLoading();
+    }
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.classList.remove('show');
+      setTimeout(() => modal.remove(), 300);
+    }
+  });
+}
+
+/* ============================================================
    WHATSAPP
    ============================================================ */
 function contactarCliente() {
@@ -996,7 +1103,7 @@ function contactarCliente() {
 }
 
 /* ============================================================
-   REGENERAR PDF (SIN IMPORTAR CLIENTE-PDF)
+   REGENERAR PDF
    ============================================================ */
 async function regenerarYEnviarPDF() {
   if (!orden.telefono) {
@@ -1008,13 +1115,11 @@ async function regenerarYEnviarPDF() {
   haptic(20);
 
   try {
-    // Generamos el PDF aquí mismo usando las librerías cargadas en el HTML
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     const W = 210, H = 297, M = 15, CW = W - M * 2;
     let y = 0;
 
-    // Header
     pdf.setFillColor(230, 81, 0);
     pdf.rect(0, 0, W, 40, 'F');
     pdf.setTextColor(255, 255, 255);
@@ -1027,7 +1132,6 @@ async function regenerarYEnviarPDF() {
     pdf.setFontSize(8);
     pdf.text(`Centro Comercial Cañoto #K1 · Tel: 75959450`, M + 10, 28);
 
-    // Recibo N°
     pdf.setFillColor(255, 255, 255);
     pdf.roundedRect(W - M - 60, 8, 60, 24, 3, 3, 'F');
     pdf.setTextColor(230, 81, 0);
@@ -1043,7 +1147,6 @@ async function regenerarYEnviarPDF() {
 
     y = 50;
 
-    // Cliente / Equipo
     const colW = (CW - 6) / 2;
     pdf.setFillColor(248, 248, 248);
     pdf.roundedRect(M, y, colW, 30, 3, 3, 'F');
@@ -1075,7 +1178,6 @@ async function regenerarYEnviarPDF() {
 
     y += 36;
 
-    // Falla / Seguridad
     pdf.setFillColor(248, 248, 248);
     pdf.roundedRect(M, y, colW, 30, 3, 3, 'F');
     pdf.setTextColor(230, 81, 0);
@@ -1100,7 +1202,6 @@ async function regenerarYEnviarPDF() {
 
     y += 36;
 
-    // Servicios
     pdf.setFillColor(230, 81, 0);
     pdf.roundedRect(M, y, CW, 10, 3, 3, 'F');
     pdf.setTextColor(255, 255, 255);
@@ -1121,7 +1222,6 @@ async function regenerarYEnviarPDF() {
 
     y = pdf.lastAutoTable.finalY + 8;
 
-    // Totales
     const boxW = 80;
     const boxX = M + CW - boxW;
     pdf.setFillColor(248, 248, 248);
@@ -1140,11 +1240,9 @@ async function regenerarYEnviarPDF() {
     pdf.setFontSize(14);
     pdf.text(formatBs(orden.saldo || 0), boxX + boxW - 5, y + 16, { align: 'right' });
 
-    // Guardar
     const nombreArchivo = `Recibo_${orden.numeroRecibo || 'orden'}.pdf`;
     pdf.save(nombreArchivo);
 
-    // Enviar WhatsApp
     setTimeout(() => {
       const nombreCliente = (orden.cliente || '').split(' ')[0] || 'cliente';
       const equipo = `${orden.marca || ''} ${orden.modelo || ''}`.trim();
