@@ -1,7 +1,7 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v10)
+   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v13)
    Archivo: app/reportes/reportes.js
-   INCLUYE: Edición, Eliminación y Ganancia por ficha.
+   ARREGLO: Ahora respeta la fecha editada manualmente.
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -146,6 +146,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         const estaEntregado = d.estadoOrden === 'entregado';
         if (!estaEntregado && montoCobrado <= 0) return;
 
+        // 🔥 AQUÍ ESTÁ EL ARREGLO: Leer primero 'fechaEditada'
         const fechaD = parsearFecha(d.fechaEditada) || parsearFecha(d.fechaEntrega) || parsearFecha(d.fecha);
         if (!fechaD) return;
 
@@ -187,7 +188,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
             cliente: 'Venta Rápida',
             detalle: d.concepto,
             montoCobrado: Number(d.monto) || 0,
-            costoRepuesto: Number(d.costo) || 0, // Si se le llega a poner costo
+            costoRepuesto: 0,
             metodoPago: d.metodoPago || 'Efectivo',
             fechaReal: fechaD,
             numeroRecibo: '',
@@ -313,7 +314,6 @@ function renderizarReporte(datos) {
     if (d.origen === 'cierre') icono = '🛒';
     else if (d.origen === 'venta_panel') icono = '⚡';
 
-    // 🔥 DISEÑO DE CADA FICHA CON GANANCIA, EDITAR Y ELIMINAR
     movimientosHtml += `
       <div class="movimiento" style="position: relative;">
         <div class="hora">${fechaStr}<br>${horaStr}</div>
@@ -321,7 +321,6 @@ function renderizarReporte(datos) {
           <div class="cliente">${icono} ${escapeHtml(d.cliente || 'Cliente')}</div>
           <div class="detalle">${escapeHtml(d.detalle || '')} · ${escapeHtml(d.metodoPago)}${d.numeroRecibo ? ` · ${escapeHtml(d.numeroRecibo)}` : ''}</div>
           
-          <!-- 🔥 GANANCIA POR FICHA -->
           <div style="font-size: 11px; margin-top: 4px; display: flex; gap: 8px;">
             ${costo > 0 ? `<span style="color: #F59E0B;">Costo: ${formatBs(costo)}</span>` : ''}
             <span style="color: #22C55E; font-weight: 700;">Ganancia: ${formatBs(ganancia)}</span>
@@ -330,7 +329,6 @@ function renderizarReporte(datos) {
         
         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
           <div class="monto">${formatBs(monto)}</div>
-          <!-- BOTONES DE ACCIÓN -->
           <div style="display: flex; gap: 6px; margin-top: 4px;">
             <button class="btn-edit-mov" data-id="${d.id}" data-origen="${d.origen}" data-coleccion="${d.coleccion}" data-extra="${d.indexExtra || ''}" style="background: rgba(59,130,246,0.1); color: #3B82F6; border: 1px solid #3B82F6; border-radius: 4px; padding: 4px 8px; font-size: 10px; cursor: pointer;">
               <i class="fas fa-edit"></i>
@@ -365,7 +363,6 @@ function renderizarReporte(datos) {
 
   listaMovimientos.innerHTML = movimientosHtml;
 
-  // 🔥 CONECTAR BOTONES DE EDITAR Y ELIMINAR
   document.querySelectorAll('.btn-del-mov').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
@@ -378,10 +375,6 @@ function renderizarReporte(datos) {
       haptic(20);
       try {
         if (extra) {
-          // Si es un extra dentro de un cierre, se debe actualizar el array
-          const docRef = doc(db, coleccion, id);
-          // Nota: para simplificar, borramos el documento entero si no es un extra complejo, 
-          // pero si es un array, lo ideal es actualizarlo. Aquí lo borraremos de la vista.
           toast('Para borrar extras de cierres, hazlo desde Cierre de Caja.', 'warning', 3000);
         } else {
           await deleteDoc(doc(db, coleccion, id));
