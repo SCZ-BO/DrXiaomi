@@ -1,375 +1,921 @@
-<!DOCTYPE html>
-<html lang="es" data-theme="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <meta name="theme-color" content="#0E0E0E">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>DR. Xiaomi · Nuevo Recibo</title>
+/* ============================================================
+   DR. XIAOMI · CLIENTE (Wizard PRO - Código Completo)
+   Archivo: js/cliente.js
+   ============================================================ */
 
-  <!-- FAVICON Y MANIFEST -->
-  <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
-  <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
-  <link rel="manifest" href="/manifest.json">
+import { requireAuth, logout } from '/js/app-auth.js';
+import { toast, haptic, initTheme, escapeHtml, formatBs, showLoading, hideLoading } from '/js/app-ui.js';
+import { db } from '/js/firebase.js';
+import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  <!-- FUENTES E ICONOS -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+// Importamos tu generador de PDF
+import { generarPDFUnificado } from '/js/cliente-pdf.js';
 
-  <!-- LIBRERÍAS PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+/* ============================================================
+   CONFIGURACIÓN GENERAL
+   ============================================================ */
+const CONFIG = {
+  nombreTienda: 'DR. XIAOMI SCZ',
+  eslogan: 'Servicio Técnico Especializado',
+  direccion: 'Centro Comercial Cañoto #K1, Santa Cruz',
+  telefono: '75959450',
+  web: 'xiaomi.scz.red',
+  urlApp: 'https://xiaomi.scz.red',
+  logoUrl: 'https://xiaomi.scz.red/img/logo1.png'
+};
 
-  <style>
-    :root { --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --brand: #E65100; --brand-hover: #BF360C; --brand-light: rgba(230, 81, 0, 0.1); }
-    [data-theme="dark"] { --bg-main: #0E0E0E; --bg-card: #181818; --bg-elev: #242424; --text-main: #F5F5F5; --text-mute: #888888; --border: #2A2A2A; }
-    [data-theme="light"] { --bg-main: #F9F9F9; --bg-card: #FFFFFF; --bg-elev: #F0F0F0; --text-main: #111111; --text-mute: #666666; --border: #E0E0E0; }
+/* ============================================================
+   ESTADO GLOBAL
+   ============================================================ */
+let sesion = null;
+let pasoActual = 1;
+const TOTAL_PASOS = 7;
 
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+const datos = {
+  nombre: '', telefono: '',
+  marca: '', modelo: '', color: '', enciende: '',
+  motivoIngreso: '', falla: '', checklist: '',
+  tipoSeguridad: 'patron', pin: '', patronSecuencia: '',
+  fotos: [null, null, null, null],
+  servicios: [], total: 0, adelanto: 0, saldo: 0
+};
+
+export {
+  sesion, datos, CONFIG, generarNumeroRecibo, configurarWhatsApp,
+  showLoading, hideLoading, toast, haptic, formatBs, escapeHtml,
+  db, collection, addDoc, serverTimestamp
+};
+
+/* ============================================================
+   INICIALIZACIÓN
+   ============================================================ */
+initTheme();
+
+requireAuth((s) => {
+  sesion = s;
+  iniciar();
+});
+
+function iniciar() {
+  const userInfo = document.getElementById('userInfo');
+  if (userInfo) userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
+  
+  // Cargar el tema guardado (Sol/Luna)
+  const temaGuardado = localStorage.getItem('theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', temaGuardado);
+  const icono = document.querySelector('#themeToggleBtn i');
+  if (icono) icono.className = temaGuardado === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+  const hayBorrador = cargarBorrador();
+
+  configurarHeader();
+  configurarWizard();
+  configurarMarca();
+  configurarRadioGroups();
+  configurarChecklistSemáforo();
+  configurarMotivos();
+  configurarPattern();
+  configurarFotos();
+  configurarServicios();
+  configurarBotonGenerarPDF();
+
+  const content = document.getElementById('wizardContent');
+  if (content) {
+    content.addEventListener('input', guardarBorradorDebounce);
+    content.addEventListener('change', guardarBorradorDebounce);
+  }
+
+  if (!hayBorrador) irAPaso(1);
+  
+  actualizarBarraProgreso();
+  actualizarBotones();
+}
+
+/* ============================================================
+   PERSISTENCIA (BORRADOR ANTI-PÉRDIDA)
+   ============================================================ */
+let timerGuardado = null;
+
+function guardarBorrador() {
+  try { localStorage.setItem('drxiaomi_borrador', JSON.stringify(datos)); } catch (e) {}
+}
+
+function guardarBorradorDebounce() {
+  clearTimeout(timerGuardado);
+  timerGuardado = setTimeout(guardarBorrador, 500);
+}
+
+function cargarBorrador() {
+  try {
+    const guardado = localStorage.getItem('drxiaomi_borrador');
+    if (!guardado) return false;
+    const d = JSON.parse(guardado);
+    if (!d.nombre) return false;
     
-    /* LAYOUT TIPO APP (Sin scroll general) */
-    html, body { height: 100%; overflow: hidden; }
-    body { background-color: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
+    Object.assign(datos, d);
     
-    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-main); border-bottom: 1px solid var(--border); z-index: 100; }
-    .app-body { flex: 1; overflow-y: auto; padding: 12px 12px 12px 12px; -webkit-overflow-scrolling: touch; }
+    if (datos.nombre) document.getElementById('nombre').value = datos.nombre;
+    if (datos.telefono) document.getElementById('telefono').value = datos.telefono;
+    if (datos.modelo) document.getElementById('modelo').value = datos.modelo;
+    if (datos.color) document.getElementById('color').value = datos.color;
+    if (datos.falla) document.getElementById('fallaDetalle').value = datos.falla;
     
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-logo { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
-    .brand-text h1 { font-size: 14px; font-weight: 700; margin: 0; }
-    .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
+    toast('Borrador recuperado', 'info', 2000);
+    irAPaso(2); 
+    return true;
+  } catch (e) { return false; }
+}
+
+function limpiarBorrador() {
+  if (confirm('¿Borrar todo y empezar un recibo nuevo?')) {
+    localStorage.removeItem('drxiaomi_borrador');
+    window.location.reload();
+  }
+}
+
+/* ============================================================
+   HEADER Y WIZARD (CON LOS NUEVOS BOTONES)
+   ============================================================ */
+function configurarHeader() {
+  // 1. Botón Volver (Izquierda)
+  document.getElementById('backToPanelBtn')?.addEventListener('click', () => {
+    haptic(10);
+    if (confirm('¿Salir? Tu borrador se guardará automáticamente.')) window.location.href = '/app/';
+  });
+  
+  // 2. Botón Casa
+  document.getElementById('homeBtn')?.addEventListener('click', () => {
+    haptic(10);
+    if (confirm('¿Ir al panel principal? Tu borrador se guardará.')) window.location.href = '/app/';
+  });
+
+  // 3. Botón Cambiar Tema (Sol/Luna)
+  document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
+    haptic(10);
+    const html = document.documentElement;
+    const nuevoTema = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', nuevoTema);
+    localStorage.setItem('theme', nuevoTema);
     
-    /* BOTONES DEL HEADER UNIFICADOS */
-    .header-actions { display: flex; gap: 6px; }
-    .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-    .icon-btn:active { transform: scale(0.95); }
+    const icono = document.querySelector('#themeToggleBtn i');
+    if (icono) icono.className = nuevoTema === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+  });
 
-    /* PROGRESO DE PUNTOS */
-    .wizard-progress { padding: 4px 0 16px 0; display: flex; justify-content: center; gap: 8px; }
-    .wizard-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg-elev); transition: 0.3s; }
-    .wizard-dot.active { background: var(--brand); transform: scale(1.2); }
-    .wizard-dot.done { background: var(--brand); opacity: 0.5; }
+  // 4. Botón Limpiar Borrador
+  document.getElementById('clearDraftBtn')?.addEventListener('click', () => { 
+    haptic(15); 
+    limpiarBorrador(); 
+  });
 
-    /* SUBTÍTULOS SUTILES */
-    .step-indicator { font-size: 11px; font-weight: 600; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    
-    /* FORMULARIOS */
-    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; }
-    
-    .field { position: relative; margin-bottom: 10px; }
-    .field input, .field textarea { width: 100%; padding: 12px 12px; background: var(--bg-elev); border: 1px solid transparent; border-radius: var(--radius-sm); color: var(--text-main); font-size: 14px; font-family: inherit; transition: 0.2s; outline: none; }
-    .field input:focus, .field textarea:focus { border-color: var(--brand); background: var(--bg-card); }
-    .field label { position: absolute; left: 12px; top: 12px; font-size: 13px; color: var(--text-mute); transition: 0.2s; pointer-events: none; }
-    .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label, .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label { top: 4px; font-size: 9px; font-weight: 700; color: var(--brand); }
-
-    /* BOTONES RECTANGULARES */
-    .field-title { font-size: 11px; font-weight: 700; margin-bottom: 8px; display: block; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
-    .marcas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
-    .marca-btn { padding: 10px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; font-size: 11px; cursor: pointer; transition: 0.2s; }
-    .marca-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
-    
-    .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .radio-option { padding: 12px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: 0.2s; }
-    .radio-option.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
-    .radio-option i { font-size: 14px; }
-
-    .chips-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-    .chip-btn { padding: 10px 14px; border-radius: var(--radius-sm); background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-    .chip-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
-
-    .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
-    .check-item { padding: 10px 4px; background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); font-size: 10px; font-weight: 500; cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; text-align: center; white-space: nowrap; }
-    .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 11px; }
-    .check-item.ok { background: rgba(34, 197, 94, 0.1); border-color: #22C55E; color: #22C55E; }
-    .check-item.ok::before { content: '✓'; color: #22C55E; }
-    .check-item.falla { background: rgba(239, 68, 68, 0.1); border-color: #EF4444; color: #EF4444; }
-    .check-item.falla::before { content: '✕'; color: #EF4444; }
-
-    .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .foto-slot { aspect-ratio: 4/3; border-radius: var(--radius-sm); border: 1px dashed var(--border); background: var(--bg-elev); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-mute); font-size: 11px; cursor: pointer; position: relative; overflow: hidden; }
-    .foto-slot img { width: 100%; height: 100%; object-fit: cover; }
-    .foto-remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: var(--radius-sm); background: rgba(0,0,0,0.7); color: white; border: none; display: flex; align-items: center; justify-content: center; }
-
-    .servicio-item { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
-    .servicio-item input.servicio-desc { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); }
-    .servicio-item input.servicio-costo { width: 80px; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--brand); font-weight: 700; text-align: right; }
-    .removeServicio { width: 38px; height: 38px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.2); cursor: pointer; }
-
-    .resumen-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 500; margin-bottom: 10px; }
-    .resumen-saldo { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; color: var(--brand); font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
-
-    /* FOOTER FIJO ABAJO */
-    .wizard-footer { 
-      padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); 
-      background: var(--bg-main); border-top: 1px solid var(--border); 
-      display: flex; gap: 8px; z-index: 100; 
+  // 5. Botón Precios
+  document.getElementById('preciosBtn')?.addEventListener('click', () => {
+    haptic(10);
+    if (confirm('¿Ir a la lista de precios? Tu borrador se guardará.')) {
+      window.location.href = '/precio/'; 
     }
-    .btn { padding: 14px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
-    .btn-primary { background: var(--brand); color: white; }
-    .btn-primary:active { background: var(--brand-hover); transform: scale(0.98); }
-    .btn-secondary { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); }
-    #btnPrev { flex: 0 0 50px; padding: 14px 0; }
-    #btnNext, #btnGenerate { flex: 1; }
+  });
 
-    .sheet-backdrop, .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 9999; }
-    .sheet-backdrop { align-items: flex-end; }
-    .sheet-backdrop.show, .modal-backdrop.show { opacity: 1; pointer-events: auto; }
-    .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 20px; width: 100%; max-width: 550px; border-top: 1px solid var(--border); }
-    .modal { background: var(--bg-card); padding: 20px; border-radius: var(--radius-md); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
-    .hidden { display: none !important; }
+  // 6. Botón Reportes (Solo visible para Admin)
+  document.getElementById('reportesBtn')?.addEventListener('click', () => {
+    haptic(10);
+    window.location.href = '/app/reportes/';
+  });
 
-    .preview-recibo { background: white; color: #1a1a1a; border-radius: var(--radius-sm); padding: 16px; font-size: 12px; }
-    .preview-header { border-bottom: 2px solid var(--brand); margin: -16px -16px 12px; padding: 12px 16px; display: flex; align-items: center; gap: 8px; background: #f9fafb;}
-    .preview-header img { width: 32px; height: 32px; object-fit: contain; }
-    .preview-section { background: #f9fafb; border-radius: var(--radius-sm); padding: 10px; margin-bottom: 10px; border: 1px solid #eee; }
-    .preview-totales { border-top: 1px solid #ddd; margin-top: 6px; padding-top: 6px; }
-  </style>
-</head>
-<body>
+  if (sesion && sesion.rol === 'admin') {
+    const btnReportes = document.getElementById('reportesBtn');
+    if (btnReportes) btnReportes.style.display = 'flex';
+  }
 
-  <!-- ========================================== -->
-  <!-- HEADER CON LOS MISMOS BOTONES DEL PANEL    -->
-  <!-- ========================================== -->
-  <header class="app-header">
-    <div class="brand">
-      <button class="icon-btn" id="backToPanelBtn"><i class="fas fa-arrow-left"></i></button>
-      <div class="brand-logo"><img src="/imagenes/web-app-manifest-192x192.png" onerror="this.style.display='none'"></div>
-      <div class="brand-text"><h1>NUEVO RECIBO</h1><p id="userInfo">Cargando...</p></div>
-    </div>
-    
-    <div class="header-actions">
-      <!-- 1. Botón Casa -->
-      <button class="icon-btn" id="homeBtn" title="Ir al Panel Principal">
-        <i class="fas fa-home"></i>
-      </button>
+  // 7. Botón Salir
+  document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    haptic(20);
+    if (confirm('¿Cerrar sesión?')) logout();
+  });
+}
+
+function configurarWizard() {
+  document.getElementById('btnPrev')?.addEventListener('click', irPasoAnterior);
+  document.getElementById('btnNext')?.addEventListener('click', irPasoSiguiente);
+}
+
+function irPasoSiguiente() {
+  if (!validarPaso(pasoActual)) return;
+  guardarDatosPaso(pasoActual);
+  if (pasoActual < TOTAL_PASOS) irAPaso(pasoActual + 1);
+}
+
+function irPasoAnterior() {
+  guardarDatosPaso(pasoActual);
+  if (pasoActual > 1) irAPaso(pasoActual - 1);
+}
+
+function irAPaso(nuevoPaso) {
+  haptic(10);
+  pasoActual = nuevoPaso;
+
+  document.querySelectorAll('.wizard-panel').forEach(p => {
+    p.classList.add('hidden');
+    p.setAttribute('aria-hidden', 'true');
+  });
+  
+  const panel = document.querySelector(`[data-panel="${pasoActual}"]`);
+  if (panel) {
+    panel.classList.remove('hidden');
+    panel.setAttribute('aria-hidden', 'false');
+    const appBody = document.getElementById('appBody');
+    if (appBody) appBody.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // 🚨 LÓGICA INTELIGENTE DEL PASO 3 (Blindada con timeout)
+  if (pasoActual === 3) {
+    setTimeout(() => {
+      const valorEnciende = document.getElementById('enciende')?.value;
+      const cardReparaciones = document.getElementById('cardReparaciones');
+      const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
+      const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
       
-      <!-- 2. Botón Cambiar Tema (Sol/Luna) -->
-      <button class="icon-btn" id="themeToggleBtn" title="Cambiar Tema">
-        <i class="fas fa-sun"></i>
-      </button>
+      // Primero ocultamos todo
+      cardReparaciones?.classList.add('hidden');
+      cardAuditoriaGeneral?.classList.add('hidden');
+      cardAuditoriaFisica?.classList.add('hidden');
 
-      <!-- 3. Botón Limpiar Borrador -->
-      <button class="icon-btn" id="clearDraftBtn" title="Limpiar Borrador">
-        <i class="fas fa-trash-alt"></i>
-      </button>
+      // Luego mostramos lo que corresponde
+      if (valorEnciende === 'Sí' || valorEnciende === 'A veces') {
+        cardReparaciones?.classList.remove('hidden');
+        cardAuditoriaGeneral?.classList.remove('hidden');
+      } else if (valorEnciende === 'No') {
+        cardAuditoriaFisica?.classList.remove('hidden');
+      }
+    }, 50);
+  }
 
-      <!-- 4. Botón Precios -->
-      <button class="icon-btn" id="preciosBtn" title="Buscar precio">
-        <img src="/imagenes/icon-precio.png" alt="Precio" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
-      </button>
+  actualizarBarraProgreso();
+  actualizarBotones();
+  if (pasoActual === 7) generarVistaPrevia();
+}
 
-      <!-- 5. Botón Reportes (Oculto por defecto) -->
-      <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;">
-        <img src="/imagenes/icon-reportes.png" alt="Reportes" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
-      </button>
+function actualizarBarraProgreso() {
+  const dots = document.querySelectorAll('.wizard-dot');
+  dots.forEach((dot, index) => {
+    const step = index + 1;
+    dot.classList.remove('active', 'done');
+    if (step < pasoActual) dot.classList.add('done');
+    else if (step === pasoActual) dot.classList.add('active');
+  });
+}
 
-      <!-- 6. Botón Salir -->
-      <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
-        <img src="/imagenes/icon-salir.png" alt="Salir" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
-      </button>
-    </div>
-  </header>
+function actualizarBotones() {
+  const btnPrev = document.getElementById('btnPrev');
+  const btnNext = document.getElementById('btnNext');
+  const btnGenerate = document.getElementById('btnGenerate');
+  if (!btnPrev || !btnNext || !btnGenerate) return;
 
-  <!-- ========================================== -->
-  <!-- CONTENIDO DEL WIZARD (INTACTO)             -->
-  <!-- ========================================== -->
-  <div class="app-body" id="appBody">
-    <div class="wizard-progress" id="wizardProgress">
-      <div class="wizard-dot active"></div><div class="wizard-dot"></div><div class="wizard-dot"></div>
-      <div class="wizard-dot"></div><div class="wizard-dot"></div><div class="wizard-dot"></div><div class="wizard-dot"></div>
-    </div>
+  btnPrev.style.display = pasoActual === 1 ? 'none' : 'flex';
+  if (pasoActual === TOTAL_PASOS) {
+    btnNext.style.display = 'none';
+    btnGenerate.style.display = 'flex';
+  } else {
+    btnNext.style.display = 'flex';
+    btnGenerate.style.display = 'none';
+  }
+}
 
-    <main id="wizardContent">
-      <!-- PASO 1 -->
-      <section class="wizard-panel" data-panel="1" aria-hidden="false">
-        <div class="step-indicator">Paso 1 · Cliente</div>
-        <div class="card">
-          <div class="field"><input type="text" id="nombre" placeholder=" " required autocomplete="name"><label for="nombre">Nombre completo *</label></div>
-          <div class="field"><input type="tel" id="telefono" placeholder=" " required inputmode="numeric" maxlength="8"><label for="telefono">Teléfono / WhatsApp *</label></div>
+/* ============================================================
+   VALIDACIONES INTELIGENTES
+   ============================================================ */
+function validarPaso(paso) {
+  const irAError = (idElemento, mensaje) => {
+    toast(mensaje, 'error');
+    const el = document.getElementById(idElemento);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.focus();
+      el.style.transition = 'border-color 0.3s';
+      el.style.borderColor = '#EF4444';
+      setTimeout(() => { el.style.borderColor = 'transparent'; }, 2000);
+    }
+    return false;
+  };
+
+  if (paso === 1) {
+    if (!document.getElementById('nombre')?.value.trim()) return irAError('nombre', 'Falta el nombre del cliente');
+    if (document.getElementById('telefono')?.value.length < 7) return irAError('telefono', 'El teléfono debe tener al menos 7 dígitos');
+  }
+
+  if (paso === 2) {
+    if (!document.getElementById('marca')?.value) {
+      toast('Selecciona una marca', 'error');
+      document.getElementById('marcasGrid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
+    if (!document.getElementById('modelo')?.value.trim()) return irAError('modelo', 'Falta el modelo del equipo');
+    if (!document.getElementById('enciende')?.value) {
+      toast('Indica si el equipo enciende', 'error');
+      document.getElementById('enciendeGroup').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
+  }
+
+  if (paso === 3) {
+    const enciende = document.getElementById('enciende')?.value;
+    if (enciende === 'Sí' || enciende === 'A veces') {
+      if (!document.getElementById('motivoIngreso')?.value) {
+        toast('Selecciona una reparación (Cambio de pantalla, etc)', 'error');
+        document.getElementById('cardReparaciones').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+    }
+  }
+
+  if (paso === 4) {
+    const tipo = document.getElementById('tipoSeguridad')?.value;
+    if (tipo === 'patron' && !document.getElementById('patronSecuencia')?.value) {
+      toast('Debes dibujar el patrón para continuar', 'error');
+      document.getElementById('patronContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
+    if (tipo === 'pin' && !document.getElementById('pinInput')?.value.trim()) {
+      return irAError('pinInput', 'Ingresa el PIN de desbloqueo');
+    }
+  }
+
+  if (paso === 6) {
+    let hayServicio = false;
+    document.querySelectorAll('.servicio-item').forEach(item => {
+      if (item.querySelector('.servicio-desc').value && parseFloat(item.querySelector('.servicio-costo').value) > 0) hayServicio = true;
+    });
+    if (!hayServicio) {
+      toast('Añade al menos un costo (Servicio y Precio)', 'error');
+      document.getElementById('serviciosList').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
+  }
+  return true;
+}
+
+function guardarDatosPaso(paso) {
+  if (paso === 1) {
+    datos.nombre = document.getElementById('nombre')?.value.trim() || '';
+    datos.telefono = document.getElementById('telefono')?.value.trim() || '';
+  }
+  if (paso === 2) {
+    datos.marca = document.getElementById('marca')?.value || '';
+    datos.modelo = document.getElementById('modelo')?.value.trim() || '';
+    datos.color = document.getElementById('color')?.value.trim() || '';
+    datos.enciende = document.getElementById('enciende')?.value || '';
+  }
+  if (paso === 3) {
+    datos.motivoIngreso = document.getElementById('motivoIngreso')?.value || '';
+    datos.falla = document.getElementById('fallaDetalle')?.value.trim() || '';
+    datos.checklist = document.getElementById('checklistResultados')?.value || '';
+  }
+  if (paso === 4) {
+    datos.tipoSeguridad = document.getElementById('tipoSeguridad')?.value || 'patron';
+    datos.pin = document.getElementById('pinInput')?.value.trim() || '';
+    datos.patronSecuencia = document.getElementById('patronSecuencia')?.value || '';
+  }
+  if (paso === 6) {
+    recolectarServicios();
+  }
+}
+
+/* ============================================================
+   LÓGICA INTELIGENTE: PASO 2 Y 3
+   ============================================================ */
+function configurarMarca() {
+  const grid = document.getElementById('marcasGrid');
+  if (!grid) return;
+  grid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.marca-btn');
+    if (!btn) return;
+    haptic(8);
+    grid.querySelectorAll('.marca-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('marca').value = btn.dataset.marca;
+  });
+}
+
+function configurarRadioGroups() {
+  const enciendeGroup = document.getElementById('enciendeGroup');
+  if (enciendeGroup) {
+    enciendeGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.radio-option');
+      if (!btn) return;
+      haptic(8);
+      
+      enciendeGroup.querySelectorAll('.radio-option').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const valor = btn.dataset.value;
+      document.getElementById('enciende').value = valor;
+
+      const cardReparaciones = document.getElementById('cardReparaciones');
+      const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
+      const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
+      
+      if (valor === 'Sí' || valor === 'A veces') {
+        cardReparaciones?.classList.remove('hidden');
+        cardAuditoriaGeneral?.classList.remove('hidden');
+        cardAuditoriaFisica?.classList.add('hidden');
+      } else {
+        cardReparaciones?.classList.add('hidden');
+        cardAuditoriaGeneral?.classList.add('hidden');
+        cardAuditoriaFisica?.classList.remove('hidden');
+      }
+    });
+  }
+
+  const tipoGroup = document.getElementById('tipoSeguridadGroup');
+  if (tipoGroup) {
+    tipoGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.radio-option');
+      if (!btn) return;
+      haptic(8);
+      tipoGroup.querySelectorAll('.radio-option').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tipo = btn.dataset.value;
+      document.getElementById('tipoSeguridad').value = tipo;
+      document.getElementById('pinContainer')?.classList.toggle('hidden', tipo !== 'pin');
+      document.getElementById('patronContainer')?.classList.toggle('hidden', tipo !== 'patron');
+    });
+  }
+}
+
+function configurarMotivos() {
+  const motivoGroup = document.getElementById('motivoIngresoGroup');
+  if (motivoGroup) {
+    motivoGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip-btn');
+      if (!btn) return;
+      haptic(8);
+      motivoGroup.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('motivoIngreso').value = btn.dataset.value;
+    });
+  }
+}
+
+function configurarChecklistSemáforo() {
+  const configurarGrupo = (idGrupo) => {
+    const group = document.getElementById(idGrupo);
+    if (!group) return;
+    group.addEventListener('click', (e) => {
+      const btn = e.target.closest('.check-item');
+      if (!btn) return;
+      haptic(10);
+      
+      if (!btn.classList.contains('ok') && !btn.classList.contains('falla')) {
+        btn.classList.add('ok'); 
+      } else if (btn.classList.contains('ok')) {
+        btn.classList.remove('ok');
+        btn.classList.add('falla');
+      } else {
+        btn.classList.remove('falla');
+      }
+      actualizarResultadosChecklist();
+    });
+  };
+
+  configurarGrupo('checklistGeneralGroup');
+  configurarGrupo('checklistFisicoGroup');
+
+  function actualizarResultadosChecklist() {
+    const resultados = [];
+    document.querySelectorAll('#checklistGeneralGroup .check-item, #checklistFisicoGroup .check-item').forEach(btn => {
+      const item = btn.dataset.item;
+      if (btn.classList.contains('ok')) resultados.push(`${item}: OK`);
+      if (btn.classList.contains('falla')) resultados.push(`${item}: FALLA`);
+    });
+    const inputRes = document.getElementById('checklistResultados');
+    if (inputRes) inputRes.value = resultados.join(', ');
+  }
+}
+
+/* ============================================================
+   PATTERN LOCK (DIBUJO CORREGIDO)
+   ============================================================ */
+function configurarPattern() {
+  const bgCanvas = document.getElementById('bgCanvas');
+  const lineCanvas = document.getElementById('lineCanvas');
+  if (!bgCanvas || !lineCanvas) return;
+
+  if (!document.getElementById('patronSecuencia')) {
+    const input = document.createElement('input');
+    input.type = 'hidden'; input.id = 'patronSecuencia';
+    document.body.appendChild(input);
+  }
+
+  const bgc = bgCanvas.getContext('2d');
+  const lnc = lineCanvas.getContext('2d');
+  const size = 300, r = 20, margin = 30;
+  const pts = []; let id = 1;
+  for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) pts.push({ id: id++, x: margin + 120 * x, y: margin + 120 * y, sel: false });
+
+  let path = [], drawing = false;
+
+  function drawBase() {
+    bgc.clearRect(0, 0, size, size);
+    pts.forEach(p => {
+      bgc.beginPath(); bgc.arc(p.x, p.y, r, 0, 2 * Math.PI);
+      bgc.fillStyle = p.sel ? '#E65100' : 'transparent'; bgc.fill();
+      bgc.strokeStyle = p.sel ? '#E65100' : '#555'; bgc.lineWidth = 3; bgc.stroke();
+    });
+  }
+
+  function drawLines(current) {
+    lnc.clearRect(0, 0, size, size);
+    if (path.length === 0) return;
+    lnc.strokeStyle = '#E65100'; lnc.lineWidth = 6; lnc.lineCap = 'round'; lnc.lineJoin = 'round';
+    lnc.beginPath(); lnc.moveTo(path[0].x, path[0].y);
+    path.forEach(p => lnc.lineTo(p.x, p.y));
+    if (drawing && current) lnc.lineTo(current.x, current.y);
+    lnc.stroke();
+  }
+
+  function getPos(e) {
+    const rect = lineCanvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { 
+      x: (t.clientX - rect.left) * (size / rect.width), 
+      y: (t.clientY - rect.top) * (size / rect.height) 
+    };
+  }
+
+  function hit(p) { return pts.find(pt => !pt.sel && Math.hypot(pt.x - p.x, pt.y - p.y) < r + 25); }
+
+  function updateSeq() {
+    const seq = path.map(p => p.id).join(',');
+    const hiddenInput = document.getElementById('patronSecuencia');
+    const display = document.getElementById('pattern-sequence');
+    
+    if (hiddenInput) hiddenInput.value = seq;
+    if (display) display.textContent = seq ? path.map(p => p.id).join(' → ') : 'Sin patrón';
+  }
+
+  lineCanvas.addEventListener('mousedown', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); });
+  lineCanvas.addEventListener('mousemove', (e) => {
+    if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
+    if (h) { h.sel = true; path.push(h); haptic(10); drawBase(); updateSeq(); }
+    drawLines(p);
+  });
+  lineCanvas.addEventListener('mouseup', () => { drawing = false; drawLines(); updateSeq(); });
+  lineCanvas.addEventListener('mouseleave', () => { drawing = false; drawLines(); updateSeq(); });
+
+  lineCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); }, { passive: false });
+  lineCanvas.addEventListener('touchmove', (e) => {
+    if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
+    if (h) { h.sel = true; path.push(h); haptic(10); drawBase(); updateSeq(); }
+    drawLines(p);
+  }, { passive: false });
+  lineCanvas.addEventListener('touchend', (e) => { e.preventDefault(); drawing = false; drawLines(); updateSeq(); }, { passive: false });
+
+  document.getElementById('clearPattern')?.addEventListener('click', () => {
+    haptic(10); path = []; pts.forEach(p => p.sel = false); drawBase(); lnc.clearRect(0, 0, size, size); updateSeq();
+  });
+
+  drawBase();
+}
+
+/* ============================================================
+   FOTOS (CÁMARA Y GALERÍA)
+   ============================================================ */
+function configurarFotos() {
+  const grid = document.getElementById('fotosGrid');
+  const sheet = document.getElementById('fotoSheet');
+  if (!grid) return;
+
+  let slotActual = null;
+
+  grid.addEventListener('click', (e) => {
+    const slot = e.target.closest('.foto-slot');
+    if (!slot) return;
+
+    if (e.target.closest('.foto-remove')) {
+      e.stopPropagation(); haptic(15);
+      const idx = parseInt(slot.dataset.slot);
+      datos.fotos[idx] = null; renderSlots(); return;
+    }
+
+    const idx = parseInt(slot.dataset.slot);
+    if (datos.fotos[idx]) return;
+
+    slotActual = idx; haptic(10);
+    if (sheet) sheet.classList.add('show');
+  });
+
+  const cerrarSheet = () => sheet?.classList.remove('show');
+  document.getElementById('btnCancelarFoto')?.addEventListener('click', cerrarSheet);
+
+  const dispararInput = (usarCamara) => {
+    const tempInput = document.createElement('input');
+    tempInput.type = 'file';
+    tempInput.accept = 'image/*';
+    if (usarCamara) tempInput.capture = 'environment';
+    tempInput.style.position = 'absolute'; tempInput.style.top = '-9999px';
+
+    tempInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (file && slotActual !== null) {
+        haptic(10);
+        try {
+          const dataUrl = await comprimirImagen(file);
+          datos.fotos[slotActual] = { file, dataUrl };
+          renderSlots(); toast('Foto añadida', 'success', 1500); guardarBorradorDebounce();
+        } catch (err) { toast('Error al procesar imagen', 'error'); }
+      }
+      slotActual = null;
+      document.body.removeChild(tempInput);
+    });
+    document.body.appendChild(tempInput);
+    tempInput.click();
+  };
+
+  document.getElementById('btnTomarFoto')?.addEventListener('click', () => { cerrarSheet(); dispararInput(true); });
+  document.getElementById('btnSubirFoto')?.addEventListener('click', () => { cerrarSheet(); dispararInput(false); });
+
+  function renderSlots() {
+    grid.querySelectorAll('.foto-slot').forEach((slot, i) => {
+      const f = datos.fotos[i];
+      if (f && f.dataUrl) {
+        slot.classList.add('filled');
+        slot.innerHTML = `<img src="${f.dataUrl}" alt="Foto"><button type="button" class="foto-remove"><i class="fas fa-times"></i></button>`;
+      } else {
+        slot.classList.remove('filled');
+        slot.innerHTML = `<i class="fas fa-camera"></i><span>Añadir</span>`;
+      }
+    });
+  }
+  renderSlots();
+}
+
+async function comprimirImagen(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > 1000) { h = h * 1000 / w; w = 1000; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.onerror = reject; img.src = e.target.result;
+    };
+    reader.onerror = reject; reader.readAsDataURL(file);
+  });
+}
+
+/* ============================================================
+   SERVICIOS Y COSTOS
+   ============================================================ */
+function configurarServicios() {
+  const list = document.getElementById('serviciosList');
+  const btnAdd = document.getElementById('addServicio');
+  const preciosGroup = document.getElementById('preciosRapidosGroup');
+  if (!list || !btnAdd) return;
+
+  list.addEventListener('input', (e) => {
+    if (e.target.classList.contains('servicio-costo')) calcularTotal();
+  });
+
+  list.addEventListener('click', (e) => {
+    if (e.target.closest('.removeServicio')) {
+      haptic(15);
+      const item = e.target.closest('.servicio-item');
+      if (list.querySelectorAll('.servicio-item').length > 1) {
+        item.remove(); calcularTotal();
+      }
+    }
+  });
+
+  btnAdd.addEventListener('click', () => {
+    haptic(10);
+    const item = crearServicioItem('', '');
+    list.appendChild(item);
+    item.querySelector('.servicio-desc').focus();
+  });
+
+  if (preciosGroup) {
+    preciosGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip-btn');
+      if (!btn) return;
+      haptic(8);
+      const precio = btn.dataset.precio;
+      let llenado = false;
+      
+      document.querySelectorAll('.servicio-costo').forEach(input => {
+        if (!input.value && !llenado) {
+          input.value = precio;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          llenado = true;
+        }
+      });
+
+      if (!llenado) {
+        const item = crearServicioItem('Reparación extra', precio);
+        list.appendChild(item);
+        calcularTotal();
+      }
+    });
+  }
+
+  document.getElementById('adelanto')?.addEventListener('input', calcularTotal);
+  
+  if (list.children.length === 0) list.appendChild(crearServicioItem('', ''));
+}
+
+function crearServicioItem(desc, costo) {
+  const div = document.createElement('div');
+  div.className = 'servicio-item';
+  div.innerHTML = `
+    <input type="text" class="servicio-desc" placeholder="Ej. Cambio de pantalla" value="${desc}">
+    <input type="number" class="servicio-costo" placeholder="Bs." value="${costo}" step="0.01" min="0">
+    <button type="button" class="removeServicio"><i class="fas fa-times"></i></button>
+  `;
+  return div;
+}
+
+function calcularTotal() {
+  let total = 0;
+  document.querySelectorAll('.servicio-costo').forEach(input => {
+    total += parseFloat(input.value) || 0;
+  });
+  
+  const adelanto = parseFloat(document.getElementById('adelanto')?.value) || 0;
+  const totalDisplay = document.getElementById('costoTotalDisplay');
+  const saldoDisplay = document.getElementById('saldoDisplay');
+  const costoTotalInput = document.getElementById('costoTotal');
+  
+  if (costoTotalInput) costoTotalInput.value = total.toFixed(2);
+  if (totalDisplay) totalDisplay.textContent = formatBs(total);
+  if (saldoDisplay) saldoDisplay.textContent = formatBs(Math.max(0, total - adelanto));
+}
+
+function recolectarServicios() {
+  datos.servicios = [];
+  document.querySelectorAll('.servicio-item').forEach(item => {
+    const desc = item.querySelector('.servicio-desc')?.value.trim() || '';
+    const costo = parseFloat(item.querySelector('.servicio-costo')?.value) || 0;
+    if (desc || costo > 0) {
+      datos.servicios.push({ desc: desc || 'Reparación', costo });
+    }
+  });
+  datos.total = parseFloat(document.getElementById('costoTotal')?.value) || 0;
+  datos.adelanto = parseFloat(document.getElementById('adelanto')?.value) || 0;
+  datos.saldo = Math.max(0, datos.total - datos.adelanto);
+}
+
+/* ============================================================
+   VISTA PREVIA Y GENERACIÓN DE PDF
+   ============================================================ */
+function generarVistaPrevia() {
+  guardarDatosPaso(6);
+  const cont = document.getElementById('previewContainer');
+  if (!cont) return;
+
+  const serviciosHtml = datos.servicios.map(s => 
+    `<tr><td style="padding: 4px 0;">${escapeHtml(s.desc)}</td><td style="text-align:right; padding: 4px 0;">${formatBs(s.costo)}</td></tr>`
+  ).join('');
+
+  const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
+  const fotosHtml = fotosValidas.length > 0 
+    ? `<div class="preview-section" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">${fotosValidas.map(f => `<img src="${f.dataUrl}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">`).join('')}</div>` 
+    : '';
+
+  // Lógica para mostrar la clave o el patrón en la vista previa
+  let seguridadTexto = 'Ninguna';
+  if (datos.tipoSeguridad === 'pin' && datos.pin) {
+    seguridadTexto = `PIN: ${escapeHtml(datos.pin)}`;
+  } else if (datos.tipoSeguridad === 'patron' && datos.patronSecuencia) {
+    seguridadTexto = `Patrón: ${datos.patronSecuencia.split(',').join(' → ')}`;
+  } else if (datos.tipoSeguridad === 'ninguno') {
+    seguridadTexto = 'Sin bloqueo';
+  }
+
+  cont.innerHTML = `
+    <div class="preview-recibo">
+      <div class="preview-header">
+        <img src="${CONFIG.logoUrl}" onerror="this.style.display='none'">
+        <div>
+          <h3 style="margin:0;font-size:16px;">${CONFIG.nombreTienda}</h3>
+          <p style="margin:0;font-size:10px;">Recibo de Ingreso</p>
         </div>
-      </section>
-
-      <!-- PASO 2 -->
-      <section class="wizard-panel hidden" data-panel="2" aria-hidden="true">
-        <div class="step-indicator">Paso 2 · Equipo</div>
-        <div class="card">
-          <label class="field-title">Marca *</label>
-          <div class="marcas-grid" id="marcasGrid">
-            <button type="button" class="marca-btn" data-marca="Xiaomi">Xiaomi</button>
-            <button type="button" class="marca-btn" data-marca="Samsung">Samsung</button>
-            <button type="button" class="marca-btn" data-marca="Huawei">Huawei</button>
-            <button type="button" class="marca-btn" data-marca="Tecno">Tecno</button>
-            <button type="button" class="marca-btn" data-marca="Honor">Honor</button>
-            <button type="button" class="marca-btn" data-marca="Infinix">Infinix</button>
-            <button type="button" class="marca-btn" data-marca="iPhone">iPhone</button>
-            <button type="button" class="marca-btn" data-marca="Otro">Otro</button>
-          </div>
-          <input type="hidden" id="marca" required>
-        </div>
-        <div class="card">
-          <div class="field" style="margin-bottom: 10px;"><input type="text" id="modelo" placeholder=" " required><label for="modelo">Modelo del equipo *</label></div>
-          <div class="field" style="margin-bottom: 0;"><input type="text" id="color" placeholder=" "><label for="color">Color (opcional)</label></div>
-        </div>
-        <div class="card">
-          <label class="field-title">¿El equipo enciende? *</label>
-          <div class="radio-group" id="enciendeGroup">
-            <button type="button" class="radio-option" data-value="Sí"><i class="fas fa-power-off"></i><span>Sí</span></button>
-            <button type="button" class="radio-option" data-value="No"><i class="fas fa-ban"></i><span>No</span></button>
-            <button type="button" class="radio-option" data-value="A veces"><i class="fas fa-circle-half-stroke"></i><span>A veces</span></button>
-          </div>
-          <input type="hidden" id="enciende" required>
-        </div>
-      </section>
-
-      <!-- PASO 3 -->
-      <section class="wizard-panel hidden" data-panel="3" aria-hidden="true">
-        <div class="step-indicator">Paso 3 · Recepción</div>
-        <div class="card hidden" id="cardReparaciones">
-          <label class="field-title">1. Motivo de Reparación</label>
-          <div class="chips-group" id="motivoIngresoGroup">
-            <button type="button" class="chip-btn" data-value="Cambio de pantalla">📱 Cambio pantalla</button>
-            <button type="button" class="chip-btn" data-value="Cambio de batería">🔋 Cambio batería</button>
-            <button type="button" class="chip-btn" data-value="Módulo de carga">🔌 Módulo carga</button>
-            <button type="button" class="chip-btn" data-value="Cambio de tapa">🪵 Cambio tapa</button>
-            <button type="button" class="chip-btn" data-value="Cambio de visor cámara">📸 Visor cámara</button>
-            <button type="button" class="chip-btn" data-value="Problema de placa">🔬 Placa</button>
-            <button type="button" class="chip-btn" data-value="Otro">🛠️ Otro</button>
-          </div>
-          <input type="hidden" id="motivoIngreso" value="">
-        </div>
-        <div class="card hidden" id="cardAuditoriaGeneral">
-          <label class="field-title">2. Auditoría General</label>
-          <div class="checklist-grid" id="checklistGeneralGroup">
-            <button type="button" class="check-item" data-item="Cámaras"><span>Cámaras</span></button>
-            <button type="button" class="check-item" data-item="Audio / mic"><span>Audio / mic</span></button>
-            <button type="button" class="check-item" data-item="Wi-Fi / señal"><span>Wi-Fi / señal</span></button>
-            <button type="button" class="check-item" data-item="Táctil"><span>Táctil</span></button>
-            <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
-          </div>
-        </div>
-        <div class="card hidden" id="cardAuditoriaFisica">
-          <label class="field-title">Auditoría Física</label>
-          <div class="checklist-grid" id="checklistFisicoGroup">
-            <button type="button" class="check-item" data-item="Pantalla"><span>Pantalla sana</span></button>
-            <button type="button" class="check-item" data-item="Tapa trasera"><span>Tapa trasera</span></button>
-            <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
-          </div>
-        </div>
-        <input type="hidden" id="checklistResultados" value="">
-        <div class="card">
-          <label class="field-title">Detalles extra (opcional)</label>
-          <div class="field" style="margin-bottom:0;"><textarea id="fallaDetalle" placeholder=" " rows="2"></textarea><label for="fallaDetalle">Escribe algo más...</label></div>
-        </div>
-      </section>
-
-      <!-- PASO 4 -->
-      <section class="wizard-panel hidden" data-panel="4" aria-hidden="true">
-        <div class="step-indicator">Paso 4 · Seguridad</div>
-        <div class="card">
-          <div class="radio-group" id="tipoSeguridadGroup" style="margin-bottom:12px;">
-            <button type="button" class="radio-option active" data-value="patron"><i class="fas fa-braille"></i><span>Patrón</span></button>
-            <button type="button" class="radio-option" data-value="pin"><i class="fas fa-hashtag"></i><span>PIN</span></button>
-            <button type="button" class="radio-option" data-value="ninguno"><i class="fas fa-lock-open"></i><span>Ninguno</span></button>
-          </div>
-          <input type="hidden" id="tipoSeguridad" value="patron">
-          
-          <div id="pinContainer" class="hidden">
-            <div class="field"><input type="text" id="pinInput" placeholder=" " maxlength="12" inputmode="numeric"><label for="pinInput">PIN de acceso</label></div>
-          </div>
-
-          <div id="patronContainer">
-            <div style="position: relative; width: 100%; max-width: 260px; margin: 0 auto; aspect-ratio: 1 / 1;">
-              <canvas id="bgCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
-              <canvas id="lineCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%; touch-action: none;"></canvas>
-            </div>
-            <div style="text-align:center;margin:8px 0;">
-              <span id="pattern-sequence" style="font-size: 12px; font-weight: 700; color: var(--brand);">Sin patrón</span>
-            </div>
-            <button type="button" id="clearPattern" class="btn btn-secondary" style="width: 100%; padding:8px; font-size:12px;"><i class="fas fa-eraser"></i> Limpiar</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- PASO 5 -->
-      <section class="wizard-panel hidden" data-panel="5" aria-hidden="true">
-        <div class="step-indicator">Paso 5 · Fotos</div>
-        <div class="card">
-          <div class="fotos-grid" id="fotosGrid">
-            <button type="button" class="foto-slot" data-slot="0"><i class="fas fa-camera"></i><span>Añadir</span></button>
-            <button type="button" class="foto-slot" data-slot="1"><i class="fas fa-camera"></i><span>Añadir</span></button>
-            <button type="button" class="foto-slot" data-slot="2"><i class="fas fa-camera"></i><span>Añadir</span></button>
-            <button type="button" class="foto-slot" data-slot="3"><i class="fas fa-camera"></i><span>Añadir</span></button>
-          </div>
-        </div>
-      </section>
-
-      <!-- PASO 6 -->
-      <section class="wizard-panel hidden" data-panel="6" aria-hidden="true">
-        <div class="step-indicator">Paso 6 · Costos</div>
-        <div class="card">
-          <div class="servicios-container" id="serviciosList"></div>
-          <button type="button" id="addServicio" class="btn btn-secondary" style="width: 100%; margin-top: 6px; font-size: 12px; padding:10px;"><i class="fas fa-plus"></i> Añadir otro servicio</button>
-          <div style="margin-top: 12px;">
-            <label class="field-title" style="font-size: 10px;">Precios rápidos</label>
-            <div class="chips-group" id="preciosRapidosGroup" style="margin-bottom:0;">
-              <button type="button" class="chip-btn" data-precio="50">Bs. 50</button>
-              <button type="button" class="chip-btn" data-precio="100">Bs. 100</button>
-              <button type="button" class="chip-btn" data-precio="200">Bs. 200</button>
-              <button type="button" class="chip-btn" data-precio="350">Bs. 350</button>
-              <button type="button" class="chip-btn" data-precio="500">Bs. 500</button>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="resumen-row"><span>Total</span><strong id="costoTotalDisplay">Bs. 0.00</strong></div>
-          <div class="field" style="margin-bottom:0;"><input type="number" id="adelanto" placeholder=" " value="0"><label for="adelanto">Adelanto</label></div>
-          <div class="resumen-row resumen-saldo"><span>Saldo pendiente</span><strong id="saldoDisplay">Bs. 0.00</strong></div>
-        </div>
-        <input type="hidden" id="costoTotal" value="0">
-      </section>
-
-      <!-- PASO 7 -->
-      <section class="wizard-panel hidden" data-panel="7" aria-hidden="true">
-        <div class="step-indicator">Paso 7 · Listo</div>
-        <div id="previewContainer"></div>
-      </section>
-    </main>
-  </div>
-
-  <footer class="wizard-footer" id="wizardFooter">
-    <button type="button" class="btn btn-secondary" id="btnPrev" style="display: none;"><i class="fas fa-arrow-left"></i></button>
-    <button type="button" class="btn btn-primary" id="btnNext">Siguiente <i class="fas fa-arrow-right"></i></button>
-    <button type="button" class="btn btn-primary" id="btnGenerate" style="display: none;"><i class="fas fa-file-pdf"></i> Generar Recibo</button>
-  </footer>
-
-  <div class="modal-backdrop" id="successModal">
-    <div class="modal">
-      <div style="font-size: 48px; color: #22C55E; margin-bottom: 16px;"><i class="fas fa-check-circle"></i></div>
-      <h3 style="font-size: 20px; margin-bottom: 8px;">¡Recibo generado!</h3>
-      <p style="font-size: 14px; color: var(--text-mute); margin-bottom: 24px;" id="successNumero">REC-XXX</p>
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        <button class="btn" style="background:#25D366;color:white;" id="sendWhatsappBtn"><i class="fab fa-whatsapp"></i> WhatsApp</button>
-        <button class="btn btn-secondary" id="backToPanelBtn2">Volver al panel</button>
       </div>
-    </div>
-  </div>
+      
+      <div class="preview-section">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>CLIENTE:</strong> <span>${escapeHtml(datos.nombre)}</span></div>
+        <div style="display:flex;justify-content:space-between;"><strong>TELÉFONO:</strong> <span>${escapeHtml(datos.telefono)}</span></div>
+      </div>
 
-  <div class="sheet-backdrop" id="fotoSheet">
-    <div class="sheet">
-      <h3 style="margin-bottom: 16px; text-align: center;">Añadir foto</h3>
-      <button type="button" class="btn btn-primary" id="btnTomarFoto" style="width: 100%; margin-bottom: 10px;"><i class="fas fa-camera"></i> Cámara</button>
-      <button type="button" class="btn btn-secondary" id="btnSubirFoto" style="width: 100%; margin-bottom: 10px;"><i class="fas fa-image"></i> Galería</button>
-      <button type="button" class="btn" id="btnCancelarFoto" style="width: 100%; background:transparent; color:var(--text-mute);">Cancelar</button>
-    </div>
-  </div>
+      <div class="preview-section">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>EQUIPO:</strong> <span>${escapeHtml(datos.marca)} ${escapeHtml(datos.modelo)} (${escapeHtml(datos.color || 'N/A')})</span></div>
+        <div style="display:flex;justify-content:space-between;color:#E65100;"><strong>DESBLOQUEO:</strong> <span>${seguridadTexto}</span></div>
+      </div>
 
-  <script type="module" src="/js/cliente.js"></script>
-</body>
-</html>
+      <div class="preview-section">
+        <div><strong>MOTIVO / FALLA:</strong> ${escapeHtml(datos.motivoIngreso || datos.falla || '-')}</div>
+        <div style="margin-top:4px; font-size:10px; color:#666;"><strong>CHECKLIST:</strong> ${escapeHtml(datos.checklist || 'Todo OK')}</div>
+      </div>
+
+      <table style="width:100%; font-size:11px; margin-top:10px; border-collapse:collapse;">
+        <thead><tr style="border-bottom:1px solid #ddd;"><th align="left" style="padding:6px 0;">Servicio</th><th align="right" style="padding:6px 0;">Costo</th></tr></thead>
+        <tbody>${serviciosHtml}</tbody>
+      </table>
+
+      <div class="preview-totales">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Total:</span><b>${formatBs(datos.total)}</b></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Adelanto:</span><b>${formatBs(datos.adelanto)}</b></div>
+        <div style="display:flex;justify-content:space-between;color:#E65100;font-size:14px;margin-top:8px;"><span>SALDO A PAGAR:</span><b>${formatBs(datos.saldo)}</b></div>
+      </div>
+
+      ${fotosHtml}
+    </div>
+  `;
+}
+
+function configurarBotonGenerarPDF() {
+  const btn = document.getElementById('btnGenerate');
+  if (!btn) return;
+  let generando = false;
+
+  btn.addEventListener('click', async () => {
+    if (generando) return;
+    if (!validarPaso(6)) return;
+    
+    generando = true;
+    guardarDatosPaso(6);
+    
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+    btn.style.opacity = '0.7';
+
+    try {
+      const num = generarNumeroRecibo();
+      const paquete = {
+        numeroRecibo: num,
+        cliente: datos.nombre,
+        telefono: datos.telefono,
+        marca: datos.marca,
+        modelo: datos.modelo,
+        color: datos.color,
+        enciende: datos.enciende,
+        falla: datos.falla,
+        motivoIngreso: datos.motivoIngreso,
+        checklist: datos.checklist,
+        tipoSeguridad: datos.tipoSeguridad,
+        pin: datos.pin,
+        patron: datos.patronSecuencia,
+        servicios: datos.servicios,
+        total: datos.total,
+        adelanto: datos.adelanto,
+        saldo: datos.saldo,
+        fotos: datos.fotos.filter(f => f && f.dataUrl).map(f => f.dataUrl)
+      };
+
+      const exito = await generarPDFUnificado(paquete, 'guardar_en_nube');
+      
+      if (exito) {
+        localStorage.removeItem('drxiaomi_borrador');
+        document.getElementById('successNumero').textContent = num;
+        document.getElementById('successModal').classList.add('show');
+        window._ultimoRecibo = paquete;
+        configurarWhatsApp();
+      }
+    } catch (error) {
+      console.error("Error al generar PDF:", error);
+      toast('Error al generar el PDF', 'error');
+    } finally {
+      generando = false;
+      btn.innerHTML = textoOriginal;
+      btn.style.opacity = '1';
+    }
+  });
+
+  document.getElementById('backToPanelBtn2')?.addEventListener('click', () => {
+    window.location.href = '/app/';
+  });
+}
+
+function configurarWhatsApp() {
+  const btn = document.getElementById('sendWhatsappBtn');
+  if (!btn) return;
+  
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  
+  newBtn.addEventListener('click', () => {
+    const recibo = window._ultimoRecibo;
+    if (!recibo) return;
+    
+    haptic(15);
+    const mensaje = `Hola ${recibo.cliente.split(' ')[0]},\n\nRecibo de ingreso generado.\n\nN Recibo: ${recibo.numeroRecibo}\nEquipo: ${recibo.marca} ${recibo.modelo}\nTotal: ${formatBs(recibo.total)}\n${recibo.saldo > 0 ? `Saldo pendiente: ${formatBs(recibo.saldo)}` : ''}\n\nConsulta el estado en: ${CONFIG.urlApp}/?recibo=${recibo.numeroRecibo}\n\n${CONFIG.nombreTienda}\nTel: ${CONFIG.telefono}`;
+    
+    window.open(`https://wa.me/591${recibo.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`, '_blank');
+  });
+}
+
+function generarNumeroRecibo() {
+  const f = new Date();
+  return `REC-${String(f.getDate()).padStart(2, '0')}${String(f.getMonth() + 1).padStart(2, '0')}${String(f.getFullYear()).slice(-2)}-${String(f.getHours()).padStart(2, '0')}${String(f.getMinutes()).padStart(2, '0')}${String(f.getSeconds()).padStart(2, '0')}`;
+}
