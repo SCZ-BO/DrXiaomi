@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (VERSIÓN FINAL CON EDICIÓN DE FECHA)
+   DR. XIAOMI · ORDEN (VERSIÓN PRO - ADAPTADA AL NUEVO HTML)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -77,6 +77,17 @@ async function iniciar() {
     window.location.href = '/app/';
   });
 
+  // Botón de tema (nuevo en el header)
+  document.getElementById('themeToggle')?.addEventListener('click', () => {
+    haptic(10);
+    const html = document.documentElement;
+    const nuevo = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', nuevo);
+    localStorage.setItem('theme', nuevo);
+    const icon = document.querySelector('#themeToggle i');
+    if (icon) icon.className = nuevo === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+  });
+
   await cargarOrden();
 }
 
@@ -119,7 +130,7 @@ async function cargarOrden() {
 }
 
 /* ============================================================
-   RENDER PRINCIPAL
+   RENDER PRINCIPAL (Adaptado al nuevo HTML Pro)
    ============================================================ */
 function renderOrden() {
   const estadoActual = orden.estadoOrden || 'recibido';
@@ -142,15 +153,15 @@ function renderOrden() {
     ? orden.servicios.map(s => `
         <tr>
           <td>${escapeHtml(s.desc)}</td>
-          <td class="costo">${formatBs(s.costo)}</td>
+          <td>${formatBs(s.costo)}</td>
         </tr>
       `).join('')
     : '<tr><td colspan="2" style="text-align:center;color:var(--text-mute);padding:12px;">Sin servicios registrados</td></tr>';
 
   const fotosValidas = Array.isArray(orden.fotos) ? orden.fotos : [];
   const fotosHtml = fotosValidas.length > 0
-    ? `<div class="preview-section">
-         <div class="preview-section-title">📸 Fotos del ingreso</div>
+    ? `<div class="card">
+         <div class="card-title">📸 Fotos del ingreso</div>
          <div class="bitacora-fotos">
            ${fotosValidas.map(f => `<img src="${f}" alt="foto" data-ver-img="${f}">`).join('')}
          </div>
@@ -160,193 +171,129 @@ function renderOrden() {
   const colorEstado = ESTADO_COLORES[estadoActual] || '#FF6900';
   const ganancia = (Number(orden.montoCobrado) || 0) - (Number(orden.costoRepuesto) || 0);
 
-  cont.innerHTML = `
-    <!-- RECIBO -->
-    <div class="preview-recibo">
-      <div class="preview-header">
-        <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi"
-             onerror="this.style.display='none';">
-        <div class="preview-header-text">
-          <h3>DR. XIAOMI SCZ</h3>
-          <p>Servicio Técnico Especializado</p>
-        </div>
-        <div class="preview-header-recibo">
-          <strong>RECIBO</strong>
-          DE INGRESO
-        </div>
-      </div>
+  // Construimos los botones de estado para el nuevo grid
+  const estadosBotones = Object.entries(ESTADOS).map(([key, info]) => `
+    <button class="estado-btn ${key === estadoActual ? 'activo' : ''}" data-estado="${key}">
+      <i class="fas ${info.icono}"></i>
+      <span>${info.texto}</span>
+    </button>
+  `).join('');
 
-      <div class="preview-estado-badge-wrap">
-        <span class="preview-estado-badge" style="background:${colorEstado}25;color:${colorEstado};border:1px solid ${colorEstado}60;">
-          <i class="fas ${estadoInfo.icono}"></i>
-          ${estadoInfo.texto}
+  cont.innerHTML = `
+    <!-- 1. RECIBO (Diseño limpio con tarjetas) -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Detalle del Recibo</div>
+        <span class="chip-estado" style="background:${colorEstado}25; color:${colorEstado}; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:700;">
+          <i class="fas ${estadoInfo.icono}"></i> ${estadoInfo.texto}
         </span>
       </div>
 
-      <div class="preview-fecha">
-        <span>Fecha: <strong>${formatFecha(orden.fecha)}</strong></span>
-        <span>Por: <strong>${escapeHtml(orden.creadoPor || '-')}</strong></span>
-      </div>
-
-      <div class="preview-section">
-        <div class="preview-section-title">👤 Cliente</div>
-        <div class="preview-row">
-          <span>Nombre:</span>
+      <div class="recibo-detalle">
+        <div class="recibo-row">
+          <span>Cliente</span>
           <span>${escapeHtml(orden.cliente || '-')}</span>
         </div>
-        <div class="preview-row">
-          <span>Teléfono:</span>
-          <span style="color:var(--brand);font-weight:700;">
-            ${escapeHtml(orden.telefono || '-')}
-          </span>
+        <div class="recibo-row">
+          <span>Teléfono</span>
+          <span style="color:var(--brand); font-weight:700;">${escapeHtml(orden.telefono || '-')}</span>
         </div>
-      </div>
-
-      <div class="preview-section">
-        <div class="preview-section-title">📱 Equipo</div>
-        <div class="preview-row">
-          <span>Marca / Modelo:</span>
+        <div class="recibo-row">
+          <span>Equipo</span>
           <span>${escapeHtml(orden.marca || '')} ${escapeHtml(orden.modelo || '')}</span>
         </div>
         ${orden.imei ? `
-          <div class="preview-row">
-            <span>IMEI:</span>
-            <span style="font-family:monospace;font-size:11px;">${escapeHtml(orden.imei)}</span>
+          <div class="recibo-row">
+            <span>IMEI</span>
+            <span style="font-family:monospace; font-size:12px;">${escapeHtml(orden.imei)}</span>
           </div>
         ` : ''}
-        <div class="preview-row">
-          <span>Enciende:</span>
+        <div class="recibo-row">
+          <span>Enciende</span>
           <span>${escapeHtml(orden.enciende || '-')}</span>
+        </div>
+        ${orden.estadoEquipo || orden.falla ? `
+          <div class="recibo-row">
+            <span>Estado / Falla</span>
+            <span style="text-align:right;">${escapeHtml(orden.estadoEquipo || '')} ${escapeHtml(orden.falla || '')}</span>
+          </div>
+        ` : ''}
+        ${orden.tipoSeguridad === 'pin' && orden.pin ? `
+          <div class="recibo-row">
+            <span>Clave PIN</span>
+            <span style="font-family:monospace; font-weight:800; color:var(--brand);">${escapeHtml(orden.pin)}</span>
+          </div>
+        ` : ''}
+        ${patronTexto ? `
+          <div class="recibo-row">
+            <span>Patrón</span>
+            <span style="font-family:monospace; font-weight:800; color:var(--brand);">${escapeHtml(patronTexto)}</span>
+          </div>
+        ` : ''}
+        <div class="recibo-row">
+          <span>Fecha de ingreso</span>
+          <span>${formatFecha(orden.fecha)}</span>
+        </div>
+        <div class="recibo-row">
+          <span>Por</span>
+          <span>${escapeHtml(orden.creadoPor || '-')}</span>
         </div>
       </div>
 
-      ${orden.estadoEquipo || orden.falla ? `
-        <div class="preview-section">
-          <div class="preview-section-title">🔍 Estado y falla</div>
-          ${orden.estadoEquipo ? `
-            <div class="preview-row">
-              <span>Estado:</span>
-              <span>${escapeHtml(orden.estadoEquipo)}</span>
-            </div>
-          ` : ''}
-          ${orden.falla ? `
-            <div class="preview-row">
-              <span>Falla:</span>
-              <span>${escapeHtml(orden.falla)}</span>
-            </div>
-          ` : ''}
-        </div>
-      ` : ''}
-
-      ${orden.tipoSeguridad ? `
-        <div class="preview-section">
-          <div class="preview-section-title">🔐 Clave de acceso</div>
-          ${orden.tipoSeguridad === 'pin' && orden.pin ? `
-            <div class="preview-row">
-              <span>PIN:</span>
-              <span style="font-family:monospace;font-weight:800;color:var(--brand);">
-                ${escapeHtml(orden.pin)}
-              </span>
-            </div>
-          ` : ''}
-          ${patronTexto ? `
-            <div class="preview-row">
-              <span>Patrón:</span>
-              <span style="font-family:monospace;font-weight:800;color:var(--brand);">
-                ${escapeHtml(patronTexto)}
-              </span>
-            </div>
-          ` : ''}
-        </div>
-      ` : ''}
-
-      <div class="preview-section">
-        <div class="preview-section-title">🔧 Servicios y costos</div>
-        <table class="preview-servicios-table">
+      <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px;">
+        <table class="tabla-servicios">
           <thead>
-            <tr>
-              <th>Descripción</th>
-              <th style="text-align:right;">Costo</th>
-            </tr>
+            <tr><th>Servicio</th><th style="text-align:right;">Costo</th></tr>
           </thead>
           <tbody>
             ${serviciosHtml}
           </tbody>
         </table>
-
-        <div class="preview-totales">
-          <div class="total-row">
-            <span>Total:</span>
-            <strong>${formatBs(orden.total || 0)}</strong>
+        <div class="total-box">
+          <span style="font-size:12px; color:var(--text-mute);">Total</span>
+          <strong>${formatBs(orden.total || 0)}</strong>
+        </div>
+        ${Number(orden.adelanto) > 0 ? `
+          <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:13px;">
+            <span style="color:var(--text-mute);">Adelanto</span>
+            <span>${formatBs(orden.adelanto)}</span>
           </div>
-          ${Number(orden.adelanto) > 0 ? `
-            <div class="total-row">
-              <span>Adelanto:</span>
-              <strong>${formatBs(orden.adelanto)}</strong>
-            </div>
-          ` : ''}
-          <div class="saldo-row">
-            <span>SALDO A PAGAR:</span>
-            <span>${formatBs(orden.saldo || 0)}</span>
-          </div>
+        ` : ''}
+        <div class="total-box" style="background:var(--brand-light); margin-top:8px;">
+          <span style="font-size:12px; color:var(--brand); font-weight:700;">SALDO A PAGAR</span>
+          <strong style="color:var(--brand); font-size:18px;">${formatBs(orden.saldo || 0)}</strong>
         </div>
       </div>
-
-      ${fotosHtml}
-
-      ${orden.fechaEntrega || orden.montoCobrado ? `
-        <div class="preview-section" style="background:rgba(16,185,129,0.05);">
-          <div class="preview-section-title" style="color:#10B981;">✅ Entrega</div>
-          ${orden.fechaEntrega ? `
-            <div class="preview-row">
-              <span>Fecha entrega:</span>
-              <span style="color:#10B981;font-weight:700;">${formatFecha(orden.fechaEntrega)}</span>
-            </div>
-          ` : ''}
-          ${orden.montoCobrado ? `
-            <div class="preview-row">
-              <span>Cobrado:</span>
-              <span style="color:#10B981;font-weight:700;">${formatBs(orden.montoCobrado)}</span>
-            </div>
-            <div class="preview-row">
-              <span>Método:</span>
-              <span>${escapeHtml(orden.metodoPago || '-')}</span>
-            </div>
-          ` : ''}
-        </div>
-      ` : ''}
     </div>
 
-    <!-- ACCIONES -->
-    <div class="section-block">
-      <h3>📱 Acciones</h3>
-      <div style="display:flex; gap:8px;">
-        <button class="btn btn-whatsapp" id="btnContactar" style="flex:1;">
+    <!-- 2. FOTOS (si existen) -->
+    ${fotosHtml}
+
+    <!-- 3. ACCIONES (Contactar / PDF) -->
+    <div class="card">
+      <div class="card-title">📱 Acciones</div>
+      <div style="display:flex; gap:12px; margin-top:8px;">
+        <button class="btn-grande btn-whatsapp" id="btnContactar" style="flex:1;">
           <i class="fab fa-whatsapp"></i> Contactar
         </button>
-        <button class="btn" id="btnRegenerarPDF" style="flex:1; background:var(--brand); color:white; border:none; padding:14px; border-radius:var(--radius-sm); font-weight:700; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit;">
+        <button class="btn-grande btn-pdf" id="btnRegenerarPDF" style="flex:1;">
           <i class="fas fa-file-pdf"></i> Enviar PDF
         </button>
       </div>
     </div>
 
-    <!-- CAMBIAR ESTADO -->
-    <div class="section-block">
-      <h3>🔄 Cambiar estado</h3>
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-        ${Object.entries(ESTADOS).map(([key, info]) => `
-          <button class="estado-btn ${key === estadoActual ? 'activo' : ''}" data-estado="${key}">
-            <i class="fas ${info.icono}"></i>
-            <span>${info.texto}</span>
-          </button>
-        `).join('')}
+    <!-- 4. CAMBIAR ESTADO (Grid grande) -->
+    <div class="card">
+      <div class="card-title">🔄 Cambiar estado</div>
+      <div class="estados-grid" style="margin-top:12px;">
+        ${estadosBotones}
       </div>
     </div>
 
-    <!-- COSTOS Y GANANCIA (admin) -->
+    <!-- 5. COSTOS Y GANANCIA (Solo admin) -->
     ${sesion.rol === 'admin' ? `
-      <div class="section-block" style="border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.03);">
-        <h3 style="color:#10B981;">💰 Costos y ganancia</h3>
+      <div class="card" style="border-color:rgba(16,185,129,0.3);">
+        <div class="card-title" style="color:#10B981;">💰 Costos y ganancia</div>
         ${Number(orden.montoCobrado) > 0 ? `
           <div class="fila-info">
             <span class="label">Cobrado al cliente</span>
@@ -369,21 +316,19 @@ function renderOrden() {
             Esta orden aún no tiene cobro registrado.
           </p>
         `}
-        <button id="btnRegistrarCosto" class="btn btn-primary" style="margin-top:12px;">
+        <button id="btnRegistrarCosto" class="btn-grande btn-pdf" style="margin-top:12px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border);">
           <i class="fas fa-calculator"></i>
           ${Number(orden.costoRepuesto) > 0 ? 'Editar costo' : 'Registrar costo'}
         </button>
-        
-        <!-- 🔥 NUEVO BOTÓN PARA EDITAR FECHA -->
-        <button id="btnEditarFecha" class="btn btn-secondary" style="margin-top:8px; border-color:var(--brand); color:var(--brand);">
+        <button id="btnEditarFecha" class="btn-grande" style="margin-top:8px; background:var(--bg-elev); color:var(--brand); border:1px solid var(--brand);">
           <i class="fas fa-calendar-alt"></i> Editar fecha de ingreso
         </button>
       </div>
     ` : ''}
 
-    <!-- BITÁCORA -->
-    <div class="section-block">
-      <h3>📋 Bitácora</h3>
+    <!-- 6. BITÁCORA (Estilo chat) -->
+    <div class="card">
+      <div class="card-title">📋 Bitácora</div>
 
       <div style="margin-bottom:16px;">
         <div class="dictado-wrap textarea">
@@ -403,7 +348,7 @@ function renderOrden() {
         </div>
         <input type="file" id="fotoInput" accept="image/*" capture="environment" hidden>
 
-        <button id="btnGuardarNota" class="btn btn-primary btn-sm" style="margin-top:12px; width:auto;">
+        <button id="btnGuardarNota" class="btn-grande btn-pdf" style="margin-top:12px; padding:10px; font-size:13px; width:auto;">
           <i class="fas fa-plus"></i> Añadir
         </button>
       </div>
@@ -413,18 +358,18 @@ function renderOrden() {
       </div>
     </div>
 
-    <!-- ADMIN -->
+    <!-- 7. ADMIN (Eliminar) -->
     ${sesion.rol === 'admin' ? `
-      <div class="section-block" style="border-color: rgba(239,68,68,0.3);">
-        <h3 style="color:#EF4444;">⚙️ Admin</h3>
-        <button id="btnEliminar" class="btn btn-secondary" style="border-color:#EF4444; color:#EF4444;">
+      <div class="card" style="border-color: rgba(239,68,68,0.3);">
+        <div class="card-title" style="color:#EF4444;">⚙️ Admin</div>
+        <button id="btnEliminar" class="btn-grande" style="background:rgba(239,68,68,0.1); color:#EF4444; border:1px solid #EF4444; margin-top:8px;">
           <i class="fas fa-trash"></i> Eliminar orden
         </button>
       </div>
     ` : ''}
 
-    <!-- VOLVER AL PANEL -->
-    <button id="btnVolverPanelFinal" style="width:100%; margin-top:8px; margin-bottom:24px; padding:16px; background:var(--brand); color:white; border:none; border-radius:var(--radius-sm); font-weight:800; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-family:inherit;">
+    <!-- 8. VOLVER AL PANEL -->
+    <button id="btnVolverPanelFinal" class="btn-grande btn-pdf" style="margin-top:8px; margin-bottom:24px; padding:16px; font-size:15px;">
       <i class="fas fa-home"></i> VOLVER AL PANEL
     </button>
   `;
@@ -472,7 +417,7 @@ function renderBitacora() {
           <i class="fas ${icono}"></i>
         </div>
         <div class="bitacora-content">
-          <div>
+          <div class="bitacora-header">
             <span class="bitacora-autor">${escapeHtml(entry.autor || 'Sistema')}</span>
             <span class="bitacora-fecha">${tiempoRelativo(entry.fecha)}</span>
           </div>
@@ -526,10 +471,7 @@ function configurarEventosOrden() {
   document.getElementById('btnContactar')?.addEventListener('click', contactarCliente);
   document.getElementById('btnEliminar')?.addEventListener('click', eliminarOrden);
   document.getElementById('btnRegistrarCosto')?.addEventListener('click', abrirModalCosto);
-  
-  // 🔥 AÑADIDO: Botón para editar fecha
   document.getElementById('btnEditarFecha')?.addEventListener('click', abrirModalFecha);
-  
   document.getElementById('btnRegenerarPDF')?.addEventListener('click', () => {
     haptic(15);
     regenerarYEnviarPDF();
@@ -984,7 +926,7 @@ function cerrarModalCosto() {
 }
 
 /* ============================================================
-   🔥 MODAL DE EDICIÓN DE FECHA (SOLO ADMIN)
+   MODAL DE EDICIÓN DE FECHA
    ============================================================ */
 function abrirModalFecha() {
   if (sesion.rol !== 'admin') return;
@@ -994,7 +936,6 @@ function abrirModalFecha() {
   if (orden.fecha) {
     const d = orden.fecha.toDate ? orden.fecha.toDate() : new Date(orden.fecha);
     if (!isNaN(d.getTime())) {
-      // Formato YYYY-MM-DD para el input type="date"
       fechaActualStr = d.toISOString().split('T')[0];
     }
   }
@@ -1044,7 +985,7 @@ function abrirModalFecha() {
     showLoading('Actualizando fecha...');
 
     try {
-      const nuevaFecha = new Date(nuevaFechaStr + 'T12:00:00'); // Mediodía para evitar problemas de zona horaria
+      const nuevaFecha = new Date(nuevaFechaStr + 'T12:00:00');
 
       const entrada = {
         tipo: 'nota',
