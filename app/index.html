@@ -278,25 +278,28 @@
     const btnCargarMas = document.getElementById('btnCargarMas');
     const appLoader = document.getElementById('appLoader');
 
-    requireAuth((s) => {
-      sesion = s;
-      iniciarApp();
-    });
+requireAuth((s) => {
+  sesion = s;
+  // 🔥 Damos 1 segundo de margen para que Firebase confirme la sesión
+  setTimeout(() => {
+    iniciarApp();
+  }, 1000);
+});
 
-    function iniciarApp() {
-      document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
-      
-      // 🔥 Mostrar botones según rol
-      if (sesion.rol === 'admin') {
-        const btnRep = document.getElementById('reportesBtn');
-        if (btnRep) btnRep.style.display = 'flex';
-        const btnInv = document.getElementById('inventarioBtn');
-        if (btnInv) btnInv.style.display = 'flex';
-      }
-      
-      configurarEventos();
-      cargarOrdenes();
-    }
+function iniciarApp() {
+  document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
+  
+  // 🔥 Mostrar botones según rol
+  if (sesion.rol === 'admin') {
+    const btnRep = document.getElementById('reportesBtn');
+    if (btnRep) btnRep.style.display = 'flex';
+    const btnInv = document.getElementById('inventarioBtn');
+    if (btnInv) btnInv.style.display = 'flex';
+  }
+  
+  configurarEventos();
+  cargarOrdenes();
+}
 
     function configurarEventos() {
       document.getElementById('preciosBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/precio/'; });
