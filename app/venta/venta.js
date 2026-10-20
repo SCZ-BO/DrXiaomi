@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · VENTA DIRECTA
+   DR. XIAOMI · VENTA DIRECTA (CON FECHA RETROACTIVA)
    Archivo: app/venta/venta.js
    ============================================================ */
 
@@ -16,6 +16,11 @@ let ventaActual = null;
 requireAuth((s) => {
   sesion = s;
   document.getElementById('userInfo').textContent = sesion.nombre;
+
+  // 🔥 Poner la fecha de hoy por defecto en el input
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('fechaVenta').value = hoy;
+
   configurarEventos();
   agregarServicio();
 });
@@ -49,11 +54,15 @@ function configurarEventos() {
   // Cerrar Modal (Venta Rápida) - LIMPIA LOS CAMPOS
   document.getElementById('btnCerrarModal')?.addEventListener('click', () => {
     haptic(10);
-    // Limpiamos los campos antes de salir
     document.getElementById('clienteNombre').value = '';
     document.getElementById('clienteTelefono').value = '';
+    
+    // Restaurar la fecha a hoy por si era retroactiva
+    const hoy = new Date().toISOString().split('T')[0];
+    document.getElementById('fechaVenta').value = hoy;
+
     document.getElementById('serviciosList').innerHTML = '';
-    agregarServicio(); // Vuelve a poner una caja vacía
+    agregarServicio();
     calcularTotal();
     window.location.href = '/app/';
   });
@@ -102,6 +111,12 @@ function calcularTotal() {
 async function registrarVenta() {
   const clienteNombre = document.getElementById('clienteNombre').value.trim() || 'Cliente Ocasional';
   const clienteTelefono = document.getElementById('clienteTelefono').value.trim();
+  const fechaSeleccionada = document.getElementById('fechaVenta').value; // 🔥 Fecha del input
+
+  if (!fechaSeleccionada) {
+    toast('Selecciona una fecha válida', 'error');
+    return;
+  }
 
   let servicios = [];
   let total = 0;
@@ -126,10 +141,11 @@ async function registrarVenta() {
   btn.disabled = true;
 
   try {
-    const fecha = new Date();
-    const numeroRecibo = `VNT-${String(fecha.getDate()).padStart(2,'0')}${String(fecha.getMonth()+1).padStart(2,'0')}${String(fecha.getFullYear()).slice(-2)}-${String(fecha.getHours()).padStart(2,'0')}${String(fecha.getMinutes()).padStart(2,'0')}`;
+    // 🔥 Usar la fecha seleccionada (Retroactiva o de Hoy)
+    const fechaObj = new Date(fechaSeleccionada + 'T12:00:00'); 
+    const numeroRecibo = `VNT-${String(fechaObj.getDate()).padStart(2,'0')}${String(fechaObj.getMonth()+1).padStart(2,'0')}${String(fechaObj.getFullYear()).slice(-2)}-${String(new Date().getHours()).padStart(2,'0')}${String(new Date().getMinutes()).padStart(2,'0')}`;
 
-    ventaActual = { numeroRecibo, cliente: clienteNombre, telefono: clienteTelefono, servicios, total, metodoPago };
+    ventaActual = { numeroRecibo, cliente: clienteNombre, telefono: clienteTelefono, servicios, total, metodoPago, fechaReal: fechaObj };
 
     // Guardar en Firebase
     await addDoc(collection(db, 'recibos'), {
@@ -141,8 +157,8 @@ async function registrarVenta() {
       estadoOrden: 'entregado',
       tipo: 'venta_directa',
       montoCobrado: total,
-      fechaEntrega: serverTimestamp(),
-      fecha: serverTimestamp(),
+      fechaEntrega: fechaObj, // 🔥 Fecha seleccionada
+      fecha: fechaObj,        // 🔥 Fecha seleccionada
       creadoPor: sesion.nombre
     });
 
@@ -193,8 +209,10 @@ async function generarPDFVenta(venta) {
     pdf.text('Recibo N°:', 14, 59);
     pdf.text(venta.numeroRecibo, 40, 59);
 
+    // 🔥 Fecha del PDF (la fecha seleccionada, no la de hoy)
     pdf.text('Fecha:', 14, 66);
-    pdf.text(new Date().toLocaleString('es-BO'), 40, 66);
+    const fechaStr = venta.fechaReal.toLocaleDateString('es-BO');
+    pdf.text(fechaStr, 40, 66);
 
     // Tabla de Productos
     const body = venta.servicios.map(s => [s.desc, formatBs(s.costo)]);
