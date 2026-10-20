@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL CON ESTILOS MEJORADOS)
+   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL CORREGIDA v2)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -32,9 +32,7 @@ styleGlobal.textContent = `
     transform: scale(0.98);
   }
   /* Estilos para el modal en general */
-  .modal-backdrop .modal h3 {
-    margin-bottom: 8px;
-  }
+  .modal-backdrop .modal h3 { margin-bottom: 8px; }
   .modal-backdrop .modal label {
     display: block;
     font-size: 12px;
@@ -59,9 +57,7 @@ styleGlobal.textContent = `
     outline: none;
     transition: border-color 0.2s;
   }
-  .modal-backdrop .modal input:focus {
-    border-color: #FF6900;
-  }
+  .modal-backdrop .modal input:focus { border-color: #FF6900; }
   /* Botones dentro del modal */
   .modal-backdrop .modal .btn-modal-cancel {
     flex: 1;
@@ -210,7 +206,8 @@ function renderOrden() {
   const titleEl = document.getElementById('headerTitle');
   const subtitleEl = document.getElementById('headerSubtitle');
   if (titleEl) titleEl.textContent = orden.numeroRecibo || 'ORDEN';
-  if (subtitleEl) subtitleEl.textContent = `${estadoInfo.texto} · ${tiempoRelativo(orden.fecha)}`;
+  // 🔥 MOSTRAMOS LA FECHA EDITADA SI EXISTE
+  if (subtitleEl) subtitleEl.textContent = `${estadoInfo.texto} · ${tiempoRelativo(orden.fechaEditada || orden.fecha)}`;
 
   const cont = document.getElementById('contenido');
   if (!cont) return;
@@ -257,7 +254,8 @@ function renderOrden() {
       ${orden.estadoEquipo || orden.falla ? `<div class="recibo-row"><span>Estado / Falla</span><span style="text-align:right;">${escapeHtml(orden.estadoEquipo || '')} ${escapeHtml(orden.falla || '')}</span></div>` : ''}
       ${orden.tipoSeguridad === 'pin' && orden.pin ? `<div class="recibo-row"><span>Clave PIN</span><span style="font-family:monospace; font-weight:800; color:var(--brand);">${escapeHtml(orden.pin)}</span></div>` : ''}
       ${patronTexto ? `<div class="recibo-row"><span>Patrón</span><span style="font-family:monospace; font-weight:800; color:var(--brand);">${escapeHtml(patronTexto)}</span></div>` : ''}
-      <div class="recibo-row"><span>Fecha de ingreso</span><span>${formatFecha(orden.fecha)}</span></div>
+      <!-- 🔥 MOSTRAMOS LA FECHA EDITADA SI EXISTE -->
+      <div class="recibo-row"><span>Fecha de ingreso</span><span>${formatFecha(orden.fechaEditada || orden.fecha)}</span></div>
       <div class="recibo-row"><span>Por</span><span>${escapeHtml(orden.creadoPor || '-')}</span></div>
 
       <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px;">
@@ -427,7 +425,7 @@ async function cambiarEstado(nuevoEstado) {
   try {
     const entrada = { tipo: 'estado', texto: `Estado cambiado a: ${ESTADOS[nuevoEstado].texto}`, autor: sesion.nombre, fecha: new Date().toISOString() };
     await updateDoc(doc(db, 'recibos', ordenId), { estadoOrden: nuevoEstado, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
-    toast(`Estado: ${ESTADOS[nuevoEstado].texto}`, success, 2000);
+    toast(`Estado: ${ESTADOS[nuevoEstado].texto}`, 'success', 2000);
   } catch (err) { toast('Error al cambiar estado', 'error'); }
   finally { hideLoading(); }
 }
@@ -620,14 +618,16 @@ function abrirModalCosto() {
 }
 
 /* ============================================================
-   MODAL DE FECHA (ESTILOS MEJORADOS)
+   MODAL DE FECHA (ESTILOS MEJORADOS Y CORREGIDO)
    ============================================================ */
 function abrirModalFecha() {
   if (sesion.rol !== 'admin') return;
   haptic(15);
   let fechaActualStr = '';
-  if (orden.fecha) {
-    const d = orden.fecha.toDate ? orden.fecha.toDate() : new Date(orden.fecha);
+  // 🔥 USAMOS LA FECHA EDITADA SI EXISTE
+  const fechaParaMostrar = orden.fechaEditada || orden.fecha;
+  if (fechaParaMostrar) {
+    const d = fechaParaMostrar.toDate ? fechaParaMostrar.toDate() : new Date(fechaParaMostrar);
     if (!isNaN(d.getTime())) fechaActualStr = d.toISOString().split('T')[0];
   }
 
@@ -664,7 +664,12 @@ function abrirModalFecha() {
     try {
       const nuevaFecha = new Date(nuevaFechaStr + 'T12:00:00');
       const entrada = { tipo: 'nota', texto: `Fecha de ingreso editada a: ${nuevaFecha.toLocaleDateString('es-BO')}`, autor: sesion.nombre, fecha: new Date().toISOString() };
-      await updateDoc(doc(db, 'recibos', ordenId), { fecha: nuevaFecha, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
+      // 🔥 GUARDAMOS EN 'fechaEditada' PARA NO PERDER LA ORIGINAL
+      await updateDoc(doc(db, 'recibos', ordenId), { 
+        fechaEditada: nuevaFecha, 
+        bitacora: arrayUnion(entrada), 
+        actualizadoEn: serverTimestamp() 
+      });
       toast('Fecha actualizada correctamente', 'success', 2500);
       modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
     } catch (err) { toast('Error al actualizar la fecha', 'error'); }
@@ -709,7 +714,11 @@ async function regenerarYEnviarPDF() {
     pdf.setFillColor(255, 255, 255); pdf.roundedRect(W - M - 60, 8, 60, 24, 3, 3, 'F');
     pdf.setTextColor(230, 81, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text('RECIBO N°', W - M - 4, 14, { align: 'right' });
     pdf.setFontSize(11); pdf.text(orden.numeroRecibo || '-', W - M - 4, 20, { align: 'right' });
-    pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, W - M - 4, 26, { align: 'right' });
+    pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); 
+    // 🔥 USAMOS LA FECHA EDITADA EN EL PDF
+    const fechaPdf = orden.fechaEditada || orden.fecha;
+    const fechaPdfStr = fechaPdf ? (fechaPdf.toDate ? fechaPdf.toDate() : new Date(fechaPdf)).toLocaleDateString('es-BO') : new Date().toLocaleDateString('es-BO');
+    pdf.text(`Fecha: ${fechaPdfStr}`, W - M - 4, 26, { align: 'right' });
 
     y = 50;
     const colW = (CW - 6) / 2;
