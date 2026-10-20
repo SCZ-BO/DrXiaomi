@@ -131,7 +131,8 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       datosRecibos = [];
       snapshot.forEach(doc => {
         const d = doc.data();
-        let fechaD = d.fechaEntrega || d.fecha;
+        // 🔥 CORRECCIÓN: Prioridad a fechaEditada
+        let fechaD = d.fechaEditada || d.fechaEntrega || d.fecha;
         if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
         else if (fechaD) fechaD = new Date(fechaD);
 
