@@ -189,12 +189,10 @@
           <img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
         </button>
         
-        <!-- NUEVO: Botón de Cierre de Caja -->
         <button class="icon-btn" id="cierreBtn" title="Cierre de Caja">
           <i class="fas fa-cash-register"></i>
         </button>
         
-        <!-- NUEVO: Botón de Inventario (Solo Admin) -->
         <button class="icon-btn" id="inventarioBtn" title="Inventario" style="display: none;">
           <i class="fas fa-box"></i>
         </button>
@@ -235,7 +233,7 @@
       </button>
     </main>
 
-    <!-- NUEVO: Botones Flotantes (FAB) -->
+    <!-- BOTONES FLOTANTES (FAB) -->
     <div style="position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 12px; z-index: 90;">
       <button class="btn-fab" id="ventaRapidaBtn" title="Venta Rápida" style="width: 50px; height: 50px; font-size: 20px; background: var(--bg-card); color: var(--brand); border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.3); position: relative;">
         <i class="fas fa-shopping-cart"></i>
@@ -260,7 +258,7 @@
     import { requireAuth, logout } from '/js/app-auth.js';
     import { toast, haptic, initTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
     import { db } from '/js/firebase.js';
-    import { collection, query, orderBy, onSnapshot, limit, doc, updateDoc, deleteDoc, startAfter, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { collection, query, onSnapshot, limit, doc, updateDoc, deleteDoc, startAfter, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     initTheme();
     let sesion = null;
@@ -278,35 +276,32 @@
     const btnCargarMas = document.getElementById('btnCargarMas');
     const appLoader = document.getElementById('appLoader');
 
-requireAuth((s) => {
-  sesion = s;
-  // 🔥 Damos 1 segundo de margen para que Firebase confirme la sesión
-  setTimeout(() => {
-    iniciarApp();
-  }, 1000);
-});
+    requireAuth((s) => {
+      sesion = s;
+      setTimeout(() => {
+        iniciarApp();
+      }, 1000);
+    });
 
-function iniciarApp() {
-  document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
-  
-  // 🔥 Mostrar botones según rol
-  if (sesion.rol === 'admin') {
-    const btnRep = document.getElementById('reportesBtn');
-    if (btnRep) btnRep.style.display = 'flex';
-    const btnInv = document.getElementById('inventarioBtn');
-    if (btnInv) btnInv.style.display = 'flex';
-  }
-  
-  configurarEventos();
-  cargarOrdenes();
-}
+    function iniciarApp() {
+      document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
+      
+      if (sesion.rol === 'admin') {
+        const btnRep = document.getElementById('reportesBtn');
+        if (btnRep) btnRep.style.display = 'flex';
+        const btnInv = document.getElementById('inventarioBtn');
+        if (btnInv) btnInv.style.display = 'flex';
+      }
+      
+      configurarEventos();
+      cargarOrdenes();
+    }
 
     function configurarEventos() {
       document.getElementById('preciosBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/precio/'; });
       document.getElementById('reportesBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/reportes/'; });
       document.getElementById('logoutBtn').addEventListener('click', () => { haptic(20); logout(); });
       
-      // 🔥 Nuevos botones
       document.getElementById('cierreBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cierre/'; });
       document.getElementById('inventarioBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/inventario/'; });
       document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/venta/'; });
@@ -342,15 +337,27 @@ function iniciarApp() {
       });
     }
 
+    // 🔥 CARGA CON ORDENAMIENTO POR FECHA EDITADA
     function cargarOrdenes() {
       if (unsubscribe) unsubscribe();
       if (appLoader) appLoader.classList.remove('hidden');
 
-      const q = query(collection(db, 'recibos'), orderBy('fecha', 'desc'), limit(LIMITE_POR_PAGINA));
+      // Traemos más recibos sin ordenar en Firestore
+      const q = query(collection(db, 'recibos'), limit(200));
 
       unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, 
         (snapshot) => {
           ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          
+          // 🔥 ORDENAMOS POR FECHA EDITADA (si existe) O POR FECHA ORIGINAL
+          ordenes.sort((a, b) => {
+            const fa = a.fechaEditada || a.fecha;
+            const fb = b.fechaEditada || b.fecha;
+            const da = fa && fa.toDate ? fa.toDate() : new Date(fa);
+            const db = fb && fb.toDate ? fb.toDate() : new Date(fb);
+            return db - da;
+          });
+          
           hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
           if (snapshot.docs.length > 0) ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
 
@@ -373,11 +380,20 @@ function iniciarApp() {
       btnCargarMas.disabled = true;
 
       try {
-        const q = query(collection(db, 'recibos'), orderBy('fecha', 'desc'), startAfter(ultimoDocumento), limit(LIMITE_POR_PAGINA));
+        const q = query(collection(db, 'recibos'), startAfter(ultimoDocumento), limit(LIMITE_POR_PAGINA));
         const snapshot = await getDocs(q);
         const nuevosRecibos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         
         ordenes = [...ordenes, ...nuevosRecibos];
+        // Reordenar después de cargar más
+        ordenes.sort((a, b) => {
+          const fa = a.fechaEditada || a.fecha;
+          const fb = b.fechaEditada || b.fecha;
+          const da = fa && fa.toDate ? fa.toDate() : new Date(fa);
+          const db = fb && fb.toDate ? fb.toDate() : new Date(fb);
+          return db - da;
+        });
+        
         if (snapshot.docs.length > 0) ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
         hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
 
@@ -473,7 +489,12 @@ function iniciarApp() {
       const activas = ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
       const listas = ordenes.filter(o => o.estadoOrden === 'listo').length;
       const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-      const hoyCount = ordenes.filter(o => { if (!o.fecha) return false; const d = o.fecha.toDate ? o.fecha.toDate() : new Date(o.fecha); return d >= hoy; }).length;
+      const hoyCount = ordenes.filter(o => { 
+        const f = o.fechaEditada || o.fecha;
+        if (!f) return false; 
+        const d = f.toDate ? f.toDate() : new Date(f); 
+        return d >= hoy; 
+      }).length;
       
       document.getElementById('statActivas').textContent = activas;
       document.getElementById('statListas').textContent = listas;
