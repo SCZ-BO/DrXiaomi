@@ -1,7 +1,11 @@
 /* ============================================================
-   DR. XIAOMI · AUTENTICACIÓN SIMPLE CON PIN (OPTIMIZADO)
+   DR. XIAOMI · AUTENTICACIÓN SIMPLE CON PIN (CONECTADO A FIREBASE)
    Archivo: js/app-auth.js
    ============================================================ */
+
+// 🔥 IMPORTS DE FIREBASE
+import { auth } from '/js/firebase.js';
+import { signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const USUARIOS = {
   admin: {
@@ -31,6 +35,15 @@ export function login(usuarioId, pin) {
   if (!pin || pin.trim().length === 0) return { success: false, error: 'Ingresa tu clave' };
   if (pin !== usuario.pin) return { success: false, error: 'Clave incorrecta' };
 
+  // 🔥 CONECTAR CON FIREBASE AUTH (Para que las reglas de Firestore nos dejen pasar)
+  signInAnonymously(auth)
+    .then(() => {
+      console.log('✅ Firebase Auth: Token anónimo generado correctamente');
+    })
+    .catch((error) => {
+      console.error('⚠️ Error en Firebase Auth (Revisa que el login anónimo esté activo):', error);
+    });
+
   const sesion = {
     usuarioId,
     nombre: usuario.nombre,
@@ -41,7 +54,7 @@ export function login(usuarioId, pin) {
   };
 
   localStorage.setItem(SESION_KEY, JSON.stringify(sesion));
-  console.log('✅ Login OK:', usuarioId);
+  console.log('✅ Login Local OK:', usuarioId);
 
   return { success: true, usuario: sesion };
 }
@@ -86,31 +99,31 @@ export function getPerfiles() {
 }
 
 /* ============================================================
-   PROTECCIÓN DE PÁGINAS (Optimizado para velocidad)
+   PROTECCIÓN DE PÁGINAS
    ============================================================ */
 export function requireAuth(callback, opciones = {}) {
   const { requiereAdmin = false, redirigirA = '/login/' } = opciones;
 
-  // 🔥 Leemos la sesión del almacenamiento local (es instantáneo)
   const sesion = getSesion();
 
-  // Si no hay sesión, mandamos al login de inmediato
   if (!sesion) {
     console.log('🔒 Sin sesión → redirigiendo a login');
     window.location.href = redirigirA;
     return null;
   }
 
-  // Si requiere admin y no lo es, lo devolvemos al panel
   if (requiereAdmin && sesion.rol !== 'admin') {
     console.log('🔒 No es admin → redirigiendo a /app/');
     window.location.href = '/app/';
     return null;
   }
 
-  // 🔥 EJECUTAMOS EL CALLBACK INMEDIATAMENTE (Velocidad pura)
-  // Al no esperar a Firebase ni a internet, el panel del celular
-  // abrirá la pantalla de inmediato con los datos del usuario.
+  // 🔥 IMPORTANTE: Si recargamos la página (F5) y ya había sesión, 
+  // nos aseguramos de que Firebase vuelva a generar el token por si se perdió.
+  if (!auth.currentUser) {
+    signInAnonymously(auth).catch(e => console.log("Reconectando a Firebase..."));
+  }
+
   if (typeof callback === 'function') {
     callback(sesion);
   }
