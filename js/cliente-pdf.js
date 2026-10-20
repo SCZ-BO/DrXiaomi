@@ -12,7 +12,8 @@ import { db, auth } from '/js/firebase.js';
 import {
   collection, addDoc, serverTimestamp,
   query, where, getDocs, updateDoc, doc
-} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+//                                   👆 CAMBIA ESTO POR 10.12.0
 
 // 🔥 CAMBIO: Variable de módulo en lugar de window._ultimoPDF
 let ultimoPDF = null;
