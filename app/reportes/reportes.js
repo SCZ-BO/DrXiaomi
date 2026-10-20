@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (UNIFICADO: RECIBOS + CIERRES)
+   DR. XIAOMI · REPORTES (UNIFICADO + EXPORTACIÓN CSV)
    Archivo: app/reportes/reportes.js
    ============================================================ */
 
@@ -13,6 +13,7 @@ let sesion = null;
 let rangoActual = 'hoy';
 let unsubscribeRecibos = null;
 let unsubscribeCierres = null;
+let datosActuales = []; // 🔥 Guardamos los datos para exportarlos
 
 // Elementos del DOM
 const headerSubtitle = document.getElementById('headerSubtitle');
@@ -66,6 +67,9 @@ function configurarEventos() {
   });
 
   document.getElementById('btnVolverPanel')?.addEventListener('click', () => window.location.href = '/app/');
+
+  // 🔥 EVENTO EXPORTAR A CSV
+  document.getElementById('btnExportar')?.addEventListener('click', exportarCSV);
 }
 
 async function cargarReporte(rango, desdeFecha, hastaFecha) {
@@ -111,6 +115,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
     const procesarYRenderizar = () => {
       const todosLosDatos = [...datosRecibos, ...datosCierres];
       todosLosDatos.sort((a, b) => b.fechaReal - a.fechaReal);
+      datosActuales = todosLosDatos; // 🔥 Guardamos para el CSV
       renderizarReporte(todosLosDatos);
       document.getElementById('appLoader')?.classList.add('hidden');
     };
@@ -279,4 +284,48 @@ function renderizarReporte(datos) {
   `;
 
   listaMovimientos.innerHTML = movimientosHtml;
+}
+
+// ============================================================
+// 🔥 EXPORTAR A CSV
+// ============================================================
+function exportarCSV() {
+  haptic(15);
+
+  if (!datosActuales || datosActuales.length === 0) {
+    toast('No hay datos para exportar', 'warning');
+    return;
+  }
+
+  // Encabezado del CSV
+  let csv = 'Fecha;Hora;Tipo;Cliente;Detalle;Metodo Pago;Monto\n';
+
+  datosActuales.forEach(d => {
+    const fechaD = d.fechaReal;
+    const fechaStr = `${String(fechaD.getDate()).padStart(2, '0')}/${String(fechaD.getMonth() + 1).padStart(2, '0')}/${fechaD.getFullYear()}`;
+    const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
+    const tipo = d.origen === 'cierre' ? 'Accesorio/Extra' : 'Reparacion/Venta';
+
+    // Limpiamos el texto de caracteres problemáticos para el CSV
+    const cliente = String(d.cliente || '').replace(/;/g, ',');
+    const detalle = String(d.detalle || '').replace(/;/g, ',');
+    const metodo = String(d.metodoPago || '').replace(/;/g, ',');
+    const monto = Number(d.montoCobrado).toFixed(2);
+
+    csv += `${fechaStr};${horaStr};${tipo};${cliente};${detalle};${metodo};${monto}\n`;
+  });
+
+  // Crear archivo y descargar (con BOM para que Excel lea bien acentos)
+  const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  
+  link.setAttribute('href', url);
+  link.setAttribute('download', `Reporte_${new Date().toISOString().slice(0,10)}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  toast('CSV exportado correctamente', 'success');
 }
