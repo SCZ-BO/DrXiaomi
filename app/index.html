@@ -122,10 +122,48 @@
     
     .custom-select { width: 100%; padding: 12px; border-radius: var(--radius-sm); background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); outline: none; font-weight: 600; font-size: 14px; appearance: none; }
 
-    /* LOADER */
-    .loader-overlay { position: fixed; inset: 0; background: rgba(14, 14, 14, 0.9); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.3s; }
+    /* LOADER PRO (LOGO + ANILLO GIRATORIO) */
+    .loader-overlay {
+      position: fixed; inset: 0; 
+      background: rgba(14, 14, 14, 0.95);
+      backdrop-filter: blur(8px);
+      z-index: 999999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.4s ease;
+    }
     .loader-overlay.hidden { opacity: 0; pointer-events: none; }
-    .loader-ring { width: 50px; height: 50px; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+    
+    .loader-logo-container {
+      position: relative;
+      width: 90px; height: 90px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    .loader-ring {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      border-top-color: var(--brand);
+      border-bottom-color: var(--brand);
+      animation: spin 1.2s linear infinite;
+    }
+    
+    .loader-logo-img {
+      width: 70px; height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--bg-elev);
+      border: 2px solid var(--border);
+      box-shadow: 0 0 20px rgba(230, 81, 0, 0.2);
+    }
+    
+    .loader-text {
+      font-size: 13px; font-weight: 600; color: var(--text-mute);
+      letter-spacing: 0.5px;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     @keyframes spin { 100% { transform: rotate(360deg); } }
     
     .empty-state { text-align: center; padding: 40px 20px; color: var(--text-mute); }
@@ -135,10 +173,13 @@
 </head>
 <body>
 
-  <!-- LOADER -->
+  <!-- LOADER PRO -->
   <div class="loader-overlay" id="appLoader">
-    <div class="loader-ring"></div>
-    <div style="font-size: 13px; font-weight: 600; color: var(--text-mute);">Cargando recibos...</div>
+    <div class="loader-logo-container">
+      <div class="loader-ring"></div>
+      <img src="/img/logo1.png" alt="Cargando..." class="loader-logo-img" onerror="this.src='/imagenes/web-app-manifest-192x192.png'">
+    </div>
+    <div class="loader-text">Cargando recibos...</div>
   </div>
 
   <div class="app-container">
