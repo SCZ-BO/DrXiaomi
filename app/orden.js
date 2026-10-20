@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL - CORREGIDO v5)
+   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL - CORREGIDO v6)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -657,7 +657,7 @@ function abrirModalFecha() {
       const nuevaFecha = new Date(nuevaFechaStr + 'T12:00:00');
       const entrada = { tipo: 'nota', texto: `Fecha de ingreso editada a: ${nuevaFecha.toLocaleDateString('es-BO')}`, autor: sesion.nombre, fecha: new Date().toISOString() };
       
-      // 🔥 SOBRESCRIBIMOS 'fecha' Y GUARDAMOS EN 'fechaEditada'
+      // 🔥 GUARDAMOS EN 'fecha' Y EN 'fechaEditada'
       await updateDoc(doc(db, 'recibos', ordenId), { 
         fecha: nuevaFecha,              // Sobrescribe fecha original
         fechaEditada: nuevaFecha,       // Mantiene registro de la edición
