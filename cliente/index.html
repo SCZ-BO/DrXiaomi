@@ -130,6 +130,11 @@
     .preview-header img { width: 32px; height: 32px; object-fit: contain; }
     .preview-section { background: #f9fafb; border-radius: var(--radius-sm); padding: 10px; margin-bottom: 10px; border: 1px solid #eee; }
     .preview-totales { border-top: 1px solid #ddd; margin-top: 6px; padding-top: 6px; }
+
+    /* 🔥 ESTILO PARA INPUTS OCULTOS DE CÁMARA */
+    .hidden-file-input {
+      position: absolute; width: 1px; height: 1px; opacity: 0; z-index: -1;
+    }
   </style>
 </head>
 <body>
@@ -178,7 +183,7 @@
   </header>
 
   <!-- ========================================== -->
-  <!-- CONTENIDO DEL WIZARD (INTACTO)             -->
+  <!-- CONTENIDO DEL WIZARD                       -->
   <!-- ========================================== -->
   <div class="app-body" id="appBody">
     <div class="wizard-progress" id="wizardProgress">
@@ -356,6 +361,8 @@
       <p style="font-size: 14px; color: var(--text-mute); margin-bottom: 24px;" id="successNumero">REC-XXX</p>
       <div style="display: flex; flex-direction: column; gap: 10px;">
         <button class="btn" style="background:#25D366;color:white;" id="sendWhatsappBtn"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+        <!-- 🔥 BOTÓN DE DESCARGA AÑADIDO AQUÍ -->
+        <button class="btn btn-primary" id="downloadPdfBtn"><i class="fas fa-download"></i> Descargar PDF</button>
         <button class="btn btn-secondary" id="backToPanelBtn2">Volver al panel</button>
       </div>
     </div>
@@ -369,6 +376,10 @@
       <button type="button" class="btn" id="btnCancelarFoto" style="width: 100%; background:transparent; color:var(--text-mute);">Cancelar</button>
     </div>
   </div>
+
+  <!-- 🔥 INPUTS OCULTOS PARA LA CÁMARA (Añadidos aquí) -->
+  <input type="file" id="inputCamara" accept="image/*,dummy/allowAndroidCamera" capture="environment" class="hidden-file-input">
+  <input type="file" id="inputGaleria" accept="image/*,dummy/allowAndroidCamera" class="hidden-file-input">
 
   <script type="module" src="/js/cliente.js"></script>
 </body>
