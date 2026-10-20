@@ -1,12 +1,13 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (VERSIÓN DEFINITIVA v9 - LIMPIA)
+   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v10)
    Archivo: app/reportes/reportes.js
+   INCLUYE: Edición, Eliminación y Ganancia por ficha.
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
 import { toast, haptic, initTheme, formatBs, escapeHtml } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
-import { collection, query, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, query, onSnapshot, limit, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 initTheme();
 let sesion = null;
@@ -16,7 +17,6 @@ let unsubscribeCierres = null;
 let unsubscribeVentas = null; 
 let datosActuales = [];
 
-// Elementos del DOM
 const headerSubtitle = document.getElementById('headerSubtitle');
 const totalMontoEl = document.getElementById('totalMonto');
 const totalEntregasEl = document.getElementById('totalEntregas');
@@ -71,7 +71,7 @@ function configurarEventos() {
   document.getElementById('btnExportar')?.addEventListener('click', exportarCSV);
 }
 
-// 🔥 FUNCIÓN BLINDADA PARA LEER CUALQUIER TIPO DE FECHA
+// UTILIDAD PARA LEER CUALQUIER TIPO DE FECHA
 function parsearFecha(fechaObj) {
   if (!fechaObj) return null;
   if (typeof fechaObj.toDate === 'function') return fechaObj.toDate();
@@ -152,8 +152,10 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
           datosRecibos.push({
+            id: doc.id,
             origen: 'recibo',
-            cliente: d.cliente,
+            coleccion: 'recibos',
+            cliente: d.cliente || 'Cliente',
             detalle: `${d.marca || ''} ${d.modelo || ''}`,
             montoCobrado: montoCobrado,
             costoRepuesto: Number(d.costoRepuesto) || 0,
@@ -167,7 +169,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
-    // 2. Escuchar Ventas Rápidas (EL PANEL)
+    // 2. Escuchar Ventas Rápidas (Panel)
     const qVentas = query(collection(db, 'ventas'), limit(500));
     unsubscribeVentas = onSnapshot(qVentas, (snapshot) => {
       datosVentas = [];
@@ -179,11 +181,13 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         const diaVenta = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaVenta >= diaInicio && diaVenta <= diaFin) {
           datosVentas.push({
+            id: doc.id,
             origen: 'venta_panel',
+            coleccion: 'ventas',
             cliente: 'Venta Rápida',
             detalle: d.concepto,
             montoCobrado: Number(d.monto) || 0,
-            costoRepuesto: 0,
+            costoRepuesto: Number(d.costo) || 0, // Si se le llega a poner costo
             metodoPago: d.metodoPago || 'Efectivo',
             fechaReal: fechaD,
             numeroRecibo: '',
@@ -194,7 +198,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
-    // 3. Escuchar Cierres
+    // 3. Escuchar Cierres (Ventas Extras antiguas)
     const qCierres = query(collection(db, 'cierres'), limit(500));
     unsubscribeCierres = onSnapshot(qCierres, (snapshot) => {
       datosCierres = [];
@@ -206,9 +210,12 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
           if (d.ventasInventario && d.ventasInventario.length > 0) {
-            d.ventasInventario.forEach(v => {
+            d.ventasInventario.forEach((v, index) => {
               datosCierres.push({
+                id: doc.id,
+                indexExtra: `inv_${index}`,
                 origen: 'cierre',
+                coleccion: 'cierres',
                 cliente: 'Venta de Accesorio',
                 detalle: `${v.cantidad}x ${v.nombre}`,
                 montoCobrado: Number(v.precio * v.cantidad) || 0,
@@ -221,10 +228,13 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
             });
           }
           if (d.extras && d.extras.length > 0) {
-            d.extras.forEach(e => {
+            d.extras.forEach((e, index) => {
               if (e.monto > 0) {
                 datosCierres.push({
+                  id: doc.id,
+                  indexExtra: `ext_${index}`,
                   origen: 'cierre',
+                  coleccion: 'cierres',
                   cliente: 'Venta Extra',
                   detalle: e.desc || 'Varios',
                   montoCobrado: Number(e.monto) || 0,
@@ -283,6 +293,7 @@ function renderizarReporte(datos) {
     const d = datos[i];
     const monto = d.montoCobrado;
     const costo = d.costoRepuesto;
+    const ganancia = monto - costo;
     const metodo = (d.metodoPago || '').toLowerCase();
 
     totalMonto += monto;
@@ -302,14 +313,33 @@ function renderizarReporte(datos) {
     if (d.origen === 'cierre') icono = '🛒';
     else if (d.origen === 'venta_panel') icono = '⚡';
 
+    // 🔥 DISEÑO DE CADA FICHA CON GANANCIA, EDITAR Y ELIMINAR
     movimientosHtml += `
-      <div class="movimiento">
+      <div class="movimiento" style="position: relative;">
         <div class="hora">${fechaStr}<br>${horaStr}</div>
         <div class="info">
           <div class="cliente">${icono} ${escapeHtml(d.cliente || 'Cliente')}</div>
           <div class="detalle">${escapeHtml(d.detalle || '')} · ${escapeHtml(d.metodoPago)}${d.numeroRecibo ? ` · ${escapeHtml(d.numeroRecibo)}` : ''}</div>
+          
+          <!-- 🔥 GANANCIA POR FICHA -->
+          <div style="font-size: 11px; margin-top: 4px; display: flex; gap: 8px;">
+            ${costo > 0 ? `<span style="color: #F59E0B;">Costo: ${formatBs(costo)}</span>` : ''}
+            <span style="color: #22C55E; font-weight: 700;">Ganancia: ${formatBs(ganancia)}</span>
+          </div>
         </div>
-        <div class="monto">${formatBs(monto)}</div>
+        
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+          <div class="monto">${formatBs(monto)}</div>
+          <!-- BOTONES DE ACCIÓN -->
+          <div style="display: flex; gap: 6px; margin-top: 4px;">
+            <button class="btn-edit-mov" data-id="${d.id}" data-origen="${d.origen}" data-coleccion="${d.coleccion}" data-extra="${d.indexExtra || ''}" style="background: rgba(59,130,246,0.1); color: #3B82F6; border: 1px solid #3B82F6; border-radius: 4px; padding: 4px 8px; font-size: 10px; cursor: pointer;">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-del-mov" data-id="${d.id}" data-origen="${d.origen}" data-coleccion="${d.coleccion}" data-extra="${d.indexExtra || ''}" style="background: rgba(239,68,68,0.1); color: #EF4444; border: 1px solid #EF4444; border-radius: 4px; padding: 4px 8px; font-size: 10px; cursor: pointer;">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -334,6 +364,152 @@ function renderizarReporte(datos) {
   `;
 
   listaMovimientos.innerHTML = movimientosHtml;
+
+  // 🔥 CONECTAR BOTONES DE EDITAR Y ELIMINAR
+  document.querySelectorAll('.btn-del-mov').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const coleccion = btn.dataset.coleccion;
+      const extra = btn.dataset.extra;
+
+      if (!confirm('¿Seguro que deseas eliminar este registro? Esta acción no se puede deshacer.')) return;
+      
+      haptic(20);
+      try {
+        if (extra) {
+          // Si es un extra dentro de un cierre, se debe actualizar el array
+          const docRef = doc(db, coleccion, id);
+          // Nota: para simplificar, borramos el documento entero si no es un extra complejo, 
+          // pero si es un array, lo ideal es actualizarlo. Aquí lo borraremos de la vista.
+          toast('Para borrar extras de cierres, hazlo desde Cierre de Caja.', 'warning', 3000);
+        } else {
+          await deleteDoc(doc(db, coleccion, id));
+          toast('Registro eliminado', 'success');
+        }
+      } catch (err) {
+        console.error(err);
+        toast('Error al eliminar', 'error');
+      }
+    });
+  });
+
+  document.querySelectorAll('.btn-edit-mov').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const coleccion = btn.dataset.coleccion;
+      const extra = btn.dataset.extra;
+      const registro = datosActuales.find(d => d.id === id && d.indexExtra === extra);
+      
+      if (!registro) return;
+      abrirModalEdicion(registro);
+    });
+  });
+}
+
+/* ============================================================
+   MODAL DE EDICIÓN
+   ============================================================ */
+function abrirModalEdicion(registro) {
+  if (registro.origen === 'cierre') {
+    toast('Los cierres antiguos no se pueden editar desde aquí.', 'warning');
+    return;
+  }
+
+  haptic(15);
+  const modal = document.createElement('div');
+  modal.className = 'sheet-backdrop';
+  modal.id = 'modalEdicion';
+  modal.style.display = 'flex';
+
+  const esRecibo = registro.origen === 'recibo';
+
+  modal.innerHTML = `
+    <div class="sheet">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="font-size: 18px; font-weight: 800;">Editar ${esRecibo ? 'Recibo' : 'Venta'}</h3>
+        <button class="icon-btn" id="btnCloseEdit" style="background: var(--bg-elev);"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <div class="input-group">
+        <label>Cliente / Concepto</label>
+        <input type="text" id="editCliente" class="form-control" value="${escapeHtml(registro.cliente)}" ${!esRecibo ? 'readonly style="opacity:0.5;"' : ''}>
+      </div>
+
+      <div class="input-group">
+        <label>Detalle</label>
+        <input type="text" id="editDetalle" class="form-control" value="${escapeHtml(registro.detalle)}">
+      </div>
+
+      <div class="input-group">
+        <label>Monto Cobrado (Bs.)</label>
+        <input type="number" id="editMonto" class="form-control" value="${registro.montoCobrado}">
+      </div>
+
+      <div class="input-group">
+        <label>Costo del Repuesto (Bs.)</label>
+        <input type="number" id="editCosto" class="form-control" value="${registro.costoRepuesto}">
+      </div>
+
+      <div class="input-group">
+        <label>Método de Pago</label>
+        <select id="editMetodo" class="form-control">
+          <option value="Efectivo" ${registro.metodoPago === 'Efectivo' ? 'selected' : ''}>💵 Efectivo</option>
+          <option value="QR" ${registro.metodoPago === 'QR' ? 'selected' : ''}>📱 QR</option>
+          <option value="Transferencia" ${registro.metodoPago === 'Transferencia' ? 'selected' : ''}>🏦 Transferencia</option>
+          <option value="Mixto" ${registro.metodoPago.includes('Mixto') ? 'selected' : ''}>🔀 Mixto</option>
+        </select>
+      </div>
+
+      <button class="btn-sheet btn-sheet-primary" id="btnSaveEdit">
+        <i class="fas fa-save"></i> Guardar Cambios
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('show'), 10);
+
+  const cerrar = () => {
+    modal.classList.remove('show');
+    setTimeout(() => modal.remove(), 300);
+  };
+
+  document.getElementById('btnCloseEdit').addEventListener('click', cerrar);
+  modal.addEventListener('click', (e) => { if (e.target === modal) cerrar(); });
+
+  document.getElementById('btnSaveEdit').addEventListener('click', async () => {
+    const nuevoMonto = parseFloat(document.getElementById('editMonto').value) || 0;
+    const nuevoCosto = parseFloat(document.getElementById('editCosto').value) || 0;
+    const nuevoDetalle = document.getElementById('editDetalle').value.trim();
+    const nuevoMetodo = document.getElementById('editMetodo').value;
+    
+    haptic(20);
+    try {
+      if (esRecibo) {
+        const nuevoCliente = document.getElementById('editCliente').value.trim();
+        await updateDoc(doc(db, 'recibos', registro.id), {
+          cliente: nuevoCliente,
+          montoCobrado: nuevoMonto,
+          costoRepuesto: nuevoCosto,
+          metodoPago: nuevoMetodo,
+          actualizadoEn: serverTimestamp()
+        });
+      } else {
+        await updateDoc(doc(db, 'ventas', registro.id), {
+          monto: nuevoMonto,
+          metodoPago: nuevoMetodo,
+          concepto: nuevoDetalle
+        });
+      }
+      toast('Cambios guardados', 'success');
+      cerrar();
+    } catch (err) {
+      console.error(err);
+      toast('Error al guardar', 'error');
+    }
+  });
 }
 
 /* ============================================================
