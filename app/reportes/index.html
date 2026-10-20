@@ -250,5 +250,16 @@
   </div>
 
   <script type="module" src="reportes.js"></script>
+
+  <!-- 🔥 RED DE SEGURIDAD -->
+  <script>
+    setTimeout(() => {
+      const loader = document.getElementById('appLoader');
+      if (loader && !loader.classList.contains('hidden')) {
+        loader.classList.add('hidden');
+        console.warn('⚠️ Loader apagado por seguridad (timeout de 2s).');
+      }
+    }, 2000);
+  </script>
 </body>
 </html>
