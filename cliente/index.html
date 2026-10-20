@@ -8,13 +8,19 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>DR. Xiaomi · Nuevo Recibo</title>
 
+  <!-- FAVICON Y MANIFEST -->
   <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/imagenes/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- FUENTES E ICONOS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="manifest" href="/manifest.json">
 
+  <!-- LIBRERÍAS PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -26,7 +32,7 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
-    /* LAYOUT TIPO APP */
+    /* LAYOUT TIPO APP (Sin scroll general) */
     html, body { height: 100%; overflow: hidden; }
     body { background-color: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
     
@@ -131,7 +137,7 @@
       <div class="brand-text"><h1>NUEVO RECIBO</h1><p id="userInfo">Cargando...</p></div>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" id="clearDraftBtn"><i class="fas fa-trash-alt"></i></button>
+      <button class="icon-btn" id="clearDraftBtn" title="Limpiar"><i class="fas fa-trash-alt"></i></button>
       <button class="icon-btn" id="themeToggleBtn"><i class="fas fa-sun"></i></button>
       <button class="icon-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button>
     </div>
@@ -144,7 +150,7 @@
     </div>
 
     <main id="wizardContent">
-      <!-- PASO 1 (CON NOMBRE Y TELÉFONO DE VUELTA) -->
+      <!-- PASO 1 -->
       <section class="wizard-panel" data-panel="1" aria-hidden="false">
         <div class="step-indicator">Paso 1 · Cliente</div>
         <div class="card">
@@ -185,7 +191,7 @@
         </div>
       </section>
 
-      <!-- PASO 3 -->
+      <!-- PASO 3 (SIN PLAZO DE ENTREGA) -->
       <section class="wizard-panel hidden" data-panel="3" aria-hidden="true">
         <div class="step-indicator">Paso 3 · Recepción</div>
         <div class="card hidden" id="cardReparaciones">
@@ -223,16 +229,6 @@
         <div class="card">
           <label class="field-title">Detalles extra (opcional)</label>
           <div class="field" style="margin-bottom:0;"><textarea id="fallaDetalle" placeholder=" " rows="2"></textarea><label for="fallaDetalle">Escribe algo más...</label></div>
-        </div>
-        <div class="card">
-          <label class="field-title">Plazo de entrega</label>
-          <div class="chips-group" id="plazoGroup">
-            <button type="button" class="chip-btn active" data-value="Hoy mismo">⚡ Hoy</button>
-            <button type="button" class="chip-btn" data-value="Mañana">📅 Mañana</button>
-            <button type="button" class="chip-btn" data-value="En 2 días">⏳ 2 días</button>
-            <button type="button" class="chip-btn" data-value="En 3 días">⏳ 3 días</button>
-          </div>
-          <input type="hidden" id="plazoEntrega" value="Hoy mismo">
         </div>
       </section>
 
