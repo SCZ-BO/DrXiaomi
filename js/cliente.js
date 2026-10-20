@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · CLIENTE (Wizard PRO - Código Completo)
+   DR. XIAOMI · CLIENTE (Wizard PRO - Código Completo y Blindado)
    Archivo: js/cliente.js
    ============================================================ */
 
@@ -184,22 +184,27 @@ function irAPaso(nuevoPaso) {
     if (appBody) appBody.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Forzar la lógica del Paso 3 al entrar (evita el bug de las tarjetas ocultas)
+  // 🚨 ARREGLO DEFINITIVO PARA EL PASO 3
   if (pasoActual === 3) {
-    const valorEnciende = document.getElementById('enciende')?.value;
-    const cardReparaciones = document.getElementById('cardReparaciones');
-    const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
-    const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
-    
-    if (valorEnciende === 'Sí' || valorEnciende === 'A veces') {
-      cardReparaciones?.classList.remove('hidden');
-      cardAuditoriaGeneral?.classList.remove('hidden');
-      cardAuditoriaFisica?.classList.add('hidden');
-    } else {
+    setTimeout(() => {
+      const valorEnciende = document.getElementById('enciende')?.value;
+      const cardReparaciones = document.getElementById('cardReparaciones');
+      const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
+      const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
+      
+      // Primero ocultamos todo
       cardReparaciones?.classList.add('hidden');
       cardAuditoriaGeneral?.classList.add('hidden');
-      cardAuditoriaFisica?.classList.remove('hidden');
-    }
+      cardAuditoriaFisica?.classList.add('hidden');
+
+      // Luego mostramos lo que corresponde
+      if (valorEnciende === 'Sí' || valorEnciende === 'A veces') {
+        cardReparaciones?.classList.remove('hidden');
+        cardAuditoriaGeneral?.classList.remove('hidden');
+      } else if (valorEnciende === 'No') {
+        cardAuditoriaFisica?.classList.remove('hidden');
+      }
+    }, 50);
   }
 
   actualizarBarraProgreso();
@@ -234,7 +239,7 @@ function actualizarBotones() {
 }
 
 /* ============================================================
-   VALIDACIONES INTELIGENTES (CON SCROLL AUTOMÁTICO)
+   VALIDACIONES INTELIGENTES
    ============================================================ */
 function validarPaso(paso) {
   const irAError = (idElemento, mensaje) => {
