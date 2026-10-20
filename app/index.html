@@ -17,7 +17,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <link rel="manifest" href="/manifest.json">
-  <!-- LIBRERÍA PARA GENERAR EL PDF DEL DÍA -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
@@ -83,17 +82,21 @@
     .chip { padding: 8px 14px; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-mute); font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: 0.2s; }
     .chip.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
 
-    /* TARJETAS DE RECIBOS */
+    /* TARJETAS DE RECIBOS Y VENTAS */
+    .section-title { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; margin-top: 24px; }
+    
     .orden-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; transition: 0.2s; cursor: pointer; position: relative; border-left: 3px solid var(--border); }
     .orden-card:active { transform: scale(0.98); background: var(--bg-elev); }
     
-    /* Borde lateral por estado */
     .orden-card[data-estado="recibido"] { border-left-color: #9CA3AF; }
     .orden-card[data-estado="reparacion"] { border-left-color: var(--brand); }
     .orden-card[data-estado="espera-repuesto"] { border-left-color: #3B82F6; }
     .orden-card[data-estado="listo"] { border-left-color: #FBBF24; }
     .orden-card[data-estado="entregado"] { border-left-color: #22C55E; }
     .orden-card[data-estado="devuelto"] { border-left-color: #EF4444; }
+
+    /* TARJETA DE VENTA RÁPIDA */
+    .venta-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid var(--success); }
 
     .chip-estado { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 700; text-transform: uppercase; }
     .chip-estado[data-estado="recibido"] { background: rgba(255, 255, 255, 0.1); color: var(--text-main); }
@@ -119,54 +122,19 @@
     
     .custom-select { width: 100%; padding: 12px; border-radius: var(--radius-sm); background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); outline: none; font-weight: 600; font-size: 14px; appearance: none; }
     
-    /* CAMPOS DE FORMULARIO (PARA MODAL VENTA) */
     .input-group { margin-bottom: 16px; }
     .input-group label { display: block; font-size: 11px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; }
     .form-control { width: 100%; padding: 14px; border-radius: var(--radius-sm); background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); outline: none; font-family: inherit; font-size: 15px; }
     .form-control:focus { border-color: var(--brand); }
     .btn-sheet-success { background: var(--success); color: white; }
 
-    /* LOADER PRO (LOGO + ANILLO GIRATORIO) */
-    .loader-overlay {
-      position: fixed; inset: 0; 
-      background: rgba(14, 14, 14, 0.95);
-      backdrop-filter: blur(8px);
-      z-index: 999999;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      transition: opacity 0.4s ease;
-    }
+    /* LOADER PRO */
+    .loader-overlay { position: fixed; inset: 0; background: rgba(14, 14, 14, 0.95); backdrop-filter: blur(8px); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
     .loader-overlay.hidden { opacity: 0; pointer-events: none; }
-    
-    .loader-logo-container {
-      position: relative;
-      width: 90px; height: 90px;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 20px;
-    }
-    
-    .loader-ring {
-      position: absolute; inset: 0;
-      border-radius: 50%;
-      border: 3px solid transparent;
-      border-top-color: var(--brand);
-      border-bottom-color: var(--brand);
-      animation: spin 1.2s linear infinite;
-    }
-    
-    .loader-logo-img {
-      width: 70px; height: 70px;
-      border-radius: 50%;
-      object-fit: cover;
-      background: var(--bg-elev);
-      border: 2px solid var(--border);
-      box-shadow: 0 0 20px rgba(230, 81, 0, 0.2);
-    }
-    
-    .loader-text {
-      font-size: 13px; font-weight: 600; color: var(--text-mute);
-      letter-spacing: 0.5px;
-      animation: pulse 1.5s infinite;
-    }
+    .loader-logo-container { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); animation: spin 1.2s linear infinite; }
+    .loader-logo-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; background: var(--bg-elev); border: 2px solid var(--border); box-shadow: 0 0 20px rgba(230, 81, 0, 0.2); }
+    .loader-text { font-size: 13px; font-weight: 600; color: var(--text-mute); letter-spacing: 0.5px; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     @keyframes spin { 100% { transform: rotate(360deg); } }
     
@@ -228,6 +196,12 @@
         <div class="stat-card"><div class="stat-value" id="statActivas">—</div><div class="stat-label">Activas</div></div>
         <div class="stat-card"><div class="stat-value success" id="statListas">—</div><div class="stat-label">Listas</div></div>
         <div class="stat-card"><div class="stat-value brand" id="statHoy">—</div><div class="stat-label">Ingresos Hoy</div></div>
+      </div>
+
+      <!-- VENTAS RÁPIDAS (VISIBLES EN PANEL) -->
+      <div id="seccionVentas" style="display: none;">
+        <div class="section-title" style="color: var(--success); margin-top: 0;">🛒 Ventas de Hoy</div>
+        <div id="listaVentas"></div>
       </div>
 
       <div class="search-bar">
@@ -417,12 +391,58 @@
       unsubscribeVentas = onSnapshot(q, (snapshot) => {
         const todasVentas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         const hoy = new Date(); hoy.setHours(0,0,0,0);
+        
+        // Filtramos solo las ventas de hoy
         ventasHoy = todasVentas.filter(v => {
           const f = v.fecha?.toDate ? v.fecha.toDate() : new Date(v.fecha);
           return f >= hoy;
         });
+
+        // Ordenamos de más reciente a más antigua
+        ventasHoy.sort((a, b) => {
+          const fa = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha);
+          const fb = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha);
+          return fb - fa;
+        });
+
+        renderizarVentasHoy();
         actualizarStats();
       });
+    }
+
+    // 🔥 RENDERIZAR VENTAS EN EL PANEL
+    function renderizarVentasHoy() {
+      const seccion = document.getElementById('seccionVentas');
+      const lista = document.getElementById('listaVentas');
+      
+      if (ventasHoy.length === 0) {
+        seccion.style.display = 'none';
+        return;
+      }
+
+      seccion.style.display = 'block';
+      lista.innerHTML = ventasHoy.map(v => {
+        const fechaD = v.fecha?.toDate ? v.fecha.toDate() : new Date(v.fecha);
+        const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
+        
+        let icono = '🛒';
+        if (v.concepto === 'Botón') icono = '🔘';
+        else if (v.concepto === 'Limpieza') icono = '🧹';
+        else if (v.concepto === 'Reactivación') icono = '⚡';
+        else if (v.concepto === 'Cargador') icono = '🔌';
+
+        return `
+          <div class="venta-card">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--text-main);">${icono} ${escapeHtml(v.concepto)}</div>
+              <div style="font-size: 11px; color: var(--text-mute); margin-top: 2px;">${horaStr} · ${escapeHtml(v.metodoPago)}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--success);">${formatBs(v.monto)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     // 🔥 CARGA DE RECIBOS
