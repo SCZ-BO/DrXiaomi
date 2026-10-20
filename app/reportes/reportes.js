@@ -1,7 +1,7 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v13)
+   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v14)
    Archivo: app/reportes/reportes.js
-   ARREGLO: Ahora respeta la fecha editada manualmente.
+   ARREGLO: Permite borrar todo y respeta fechas editadas.
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -80,9 +80,6 @@ function parsearFecha(fechaObj) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-/* ============================================================
-   CARGAR REPORTE
-   ============================================================ */
 async function cargarReporte(rango, desdeFecha, hastaFecha) {
   if (unsubscribeRecibos) unsubscribeRecibos();
   if (unsubscribeCierres) unsubscribeCierres();
@@ -136,7 +133,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       document.getElementById('appLoader')?.classList.add('hidden');
     };
 
-    // 1. Escuchar Recibos
     const qRecibos = query(collection(db, 'recibos'), limit(500));
     unsubscribeRecibos = onSnapshot(qRecibos, (snapshot) => {
       datosRecibos = [];
@@ -146,7 +142,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         const estaEntregado = d.estadoOrden === 'entregado';
         if (!estaEntregado && montoCobrado <= 0) return;
 
-        // 🔥 AQUÍ ESTÁ EL ARREGLO: Leer primero 'fechaEditada'
+        // 🔥 AQUÍ SE RESPETA LA FECHA EDITADA
         const fechaD = parsearFecha(d.fechaEditada) || parsearFecha(d.fechaEntrega) || parsearFecha(d.fecha);
         if (!fechaD) return;
 
@@ -170,7 +166,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
-    // 2. Escuchar Ventas Rápidas (Panel)
     const qVentas = query(collection(db, 'ventas'), limit(500));
     unsubscribeVentas = onSnapshot(qVentas, (snapshot) => {
       datosVentas = [];
@@ -199,7 +194,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
-    // 3. Escuchar Cierres (Ventas Extras antiguas)
     const qCierres = query(collection(db, 'cierres'), limit(500));
     unsubscribeCierres = onSnapshot(qCierres, (snapshot) => {
       datosCierres = [];
@@ -259,9 +253,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
   }
 }
 
-/* ============================================================
-   RENDERIZAR REPORTE
-   ============================================================ */
 function renderizarReporte(datos) {
   document.getElementById('appLoader')?.classList.add('hidden');
 
@@ -374,8 +365,11 @@ function renderizarReporte(datos) {
       
       haptic(20);
       try {
+        // 🔥 AHORA SÍ PERMITE BORRAR TODO, INCLUSO EXTRAS DE CIERRES
         if (extra) {
-          toast('Para borrar extras de cierres, hazlo desde Cierre de Caja.', 'warning', 3000);
+           // Si es un extra de cierre, borramos el documento entero de cierre
+           await deleteDoc(doc(db, coleccion, id));
+           toast('Cierre eliminado', 'success');
         } else {
           await deleteDoc(doc(db, coleccion, id));
           toast('Registro eliminado', 'success');
@@ -401,15 +395,7 @@ function renderizarReporte(datos) {
   });
 }
 
-/* ============================================================
-   MODAL DE EDICIÓN
-   ============================================================ */
 function abrirModalEdicion(registro) {
-  if (registro.origen === 'cierre') {
-    toast('Los cierres antiguos no se pueden editar desde aquí.', 'warning');
-    return;
-  }
-
   haptic(15);
   const modal = document.createElement('div');
   modal.className = 'sheet-backdrop';
@@ -489,12 +475,15 @@ function abrirModalEdicion(registro) {
           metodoPago: nuevoMetodo,
           actualizadoEn: serverTimestamp()
         });
-      } else {
+      } else if (registro.origen === 'venta_panel') {
         await updateDoc(doc(db, 'ventas', registro.id), {
           monto: nuevoMonto,
           metodoPago: nuevoMetodo,
           concepto: nuevoDetalle
         });
+      } else {
+         toast('No se pueden editar registros de cierres antiguos.', 'warning');
+         return;
       }
       toast('Cambios guardados', 'success');
       cerrar();
@@ -505,9 +494,6 @@ function abrirModalEdicion(registro) {
   });
 }
 
-/* ============================================================
-   EXPORTAR CSV
-   ============================================================ */
 function exportarCSV() {
   haptic(15);
 
