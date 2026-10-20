@@ -3,19 +3,18 @@
    Archivo: js/cliente-pdf.js
    ============================================================ */
 
-// 🔥 CAMBIO: Separar imports. Firebase ya NO viene de cliente.js
+// 🔥 Imports separados correctamente
 import { datos, sesion, CONFIG, generarNumeroRecibo } from '/js/cliente.js';
 import { toast, haptic, formatBs, showLoading, hideLoading } from '/js/app-ui.js';
 
-// 🔥 CAMBIO: Importar Firebase desde firebase.js (verifica que exporte db y auth)
+// 🔥 Firebase desde firebase.js (verifica que exporte db y auth)
 import { db, auth } from '/js/firebase.js';
 import {
   collection, addDoc, serverTimestamp,
   query, where, getDocs, updateDoc, doc
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-//                                   👆 CAMBIA ESTO POR 10.12.0
 
-// 🔥 CAMBIO: Variable de módulo en lugar de window._ultimoPDF
+// 🔥 Variable de módulo en lugar de window._ultimoPDF
 let ultimoPDF = null;
 let ultimoNombrePDF = 'recibo.pdf';
 
@@ -25,7 +24,9 @@ const COLOR = {
   textoOscuro: [30, 30, 30], textoMedio: [100, 100, 100], textoClaro: [150, 150, 150], blanco: [255, 255, 255]
 };
 
-// 🔥 FUNCIÓN PARA CARGAR SCRIPTS DINÁMICAMENTE
+/* ============================================================
+   CARGA DE LIBRERÍAS
+   ============================================================ */
 function cargarScript(url) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${url}"]`)) { resolve(); return; }
@@ -55,7 +56,9 @@ async function cargarLibreriasPDF() {
   }
 }
 
-// 🔥 CAMBIO: Función pública para descargar el último PDF (para el botón del modal)
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
 export function descargarUltimoPDF() {
   if (ultimoPDF) {
     try {
@@ -71,9 +74,10 @@ export function descargarUltimoPDF() {
 }
 
 export function configurarPDF() {
-  document.getElementById('btnGenerate')?.addEventListener('click', generarPDF);
+  document.getElementById('btnGenerate')?.addEventListener('click', () => {
+    // Este listener lo maneja cliente.js; aquí solo dejamos el de descarga
+  });
   document.getElementById('backToPanelBtn2')?.addEventListener('click', () => window.location.href = '/app/');
-  // 🔥 CAMBIO: usar la función descargarUltimoPDF en lugar de window._ultimoPDF
   document.getElementById('downloadPdfBtn')?.addEventListener('click', () => {
     haptic(15);
     descargarUltimoPDF();
@@ -113,24 +117,23 @@ async function cargarLogoDataUrl() {
   });
 }
 
-// 🔥 CAMBIO: Verificar que numeroRecibo no exista ya en Firestore
 async function verificarNumeroUnico(numeroRecibo) {
   try {
     const q = query(collection(db, 'recibos'), where('numeroRecibo', '==', numeroRecibo));
     const snap = await getDocs(q);
     return snap.empty;
   } catch (err) {
-    console.warn('No se pudo verificar unicidad del número de recibo:', err);
-    return true; // si falla la verificación, no bloqueamos
+    console.warn('No se pudo verificar unicidad:', err);
+    return true;
   }
 }
 
-// 🔥 CAMBIO: función interna que construye el PDF (sin guardar en Firestore)
+/* ============================================================
+   CONSTRUIR PDF (solo diseño)
+   ============================================================ */
 async function construirPDF(paquete, numeroRecibo) {
-  // Cargar librerías
   await cargarLibreriasPDF();
 
-  // Cargar logo y QR
   const [logoDataUrl, qrDataUrl] = await Promise.all([
     cargarLogoDataUrl(),
     generarQRDataUrl(`${CONFIG.urlApp}/?recibo=${numeroRecibo}`)
@@ -141,7 +144,7 @@ async function construirPDF(paquete, numeroRecibo) {
   const W = 210, H = 297, M = 15, CW = W - M * 2;
   let y = 0;
 
-  /* ================= HEADER ================= */
+  /* HEADER */
   pdf.setFillColor(...COLOR.naranja);
   pdf.rect(0, 0, W, 40, 'F');
   pdf.setFillColor(...COLOR.naranjaClaro);
@@ -183,7 +186,7 @@ async function construirPDF(paquete, numeroRecibo) {
 
   y = 50;
 
-  /* ================= CLIENTE / EQUIPO ================= */
+  /* CLIENTE / EQUIPO */
   const colW = (CW - 6) / 2;
 
   pdf.setFillColor(...COLOR.grisFondo);
@@ -221,7 +224,7 @@ async function construirPDF(paquete, numeroRecibo) {
 
   y += 36;
 
-  /* ================= FALLA / SEGURIDAD ================= */
+  /* FALLA / SEGURIDAD */
   pdf.setFillColor(...COLOR.grisFondo);
   pdf.roundedRect(M, y, colW, 30, 3, 3, 'F');
   pdf.setFillColor(...COLOR.naranja);
@@ -255,7 +258,7 @@ async function construirPDF(paquete, numeroRecibo) {
 
   y += 36;
 
-  /* ================= SERVICIOS Y COSTOS ================= */
+  /* SERVICIOS */
   pdf.setFillColor(...COLOR.naranja);
   pdf.roundedRect(M, y, CW, 10, 3, 3, 'F');
   pdf.setTextColor(255, 255, 255);
@@ -281,7 +284,7 @@ async function construirPDF(paquete, numeroRecibo) {
 
   y = pdf.lastAutoTable.finalY + 8;
 
-  /* ================= TOTALES ================= */
+  /* TOTALES */
   const boxW = 80;
   const boxX = M + CW - boxW;
   const boxAlto = paquete.adelanto > 0 ? 28 : 20;
@@ -326,7 +329,7 @@ async function construirPDF(paquete, numeroRecibo) {
 
   y += boxAlto + 8;
 
-  /* ================= FOTOS ================= */
+  /* FOTOS */
   const fotosValidas = (paquete.fotos || []).filter(f => f && (f.dataUrl || typeof f === 'string'));
   if (fotosValidas.length > 0) {
     if (y > 220) { pdf.addPage(); y = 20; }
@@ -357,7 +360,7 @@ async function construirPDF(paquete, numeroRecibo) {
     y += fotoH + 10;
   }
 
-  /* ================= BANNER WEB ================= */
+  /* BANNER WEB */
   if (y > 215) { pdf.addPage(); y = 20; }
   pdf.setFillColor(...COLOR.naranja);
   pdf.roundedRect(M, y, CW, 35, 4, 4, 'F');
@@ -382,7 +385,7 @@ async function construirPDF(paquete, numeroRecibo) {
   }
   y += 45;
 
-  /* ================= CONDICIONES ================= */
+  /* CONDICIONES */
   if (y > 245) { pdf.addPage(); y = 20; }
   pdf.setFillColor(...COLOR.grisFondo);
   pdf.roundedRect(M, y, CW, 30, 3, 3, 'F');
@@ -401,18 +404,15 @@ async function construirPDF(paquete, numeroRecibo) {
 }
 
 /* ============================================================
-   🔥 FUNCIÓN PRINCIPAL (puede recibir un paquete ya construido
-   o construirlo desde el wizard)
+   FUNCIÓN PRINCIPAL
    ============================================================ */
 export async function generarPDFUnificado(paquete, accion = 'guardar') {
   showLoading('Generando PDF...');
   haptic(20);
 
   try {
-    // 1. Generar número único de recibo
     let numeroRecibo = paquete.numeroRecibo || generarNumeroRecibo();
 
-    // 🔥 CAMBIO: verificar unicidad SOLO si vamos a guardar en la nube
     if (accion === 'guardar_en_nube' && db) {
       const esUnico = await verificarNumeroUnico(numeroRecibo);
       if (!esUnico) {
@@ -420,10 +420,8 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
       }
     }
 
-    // 2. Construir PDF (solo diseño, no guarda nada aún)
     const { pdf } = await construirPDF(paquete, numeroRecibo);
 
-    // 3. Guardar PRIMERO en Firestore (si se pidió)
     let guardadoEnNube = false;
     let errorGuardado = null;
 
@@ -431,7 +429,6 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
       if (!db) {
         errorGuardado = 'Firebase no inicializado';
       } else if (!auth?.currentUser) {
-        // 🔥 CAMBIO: verificar auth.currentUser
         errorGuardado = 'Debes iniciar sesión para guardar en la nube';
       } else {
         try {
@@ -445,6 +442,8 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
             enciende: paquete.enciende || '',
             estadoEquipo: paquete.estadoEquipo || '-',
             falla: paquete.falla || '-',
+            motivoIngreso: paquete.motivoIngreso || '',
+            checklist: paquete.checklist || '',
             tipoSeguridad: paquete.tipoSeguridad || 'ninguno',
             pin: paquete.tipoSeguridad === 'pin' ? paquete.pin : null,
             patron: paquete.tipoSeguridad === 'patron' ? paquete.patron : null,
@@ -452,7 +451,6 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
             total: paquete.total || 0,
             adelanto: paquete.adelanto || 0,
             saldo: paquete.saldo || 0,
-            // 🔥 CAMBIO: campos nuevos para que app/index.html los lea
             metodoPago: paquete.metodoPago || null,
             fotos: paquete.fotos || [],
             estadoOrden: 'recibido',
@@ -461,9 +459,8 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
             creadoPorRol: sesion.rol || 'operador',
             fecha: serverTimestamp(),
             actualizadoEn: serverTimestamp(),
-            id: null // se rellena justo después con el ID real
+            id: null
           });
-          // Actualizar el campo `id` con el ID real del documento
           await updateDoc(doc(db, 'recibos', docRef.id), { id: docRef.id });
           guardadoEnNube = true;
         } catch (err) {
@@ -475,7 +472,6 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
       }
     }
 
-    // 4. Guardar PDF localmente
     const nombreArchivo = `Recibo_${numeroRecibo}_${(paquete.cliente || 'Cliente').split(' ')[0]}.pdf`;
     ultimoPDF = pdf;
     ultimoNombrePDF = nombreArchivo;
@@ -485,7 +481,6 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
       console.error('Error al descargar PDF:', err);
     }
 
-    // 5. Feedback al usuario
     if (accion === 'guardar_en_nube') {
       if (guardadoEnNube) {
         toast('✅ Recibo guardado y descargado', 'success', 3000);
@@ -496,7 +491,6 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
       toast('PDF generado', 'success');
     }
 
-    // 6. Devolver resultado (útil para quien llame la función)
     return {
       success: true,
       guardadoEnNube,
@@ -514,10 +508,7 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
   }
 }
 
-/* ============================================================
-   🔥 ALIAS para compatibilidad con cliente.js
-   (por si cliente.js llama a generarPDF en lugar de generarPDFUnificado)
-   ============================================================ */
+// Alias por compatibilidad
 export async function generarPDF(paquete, accion = 'guardar') {
   return generarPDFUnificado(paquete, accion);
 }
