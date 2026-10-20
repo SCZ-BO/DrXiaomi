@@ -47,8 +47,8 @@
     .brand-text h1 { font-size: 15px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
     .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
     
-    .header-actions { display: flex; gap: 6px; }
-    .icon-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+    .header-actions { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 220px; }
+    .icon-btn { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
     .icon-btn:active { transform: scale(0.95); }
     
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
@@ -144,11 +144,17 @@
         </div>
       </div>
       <div class="header-actions">
-        <!-- BOTÓN DE PRECIOS RESTAURADO -->
+        <!-- BOTONES RESTAURADOS -->
         <button class="icon-btn" id="preciosBtn" title="Lista de Precios">
           <i class="fas fa-tags" style="color: var(--brand);"></i>
         </button>
-        <button class="icon-btn" id="btnPDFDia" title="Reporte del Día (PDF)" style="color: var(--brand);">
+        <button class="icon-btn" id="reportesBtn" title="Reportes">
+          <i class="fas fa-chart-bar" style="color: var(--brand);"></i>
+        </button>
+        <button class="icon-btn" id="themeToggle" title="Cambiar Tema">
+          <i class="fas fa-moon" id="themeIcon"></i>
+        </button>
+        <button class="icon-btn" id="btnPDFDia" title="PDF del Día" style="color: var(--brand);">
           <i class="fas fa-file-pdf" style="font-size: 16px;"></i>
         </button>
         <button class="icon-btn" id="btnRefresh" title="Actualizar">
@@ -287,6 +293,14 @@
       document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
       configurarEventos();
       cargarDatos();
+      
+      // Inicializar icono de tema
+      const themeIcon = document.getElementById('themeIcon');
+      if (document.documentElement.getAttribute('data-theme') === 'light') {
+        themeIcon.className = 'fas fa-sun';
+      } else {
+        themeIcon.className = 'fas fa-moon';
+      }
     }
 
     function parsearFecha(fechaObj) {
@@ -298,9 +312,20 @@
     }
 
     function configurarEventos() {
-      // 🔥 BOTÓN DE PRECIOS RESTAURADO
+      // BOTONES DEL HEADER
       document.getElementById('preciosBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/precio/'; });
+      document.getElementById('reportesBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/reportes/'; });
+      
+      document.getElementById('themeToggle')?.addEventListener('click', () => {
+        haptic(10);
+        const html = document.documentElement;
+        const nuevo = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', nuevo);
+        localStorage.setItem('theme', nuevo);
+        document.getElementById('themeIcon').className = nuevo === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+      });
 
+      // BOTONES PRINCIPALES
       document.getElementById('nuevoReciboBtn').addEventListener('click', () => { haptic(15); window.location.href = '/cliente/'; });
       document.getElementById('ventaRapidaBtn').addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
       
@@ -336,6 +361,7 @@
       document.getElementById('btnPDFDia')?.addEventListener('click', generarPDFDia);
 
       document.getElementById('logoutBtn').addEventListener('click', () => { haptic(20); logout(); });
+      
       document.getElementById('btnRefresh')?.addEventListener('click', () => {
         haptic(15);
         const icon = document.getElementById('iconRefresh');
