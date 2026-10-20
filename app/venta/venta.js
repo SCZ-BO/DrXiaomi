@@ -21,15 +21,18 @@ requireAuth((s) => {
 });
 
 function configurarEventos() {
+  // Botón Volver
   document.getElementById('backBtn')?.addEventListener('click', () => {
     if (confirm('¿Salir? Los datos no guardados se perderán.')) window.location.href = '/app/';
   });
 
+  // Botón Añadir otro producto
   document.getElementById('addServicio')?.addEventListener('click', () => {
     haptic(10);
     agregarServicio();
   });
 
+  // Botones de método de pago
   document.getElementById('metodosGroup')?.addEventListener('click', (e) => {
     const btn = e.target.closest('.metodo-btn');
     if (!btn) return;
@@ -40,11 +43,27 @@ function configurarEventos() {
     document.getElementById('metodoPago').value = metodoPago;
   });
 
+  // Registrar Venta
   document.getElementById('btnGenerarVenta')?.addEventListener('click', registrarVenta);
-  document.getElementById('btnCerrarModal')?.addEventListener('click', () => window.location.href = '/app/');
+
+  // Cerrar Modal (Venta Rápida) - LIMPIA LOS CAMPOS
+  document.getElementById('btnCerrarModal')?.addEventListener('click', () => {
+    haptic(10);
+    // Limpiamos los campos antes de salir
+    document.getElementById('clienteNombre').value = '';
+    document.getElementById('clienteTelefono').value = '';
+    document.getElementById('serviciosList').innerHTML = '';
+    agregarServicio(); // Vuelve a poner una caja vacía
+    calcularTotal();
+    window.location.href = '/app/';
+  });
+
+  // Generar PDF (desde el modal)
   document.getElementById('btnGenerarPDF')?.addEventListener('click', () => {
     haptic(15);
-    generarPDFVenta(ventaActual);
+    if (ventaActual) {
+      generarPDFVenta(ventaActual);
+    }
   });
 }
 
@@ -112,6 +131,7 @@ async function registrarVenta() {
 
     ventaActual = { numeroRecibo, cliente: clienteNombre, telefono: clienteTelefono, servicios, total, metodoPago };
 
+    // Guardar en Firebase
     await addDoc(collection(db, 'recibos'), {
       ...ventaActual,
       marca: 'Venta Directa',
@@ -141,13 +161,15 @@ async function registrarVenta() {
   }
 }
 
-// Generación de PDF
+// ============================================================
+// GENERACIÓN DE PDF (Solo si el cliente lo pide)
+// ============================================================
 async function generarPDFVenta(venta) {
   try {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     
-    // Encabezado simple
+    // Encabezado
     pdf.setFillColor(230, 81, 0);
     pdf.rect(0, 0, 210, 30, 'F');
     pdf.setTextColor(255, 255, 255);
@@ -156,7 +178,7 @@ async function generarPDFVenta(venta) {
     pdf.setFontSize(10);
     pdf.text('Comprobante de Venta Directa', 14, 22);
 
-    // Datos
+    // Datos del Cliente
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(12);
     pdf.text('Cliente:', 14, 45);
@@ -174,7 +196,7 @@ async function generarPDFVenta(venta) {
     pdf.text('Fecha:', 14, 66);
     pdf.text(new Date().toLocaleString('es-BO'), 40, 66);
 
-    // Tabla
+    // Tabla de Productos
     const body = venta.servicios.map(s => [s.desc, formatBs(s.costo)]);
     pdf.autoTable({
       startY: 75,
@@ -194,6 +216,11 @@ async function generarPDFVenta(venta) {
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
     pdf.text(`Método de pago: ${venta.metodoPago}`, 14, finalY);
+
+    // Footer
+    pdf.setFontSize(8);
+    pdf.setTextColor(120, 120, 120);
+    pdf.text('Gracias por su compra · DR. XIAOMI SCZ', 105, 280, { align: 'center' });
 
     pdf.save(`Venta_${venta.numeroRecibo}.pdf`);
     
