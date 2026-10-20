@@ -3,441 +3,182 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0A0A0B">
+  <meta name="theme-color" content="#0E0E0E">
   <title>DR. Xiaomi · Reportes</title>
 
   <!-- Favicons -->
-  <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32x32.png">
+  <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
   <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
-  <link rel="icon" type="image/x-icon" href="/imagenes/favicon.ico">
+  <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <link rel="stylesheet" href="/css/app-theme.css">
-  <link rel="stylesheet" href="/css/app-components.css">
-  <link rel="stylesheet" href="/css/app-layouts.css">
-
-  <!-- PWA -->
-  <link rel="manifest" href="/app/manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
 
   <style>
-    /* Tarjeta grande de total */
-    .total-card {
-      background: linear-gradient(135deg, #FF6900, #FF8A3C);
-      border-radius: 20px;
-      padding: 24px;
-      color: white;
-      margin-bottom: 20px;
-      box-shadow: 0 8px 24px rgba(255, 105, 0, 0.35);
-      position: relative;
-      overflow: hidden;
+    :root { 
+      --radius-sm: 4px; 
+      --radius-md: 8px; 
+      --radius-lg: 12px; 
+      --brand: #E65100; 
+      --brand-hover: #BF360C; 
+      --brand-light: rgba(230, 81, 0, 0.1); 
+      --bg-main: #0E0E0E; 
+      --bg-card: #181818; 
+      --bg-elev: #242424; 
+      --text-main: #F5F5F5; 
+      --text-mute: #888888; 
+      --border: #2A2A2A; 
     }
-    .total-card::after {
-      content: '';
-      position: absolute;
-      top: -50px;
-      right: -50px;
-      width: 150px;
-      height: 150px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-    }
-    .total-card .label {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      opacity: 0.9;
-      font-weight: 700;
-    }
-    .total-card .valor {
-      font-size: 38px;
-      font-weight: 800;
-      letter-spacing: -1px;
-      margin: 6px 0 4px;
-      line-height: 1;
-    }
-    .total-card .sub {
-      font-size: 13px;
-      opacity: 0.85;
+    [data-theme="light"] {
+      --bg-main: #F9F9F9; 
+      --bg-card: #FFFFFF; 
+      --bg-elev: #F0F0F0; 
+      --text-main: #111111; 
+      --text-mute: #666666; 
+      --border: #E0E0E0; 
     }
 
-    /* Stats de costos / ganancia */
-    .costos-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .costo-card {
-      border-radius: 14px;
-      padding: 14px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    .costo-card.costos {
-      background: rgba(255, 149, 0, 0.1);
-      border: 1.5px solid rgba(255, 149, 0, 0.35);
-    }
-    .costo-card.ganancia {
-      background: rgba(16, 185, 129, 0.1);
-      border: 1.5px solid rgba(16, 185, 129, 0.35);
-    }
-    .costo-card .valor {
-      font-size: 22px;
-      font-weight: 800;
-      line-height: 1;
-    }
-    .costo-card.costos .valor { color: #FF9500; }
-    .costo-card.ganancia .valor { color: #10B981; }
-    .costo-card .label {
-      font-size: 11px;
-      color: var(--text-3);
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      margin-top: 4px;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    /* LAYOUT TIPO APP */
+    html, body { height: 100%; overflow: hidden; }
+    body { background-color: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
+    
+    .app-container { display: flex; flex-direction: column; height: 100%; }
+    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-main); border-bottom: 1px solid var(--border); z-index: 100; }
+    .app-content { flex: 1; overflow-y: auto; padding: 12px 12px 100px 12px; -webkit-overflow-scrolling: touch; }
+    
+    /* HEADER */
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-logo { width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .brand-text h1 { font-size: 15px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+    .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
+    
+    .header-actions { display: flex; gap: 6px; }
+    .icon-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+    .icon-btn:active { transform: scale(0.95); }
 
-    /* Card margen destacada */
-    .margen-card {
-      background: linear-gradient(135deg, rgba(0, 255, 200, 0.1), rgba(0, 153, 255, 0.1));
-      border: 1.5px solid rgba(0, 255, 200, 0.35);
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    .margen-card .valor {
-      font-size: 32px;
-      font-weight: 900;
-      color: #00FFCC;
-      line-height: 1;
-    }
-    .margen-card .label {
-      font-size: 11px;
-      color: var(--text-3);
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      margin-top: 4px;
-    }
-    .margen-card .helper {
-      font-size: 10px;
-      color: var(--text-3);
-      margin-top: 6px;
-      opacity: 0.7;
-    }
-
-    /* Filtros de fecha */
-    .fecha-filtros {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 20px;
-      overflow-x: auto;
-      padding-bottom: 6px;
-      scrollbar-width: none;
-    }
+    /* FILTROS */
+    .fecha-filtros { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
     .fecha-filtros::-webkit-scrollbar { display: none; }
-    .fecha-btn {
-      flex-shrink: 0;
-      padding: 8px 16px;
-      background: var(--bg-elev-2);
-      border: 1.5px solid var(--border-2);
-      border-radius: 999px;
-      color: var(--text-2);
-      font-size: 13px;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .fecha-btn:active { transform: scale(0.95); }
-    .fecha-btn.active {
-      background: var(--brand-500);
-      border-color: var(--brand-500);
-      color: white;
-    }
+    .fecha-btn { flex-shrink: 0; padding: 8px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; color: var(--text-mute); font-size: 12px; font-weight: 500; cursor: pointer; transition: 0.2s; }
+    .fecha-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
 
-    /* Desglose por método */
-    .metodos-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .metodo-card {
-      background: var(--bg-elev-1);
-      border: 1px solid var(--border-1);
-      border-radius: 14px;
-      padding: 14px;
-    }
-    .metodo-card .icono {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      margin-bottom: 8px;
-    }
-    .metodo-card .icono.efectivo { background: rgba(16,185,129,0.15); color: #10B981; }
+    /* FECHA CUSTOM */
+    .fecha-custom { display: none; gap: 8px; margin-bottom: 16px; align-items: center; }
+    .fecha-custom.show { display: flex; }
+    .fecha-custom input { flex: 1; padding: 10px; background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; outline: none; }
+
+    /* TARJETA TOTAL (DESTACADA) */
+    .total-card { background: var(--bg-card); border: 1px solid var(--brand); border-radius: var(--radius-md); padding: 20px; margin-bottom: 16px; position: relative; overflow: hidden; border-left: 4px solid var(--brand); }
+    .total-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--brand); font-weight: 700; }
+    .total-card .valor { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin: 4px 0; line-height: 1; color: var(--text-main); }
+    .total-card .sub { font-size: 12px; color: var(--text-mute); }
+
+    /* COSTOS Y GANANCIA */
+    .costos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .costo-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; text-align: center; }
+    .costo-card .valor { font-size: 20px; font-weight: 800; line-height: 1; }
+    .costo-card.costos .valor { color: #F59E0B; }
+    .costo-card.ganancia .valor { color: #22C55E; }
+    .costo-card .label { font-size: 10px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-top: 6px; }
+
+    /* MARGEN */
+    .margen-card { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px; text-align: center; }
+    .margen-card .valor { font-size: 28px; font-weight: 900; color: #22C55E; line-height: 1; }
+    .margen-card .label { font-size: 10px; color: #22C55E; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-top: 4px; }
+    .margen-card .helper { font-size: 10px; color: var(--text-mute); margin-top: 4px; }
+
+    /* MINI STATS */
+    .mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .mini-stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; text-align: center; }
+    .mini-stat .valor { font-size: 18px; font-weight: 800; color: var(--text-main); line-height: 1; }
+    .mini-stat .label { font-size: 10px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-top: 4px; }
+
+    /* METODOS DE PAGO */
+    .metodos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .metodo-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; }
+    .metodo-card .icono { width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 8px; }
+    .metodo-card .icono.efectivo { background: rgba(34,197,94,0.15); color: #22C55E; }
     .metodo-card .icono.qr { background: rgba(59,130,246,0.15); color: #3B82F6; }
     .metodo-card .icono.transf { background: rgba(139,92,246,0.15); color: #8B5CF6; }
-    .metodo-card .icono.mixto { background: rgba(255,105,0,0.15); color: #FF6900; }
-    .metodo-card .nombre {
-      font-size: 11px;
-      color: var(--text-3);
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      margin-bottom: 3px;
-    }
-    .metodo-card .monto {
-      font-size: 16px;
-      font-weight: 800;
-      color: var(--text-1);
-    }
+    .metodo-card .icono.mixto { background: rgba(230,81,0,0.15); color: var(--brand); }
+    .metodo-card .nombre { font-size: 10px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .metodo-card .monto { font-size: 15px; font-weight: 800; color: var(--text-main); }
 
-    /* Lista de movimientos */
-    .movimiento {
-      display: flex;
-      gap: 12px;
-      padding: 12px;
-      background: var(--bg-elev-1);
-      border: 1px solid var(--border-1);
-      border-radius: 12px;
-      margin-bottom: 8px;
-      align-items: center;
-    }
-    .movimiento .hora {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-3);
-      flex-shrink: 0;
-      min-width: 50px;
-    }
+    /* MOVIMIENTOS */
+    .movimiento { display: flex; gap: 10px; padding: 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 6px; align-items: center; }
+    .movimiento .hora { font-size: 11px; font-weight: 700; color: var(--text-mute); flex-shrink: 0; min-width: 45px; }
     .movimiento .info { flex: 1; min-width: 0; }
-    .movimiento .cliente {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-1);
-    }
-    .movimiento .detalle {
-      font-size: 12px;
-      color: var(--text-3);
-      margin-top: 2px;
-    }
-    .movimiento .monto {
-      font-size: 15px;
-      font-weight: 800;
-      color: var(--brand-500);
-      flex-shrink: 0;
-    }
+    .movimiento .cliente { font-size: 13px; font-weight: 700; color: var(--text-main); }
+    .movimiento .detalle { font-size: 11px; color: var(--text-mute); margin-top: 2px; }
+    .movimiento .monto { font-size: 14px; font-weight: 800; color: var(--brand); flex-shrink: 0; }
 
-    /* Stats mini */
-    .mini-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .mini-stat {
-      background: var(--bg-elev-1);
-      border: 1px solid var(--border-1);
-      border-radius: 14px;
-      padding: 14px;
-      text-align: center;
-    }
-    .mini-stat .valor {
-      font-size: 22px;
-      font-weight: 800;
-      color: var(--text-1);
-      line-height: 1;
-    }
-    .mini-stat .label {
-      font-size: 11px;
-      color: var(--text-3);
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      margin-top: 4px;
-    }
+    /* BOTONES FINALES */
+    .btn-action { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; margin-bottom: 10px; transition: 0.2s; border: none; }
+    .btn-action:active { transform: scale(0.98); }
+    .btn-export { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); }
+    .btn-back { background: var(--brand); color: white; margin-top: 8px; }
 
-    /* Empty state */
-    .empty-reporte {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-3);
-    }
-    .empty-reporte i {
-      font-size: 48px;
-      opacity: 0.3;
-      margin-bottom: 12px;
-      display: block;
-    }
+    /* SUBTITULOS DE SECCIÓN */
+    .section-title { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; margin-top: 16px; }
 
-    /* Botón exportar */
-    .btn-export {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 14px;
-      background: var(--bg-elev-2);
-      border: 1.5px solid var(--border-2);
-      border-radius: 14px;
-      color: var(--text-1);
-      font-size: 14px;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      margin-top: 20px;
-    }
-    .btn-export:active { transform: scale(0.97); }
+    /* EMPTY STATE */
+    .empty-reporte { text-align: center; padding: 40px 20px; color: var(--text-mute); }
+    .empty-reporte i { font-size: 40px; opacity: 0.3; margin-bottom: 12px; display: block; }
 
-    /* Botón volver al panel */
-    .btn-back-panel {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 16px;
-      background: linear-gradient(135deg, #FF6900, #FF8A3C);
-      border: none;
-      border-radius: 14px;
-      color: white;
-      font-size: 15px;
-      font-weight: 800;
-      font-family: inherit;
-      cursor: pointer;
-      margin-top: 20px;
-      box-shadow: 0 6px 20px rgba(255, 105, 0, 0.35);
-      letter-spacing: 0.3px;
-      transition: transform 0.15s ease;
-    }
-    .btn-back-panel:active { transform: scale(0.97); }
-
-    /* Fecha personalizada */
-    .fecha-custom {
-      display: none;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    .fecha-custom.show { display: flex; }
-    .fecha-custom input {
-      flex: 1;
-      padding: 10px 12px;
-      background: var(--input-bg);
-      color: var(--text-1);
-      border: 1.5px solid var(--border-2);
-      border-radius: 10px;
-      font-family: inherit;
-      font-size: 13px;
-    }
-
-    /* ============================================================ */
-    /* 🟠 LOGO REDONDO EN EL HEADER                                 */
-    /* ============================================================ */
-    .brand-logo-orden {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      box-shadow: 0 3px 10px rgba(255, 105, 0, 0.35);
-      margin: 0 10px;
-    }
-    .brand-logo-orden img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-      display: block;
-    }
-
-    /* ============================================================ */
-    /* 🟠 BOTONES DEL HEADER                                        */
-    /* ============================================================ */
-    .header-actions {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-    .icon-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      border: none;
-      background: transparent;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: #FFFFFF;
-      font-size: 18px;
-      transition: background 0.15s ease, transform 0.15s ease;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .icon-btn:active {
-      transform: scale(0.92);
-      background: rgba(255, 105, 0, 0.12);
-    }
+    /* LOADER PRO */
+    .loader-overlay { position: fixed; inset: 0; background: rgba(14, 14, 14, 0.95); backdrop-filter: blur(8px); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
+    .loader-overlay.hidden { opacity: 0; pointer-events: none; }
+    .loader-logo-container { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); animation: spin 1.2s linear infinite; }
+    .loader-logo-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; background: var(--bg-elev); border: 2px solid var(--border); box-shadow: 0 0 20px rgba(230, 81, 0, 0.2); }
+    .loader-text { font-size: 13px; font-weight: 600; color: var(--text-mute); letter-spacing: 0.5px; animation: pulse 1.5s infinite; }
+    
+    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-  <div class="app-container">
+  <!-- LOADER PRO -->
+  <div class="loader-overlay" id="appLoader">
+    <div class="loader-logo-container">
+      <div class="loader-ring"></div>
+      <img src="/img/logo1.png" alt="Cargando..." class="loader-logo-img" onerror="this.src='/imagenes/web-app-manifest-192x192.png'">
+    </div>
+    <div class="loader-text">Calculando reportes...</div>
+  </div>
 
-    <!-- HEADER -->
+  <div class="app-container">
     <header class="app-header">
       <div class="brand">
-        <button class="icon-btn" id="backBtn" aria-label="Volver al panel">
-          <i class="fas fa-arrow-left"></i>
-        </button>
-
-        <div class="brand-logo-orden">
-          <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi"
-               onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:18px;&quot;></i>';">
+        <button class="icon-btn" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+        <div class="brand-logo">
+          <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand); font-size:18px;&quot;></i>';">
         </div>
-
         <div class="brand-text">
           <h1>REPORTES</h1>
           <p id="headerSubtitle">Cargando...</p>
         </div>
       </div>
-
       <div class="header-actions">
-        <button class="icon-btn" id="homeBtn" title="Ir al panel" aria-label="Ir al panel">
-          <i class="fas fa-home"></i>
-        </button>
-        <button class="icon-btn" id="preciosBtn" title="Buscar precios" aria-label="Buscar precios">
-          <i class="fas fa-tags"></i>
-        </button>
-        <button class="icon-btn" id="refreshBtn" title="Actualizar datos" aria-label="Actualizar">
-          <i class="fas fa-rotate"></i>
-        </button>
-        <button class="icon-btn" id="logoutBtn" title="Cerrar sesión" aria-label="Cerrar sesión">
-          <i class="fas fa-right-from-bracket"></i>
-        </button>
+        <button class="icon-btn" id="homeBtn" title="Panel"><i class="fas fa-home"></i></button>
+        <button class="icon-btn" id="preciosBtn" title="Precios"><i class="fas fa-tags"></i></button>
+        <button class="icon-btn" id="refreshBtn" title="Actualizar"><i class="fas fa-rotate"></i></button>
+        <button class="icon-btn" id="logoutBtn" title="Salir"><i class="fas fa-sign-out-alt"></i></button>
       </div>
     </header>
 
-    <!-- CONTENIDO -->
     <main class="app-content">
-
-      <!-- Filtros de fecha -->
+      <!-- Filtros -->
       <div class="fecha-filtros">
         <button class="fecha-btn active" data-rango="hoy">Hoy</button>
         <button class="fecha-btn" data-rango="ayer">Ayer</button>
@@ -445,24 +186,20 @@
         <button class="fecha-btn" data-rango="mes">Este mes</button>
         <button class="fecha-btn" data-rango="custom">📅 Personalizado</button>
       </div>
-
-      <!-- Fechas personalizadas -->
       <div class="fecha-custom" id="fechaCustom">
         <input type="date" id="fechaDesde">
         <input type="date" id="fechaHasta">
-        <button class="fecha-btn active" id="btnAplicarCustom" style="padding: 10px 16px;">
-          Aplicar
-        </button>
+        <button class="fecha-btn active" id="btnAplicarCustom" style="padding: 10px 14px;">Aplicar</button>
       </div>
 
-      <!-- Total cobrado -->
+      <!-- Total -->
       <div class="total-card">
-        <div class="label">Total cobrado</div>
+        <div class="label">Total Cobrado</div>
         <div class="valor" id="totalMonto">Bs. 0.00</div>
         <div class="sub" id="totalEntregas">0 entregas</div>
       </div>
 
-      <!-- COSTOS Y GANANCIA -->
+      <!-- Costos y Ganancia -->
       <div class="costos-grid">
         <div class="costo-card costos">
           <div class="valor" id="totalCosto">Bs. 0</div>
@@ -470,17 +207,18 @@
         </div>
         <div class="costo-card ganancia">
           <div class="valor" id="totalGanancia">Bs. 0</div>
-          <div class="label">Ganancia neta</div>
+          <div class="label">Ganancia Neta</div>
         </div>
       </div>
 
+      <!-- Margen -->
       <div class="margen-card">
         <div class="valor" id="totalMargen">0%</div>
-        <div class="label">Margen de ganancia</div>
+        <div class="label">Margen de Ganancia</div>
         <div class="helper">(Ganancia / Total cobrado)</div>
       </div>
 
-      <!-- Mini stats -->
+      <!-- Mini Stats -->
       <div class="mini-stats">
         <div class="mini-stat">
           <div class="valor" id="statPromedio">Bs. 0</div>
@@ -488,37 +226,29 @@
         </div>
         <div class="mini-stat">
           <div class="valor" id="statMaximo">Bs. 0</div>
-          <div class="label">Mayor venta</div>
+          <div class="label">Mayor Venta</div>
         </div>
       </div>
 
-      <!-- Desglose por método -->
-      <h3 style="font-size:12px; font-weight:800; color:var(--brand-500); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px;">
-        Por método de pago
-      </h3>
+      <!-- Métodos -->
+      <div class="section-title">Por Método de Pago</div>
       <div class="metodos-grid" id="metodosGrid"></div>
 
       <!-- Movimientos -->
-      <h3 style="font-size:12px; font-weight:800; color:var(--brand-500); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px;">
-        Movimientos
-      </h3>
+      <div class="section-title">Movimientos</div>
       <div id="listaMovimientos"></div>
 
-      <!-- Exportar CSV -->
-      <button class="btn-export" id="btnExportar">
+      <!-- Botones -->
+      <button class="btn-action btn-export" id="btnExportar">
         <i class="fas fa-download"></i> Exportar a CSV
       </button>
-
-      <!-- Volver al panel -->
-      <button class="btn-back-panel" id="btnVolverPanel">
+      <button class="btn-action btn-back" id="btnVolverPanel">
         <i class="fas fa-home"></i> VOLVER AL PANEL
       </button>
 
     </main>
-
   </div>
 
   <script type="module" src="./reportes.js"></script>
-
 </body>
 </html>
