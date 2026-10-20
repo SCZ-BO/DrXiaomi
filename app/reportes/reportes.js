@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v2)
+   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v3)
    Archivo: app/reportes/reportes.js
    ============================================================ */
 
@@ -70,30 +70,6 @@ function configurarEventos() {
 }
 
 /* ============================================================
-   FUNCIÓN AUXILIAR: CONVERTIR CUALQUIER FECHA A DATE
-   ============================================================ */
-function convertirFecha(fecha) {
-  if (!fecha) return null;
-  
-  if (typeof fecha.toDate === 'function') {
-    return fecha.toDate();
-  }
-  
-  if (typeof fecha === 'object' && fecha.seconds !== undefined) {
-    return new Date(fecha.seconds * 1000 + Math.floor((fecha.nanoseconds || 0) / 1000000));
-  }
-  
-  if (fecha instanceof Date) {
-    return fecha;
-  }
-  
-  const d = new Date(fecha);
-  if (!isNaN(d.getTime())) return d;
-  
-  return null;
-}
-
-/* ============================================================
    CARGAR REPORTE
    ============================================================ */
 async function cargarReporte(rango, desdeFecha, hastaFecha) {
@@ -159,17 +135,20 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       snapshot.forEach(doc => {
         const d = doc.data();
         
-        // 🔥 PRIORIDAD ABSOLUTA: fechaEditada > fechaEntrega > fecha
-        let fechaD = convertirFecha(d.fechaEditada) 
-                  || convertirFecha(d.fechaEntrega) 
-                  || convertirFecha(d.fecha);
-        
+        // 🔥 LEEMOS DIRECTAMENTE 'fechaEditada' SI EXISTE
+        let fechaD = null;
+        if (d.fechaEditada) {
+          fechaD = d.fechaEditada.toDate ? d.fechaEditada.toDate() : new Date(d.fechaEditada);
+        } else if (d.fechaEntrega) {
+          fechaD = d.fechaEntrega.toDate ? d.fechaEntrega.toDate() : new Date(d.fechaEntrega);
+        } else if (d.fecha) {
+          fechaD = d.fecha.toDate ? d.fecha.toDate() : new Date(d.fecha);
+        }
+
         if (!fechaD) return;
 
-        // 🔥 LOG PARA DEPURAR
         console.log('📅 Recibo:', d.numeroRecibo, '| fechaEditada:', d.fechaEditada, '| fechaD:', fechaD);
 
-        // 🔥 COMPARAMOS SOLO POR DÍA
         const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
           datosRecibos.push({
@@ -193,7 +172,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       datosCierres = [];
       snapshot.forEach(doc => {
         const d = doc.data();
-        let fechaD = convertirFecha(d.fecha);
+        let fechaD = d.fecha ? (d.fecha.toDate ? d.fecha.toDate() : new Date(d.fecha)) : null;
         if (!fechaD) return;
 
         const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
