@@ -8,6 +8,7 @@ import { toast, haptic, initTheme, escapeHtml, formatBs, showLoading, hideLoadin
 import { db } from '/js/firebase.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// Importamos tu generador de PDF
 import { generarPDFUnificado } from '/js/cliente-pdf.js';
 
 /* ============================================================
@@ -33,7 +34,7 @@ const TOTAL_PASOS = 7;
 const datos = {
   nombre: '', telefono: '',
   marca: '', modelo: '', color: '', enciende: '',
-  falla: '', checklist: '', plazoEntrega: 'Hoy mismo',
+  motivoIngreso: '', falla: '', checklist: '', plazoEntrega: 'Hoy mismo',
   tipoSeguridad: 'patron', pin: '', patronSecuencia: '',
   fotos: [null, null, null, null],
   servicios: [], total: 0, adelanto: 0, saldo: 0
@@ -59,24 +60,29 @@ function iniciar() {
   const userInfo = document.getElementById('userInfo');
   if (userInfo) userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
   
+  // 1. Intentar recuperar borrador anti-pérdida
   const hayBorrador = cargarBorrador();
 
+  // 2. Configurar todos los módulos
   configurarHeader();
   configurarWizard();
   configurarMarca();
   configurarRadioGroups();
   configurarChecklistSemáforo();
+  configurarMotivosYPlazos();
   configurarPattern();
   configurarFotos();
   configurarServicios();
   configurarBotonGenerarPDF();
 
+  // 3. Guardado automático en cada tecla
   const content = document.getElementById('wizardContent');
   if (content) {
     content.addEventListener('input', guardarBorradorDebounce);
     content.addEventListener('change', guardarBorradorDebounce);
   }
 
+  // 4. Iniciar en el paso 1 si es nuevo
   if (!hayBorrador) irAPaso(1);
   
   actualizarBarraProgreso();
@@ -84,7 +90,7 @@ function iniciar() {
 }
 
 /* ============================================================
-   PERSISTENCIA (BORRADOR)
+   PERSISTENCIA (BORRADOR ANTI-PÉRDIDA)
    ============================================================ */
 let timerGuardado = null;
 
@@ -219,32 +225,74 @@ function actualizarBotones() {
 }
 
 /* ============================================================
-   VALIDACIONES Y GUARDADO DE PASOS
+   VALIDACIONES INTELIGENTES (CON SCROLL AUTOMÁTICO)
    ============================================================ */
 function validarPaso(paso) {
+  const irAError = (idElemento, mensaje) => {
+    toast(mensaje, 'error');
+    const el = document.getElementById(idElemento);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.focus();
+      el.style.transition = 'border-color 0.3s';
+      el.style.borderColor = '#EF4444';
+      setTimeout(() => { el.style.borderColor = 'transparent'; }, 2000);
+    }
+    return false;
+  };
+
   if (paso === 1) {
-    if (!document.getElementById('nombre')?.value.trim()) { toast('Falta el nombre del cliente', 'error'); return false; }
-    if (document.getElementById('telefono')?.value.length < 7) { toast('El teléfono debe tener al menos 7 dígitos', 'error'); return false; }
+    if (!document.getElementById('nombre')?.value.trim()) return irAError('nombre', 'Falta el nombre del cliente');
+    if (document.getElementById('telefono')?.value.length < 7) return irAError('telefono', 'El teléfono debe tener al menos 7 dígitos');
   }
+
   if (paso === 2) {
-    if (!document.getElementById('marca')?.value) { toast('Selecciona una marca', 'error'); return false; }
-    if (!document.getElementById('modelo')?.value.trim()) { toast('Falta el modelo del equipo', 'error'); return false; }
-    if (!document.getElementById('enciende')?.value) { toast('Indica si el equipo enciende', 'error'); return false; }
+    if (!document.getElementById('marca')?.value) {
+      toast('Selecciona una marca', 'error');
+      document.getElementById('marcasGrid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
+    if (!document.getElementById('modelo')?.value.trim()) return irAError('modelo', 'Falta el modelo del equipo');
+    if (!document.getElementById('enciende')?.value) {
+      toast('Indica si el equipo enciende', 'error');
+      document.getElementById('enciendeGroup').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
   }
+
   if (paso === 3) {
-    if (!document.getElementById('fallaDetalle')?.value.trim()) { toast('Describe la falla o el motivo', 'error'); return false; }
+    const enciende = document.getElementById('enciende')?.value;
+    if (enciende === 'Sí' || enciende === 'A veces') {
+      if (!document.getElementById('motivoIngreso')?.value) {
+        toast('Selecciona una reparación (Cambio de pantalla, etc)', 'error');
+        document.getElementById('cardReparaciones').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+    }
   }
+
   if (paso === 4) {
     const tipo = document.getElementById('tipoSeguridad')?.value;
-    if (tipo === 'patron' && !document.getElementById('patronSecuencia')?.value) { toast('Dibuja el patrón', 'error'); return false; }
-    if (tipo === 'pin' && !document.getElementById('pinInput')?.value.trim()) { toast('Ingresa el PIN', 'error'); return false; }
+    if (tipo === 'patron' && !document.getElementById('patronSecuencia')?.value) {
+      toast('Debes dibujar el patrón', 'error');
+      document.getElementById('patronContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
+    if (tipo === 'pin' && !document.getElementById('pinInput')?.value.trim()) {
+      return irAError('pinInput', 'Ingresa el PIN de desbloqueo');
+    }
   }
+
   if (paso === 6) {
     let hayServicio = false;
     document.querySelectorAll('.servicio-item').forEach(item => {
       if (item.querySelector('.servicio-desc').value && parseFloat(item.querySelector('.servicio-costo').value) > 0) hayServicio = true;
     });
-    if (!hayServicio) { toast('Añade al menos un costo de reparación', 'error'); return false; }
+    if (!hayServicio) {
+      toast('Añade al menos un costo (Servicio y Precio)', 'error');
+      document.getElementById('serviciosList').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
   }
   return true;
 }
@@ -261,6 +309,7 @@ function guardarDatosPaso(paso) {
     datos.enciende = document.getElementById('enciende')?.value || '';
   }
   if (paso === 3) {
+    datos.motivoIngreso = document.getElementById('motivoIngreso')?.value || '';
     datos.falla = document.getElementById('fallaDetalle')?.value.trim() || '';
     datos.checklist = document.getElementById('checklistResultados')?.value || '';
     datos.plazoEntrega = document.getElementById('plazoEntrega')?.value || 'Hoy mismo';
@@ -276,7 +325,7 @@ function guardarDatosPaso(paso) {
 }
 
 /* ============================================================
-   LÓGICA: MARCAS Y RADIOS (INTELIGENTE)
+   LÓGICA INTELIGENTE: PASO 2 Y 3
    ============================================================ */
 function configurarMarca() {
   const grid = document.getElementById('marcasGrid');
@@ -304,12 +353,21 @@ function configurarRadioGroups() {
       const valor = btn.dataset.value;
       document.getElementById('enciende').value = valor;
 
-      // LÓGICA INTELIGENTE: Ocultar pruebas funcionales si NO enciende
-      const cardFuncional = document.getElementById('cardAuditoriaFuncional');
+      // LÓGICA DE COHERENCIA
+      const cardReparaciones = document.getElementById('cardReparaciones');
+      const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
+      const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
+      
       if (valor === 'Sí' || valor === 'A veces') {
-        if (cardFuncional) cardFuncional.classList.remove('hidden');
+        // Si enciende: Mostrar menú de reparaciones + Auditoría General
+        cardReparaciones.classList.remove('hidden');
+        cardAuditoriaGeneral.classList.remove('hidden');
+        cardAuditoriaFisica.classList.add('hidden');
       } else {
-        if (cardFuncional) cardFuncional.classList.add('hidden');
+        // Si NO enciende: Ocultar menú y auditoría general, mostrar solo física
+        cardReparaciones.classList.add('hidden');
+        cardAuditoriaGeneral.classList.add('hidden');
+        cardAuditoriaFisica.classList.remove('hidden');
       }
     });
   }
@@ -330,9 +388,34 @@ function configurarRadioGroups() {
   }
 }
 
-/* ============================================================
-   LÓGICA: CHECKLIST SEMÁFORO (AMBOS GRUPOS)
-   ============================================================ */
+function configurarMotivosYPlazos() {
+  // Botones de Motivo de Reparación
+  const motivoGroup = document.getElementById('motivoIngresoGroup');
+  if (motivoGroup) {
+    motivoGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip-btn');
+      if (!btn) return;
+      haptic(8);
+      motivoGroup.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('motivoIngreso').value = btn.dataset.value;
+    });
+  }
+
+  // Botones de Plazo de Entrega
+  const plazoGroup = document.getElementById('plazoGroup');
+  if (plazoGroup) {
+    plazoGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip-btn');
+      if (!btn) return;
+      haptic(8);
+      plazoGroup.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('plazoEntrega').value = btn.dataset.value;
+    });
+  }
+}
+
 function configurarChecklistSemáforo() {
   const configurarGrupo = (idGrupo) => {
     const group = document.getElementById(idGrupo);
@@ -354,12 +437,13 @@ function configurarChecklistSemáforo() {
     });
   };
 
+  configurarGrupo('checklistGeneralGroup');
   configurarGrupo('checklistFisicoGroup');
-  configurarGrupo('checklistFuncionalGroup');
 
   function actualizarResultadosChecklist() {
     const resultados = [];
-    document.querySelectorAll('#checklistFisicoGroup .check-item, #checklistFuncionalGroup .check-item').forEach(btn => {
+    // Leemos ambos grupos
+    document.querySelectorAll('#checklistGeneralGroup .check-item, #checklistFisicoGroup .check-item').forEach(btn => {
       const item = btn.dataset.item;
       if (btn.classList.contains('ok')) resultados.push(`${item}: OK`);
       if (btn.classList.contains('falla')) resultados.push(`${item}: FALLA`);
@@ -369,28 +453,8 @@ function configurarChecklistSemáforo() {
 }
 
 /* ============================================================
-   PLAZOS Y PATTERN
+   PATTERN LOCK (DIBUJO)
    ============================================================ */
-function configurarMotivosYPlazos() {
-  const plazoGroup = document.getElementById('plazoGroup');
-  if (plazoGroup) {
-    plazoGroup.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip-btn');
-      if (!btn) return;
-      haptic(8);
-      plazoGroup.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('plazoEntrega').value = btn.dataset.value;
-    });
-  }
-}
-// Llamamos a esta función en iniciar()
-const iniciarOriginal = iniciar;
-iniciar = function() {
-  iniciarOriginal();
-  configurarMotivosYPlazos();
-}
-
 function configurarPattern() {
   const bgCanvas = document.getElementById('bgCanvas');
   const lineCanvas = document.getElementById('lineCanvas');
@@ -469,7 +533,7 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS (CÁMARA Y GALERÍA)
+   FOTOS (CÁMARA Y GALERÍA INFALIBLE)
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
@@ -660,7 +724,7 @@ function recolectarServicios() {
 }
 
 /* ============================================================
-   VISTA PREVIA Y PDF
+   VISTA PREVIA Y GENERACIÓN DE PDF
    ============================================================ */
 function generarVistaPrevia() {
   guardarDatosPaso(6);
@@ -697,7 +761,7 @@ function generarVistaPrevia() {
       </div>
 
       <div class="preview-section">
-        <div><strong>FALLA:</strong> ${escapeHtml(datos.falla || '-')}</div>
+        <div><strong>MOTIVO / FALLA:</strong> ${escapeHtml(datos.motivoIngreso || datos.falla || '-')}</div>
         <div style="margin-top:4px; font-size:10px; color:#666;"><strong>CHECKLIST:</strong> ${escapeHtml(datos.checklist || 'Todo OK')}</div>
       </div>
 
@@ -744,6 +808,7 @@ function configurarBotonGenerarPDF() {
         color: datos.color,
         enciende: datos.enciende,
         falla: datos.falla,
+        motivoIngreso: datos.motivoIngreso,
         checklist: datos.checklist,
         plazoEntrega: datos.plazoEntrega,
         tipoSeguridad: datos.tipoSeguridad,
