@@ -129,12 +129,20 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       snapshot.forEach(doc => {
         const d = doc.data();
         
-        // 🔥 CORRECCIÓN: Prioridad a fechaEditada > fechaEntrega > fecha
-        let fechaD = d.fechaEditada || d.fechaEntrega || d.fecha;
-        if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
-        else if (fechaD) fechaD = new Date(fechaD);
+        // 🔥 DEBUG: Ver qué fechas llegan
+        console.log('📅 Recibo:', d.numeroRecibo, '| fecha:', d.fecha, '| fechaEntrega:', d.fechaEntrega, '| fechaEditada:', d.fechaEditada);
+        
+        // 🔥 PRIORIDAD ABSOLUTA: fechaEditada > fechaEntrega > fecha
+        let fechaD = null;
+        if (d.fechaEditada) {
+          fechaD = d.fechaEditada.toDate ? d.fechaEditada.toDate() : new Date(d.fechaEditada);
+        } else if (d.fechaEntrega) {
+          fechaD = d.fechaEntrega.toDate ? d.fechaEntrega.toDate() : new Date(d.fechaEntrega);
+        } else if (d.fecha) {
+          fechaD = d.fecha.toDate ? d.fecha.toDate() : new Date(d.fecha);
+        }
 
-        if (fechaD >= inicio && fechaD <= fin) {
+        if (fechaD && fechaD >= inicio && fechaD <= fin) {
           datosRecibos.push({
             origen: 'recibo',
             cliente: d.cliente,
