@@ -73,13 +73,11 @@
     .chip { padding: 8px 14px; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-mute); font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: 0.2s; }
     .chip.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
 
-    /* 🔥 LISTA UNIFICADA DE INGRESOS */
     .section-title { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; margin-top: 24px; }
     
     .ingreso-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; transition: 0.2s; cursor: pointer; position: relative; border-left: 3px solid var(--border); }
     .ingreso-card:active { transform: scale(0.98); background: var(--bg-elev); }
     
-    /* Colores por tipo */
     .ingreso-card[data-tipo="telefono"] { border-left-color: var(--brand); }
     .ingreso-card[data-tipo="venta"] { border-left-color: var(--success); }
     .ingreso-card[data-tipo="cierre"] { border-left-color: #8B5CF6; }
@@ -146,6 +144,10 @@
         </div>
       </div>
       <div class="header-actions">
+        <!-- BOTÓN DE PRECIOS RESTAURADO -->
+        <button class="icon-btn" id="preciosBtn" title="Lista de Precios">
+          <i class="fas fa-tags" style="color: var(--brand);"></i>
+        </button>
         <button class="icon-btn" id="btnPDFDia" title="Reporte del Día (PDF)" style="color: var(--brand);">
           <i class="fas fa-file-pdf" style="font-size: 16px;"></i>
         </button>
@@ -237,7 +239,7 @@
     </div>
   </div>
 
-  <!-- MODAL: DETALLE RECIBO -->
+  <!-- MODAL: DETALLE RECIBO / VENTA -->
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -296,6 +298,9 @@
     }
 
     function configurarEventos() {
+      // 🔥 BOTÓN DE PRECIOS RESTAURADO
+      document.getElementById('preciosBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/precio/'; });
+
       document.getElementById('nuevoReciboBtn').addEventListener('click', () => { haptic(15); window.location.href = '/cliente/'; });
       document.getElementById('ventaRapidaBtn').addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
       
@@ -367,7 +372,6 @@
     let ventasCierre = [];
 
     function cargarDatos() {
-      // 1. Cargar Recibos
       if (unsubscribe) unsubscribe();
       if (appLoader) appLoader.classList.remove('hidden');
       const qRecibos = query(collection(db, 'recibos'), limit(200));
@@ -395,7 +399,6 @@
         }
       );
 
-      // 2. Cargar Ventas Rápidas
       if (unsubscribeVentas) unsubscribeVentas();
       const qVentas = query(collection(db, 'ventas'), limit(100));
       unsubscribeVentas = onSnapshot(qVentas, (snapshot) => {
@@ -403,7 +406,6 @@
         procesarVentas();
       });
 
-      // 3. Cargar Cierres Extras
       if (unsubscribeCierres) unsubscribeCierres();
       const qCierres = query(collection(db, 'cierres'), limit(100));
       unsubscribeCierres = onSnapshot(qCierres, (snapshot) => {
@@ -465,20 +467,17 @@
       renderizarTodo();
     }
 
-    // 🔥 UNIFICACIÓN DE LISTAS (TELÉFONOS + VENTAS)
     function renderizarTodo() {
       actualizarStats();
       
       const lista = document.getElementById('listaOrdenes');
       let todosLosMovimientos = [];
 
-      // 1. Agregar Teléfonos
       if (filtroActual === 'todos' || filtroActual === 'telefono') {
         ordenes.forEach(o => {
           const estaEntregado = o.estadoOrden === 'entregado';
           const montoCobrado = Number(o.montoCobrado) || 0;
           
-          // Solo mostramos teléfonos que sean ingresos (entregados y con monto) o que estén activos
           if (estaEntregado && montoCobrado > 0) {
             todosLosMovimientos.push({
               tipo: 'telefono',
@@ -487,7 +486,6 @@
               monto: montoCobrado
             });
           } else if (!estaEntregado) {
-             // Mostrar activos también
              todosLosMovimientos.push({
               tipo: 'telefono',
               data: o,
@@ -498,7 +496,6 @@
         });
       }
 
-      // 2. Agregar Ventas (Solo si el filtro es "Todos" o "Venta")
       if (filtroActual === 'todos' || filtroActual === 'venta') {
         ventasHoy.forEach(v => {
           todosLosMovimientos.push({
@@ -510,7 +507,6 @@
         });
       }
 
-      // 3. Filtrar por Búsqueda
       if (busquedaActual) {
         todosLosMovimientos = todosLosMovimientos.filter(m => {
           let texto = '';
@@ -524,10 +520,8 @@
         });
       }
 
-      // 4. Ordenar TODO por fecha (lo más reciente arriba)
       todosLosMovimientos.sort((a, b) => b.fechaOrden - a.fechaOrden);
 
-      // 5. Renderizar
       if (todosLosMovimientos.length === 0) {
         lista.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><h3>Sin movimientos</h3><p>No hay ingresos ni órdenes hoy.</p></div>`;
         btnCargarMas.style.display = 'none';
@@ -542,7 +536,6 @@
         }
       }).join('');
 
-      // Eventos
       lista.querySelectorAll('.ingreso-card').forEach(card => {
         card.addEventListener('click', () => {
           haptic(10);
@@ -688,7 +681,6 @@
       }
     }
 
-    // 🔥 MODAL PARA TELÉFONOS
     function abrirSheetTelefono(id) {
       const orden = ordenes.find(o => o.id === id);
       if (!orden) return;
@@ -751,7 +743,6 @@
       });
     }
 
-    // 🔥 MODAL PARA VENTAS
     function abrirSheetVenta(id, origen, extra) {
       const venta = ventasHoy.find(v => v.id === id && (v.indexExtra || '') === extra);
       if (!venta) return;
