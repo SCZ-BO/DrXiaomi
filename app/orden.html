@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0E0E0E" id="metaThemeColor">
+  <meta name="theme-color" content="#0A0A0A" id="metaThemeColor">
   <title>DR. Xiaomi · Orden</title>
 
   <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
@@ -22,16 +22,14 @@
 
   <style>
     :root { 
-      --radius-sm: 10px; --radius-md: 16px; --radius-lg: 24px; 
-      --brand: #FF6900; --brand-hover: #E55A00; --brand-light: rgba(255, 105, 0, 0.12); 
-      --bg-main: #0A0A0A; --bg-card: #151515; --bg-elev: #222222; 
-      --text-main: #F5F5F5; --text-mute: #888888; --border: #2A2A2A; 
-      --shadow-card: 0 4px 12px rgba(0,0,0,0.2);
+      --brand: #FF6900; --brand-hover: #E55A00; --brand-light: rgba(255, 105, 0, 0.15); 
+      --bg-main: #0A0A0A; --bg-card: #161616; --bg-elev: #242424; 
+      --text-main: #F5F5F5; --text-mute: #888888; --border: #2C2C2C; 
+      --radius: 14px;
     }
     [data-theme="light"] {
       --bg-main: #F5F5F7; --bg-card: #FFFFFF; --bg-elev: #F0F0F2; 
       --text-main: #1D1D1F; --text-mute: #6E6E73; --border: #E5E5EA; 
-      --shadow-card: 0 2px 8px rgba(0,0,0,0.05);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -40,7 +38,7 @@
     
     .app-container { display: flex; flex-direction: column; height: 100%; }
     
-    /* HEADER ESTILO IOS */
+    /* HEADER */
     .app-header { 
       display: flex; align-items: center; justify-content: space-between; 
       padding: 12px 16px; background: var(--bg-main); 
@@ -48,13 +46,10 @@
       position: sticky; top: 0;
     }
     .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-logo { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .icon-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--bg-elev); border: none; color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+    .icon-btn:active { transform: scale(0.9); }
     .brand-text h1 { font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -0.3px; }
     .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
-    
-    .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); border: none; color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-    .icon-btn:active { transform: scale(0.9); }
 
     /* CONTENIDO SCROLL */
     .app-content { 
@@ -65,69 +60,62 @@
 
     /* TARJETAS (Card) */
     .card { 
-      background: var(--bg-card); border-radius: var(--radius-md); 
+      background: var(--bg-card); border-radius: var(--radius); 
       padding: 16px; margin-bottom: 16px; 
-      box-shadow: var(--shadow-card); border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid var(--border);
     }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .card-title { font-size: 13px; font-weight: 700; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
 
-    /* RECIBO (Diseño limpio) */
-    .recibo-detalle { display: flex; flex-direction: column; gap: 12px; }
-    .recibo-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
-    .recibo-row span:first-child { color: var(--text-mute); }
+    /* RECIBO */
+    .recibo-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
+    .recibo-row span:first-child { color: var(--text-mute); font-weight: 500; }
     .recibo-row span:last-child { font-weight: 600; color: var(--text-main); text-align: right; }
     
-    .tabla-servicios { width: 100%; border-collapse: collapse; margin-top: 8px; }
-    .tabla-servicios th { text-align: left; font-size: 11px; color: var(--text-mute); text-transform: uppercase; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .tabla-servicios { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .tabla-servicios th { text-align: left; font-size: 10px; color: var(--text-mute); text-transform: uppercase; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
     .tabla-servicios td { padding: 8px 0; font-size: 13px; color: var(--text-main); border-bottom: 1px solid var(--border); }
     .tabla-servicios td:last-child { text-align: right; font-weight: 700; color: var(--brand); }
 
-    .total-box { 
-      background: var(--bg-elev); border-radius: var(--radius-sm); 
-      padding: 12px; margin-top: 12px; 
-      display: flex; justify-content: space-between; align-items: center; 
-    }
+    .total-box { background: var(--bg-elev); border-radius: 8px; padding: 12px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center; }
     .total-box strong { font-size: 18px; font-weight: 800; color: var(--brand); }
 
-    /* BOTONES DE ESTADO (Chips Grandes) */
-    .estados-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    /* BOTONES DE ESTADO (Compactos) */
+    .estados-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .estado-btn { 
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-      padding: 16px 8px; background: var(--bg-elev); border: 1px solid transparent;
-      border-radius: var(--radius-sm); color: var(--text-main); font-size: 12px; font-weight: 600;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      padding: 12px 8px; background: var(--bg-elev); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text-main); font-size: 11px; font-weight: 600;
       cursor: pointer; transition: all 0.2s ease; text-align: center;
     }
-    .estado-btn i { font-size: 20px; margin-bottom: 2px; }
+    .estado-btn i { font-size: 18px; margin-bottom: 2px; }
     .estado-btn:active { transform: scale(0.95); }
     .estado-btn.activo { 
       background: var(--brand-light); border-color: var(--brand); 
-      color: var(--brand); font-weight: 800; 
-      box-shadow: 0 0 12px rgba(255, 105, 0, 0.2);
+      color: var(--brand); font-weight: 700; 
     }
 
-    /* BITÁCORA (Estilo chat) */
-    .bitacora-item { display: flex; gap: 12px; margin-bottom: 16px; }
-    .bitacora-icono { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-elev); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--brand); }
+    /* BITÁCORA */
+    .bitacora-item { display: flex; gap: 10px; margin-bottom: 12px; }
+    .bitacora-icono { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-elev); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--brand); font-size: 12px; }
     .bitacora-content { flex: 1; }
-    .bitacora-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
-    .bitacora-autor { font-size: 12px; font-weight: 700; color: var(--text-main); }
-    .bitacora-fecha { font-size: 10px; color: var(--text-mute); }
-    .bitacora-texto { font-size: 13px; color: var(--text-mute); line-height: 1.4; background: var(--bg-elev); padding: 10px; border-radius: 0 12px 12px 12px; }
-    .bitacora-fotos { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-    .bitacora-fotos img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: zoom-in; }
+    .bitacora-header { display: flex; justify-content: space-between; margin-bottom: 2px; }
+    .bitacora-autor { font-size: 11px; font-weight: 700; color: var(--text-main); }
+    .bitacora-fecha { font-size: 9px; color: var(--text-mute); }
+    .bitacora-texto { font-size: 12px; color: var(--text-mute); line-height: 1.4; background: var(--bg-elev); padding: 8px 10px; border-radius: 0 10px 10px 10px; }
+    .bitacora-fotos { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+    .bitacora-fotos img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; cursor: zoom-in; }
 
     /* LOADER */
     .loader-overlay { position: fixed; inset: 0; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
     .loader-overlay.hidden { opacity: 0; pointer-events: none; }
-    .loader-ring { width: 70px; height: 70px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); animation: spin 1.2s linear infinite; }
-    .loader-logo-img { position: absolute; width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
-    .loader-text { font-size: 13px; font-weight: 600; color: var(--text-mute); margin-top: 16px; }
+    .loader-ring { width: 60px; height: 60px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); animation: spin 1.2s linear infinite; }
+    .loader-logo-img { position: absolute; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+    .loader-text { font-size: 12px; font-weight: 600; color: var(--text-mute); margin-top: 16px; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    /* UTILS */
-    .hidden { display: none !important; }
-    .btn-grande { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; border: none; margin-top: 12px; transition: 0.2s; }
+    /* BOTONES GRANDES */
+    .btn-grande { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; border: none; margin-top: 10px; transition: 0.2s; }
     .btn-grande:active { transform: scale(0.98); }
     .btn-whatsapp { background: #25D366; color: white; }
     .btn-pdf { background: var(--brand); color: white; }
@@ -135,7 +123,7 @@
     /* VISOR DE IMÁGENES */
     .img-viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; }
     .img-viewer.show { display: flex; }
-    .img-viewer img { max-width: 100%; max-height: 90vh; object-fit: contain; border-radius: var(--radius-sm); }
+    .img-viewer img { max-width: 100%; max-height: 90vh; object-fit: contain; border-radius: 8px; }
     .img-viewer .cerrar { position: absolute; top: 20px; right: 20px; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.15); color: white; border: none; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
     /* 🔥 MODALES (ESTILOS MAESTROS) */
@@ -148,7 +136,7 @@
     }
     .modal-backdrop.show { opacity: 1; visibility: visible; }
     .modal-backdrop .modal {
-      background: var(--bg-card); border-radius: var(--radius-md); padding: 24px;
+      background: var(--bg-card); border-radius: var(--radius); padding: 24px;
       width: 90%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       transform: scale(0.95); transition: transform 0.3s ease;
       border: 1px solid var(--border); position: relative; z-index: 10000000;
