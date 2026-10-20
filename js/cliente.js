@@ -197,15 +197,15 @@ function irAPaso(nuevoPaso) {
   if (pasoActual === 7) generarVistaPrevia();
 }
 
+/* ACTUALIZACIÓN DE LA BARRA DE PROGRESO (PUNTOS) */
 function actualizarBarraProgreso() {
-  document.querySelectorAll('.wizard-step').forEach(el => {
-    const step = parseInt(el.dataset.step);
-    el.classList.remove('active', 'done');
-    if (step < pasoActual) el.classList.add('done');
-    else if (step === pasoActual) el.classList.add('active');
+  const dots = document.querySelectorAll('.wizard-dot');
+  dots.forEach((dot, index) => {
+    const step = index + 1;
+    dot.classList.remove('active', 'done');
+    if (step < pasoActual) dot.classList.add('done');
+    else if (step === pasoActual) dot.classList.add('active');
   });
-  const fill = document.getElementById('wizardBarFill');
-  if (fill) fill.style.width = `${(pasoActual / TOTAL_PASOS) * 100}%`;
 }
 
 function actualizarBotones() {
@@ -359,12 +359,10 @@ function configurarRadioGroups() {
       const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
       
       if (valor === 'Sí' || valor === 'A veces') {
-        // Si enciende: Mostrar menú de reparaciones + Auditoría General
         cardReparaciones.classList.remove('hidden');
         cardAuditoriaGeneral.classList.remove('hidden');
         cardAuditoriaFisica.classList.add('hidden');
       } else {
-        // Si NO enciende: Ocultar menú y auditoría general, mostrar solo física
         cardReparaciones.classList.add('hidden');
         cardAuditoriaGeneral.classList.add('hidden');
         cardAuditoriaFisica.classList.remove('hidden');
@@ -389,7 +387,6 @@ function configurarRadioGroups() {
 }
 
 function configurarMotivosYPlazos() {
-  // Botones de Motivo de Reparación
   const motivoGroup = document.getElementById('motivoIngresoGroup');
   if (motivoGroup) {
     motivoGroup.addEventListener('click', (e) => {
@@ -402,7 +399,6 @@ function configurarMotivosYPlazos() {
     });
   }
 
-  // Botones de Plazo de Entrega
   const plazoGroup = document.getElementById('plazoGroup');
   if (plazoGroup) {
     plazoGroup.addEventListener('click', (e) => {
@@ -442,7 +438,6 @@ function configurarChecklistSemáforo() {
 
   function actualizarResultadosChecklist() {
     const resultados = [];
-    // Leemos ambos grupos
     document.querySelectorAll('#checklistGeneralGroup .check-item, #checklistFisicoGroup .check-item').forEach(btn => {
       const item = btn.dataset.item;
       if (btn.classList.contains('ok')) resultados.push(`${item}: OK`);
