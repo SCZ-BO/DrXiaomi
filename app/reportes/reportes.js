@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA)
+   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v2)
    Archivo: app/reportes/reportes.js
    ============================================================ */
 
@@ -70,27 +70,23 @@ function configurarEventos() {
 }
 
 /* ============================================================
-   CONVERTIR CUALQUIER FECHA A DATE
+   FUNCIÓN AUXILIAR: CONVERTIR CUALQUIER FECHA A DATE
    ============================================================ */
 function convertirFecha(fecha) {
   if (!fecha) return null;
   
-  // Timestamp de Firestore
   if (typeof fecha.toDate === 'function') {
     return fecha.toDate();
   }
   
-  // Objeto con seconds/nanoseconds
   if (typeof fecha === 'object' && fecha.seconds !== undefined) {
     return new Date(fecha.seconds * 1000 + Math.floor((fecha.nanoseconds || 0) / 1000000));
   }
   
-  // Date de JavaScript
   if (fecha instanceof Date) {
     return fecha;
   }
   
-  // String o número
   const d = new Date(fecha);
   if (!isNaN(d.getTime())) return d;
   
@@ -134,7 +130,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       fin = new Date(hastaFecha + 'T23:59:59');
     }
 
-    // 🔥 COMPARAMOS SOLO POR DÍA (sin hora)
     const diaInicio = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
     const diaFin = new Date(fin.getFullYear(), fin.getMonth(), fin.getDate());
 
@@ -164,7 +159,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       snapshot.forEach(doc => {
         const d = doc.data();
         
-        // 🔥 CONVERTIR CUALQUIER FORMATO DE FECHA
+        // 🔥 PRIORIDAD ABSOLUTA: fechaEditada > fechaEntrega > fecha
         let fechaD = convertirFecha(d.fechaEditada) 
                   || convertirFecha(d.fechaEntrega) 
                   || convertirFecha(d.fecha);
