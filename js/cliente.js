@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · CLIENTE (Wizard PRO - Lógica Inteligente)
+   DR. XIAOMI · CLIENTE (Wizard PRO - Código Completo)
    Archivo: js/cliente.js
    ============================================================ */
 
@@ -189,7 +189,10 @@ function irAPaso(nuevoPaso) {
   if (panel) {
     panel.classList.remove('hidden');
     panel.setAttribute('aria-hidden', 'false');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Hacemos scroll al tope del contenedor de la app, no de la ventana
+    const appBody = document.getElementById('appBody');
+    if (appBody) appBody.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   actualizarBarraProgreso();
@@ -274,7 +277,7 @@ function validarPaso(paso) {
   if (paso === 4) {
     const tipo = document.getElementById('tipoSeguridad')?.value;
     if (tipo === 'patron' && !document.getElementById('patronSecuencia')?.value) {
-      toast('Debes dibujar el patrón', 'error');
+      toast('Debes dibujar el patrón para continuar', 'error');
       document.getElementById('patronContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
       return false;
     }
@@ -353,19 +356,19 @@ function configurarRadioGroups() {
       const valor = btn.dataset.value;
       document.getElementById('enciende').value = valor;
 
-      // LÓGICA DE COHERENCIA
+      // LÓGICA DE COHERENCIA (Paso 3 cambia según encienda o no)
       const cardReparaciones = document.getElementById('cardReparaciones');
       const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
       const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
       
       if (valor === 'Sí' || valor === 'A veces') {
-        cardReparaciones.classList.remove('hidden');
-        cardAuditoriaGeneral.classList.remove('hidden');
-        cardAuditoriaFisica.classList.add('hidden');
+        cardReparaciones?.classList.remove('hidden');
+        cardAuditoriaGeneral?.classList.remove('hidden');
+        cardAuditoriaFisica?.classList.add('hidden');
       } else {
-        cardReparaciones.classList.add('hidden');
-        cardAuditoriaGeneral.classList.add('hidden');
-        cardAuditoriaFisica.classList.remove('hidden');
+        cardReparaciones?.classList.add('hidden');
+        cardAuditoriaGeneral?.classList.add('hidden');
+        cardAuditoriaFisica?.classList.remove('hidden');
       }
     });
   }
@@ -438,17 +441,18 @@ function configurarChecklistSemáforo() {
 
   function actualizarResultadosChecklist() {
     const resultados = [];
-    document.querySelectorAll('#checklistGeneralGroup .check-item, #checklistFisicoGroup .check-item').forEach(btn => {
+    document.querySelectorAll('#checklistGeneralGroup .check-item, #checklistFisicaGroup .check-item, #checklistFisicoGroup .check-item').forEach(btn => {
       const item = btn.dataset.item;
       if (btn.classList.contains('ok')) resultados.push(`${item}: OK`);
       if (btn.classList.contains('falla')) resultados.push(`${item}: FALLA`);
     });
-    document.getElementById('checklistResultados').value = resultados.join(', ');
+    const inputRes = document.getElementById('checklistResultados');
+    if (inputRes) inputRes.value = resultados.join(', ');
   }
 }
 
 /* ============================================================
-   PATTERN LOCK (DIBUJO)
+   PATTERN LOCK (DIBUJO CORREGIDO Y RESPONSIVO)
    ============================================================ */
 function configurarPattern() {
   const bgCanvas = document.getElementById('bgCanvas');
@@ -463,7 +467,7 @@ function configurarPattern() {
 
   const bgc = bgCanvas.getContext('2d');
   const lnc = lineCanvas.getContext('2d');
-  const size = 300, r = 22, margin = 30;
+  const size = 300, r = 20, margin = 30;
   const pts = []; let id = 1;
   for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) pts.push({ id: id++, x: margin + 120 * x, y: margin + 120 * y, sel: false });
 
@@ -488,21 +492,27 @@ function configurarPattern() {
     lnc.stroke();
   }
 
+  // MATEMÁTICA CORREGIDA PARA CELULARES
   function getPos(e) {
     const rect = lineCanvas.getBoundingClientRect();
     const t = e.touches ? e.touches[0] : e;
-    return { x: (t.clientX - rect.left) * (size / rect.width), y: (t.clientY - rect.top) * (size / rect.height) };
+    return { 
+      x: (t.clientX - rect.left) * (size / rect.width), 
+      y: (t.clientY - rect.top) * (size / rect.height) 
+    };
   }
 
-  function hit(p) { return pts.find(pt => !pt.sel && Math.hypot(pt.x - p.x, pt.y - p.y) < r + 12); }
+  function hit(p) { return pts.find(pt => !pt.sel && Math.hypot(pt.x - p.x, pt.y - p.y) < r + 20); }
 
   function updateSeq() {
     const seq = path.map(p => p.id).join(',');
-    document.getElementById('patronSecuencia').value = seq;
+    const hiddenInput = document.getElementById('patronSecuencia');
+    if (hiddenInput) hiddenInput.value = seq;
     const display = document.getElementById('pattern-sequence');
     if (display) display.textContent = seq ? path.map(p => p.id).join(' → ') : 'Sin patrón';
   }
 
+  // EVENTOS PC
   lineCanvas.addEventListener('mousedown', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); });
   lineCanvas.addEventListener('mousemove', (e) => {
     if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
@@ -512,13 +522,14 @@ function configurarPattern() {
   lineCanvas.addEventListener('mouseup', () => { drawing = false; drawLines(); });
   lineCanvas.addEventListener('mouseleave', () => { drawing = false; drawLines(); });
 
+  // EVENTOS CELULAR
   lineCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); }, { passive: false });
   lineCanvas.addEventListener('touchmove', (e) => {
     if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
     if (h) { h.sel = true; path.push(h); haptic(5); drawBase(); }
     drawLines(p);
   }, { passive: false });
-  lineCanvas.addEventListener('touchend', () => { drawing = false; drawLines(); });
+  lineCanvas.addEventListener('touchend', (e) => { e.preventDefault(); drawing = false; drawLines(); }, { passive: false });
 
   document.getElementById('clearPattern')?.addEventListener('click', () => {
     haptic(10); path = []; pts.forEach(p => p.sel = false); drawBase(); lnc.clearRect(0, 0, size, size); updateSeq();
