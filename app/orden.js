@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (VERSIÓN FINAL PRO)
+   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -125,6 +125,8 @@ async function cargarOrden() {
     setTimeout(() => window.location.href = '/app/', 2500);
   } finally {
     hideLoading();
+    // 🔥 APAGAMOS EL LOADER MANUALMENTE
+    document.getElementById('appLoader')?.classList.add('hidden');
   }
 }
 
@@ -150,21 +152,13 @@ function renderOrden() {
 
   const serviciosHtml = Array.isArray(orden.servicios) && orden.servicios.length > 0
     ? orden.servicios.map(s => `
-        <tr>
-          <td>${escapeHtml(s.desc)}</td>
-          <td>${formatBs(s.costo)}</td>
-        </tr>
+        <tr><td>${escapeHtml(s.desc)}</td><td>${formatBs(s.costo)}</td></tr>
       `).join('')
     : '<tr><td colspan="2" style="text-align:center;color:var(--text-mute);padding:12px;">Sin servicios registrados</td></tr>';
 
   const fotosValidas = Array.isArray(orden.fotos) ? orden.fotos : [];
   const fotosHtml = fotosValidas.length > 0
-    ? `<div class="card">
-         <div class="card-title">📸 Fotos del ingreso</div>
-         <div class="bitacora-fotos">
-           ${fotosValidas.map(f => `<img src="${f}" alt="foto" data-ver-img="${f}">`).join('')}
-         </div>
-       </div>`
+    ? `<div class="card"><div class="card-title">📸 Fotos del ingreso</div><div class="bitacora-fotos">${fotosValidas.map(f => `<img src="${f}" alt="foto" data-ver-img="${f}">`).join('')}</div></div>`
     : '';
 
   const colorEstado = ESTADO_COLORES[estadoActual] || '#FF6900';
@@ -172,8 +166,7 @@ function renderOrden() {
 
   const estadosBotones = Object.entries(ESTADOS).map(([key, info]) => `
     <button class="estado-btn ${key === estadoActual ? 'activo' : ''}" data-estado="${key}">
-      <i class="fas ${info.icono}"></i>
-      <span>${info.texto}</span>
+      <i class="fas ${info.icono}"></i><span>${info.texto}</span>
     </button>
   `).join('');
 
@@ -186,188 +179,83 @@ function renderOrden() {
           <i class="fas ${estadoInfo.icono}"></i> ${estadoInfo.texto}
         </span>
       </div>
-
-      <div class="recibo-detalle">
-        <div class="recibo-row">
-          <span>Cliente</span>
-          <span>${escapeHtml(orden.cliente || '-')}</span>
-        </div>
-        <div class="recibo-row">
-          <span>Teléfono</span>
-          <span style="color:var(--brand); font-weight:700;">${escapeHtml(orden.telefono || '-')}</span>
-        </div>
-        <div class="recibo-row">
-          <span>Equipo</span>
-          <span>${escapeHtml(orden.marca || '')} ${escapeHtml(orden.modelo || '')}</span>
-        </div>
-        ${orden.imei ? `
-          <div class="recibo-row">
-            <span>IMEI</span>
-            <span style="font-family:monospace; font-size:12px;">${escapeHtml(orden.imei)}</span>
-          </div>
-        ` : ''}
-        <div class="recibo-row">
-          <span>Enciende</span>
-          <span>${escapeHtml(orden.enciende || '-')}</span>
-        </div>
-        ${orden.estadoEquipo || orden.falla ? `
-          <div class="recibo-row">
-            <span>Estado / Falla</span>
-            <span style="text-align:right;">${escapeHtml(orden.estadoEquipo || '')} ${escapeHtml(orden.falla || '')}</span>
-          </div>
-        ` : ''}
-        ${orden.tipoSeguridad === 'pin' && orden.pin ? `
-          <div class="recibo-row">
-            <span>Clave PIN</span>
-            <span style="font-family:monospace; font-weight:800; color:var(--brand);">${escapeHtml(orden.pin)}</span>
-          </div>
-        ` : ''}
-        ${patronTexto ? `
-          <div class="recibo-row">
-            <span>Patrón</span>
-            <span style="font-family:monospace; font-weight:800; color:var(--brand);">${escapeHtml(patronTexto)}</span>
-          </div>
-        ` : ''}
-        <div class="recibo-row">
-          <span>Fecha de ingreso</span>
-          <span>${formatFecha(orden.fecha)}</span>
-        </div>
-        <div class="recibo-row">
-          <span>Por</span>
-          <span>${escapeHtml(orden.creadoPor || '-')}</span>
-        </div>
-      </div>
+      <div class="recibo-row"><span>Cliente</span><span>${escapeHtml(orden.cliente || '-')}</span></div>
+      <div class="recibo-row"><span>Teléfono</span><span style="color:var(--brand); font-weight:700;">${escapeHtml(orden.telefono || '-')}</span></div>
+      <div class="recibo-row"><span>Equipo</span><span>${escapeHtml(orden.marca || '')} ${escapeHtml(orden.modelo || '')}</span></div>
+      ${orden.imei ? `<div class="recibo-row"><span>IMEI</span><span style="font-family:monospace; font-size:12px;">${escapeHtml(orden.imei)}</span></div>` : ''}
+      <div class="recibo-row"><span>Enciende</span><span>${escapeHtml(orden.enciende || '-')}</span></div>
+      ${orden.estadoEquipo || orden.falla ? `<div class="recibo-row"><span>Estado / Falla</span><span style="text-align:right;">${escapeHtml(orden.estadoEquipo || '')} ${escapeHtml(orden.falla || '')}</span></div>` : ''}
+      ${orden.tipoSeguridad === 'pin' && orden.pin ? `<div class="recibo-row"><span>Clave PIN</span><span style="font-family:monospace; font-weight:800; color:var(--brand);">${escapeHtml(orden.pin)}</span></div>` : ''}
+      ${patronTexto ? `<div class="recibo-row"><span>Patrón</span><span style="font-family:monospace; font-weight:800; color:var(--brand);">${escapeHtml(patronTexto)}</span></div>` : ''}
+      <div class="recibo-row"><span>Fecha de ingreso</span><span>${formatFecha(orden.fecha)}</span></div>
+      <div class="recibo-row"><span>Por</span><span>${escapeHtml(orden.creadoPor || '-')}</span></div>
 
       <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px;">
-        <table class="tabla-servicios">
-          <thead>
-            <tr><th>Servicio</th><th style="text-align:right;">Costo</th></tr>
-          </thead>
-          <tbody>
-            ${serviciosHtml}
-          </tbody>
-        </table>
-        <div class="total-box">
-          <span style="font-size:12px; color:var(--text-mute);">Total</span>
-          <strong>${formatBs(orden.total || 0)}</strong>
-        </div>
-        ${Number(orden.adelanto) > 0 ? `
-          <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:13px;">
-            <span style="color:var(--text-mute);">Adelanto</span>
-            <span>${formatBs(orden.adelanto)}</span>
-          </div>
-        ` : ''}
-        <div class="total-box" style="background:var(--brand-light); margin-top:8px;">
-          <span style="font-size:12px; color:var(--brand); font-weight:700;">SALDO A PAGAR</span>
-          <strong style="color:var(--brand); font-size:18px;">${formatBs(orden.saldo || 0)}</strong>
-        </div>
+        <table class="tabla-servicios"><thead><tr><th>Servicio</th><th style="text-align:right;">Costo</th></tr></thead><tbody>${serviciosHtml}</tbody></table>
+        <div class="total-box"><span style="font-size:12px; color:var(--text-mute);">Total</span><strong>${formatBs(orden.total || 0)}</strong></div>
+        ${Number(orden.adelanto) > 0 ? `<div style="display:flex; justify-content:space-between; margin-top:8px; font-size:13px;"><span style="color:var(--text-mute);">Adelanto</span><span>${formatBs(orden.adelanto)}</span></div>` : ''}
+        <div class="total-box" style="background:var(--brand-light); margin-top:8px;"><span style="font-size:12px; color:var(--brand); font-weight:700;">SALDO A PAGAR</span><strong style="color:var(--brand); font-size:18px;">${formatBs(orden.saldo || 0)}</strong></div>
       </div>
     </div>
 
-    <!-- 2. FOTOS -->
     ${fotosHtml}
 
-    <!-- 3. ACCIONES -->
+    <!-- 2. ACCIONES -->
     <div class="card">
       <div class="card-title">📱 Acciones</div>
       <div style="display:flex; gap:12px; margin-top:8px;">
-        <button class="btn-grande btn-whatsapp" id="btnContactar" style="flex:1;">
-          <i class="fab fa-whatsapp"></i> Contactar
-        </button>
-        <button class="btn-grande btn-pdf" id="btnRegenerarPDF" style="flex:1;">
-          <i class="fas fa-file-pdf"></i> Enviar PDF
-        </button>
+        <button class="btn-grande btn-whatsapp" id="btnContactar" style="flex:1;"><i class="fab fa-whatsapp"></i> Contactar</button>
+        <button class="btn-grande btn-pdf" id="btnRegenerarPDF" style="flex:1;"><i class="fas fa-file-pdf"></i> Enviar PDF</button>
       </div>
     </div>
 
-    <!-- 4. CAMBIAR ESTADO -->
+    <!-- 3. CAMBIAR ESTADO -->
     <div class="card">
       <div class="card-title">🔄 Cambiar estado</div>
-      <div class="estados-grid" style="margin-top:12px;">
-        ${estadosBotones}
-      </div>
+      <div class="estados-grid" style="margin-top:12px;">${estadosBotones}</div>
     </div>
 
-    <!-- 5. COSTOS Y GANANCIA (admin) -->
+    <!-- 4. COSTOS (admin) -->
     ${sesion.rol === 'admin' ? `
       <div class="card" style="border-color:rgba(16,185,129,0.3);">
         <div class="card-title" style="color:#10B981;">💰 Costos y ganancia</div>
         ${Number(orden.montoCobrado) > 0 ? `
-          <div class="fila-info">
-            <span class="label">Cobrado al cliente</span>
-            <span class="valor" style="color:var(--brand); font-weight:700;">${formatBs(orden.montoCobrado || 0)}</span>
-          </div>
-          <div class="fila-info">
-            <span class="label">Costo del repuesto</span>
-            <span class="valor" style="color:#FF9500; font-weight:700;">
-              ${Number(orden.costoRepuesto) > 0 ? formatBs(orden.costoRepuesto) : 'Sin asignar'}
-            </span>
-          </div>
-          <div class="fila-info" style="background:rgba(16,185,129,0.1); padding:8px; border-radius:var(--radius-sm); margin-top:8px;">
-            <span class="label" style="color:#10B981; font-weight:700;">Ganancia neta</span>
-            <span class="valor" style="color:#10B981; font-weight:800; font-size:16px;">
-              ${formatBs(ganancia)}
-            </span>
-          </div>
-        ` : `
-          <p style="font-size:12px; color:var(--text-mute); text-align:center; margin-bottom:12px;">
-            Esta orden aún no tiene cobro registrado.
-          </p>
-        `}
-        <button id="btnRegistrarCosto" class="btn-grande btn-pdf" style="margin-top:12px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border);">
-          <i class="fas fa-calculator"></i>
-          ${Number(orden.costoRepuesto) > 0 ? 'Editar costo' : 'Registrar costo'}
-        </button>
-        <button id="btnEditarFecha" class="btn-grande" style="margin-top:8px; background:var(--bg-elev); color:var(--brand); border:1px solid var(--brand);">
-          <i class="fas fa-calendar-alt"></i> Editar fecha de ingreso
-        </button>
+          <div class="recibo-row"><span>Cobrado al cliente</span><span style="color:var(--brand); font-weight:700;">${formatBs(orden.montoCobrado || 0)}</span></div>
+          <div class="recibo-row"><span>Costo del repuesto</span><span style="color:#FF9500; font-weight:700;">${Number(orden.costoRepuesto) > 0 ? formatBs(orden.costoRepuesto) : 'Sin asignar'}</span></div>
+          <div class="recibo-row" style="background:rgba(16,185,129,0.1); padding:8px; border-radius:8px; margin-top:8px;"><span style="color:#10B981; font-weight:700;">Ganancia neta</span><span style="color:#10B981; font-weight:800; font-size:16px;">${formatBs(ganancia)}</span></div>
+        ` : `<p style="font-size:12px; color:var(--text-mute); text-align:center; margin-bottom:12px;">Esta orden aún no tiene cobro registrado.</p>`}
+        <button id="btnRegistrarCosto" class="btn-grande btn-pdf" style="margin-top:12px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border);"><i class="fas fa-calculator"></i> ${Number(orden.costoRepuesto) > 0 ? 'Editar costo' : 'Registrar costo'}</button>
+        <button id="btnEditarFecha" class="btn-grande" style="margin-top:8px; background:var(--bg-elev); color:var(--brand); border:1px solid var(--brand);"><i class="fas fa-calendar-alt"></i> Editar fecha</button>
       </div>
     ` : ''}
 
-    <!-- 6. BITÁCORA -->
+    <!-- 5. BITÁCORA -->
     <div class="card">
       <div class="card-title">📋 Bitácora</div>
-
       <div style="margin-bottom:16px;">
         <div class="dictado-wrap textarea">
-          <textarea id="nuevaNota" placeholder="Escribe o dicta una nota..." maxlength="500" data-dictado
-            style="width:100%; padding:12px; padding-right:52px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:var(--radius-sm); font-family:inherit; font-size:13px; resize:vertical; min-height:70px;"></textarea>
+          <textarea id="nuevaNota" placeholder="Escribe una nota..." maxlength="500" style="width:100%; padding:12px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical; min-height:70px;"></textarea>
         </div>
-        <div class="foto-uploader" id="fotoUploader">
-          <button type="button" class="btn-add-foto" id="btnAddFoto">
-            <i class="fas fa-camera"></i><span>Añadir</span>
-          </button>
-        </div>
+        <div class="foto-uploader" id="fotoUploader"><button type="button" class="btn-add-foto" id="btnAddFoto"><i class="fas fa-camera"></i><span>Añadir</span></button></div>
         <input type="file" id="fotoInput" accept="image/*" capture="environment" hidden>
-        <button id="btnGuardarNota" class="btn-grande btn-pdf" style="margin-top:12px; padding:10px; font-size:13px; width:auto;">
-          <i class="fas fa-plus"></i> Añadir
-        </button>
+        <button id="btnGuardarNota" class="btn-grande btn-pdf" style="margin-top:12px; padding:10px; font-size:13px; width:auto;"><i class="fas fa-plus"></i> Añadir</button>
       </div>
-
       <div id="historialBitacora">${renderBitacora()}</div>
     </div>
 
-    <!-- 7. ADMIN -->
+    <!-- 6. ADMIN -->
     ${sesion.rol === 'admin' ? `
       <div class="card" style="border-color: rgba(239,68,68,0.3);">
         <div class="card-title" style="color:#EF4444;">⚙️ Admin</div>
-        <button id="btnEliminar" class="btn-grande" style="background:rgba(239,68,68,0.1); color:#EF4444; border:1px solid #EF4444; margin-top:8px;">
-          <i class="fas fa-trash"></i> Eliminar orden
-        </button>
+        <button id="btnEliminar" class="btn-grande" style="background:rgba(239,68,68,0.1); color:#EF4444; border:1px solid #EF4444; margin-top:8px;"><i class="fas fa-trash"></i> Eliminar orden</button>
       </div>
     ` : ''}
 
-    <!-- 8. VOLVER -->
-    <button id="btnVolverPanelFinal" class="btn-grande btn-pdf" style="margin-top:8px; margin-bottom:24px; padding:16px; font-size:15px;">
-      <i class="fas fa-home"></i> VOLVER AL PANEL
-    </button>
+    <!-- 7. VOLVER -->
+    <button id="btnVolverPanelFinal" class="btn-grande btn-pdf" style="margin-top:8px; margin-bottom:24px; padding:16px; font-size:15px;"><i class="fas fa-home"></i> VOLVER AL PANEL</button>
   `;
 
   configurarEventosOrden();
-
-  if (window.__dictadoIniciar) {
-    setTimeout(() => window.__dictadoIniciar(), 100);
-  }
 }
 
 /* ============================================================
@@ -381,16 +269,10 @@ function renderBitacora() {
     return fb - fa;
   });
 
-  if (ordenada.length === 0) {
-    return `<div style="text-align:center; padding:20px; color:var(--text-mute); font-size:13px;">
-      <i class="fas fa-clipboard-list" style="font-size:24px; opacity:0.4; margin-bottom:8px; display:block;"></i>
-      No hay entradas en la bitácora aún
-    </div>`;
-  }
+  if (ordenada.length === 0) return `<div style="text-align:center; padding:20px; color:var(--text-mute); font-size:13px;"><i class="fas fa-clipboard-list" style="font-size:24px; opacity:0.4; margin-bottom:8px; display:block;"></i>No hay entradas en la bitácora aún</div>`;
 
   return ordenada.map(entry => {
-    let clase = 'nota';
-    let icono = 'fa-sticky-note';
+    let clase = 'nota', icono = 'fa-sticky-note';
     if (entry.tipo === 'estado') { clase = 'estado'; icono = 'fa-exchange-alt'; }
     else if (entry.tipo === 'foto') { clase = 'foto'; icono = 'fa-camera'; }
     else if (entry.tipo === 'whatsapp') { clase = 'whatsapp'; icono = 'fa-brands fa-whatsapp'; }
@@ -399,16 +281,9 @@ function renderBitacora() {
     return `<div class="bitacora-item">
       <div class="bitacora-icono ${clase}"><i class="fas ${icono}"></i></div>
       <div class="bitacora-content">
-        <div class="bitacora-header">
-          <span class="bitacora-autor">${escapeHtml(entry.autor || 'Sistema')}</span>
-          <span class="bitacora-fecha">${tiempoRelativo(entry.fecha)}</span>
-        </div>
+        <div class="bitacora-header"><span class="bitacora-autor">${escapeHtml(entry.autor || 'Sistema')}</span><span class="bitacora-fecha">${tiempoRelativo(entry.fecha)}</span></div>
         <div class="bitacora-texto">${escapeHtml(entry.texto || '')}</div>
-        ${Array.isArray(entry.fotos) && entry.fotos.length > 0 ? `
-          <div class="bitacora-fotos">
-            ${entry.fotos.map(f => `<img src="${f}" alt="foto" data-ver-img="${f}">`).join('')}
-          </div>
-        ` : ''}
+        ${Array.isArray(entry.fotos) && entry.fotos.length > 0 ? `<div class="bitacora-fotos">${entry.fotos.map(f => `<img src="${f}" alt="foto" data-ver-img="${f}">`).join('')}</div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -418,27 +293,18 @@ function renderBitacora() {
    EVENTOS
    ============================================================ */
 function configurarEventosOrden() {
-  document.querySelectorAll('.estado-btn').forEach(btn => {
-    btn.addEventListener('click', () => cambiarEstado(btn.dataset.estado));
-  });
+  document.querySelectorAll('.estado-btn').forEach(btn => btn.addEventListener('click', () => cambiarEstado(btn.dataset.estado)));
 
   const btnAddFoto = document.getElementById('btnAddFoto');
   const fotoInput = document.getElementById('fotoInput');
-
-  if (btnAddFoto && fotoInput) {
-    btnAddFoto.addEventListener('click', () => { haptic(10); fotoInput.click(); });
-  }
+  if (btnAddFoto && fotoInput) btnAddFoto.addEventListener('click', () => { haptic(10); fotoInput.click(); });
 
   if (fotoInput) {
     fotoInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       haptic(10);
-      try {
-        const dataUrl = await comprimirImagen(file, 1000, 0.75);
-        fotosNuevas.push(dataUrl);
-        renderFotosNuevas();
-      } catch (err) { toast('Error procesando imagen', 'error'); }
+      try { const dataUrl = await comprimirImagen(file, 1000, 0.75); fotosNuevas.push(dataUrl); renderFotosNuevas(); } catch (err) { toast('Error procesando imagen', 'error'); }
       fotoInput.value = '';
     });
   }
@@ -464,14 +330,11 @@ function configurarEventosOrden() {
 
   const viewer = document.getElementById('imgViewer');
   const viewerCerrar = document.getElementById('imgViewerCerrar');
-
   if (viewer && viewerCerrar && !viewer.dataset.listenersAdded) {
     viewer.dataset.listenersAdded = 'true';
     viewerCerrar.addEventListener('click', () => { viewer.classList.remove('show'); document.getElementById('imgViewerImg').src = ''; });
     viewer.addEventListener('click', (e) => { if (e.target === viewer) { viewer.classList.remove('show'); document.getElementById('imgViewerImg').src = ''; } });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && viewer.classList.contains('show')) { viewer.classList.remove('show'); document.getElementById('imgViewerImg').src = ''; }
-    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && viewer.classList.contains('show')) { viewer.classList.remove('show'); document.getElementById('imgViewerImg').src = ''; } });
   }
 }
 
@@ -484,22 +347,18 @@ async function cambiarEstado(nuevoEstado) {
   if (nuevoEstado === estadoActual) { toast('Ya está en ese estado', 'info', 1500); return; }
   if (nuevoEstado === 'entregado') { abrirModalCobro(); return; }
 
-  haptic(20);
-  showLoading('Actualizando estado...');
-
+  haptic(20); showLoading('Actualizando estado...');
   try {
     const entrada = { tipo: 'estado', texto: `Estado cambiado a: ${ESTADOS[nuevoEstado].texto}`, autor: sesion.nombre, fecha: new Date().toISOString() };
     await updateDoc(doc(db, 'recibos', ordenId), { estadoOrden: nuevoEstado, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
-    orden.estadoOrden = nuevoEstado;
-    orden.bitacora = [...(orden.bitacora || []), entrada];
-    toast(`Estado: ${ESTADOS[nuevoEstado].texto}`, 'success', 2000);
-    renderOrden();
+    orden.estadoOrden = nuevoEstado; orden.bitacora = [...(orden.bitacora || []), entrada];
+    toast(`Estado: ${ESTADOS[nuevoEstado].texto}`, 'success', 2000); renderOrden();
   } catch (err) { toast('Error al cambiar estado', 'error'); }
   finally { hideLoading(); }
 }
 
 /* ============================================================
-   MODAL DE COBRO (CON ESTILOS INYECTADOS)
+   MODAL DE COBRO
    ============================================================ */
 function abrirModalCobro() {
   haptic(15);
@@ -513,21 +372,21 @@ function abrirModalCobro() {
   modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(4px); z-index:9999999; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.3s ease;';
 
   modal.innerHTML = `
-    <div class="modal" style="background:var(--bg-card); border-radius:var(--radius-md); padding:24px; width:90%; max-width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid var(--border); transform:translateY(20px); transition:transform 0.3s ease; z-index:10000000;">
+    <div class="modal" style="background:var(--bg-card); border-radius:16px; padding:24px; width:90%; max-width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid var(--border); transform:translateY(20px); transition:transform 0.3s ease; z-index:10000000;">
       <h3 style="color:var(--brand); font-weight:800; font-size:18px; margin-bottom:8px;">✅ Confirmar entrega</h3>
       <p style="margin-bottom:20px; font-size:14px;"><strong>${escapeHtml(orden.cliente)}</strong><br><span style="font-size:12px; color:var(--text-mute);">Total: ${formatBs(total)}${saldo > 0 && saldo !== total ? ` · Saldo: ${formatBs(saldo)}` : ''}</span></p>
-      <div style="margin-bottom:16px;"><label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Monto cobrado</label>
-        <input type="number" id="inputMonto" step="0.01" min="0" value="${montoSugerido.toFixed(2)}" inputmode="decimal" style="width:100%; padding:14px; font-size:18px; font-weight:700; text-align:center; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:var(--radius-sm); font-family:inherit;"></div>
+      <div style="margin-bottom:16px;"><label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Monto cobrado</label><input type="number" id="inputMonto" step="0.01" min="0" value="${montoSugerido.toFixed(2)}" inputmode="decimal" style="width:100%; padding:14px; font-size:18px; font-weight:700; text-align:center; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:8px; font-family:inherit;"></div>
       <div style="margin-bottom:20px;"><label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px;">Método de pago</label>
         <div id="metodosPago" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-          <button type="button" class="metodo-btn" data-metodo="Efectivo" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"><i class="fas fa-money-bill-wave" style="font-size:20px;"></i><span>Efectivo</span></button>
-          <button type="button" class="metodo-btn" data-metodo="QR" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"><i class="fas fa-qrcode" style="font-size:20px;"></i><span>QR</span></button>
-          <button type="button" class="metodo-btn" data-metodo="Transferencia" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"><i class="fas fa-building-columns" style="font-size:20px;"></i><span>Transferencia</span></button>
-          <button type="button" class="metodo-btn" data-metodo="Mixto" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"><i class="fas fa-shuffle" style="font-size:20px;"></i><span>Mixto</span></button>
+          <button type="button" class="metodo-btn" data-metodo="Efectivo" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"><i class="fas fa-money-bill-wave" style="font-size:20px;"></i><span>Efectivo</span></button>
+          <button type="button" class="metodo-btn" data-metodo="QR" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"><i class="fas fa-qrcode" style="font-size:20px;"></i><span>QR</span></button>
+          <button type="button" class="metodo-btn" data-metodo="Transferencia" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"><i class="fas fa-building-columns" style="font-size:20px;"></i><span>Transferencia</span></button>
+          <button type="button" class="metodo-btn" data-metodo="Mixto" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"><i class="fas fa-shuffle" style="font-size:20px;"></i><span>Mixto</span></button>
         </div>
-        <div id="detalleMixtoContainer" style="display:none; margin-top:10px;"><input type="text" id="detalleMixto" placeholder="Ej: 200 efectivo + 150 QR" maxlength="100" style="width:100%; padding:12px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:var(--radius-sm); font-family:inherit; font-size:13px;"></div>
-        <div id="errorMetodo" style="color:#EF4444; font-size:12px; margin-top:8px; display:none;"></div></div>
-      <div style="display:flex; gap:8px;"><button type="button" id="btnCancelarCobro" style="flex:1; padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elev); color:var(--text-main); font-weight:700; cursor:pointer; font-family:inherit;">Cancelar</button><button type="button" id="btnConfirmarCobro" style="flex:1; padding:14px; border-radius:var(--radius-sm); border:none; background:var(--brand); color:white; font-weight:700; cursor:pointer; font-family:inherit;"><i class="fas fa-check"></i> Confirmar</button></div>
+        <div id="detalleMixtoContainer" style="display:none; margin-top:10px;"><input type="text" id="detalleMixto" placeholder="Ej: 200 efectivo + 150 QR" maxlength="100" style="width:100%; padding:12px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px;"></div>
+        <div id="errorMetodo" style="color:#EF4444; font-size:12px; margin-top:8px; display:none;"></div>
+      </div>
+      <div style="display:flex; gap:8px;"><button type="button" id="btnCancelarCobro" style="flex:1; padding:14px; border-radius:8px; border:1px solid var(--border); background:var(--bg-elev); color:var(--text-main); font-weight:700; cursor:pointer; font-family:inherit;">Cancelar</button><button type="button" id="btnConfirmarCobro" style="flex:1; padding:14px; border-radius:8px; border:none; background:var(--brand); color:white; font-weight:700; cursor:pointer; font-family:inherit;"><i class="fas fa-check"></i> Confirmar</button></div>
     </div>`;
 
   document.body.appendChild(modal);
@@ -579,14 +438,13 @@ async function confirmarCobro(monto, metodo) {
     const entrada = { tipo: 'estado', texto: `Estado cambiado a: Entregado · Cobrado: ${formatBs(monto)} (${metodo})`, autor: sesion.nombre, fecha: new Date().toISOString() };
     await updateDoc(doc(db, 'recibos', ordenId), { estadoOrden: 'entregado', fechaEntrega: serverTimestamp(), montoCobrado: monto, metodoPago: metodo, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
     orden.estadoOrden = 'entregado'; orden.fechaEntrega = new Date(); orden.montoCobrado = monto; orden.metodoPago = metodo; orden.bitacora = [...(orden.bitacora || []), entrada];
-    toast(`Entregado · ${formatBs(monto)} (${metodo})`, 'success', 2500);
-    renderOrden();
+    toast(`Entregado · ${formatBs(monto)} (${metodo})`, 'success', 2500); renderOrden();
   } catch (err) { toast('Error al registrar entrega', 'error'); }
   finally { hideLoading(); }
 }
 
 /* ============================================================
-   MODAL DE COSTO (CON ESTILOS INYECTADOS)
+   MODAL DE COSTO
    ============================================================ */
 function abrirModalCosto() {
   if (sesion.rol !== 'admin') return;
@@ -601,13 +459,13 @@ function abrirModalCosto() {
   modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(4px); z-index:9999999; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.3s ease;';
 
   modal.innerHTML = `
-    <div class="modal" style="background:var(--bg-card); border-radius:var(--radius-md); padding:24px; width:90%; max-width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid var(--border); transform:translateY(20px); transition:transform 0.3s ease; z-index:10000000;">
+    <div class="modal" style="background:var(--bg-card); border-radius:16px; padding:24px; width:90%; max-width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid var(--border); transform:translateY(20px); transition:transform 0.3s ease; z-index:10000000;">
       <h3 style="color:#10B981; font-weight:800; font-size:18px; margin-bottom:16px;"><i class="fas fa-calculator"></i> Registrar presupuesto</h3>
-      <div style="background:var(--bg-elev); border-radius:var(--radius-sm); padding:12px; margin-bottom:1rem; border:1px solid var(--border);"><div style="font-size:11px; color:var(--text-mute); margin-bottom:4px;">RECIBO</div><div style="font-weight:700; font-size:13px;">${escapeHtml(orden.numeroRecibo || '-')}</div><div style="font-size:12px; color:var(--text-main); margin-top:4px;">${escapeHtml(orden.cliente || '-')}</div><div style="font-size:11px; color:var(--text-mute); margin-top:2px;">${escapeHtml(orden.marca || '')} ${escapeHtml(orden.modelo || '')}</div></div>
-      <div style="margin-bottom:1rem;"><label style="display:block; font-size:11px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Monto cobrado al cliente</label><div style="background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; font-size:18px; font-weight:800; text-align:center; color:var(--brand);">${formatBs(monto)}</div></div>
-      <div style="margin-bottom:1rem;"><label style="display:block; font-size:11px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Costo del repuesto</label><input type="number" id="costoInput" step="0.01" min="0" value="${costoActual > 0 ? costoActual.toFixed(2) : ''}" inputmode="decimal" placeholder="0.00" style="width:100%; padding:14px; font-size:20px; font-weight:800; text-align:center; background:var(--bg-elev); color:#F59E0B; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:inherit;"><div style="display:flex; gap:6px; margin-top:8px;"><button type="button" class="costo-preset" data-pct="0.7" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">70%</button><button type="button" class="costo-preset" data-pct="0.5" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">50%</button><button type="button" class="costo-preset" data-pct="0.4" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">40%</button></div></div>
-      <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:var(--radius-sm); padding:16px; margin-bottom:1.2rem; text-align:center;"><div style="font-size:11px; color:var(--text-mute); text-transform:uppercase; font-weight:700; letter-spacing:0.6px; margin-bottom:4px;">Ganancia neta</div><div id="gananciaPreview" style="font-size:26px; font-weight:900; color:#10B981; line-height:1;">${formatBs(gananciaInicial)}</div></div>
-      <div style="display:flex; gap:8px;"><button type="button" id="btnCancelarCosto" style="flex:1; padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elev); color:var(--text-main); font-weight:700; cursor:pointer; font-family:inherit;">Cancelar</button><button type="button" id="btnGuardarCosto" style="flex:1; padding:14px; border-radius:var(--radius-sm); border:none; background:var(--brand); color:white; font-weight:700; cursor:pointer; font-family:inherit;"><i class="fas fa-check"></i> Guardar</button></div>
+      <div style="background:var(--bg-elev); border-radius:8px; padding:12px; margin-bottom:1rem; border:1px solid var(--border);"><div style="font-size:11px; color:var(--text-mute); margin-bottom:4px;">RECIBO</div><div style="font-weight:700; font-size:13px;">${escapeHtml(orden.numeroRecibo || '-')}</div><div style="font-size:12px; color:var(--text-main); margin-top:4px;">${escapeHtml(orden.cliente || '-')}</div><div style="font-size:11px; color:var(--text-mute); margin-top:2px;">${escapeHtml(orden.marca || '')} ${escapeHtml(orden.modelo || '')}</div></div>
+      <div style="margin-bottom:1rem;"><label style="display:block; font-size:11px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Monto cobrado al cliente</label><div style="background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; padding:14px; font-size:18px; font-weight:800; text-align:center; color:var(--brand);">${formatBs(monto)}</div></div>
+      <div style="margin-bottom:1rem;"><label style="display:block; font-size:11px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Costo del repuesto</label><input type="number" id="costoInput" step="0.01" min="0" value="${costoActual > 0 ? costoActual.toFixed(2) : ''}" inputmode="decimal" placeholder="0.00" style="width:100%; padding:14px; font-size:20px; font-weight:800; text-align:center; background:var(--bg-elev); color:#F59E0B; border:1px solid var(--border); border-radius:8px; font-family:inherit;"><div style="display:flex; gap:6px; margin-top:8px;"><button type="button" class="costo-preset" data-pct="0.7" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">70%</button><button type="button" class="costo-preset" data-pct="0.5" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">50%</button><button type="button" class="costo-preset" data-pct="0.4" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">40%</button></div></div>
+      <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:16px; margin-bottom:1.2rem; text-align:center;"><div style="font-size:11px; color:var(--text-mute); text-transform:uppercase; font-weight:700; letter-spacing:0.6px; margin-bottom:4px;">Ganancia neta</div><div id="gananciaPreview" style="font-size:26px; font-weight:900; color:#10B981; line-height:1;">${formatBs(gananciaInicial)}</div></div>
+      <div style="display:flex; gap:8px;"><button type="button" id="btnCancelarCosto" style="flex:1; padding:14px; border-radius:8px; border:1px solid var(--border); background:var(--bg-elev); color:var(--text-main); font-weight:700; cursor:pointer; font-family:inherit;">Cancelar</button><button type="button" id="btnGuardarCosto" style="flex:1; padding:14px; border-radius:8px; border:none; background:var(--brand); color:white; font-weight:700; cursor:pointer; font-family:inherit;"><i class="fas fa-check"></i> Guardar</button></div>
     </div>`;
 
   document.body.appendChild(modal);
@@ -675,11 +533,11 @@ function abrirModalFecha() {
   modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(4px); z-index:9999999; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.3s ease;';
 
   modal.innerHTML = `
-    <div class="modal" style="background:var(--bg-card); border-radius:var(--radius-md); padding:24px; width:90%; max-width:400px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid var(--border); transform:translateY(20px); transition:transform 0.3s ease; z-index:10000000;">
+    <div class="modal" style="background:var(--bg-card); border-radius:16px; padding:24px; width:90%; max-width:400px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid var(--border); transform:translateY(20px); transition:transform 0.3s ease; z-index:10000000;">
       <h3 style="color:var(--brand); font-weight:800; font-size:18px; margin-bottom:8px;"><i class="fas fa-calendar-alt"></i> Editar Fecha</h3>
       <p style="font-size:12px; color:var(--text-mute); margin-bottom:16px;">Esta acción cambiará la fecha en el panel y en los reportes.</p>
-      <div style="margin-bottom:20px;"><label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Nueva Fecha</label><input type="date" id="inputFechaOrden" value="${fechaActualStr}" style="width:100%; padding:14px; font-size:16px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:var(--radius-sm); font-family:inherit;"></div>
-      <div style="display:flex; gap:8px;"><button type="button" id="btnCancelarFecha" style="flex:1; padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elev); color:var(--text-main); font-weight:700; cursor:pointer; font-family:inherit;">Cancelar</button><button type="button" id="btnGuardarFecha" style="flex:1; padding:14px; border-radius:var(--radius-sm); border:none; background:var(--brand); color:white; font-weight:700; cursor:pointer; font-family:inherit;"><i class="fas fa-save"></i> Guardar</button></div>
+      <div style="margin-bottom:20px;"><label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Nueva Fecha</label><input type="date" id="inputFechaOrden" value="${fechaActualStr}" style="width:100%; padding:14px; font-size:16px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:8px; font-family:inherit;"></div>
+      <div style="display:flex; gap:8px;"><button type="button" id="btnCancelarFecha" style="flex:1; padding:14px; border-radius:8px; border:1px solid var(--border); background:var(--bg-elev); color:var(--text-main); font-weight:700; cursor:pointer; font-family:inherit;">Cancelar</button><button type="button" id="btnGuardarFecha" style="flex:1; padding:14px; border-radius:8px; border:none; background:var(--brand); color:white; font-weight:700; cursor:pointer; font-family:inherit;"><i class="fas fa-save"></i> Guardar</button></div>
     </div>`;
 
   document.body.appendChild(modal);
@@ -811,8 +669,7 @@ async function guardarNota() {
     const entrada = { tipo: fotosNuevas.length > 0 && !texto ? 'foto' : 'nota', texto: texto || 'Foto añadida', fotos: fotosNuevas.slice(), autor: sesion.nombre, fecha: new Date().toISOString() };
     await updateDoc(doc(db, 'recibos', ordenId), { bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
     orden.bitacora = [...(orden.bitacora || []), entrada]; fotosNuevas = [];
-    toast('Añadido a la bitácora', 'success', 2000);
-    renderOrden();
+    toast('Añadido a la bitácora', 'success', 2000); renderOrden();
   } catch (err) { toast('Error al guardar', 'error'); }
   finally { hideLoading(); }
 }
