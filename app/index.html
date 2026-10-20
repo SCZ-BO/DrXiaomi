@@ -17,6 +17,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <link rel="manifest" href="/manifest.json">
+  <!-- LIBRERÍA PARA GENERAR EL PDF DEL DÍA -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     :root { 
@@ -24,6 +26,7 @@
       --brand: #E65100; --brand-hover: #BF360C; --brand-light: rgba(230, 81, 0, 0.1); 
       --bg-main: #0E0E0E; --bg-card: #181818; --bg-elev: #242424; 
       --text-main: #F5F5F5; --text-mute: #888888; --border: #2A2A2A; 
+      --success: #22C55E;
     }
     [data-theme="light"] {
       --bg-main: #F9F9F9; --bg-card: #FFFFFF; --bg-elev: #F0F0F0; 
@@ -50,14 +53,24 @@
     .header-actions { display: flex; gap: 6px; }
     .icon-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
     .icon-btn:active { transform: scale(0.95); }
-    .icon-btn .icon-img { width: 16px; height: 16px; object-fit: contain; pointer-events: none; opacity: 0.8; filter: brightness(0) invert(1); }
-    [data-theme="light"] .icon-btn .icon-img { filter: none; }
+    
+    /* BOTONES GIGANTES PARA EL TÉCNICO */
+    .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .btn-hero { 
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; 
+      padding: 20px 10px; border-radius: var(--radius-md); font-weight: 800; font-size: 14px; 
+      border: none; cursor: pointer; transition: 0.2s; text-align: center;
+    }
+    .btn-hero:active { transform: scale(0.96); }
+    .btn-hero i { font-size: 28px; }
+    .btn-hero-nuevo { background: var(--brand); color: white; box-shadow: 0 4px 12px rgba(230, 81, 0, 0.3); }
+    .btn-hero-venta { background: var(--bg-card); color: var(--success); border: 2px solid var(--success); }
 
     /* STATS */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
-    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .stat-value { font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1; margin-bottom: 4px; }
-    .stat-value.success { color: #22C55E; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .stat-value { font-size: 18px; font-weight: 800; color: var(--text-main); line-height: 1; margin-bottom: 4px; }
+    .stat-value.success { color: var(--success); }
     .stat-value.brand { color: var(--brand); }
     .stat-label { font-size: 10px; font-weight: 600; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.5px; }
 
@@ -92,10 +105,6 @@
     
     .metodo-pago { font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 4px; color: #22C55E; }
 
-    /* BOTÓN FLOTANTE (FAB) */
-    .btn-fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: var(--brand); color: white; border: none; box-shadow: 0 4px 16px rgba(230, 81, 0, 0.3); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; z-index: 90; transition: 0.2s; }
-    .btn-fab:active { transform: scale(0.9); }
-
     /* BOTTOM SHEET (MODAL) */
     .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 999999; opacity: 0; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; transition: 0.3s; }
     .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
@@ -109,6 +118,13 @@
     .btn-sheet-edit { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); }
     
     .custom-select { width: 100%; padding: 12px; border-radius: var(--radius-sm); background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); outline: none; font-weight: 600; font-size: 14px; appearance: none; }
+    
+    /* CAMPOS DE FORMULARIO (PARA MODAL VENTA) */
+    .input-group { margin-bottom: 16px; }
+    .input-group label { display: block; font-size: 11px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; }
+    .form-control { width: 100%; padding: 14px; border-radius: var(--radius-sm); background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); outline: none; font-family: inherit; font-size: 15px; }
+    .form-control:focus { border-color: var(--brand); }
+    .btn-sheet-success { background: var(--success); color: white; }
 
     /* LOADER PRO (LOGO + ANILLO GIRATORIO) */
     .loader-overlay {
@@ -182,23 +198,11 @@
         </div>
       </div>
       <div class="header-actions">
+        <button class="icon-btn" id="btnPDFDia" title="Reporte del Día (PDF)" style="color: var(--brand);">
+          <i class="fas fa-file-pdf" style="font-size: 16px;"></i>
+        </button>
         <button class="icon-btn" id="btnRefresh" title="Actualizar">
           <i class="fas fa-rotate" id="iconRefresh" style="color: var(--brand); font-size: 14px;"></i>
-        </button>
-        <button class="icon-btn" id="preciosBtn" title="Buscar precio">
-          <img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
-        </button>
-        
-        <button class="icon-btn" id="cierreBtn" title="Cierre de Caja">
-          <i class="fas fa-cash-register"></i>
-        </button>
-        
-        <button class="icon-btn" id="inventarioBtn" title="Inventario" style="display: none;">
-          <i class="fas fa-box"></i>
-        </button>
-
-        <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;">
-          <img src="/imagenes/icon-reportes.png" alt="Reportes" class="icon-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
         </button>
         <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
           <img src="/imagenes/icon-salir.png" alt="Salir" class="icon-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
@@ -207,10 +211,23 @@
     </header>
 
     <main class="app-content">
+      
+      <!-- BOTONES GIGANTES INTUITIVOS -->
+      <div class="hero-actions">
+        <button class="btn-hero btn-hero-nuevo" id="nuevoReciboBtn">
+          <i class="fas fa-mobile-screen-button"></i>
+          <span>Nuevo<br>Equipo</span>
+        </button>
+        <button class="btn-hero btn-hero-venta" id="ventaRapidaBtn">
+          <i class="fas fa-cash-register"></i>
+          <span>Venta<br>Rápida</span>
+        </button>
+      </div>
+
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-value" id="statActivas">—</div><div class="stat-label">Activas</div></div>
         <div class="stat-card"><div class="stat-value success" id="statListas">—</div><div class="stat-label">Listas</div></div>
-        <div class="stat-card"><div class="stat-value brand" id="statHoy">—</div><div class="stat-label">Hoy</div></div>
+        <div class="stat-card"><div class="stat-value brand" id="statHoy">—</div><div class="stat-label">Ingresos Hoy</div></div>
       </div>
 
       <div class="search-bar">
@@ -232,18 +249,48 @@
         <i class="fas fa-chevron-down"></i> Cargar más recibos
       </button>
     </main>
+  </div>
 
-    <!-- BOTONES FLOTANTES (FAB) -->
-    <div style="position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 12px; z-index: 90;">
-      <button class="btn-fab" id="ventaRapidaBtn" title="Venta Rápida" style="width: 50px; height: 50px; font-size: 20px; background: var(--bg-card); color: var(--brand); border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.3); position: relative;">
-        <i class="fas fa-shopping-cart"></i>
-      </button>
-      <button class="btn-fab" id="nuevoReciboBtn" title="Nuevo Recibo" style="width: 56px; height: 56px; font-size: 22px; background: var(--brand); color: white; border: none; box-shadow: 0 4px 16px rgba(230, 81, 0, 0.4); position: relative;">
-        <i class="fas fa-plus"></i>
+  <!-- MODAL: VENTA RÁPIDA -->
+  <div class="sheet-backdrop" id="modalVenta">
+    <div class="sheet">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--success);"><i class="fas fa-cash-register"></i> Venta Rápida</h3>
+        <button class="icon-btn" id="btnCloseVenta" style="background: var(--bg-elev);"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <div class="input-group">
+        <label>Concepto</label>
+        <select id="ventaConcepto" class="form-control">
+          <option value="Botón">Botón</option>
+          <option value="Limpieza">Limpieza</option>
+          <option value="Reactivación">Reactivación</option>
+          <option value="Cargador">Cargador</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Monto (Bs.)</label>
+        <input type="number" id="ventaMonto" class="form-control" placeholder="0.00" inputmode="decimal">
+      </div>
+
+      <div class="input-group">
+        <label>Método de Pago</label>
+        <select id="ventaMetodo" class="form-control">
+          <option value="Efectivo">💵 Efectivo</option>
+          <option value="QR">📱 QR</option>
+          <option value="Transferencia">🏦 Transferencia</option>
+        </select>
+      </div>
+
+      <button class="btn-sheet btn-sheet-success" id="btnGuardarVenta">
+        <i class="fas fa-save"></i> Registrar Venta
       </button>
     </div>
   </div>
 
+  <!-- MODAL: DETALLE RECIBO -->
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -258,20 +305,23 @@
     import { requireAuth, logout } from '/js/app-auth.js';
     import { toast, haptic, initTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
     import { db } from '/js/firebase.js';
-    import { collection, query, onSnapshot, limit, doc, updateDoc, deleteDoc, startAfter, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { collection, query, onSnapshot, limit, doc, updateDoc, deleteDoc, startAfter, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     initTheme();
     let sesion = null;
     let ordenes = [];
+    let ventasHoy = [];
     let filtroActual = 'todos';
     let busquedaActual = '';
     let unsubscribe = null;
+    let unsubscribeVentas = null;
     
     const LIMITE_POR_PAGINA = 10;
     let ultimoDocumento = null;
     let hayMasRecibos = true;
 
     const reciboSheet = document.getElementById('reciboSheet');
+    const modalVenta = document.getElementById('modalVenta');
     const sheetContent = document.getElementById('sheetContent');
     const btnCargarMas = document.getElementById('btnCargarMas');
     const appLoader = document.getElementById('appLoader');
@@ -280,34 +330,70 @@
       sesion = s;
       setTimeout(() => {
         iniciarApp();
-      }, 1000);
+      }, 500);
     });
 
     function iniciarApp() {
       document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
       
-      if (sesion.rol === 'admin') {
-        const btnRep = document.getElementById('reportesBtn');
-        if (btnRep) btnRep.style.display = 'flex';
-        const btnInv = document.getElementById('inventarioBtn');
-        if (btnInv) btnInv.style.display = 'flex';
-      }
-      
       configurarEventos();
       cargarOrdenes();
+      cargarVentas();
     }
 
     function configurarEventos() {
-      document.getElementById('preciosBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/precio/'; });
-      document.getElementById('reportesBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/reportes/'; });
-      document.getElementById('logoutBtn').addEventListener('click', () => { haptic(20); logout(); });
-      
-      document.getElementById('cierreBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cierre/'; });
-      document.getElementById('inventarioBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/inventario/'; });
-      document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/venta/'; });
-      
+      // Botones gigantes
       document.getElementById('nuevoReciboBtn').addEventListener('click', () => { haptic(15); window.location.href = '/cliente/'; });
+      document.getElementById('ventaRapidaBtn').addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
+      
+      // Cerrar modales
+      document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta.classList.remove('show'));
+      modalVenta?.addEventListener('click', (e) => { if (e.target === modalVenta) modalVenta.classList.remove('show'); });
+      
+      document.getElementById('btnCloseSheet')?.addEventListener('click', cerrarSheet);
+      reciboSheet?.addEventListener('click', (e) => { if (e.target === reciboSheet) cerrarSheet(); });
 
+      // Guardar Venta Rápida
+      document.getElementById('btnGuardarVenta')?.addEventListener('click', async () => {
+        const concepto = document.getElementById('ventaConcepto').value;
+        const monto = parseFloat(document.getElementById('ventaMonto').value);
+        const metodo = document.getElementById('ventaMetodo').value;
+
+        if (!monto || monto <= 0) { toast('Ingresa un monto válido', 'error'); return; }
+
+        haptic(20);
+        try {
+          await addDoc(collection(db, 'ventas'), {
+            concepto, monto, metodoPago: metodo,
+            fecha: serverTimestamp(),
+            creadoPor: sesion.nombre
+          });
+          toast('Venta registrada', 'success');
+          modalVenta.classList.remove('show');
+          document.getElementById('ventaMonto').value = '';
+        } catch (err) {
+          toast('Error al guardar venta', 'error');
+          console.error(err);
+        }
+      });
+
+      // Generar PDF del Día
+      document.getElementById('btnPDFDia')?.addEventListener('click', generarPDFDia);
+
+      // Navegación y Header
+      document.getElementById('logoutBtn').addEventListener('click', () => { haptic(20); logout(); });
+      document.getElementById('btnRefresh')?.addEventListener('click', () => {
+        haptic(15);
+        const icon = document.getElementById('iconRefresh');
+        icon.style.animation = 'spin 0.8s linear infinite';
+        if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+        if (unsubscribeVentas) { unsubscribeVentas(); unsubscribeVentas = null; }
+        cargarOrdenes();
+        cargarVentas();
+        setTimeout(() => { icon.style.animation = 'none'; toast('Lista actualizada', 'success', 1500); }, 1500);
+      });
+
+      // Filtros y Búsqueda
       document.getElementById('filtros').addEventListener('click', (e) => {
         const btn = e.target.closest('[data-filtro]');
         if (!btn) return;
@@ -317,39 +403,39 @@
         filtroActual = btn.dataset.filtro;
         renderizarOrdenes();
       });
-
       document.getElementById('buscador').addEventListener('input', (e) => {
         busquedaActual = e.target.value.toLowerCase().trim();
         renderizarOrdenes();
       });
 
-      document.getElementById('btnCloseSheet')?.addEventListener('click', cerrarSheet);
-      reciboSheet?.addEventListener('click', (e) => { if (e.target === reciboSheet) cerrarSheet(); });
       btnCargarMas?.addEventListener('click', cargarMasOrdenes);
+    }
 
-      document.getElementById('btnRefresh')?.addEventListener('click', () => {
-        haptic(15);
-        const icon = document.getElementById('iconRefresh');
-        icon.style.animation = 'spin 0.8s linear infinite';
-        if (unsubscribe) { unsubscribe(); unsubscribe = null; }
-        cargarOrdenes();
-        setTimeout(() => { icon.style.animation = 'none'; toast('Lista actualizada', 'success', 1500); }, 1500);
+    // 🔥 CARGA DE VENTAS RÁPIDAS
+    function cargarVentas() {
+      const q = query(collection(db, 'ventas'), limit(100));
+      unsubscribeVentas = onSnapshot(q, (snapshot) => {
+        const todasVentas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        const hoy = new Date(); hoy.setHours(0,0,0,0);
+        ventasHoy = todasVentas.filter(v => {
+          const f = v.fecha?.toDate ? v.fecha.toDate() : new Date(v.fecha);
+          return f >= hoy;
+        });
+        actualizarStats();
       });
     }
 
-    // 🔥 CARGA CON ORDENAMIENTO POR FECHA EDITADA
+    // 🔥 CARGA DE RECIBOS
     function cargarOrdenes() {
       if (unsubscribe) unsubscribe();
       if (appLoader) appLoader.classList.remove('hidden');
 
-      // Traemos más recibos sin ordenar en Firestore
       const q = query(collection(db, 'recibos'), limit(200));
 
       unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, 
         (snapshot) => {
           ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
           
-          // 🔥 ORDENAMOS POR FECHA EDITADA (si existe) O POR FECHA ORIGINAL
           ordenes.sort((a, b) => {
             const fa = a.fechaEditada || a.fecha;
             const fb = b.fechaEditada || b.fecha;
@@ -385,7 +471,6 @@
         const nuevosRecibos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         
         ordenes = [...ordenes, ...nuevosRecibos];
-        // Reordenar después de cargar más
         ordenes.sort((a, b) => {
           const fa = a.fechaEditada || a.fecha;
           const fb = b.fechaEditada || b.fecha;
@@ -486,19 +571,29 @@
     }
 
     function actualizarStats() {
+      // 1. Conteo de activas y listas
       const activas = ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
       const listas = ordenes.filter(o => o.estadoOrden === 'listo').length;
-      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-      const hoyCount = ordenes.filter(o => { 
-        const f = o.fechaEditada || o.fecha;
-        if (!f) return false; 
-        const d = f.toDate ? f.toDate() : new Date(f); 
-        return d >= hoy; 
-      }).length;
-      
       document.getElementById('statActivas').textContent = activas;
       document.getElementById('statListas').textContent = listas;
-      document.getElementById('statHoy').textContent = hoyCount;
+
+      // 2. Ingresos Hoy (Reparaciones entregadas hoy + Ventas Rápidas de hoy)
+      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+      let ingresosReparaciones = 0;
+
+      ordenes.forEach(o => {
+        if (o.estadoOrden === 'entregado') {
+          const fEntrega = o.fechaEntrega?.toDate ? o.fechaEntrega.toDate() : (o.fechaEditada || o.fecha);
+          if (fEntrega) {
+            const d = fEntrega.toDate ? fEntrega.toDate() : new Date(fEntrega);
+            if (d >= hoy) ingresosReparaciones += Number(o.montoCobrado) || 0;
+          }
+        }
+      });
+
+      const ingresosVentas = ventasHoy.reduce((sum, v) => sum + (Number(v.monto) || 0), 0);
+      
+      document.getElementById('statHoy').textContent = formatBs(ingresosReparaciones + ingresosVentas);
     }
 
     function abrirSheet(id) {
@@ -571,6 +666,67 @@
 
     function cerrarSheet() {
       if (reciboSheet) reciboSheet.classList.remove('show');
+    }
+
+    // 🔥 GENERAR PDF DEL DÍA
+    function generarPDFDia() {
+      haptic(20);
+      toast('Generando PDF...', 'info');
+      
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+      
+      pdf.setFontSize(18);
+      pdf.text("Reporte del Día - DR. XIAOMI", 14, 20);
+      pdf.setFontSize(10);
+      pdf.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 28);
+      
+      let y = 40;
+      let totalDia = 0;
+
+      // 1. Reparaciones entregadas hoy
+      pdf.setFontSize(12);
+      pdf.text("Reparaciones Entregadas Hoy", 14, y);
+      y += 8;
+      pdf.setFontSize(10);
+      
+      const hoy = new Date(); hoy.setHours(0,0,0,0);
+      ordenes.forEach(o => {
+        if (o.estadoOrden === 'entregado') {
+          const fEntrega = o.fechaEntrega?.toDate ? o.fechaEntrega.toDate() : (o.fechaEditada || o.fecha);
+          if (fEntrega) {
+            const d = fEntrega.toDate ? fEntrega.toDate() : new Date(fEntrega);
+            if (d >= hoy) {
+              const monto = Number(o.montoCobrado) || 0;
+              pdf.text(`- ${o.numeroRecibo || 'Sin N°'} | ${o.cliente} | ${o.marca} ${o.modelo} | Bs. ${monto.toFixed(2)}`, 14, y);
+              totalDia += monto;
+              y += 6;
+            }
+          }
+        }
+      });
+
+      y += 4;
+      
+      // 2. Ventas Rápidas
+      pdf.setFontSize(12);
+      pdf.text("Ventas Rápidas (Mostrador)", 14, y);
+      y += 8;
+      pdf.setFontSize(10);
+
+      ventasHoy.forEach(v => {
+        const monto = Number(v.monto) || 0;
+        pdf.text(`- ${v.concepto} | ${v.metodoPago} | Bs. ${monto.toFixed(2)}`, 14, y);
+        totalDia += monto;
+        y += 6;
+      });
+
+      y += 10;
+      pdf.setFontSize(14);
+      pdf.text(`TOTAL DEL DÍA: Bs. ${totalDia.toFixed(2)}`, 14, y);
+
+      pdf.save(`Reporte_${new Date().toISOString().slice(0,10)}.pdf`);
+      toast('PDF generado', 'success');
     }
   </script>
 
