@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL CORREGIDA)
+   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL CON ESTILOS MEJORADOS)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -17,9 +17,80 @@ import {
 import '/js/dictado.js';
 
 /* ============================================================
-   CONFIGURACIÓN
+   CONFIGURACIÓN Y ESTILOS GLOBALES
    ============================================================ */
 const TIMEOUT_MS = 10000;
+
+// 🔥 INYECTAMOS CSS AVANZADO PARA LOS MODALES
+const styleGlobal = document.createElement('style');
+styleGlobal.textContent = `
+  /* Estilo para el botón de método de pago seleccionado */
+  .metodo-btn.activo {
+    background: rgba(255, 105, 0, 0.12) !important;
+    border-color: #FF6900 !important;
+    color: #FF6900 !important;
+    transform: scale(0.98);
+  }
+  /* Estilos para el modal en general */
+  .modal-backdrop .modal h3 {
+    margin-bottom: 8px;
+  }
+  .modal-backdrop .modal label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+  }
+  /* Estilos para los inputs dentro del modal */
+  .modal-backdrop .modal input[type="number"],
+  .modal-backdrop .modal input[type="text"],
+  .modal-backdrop .modal input[type="date"] {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    background: #242424;
+    color: #F5F5F5;
+    border: 1px solid #2C2C2C;
+    border-radius: 8px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .modal-backdrop .modal input:focus {
+    border-color: #FF6900;
+  }
+  /* Botones dentro del modal */
+  .modal-backdrop .modal .btn-modal-cancel {
+    flex: 1;
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid #2C2C2C;
+    background: #242424;
+    color: #F5F5F5;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: 0.2s;
+  }
+  .modal-backdrop .modal .btn-modal-cancel:active { transform: scale(0.98); }
+  .modal-backdrop .modal .btn-modal-confirm {
+    flex: 1;
+    padding: 14px;
+    border-radius: 8px;
+    border: none;
+    background: #FF6900;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: 0.2s;
+  }
+  .modal-backdrop .modal .btn-modal-confirm:active { transform: scale(0.98); }
+`;
+document.head.appendChild(styleGlobal);
 
 const CONFIG = {
   nombreTienda: 'DR. XIAOMI SCZ',
@@ -356,13 +427,13 @@ async function cambiarEstado(nuevoEstado) {
   try {
     const entrada = { tipo: 'estado', texto: `Estado cambiado a: ${ESTADOS[nuevoEstado].texto}`, autor: sesion.nombre, fecha: new Date().toISOString() };
     await updateDoc(doc(db, 'recibos', ordenId), { estadoOrden: nuevoEstado, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
-    toast(`Estado: ${ESTADOS[nuevoEstado].texto}`, 'success', 2000);
+    toast(`Estado: ${ESTADOS[nuevoEstado].texto}`, success, 2000);
   } catch (err) { toast('Error al cambiar estado', 'error'); }
   finally { hideLoading(); }
 }
 
 /* ============================================================
-   MODAL DE COBRO (CORREGIDO CON 'show')
+   MODAL DE COBRO (ESTILOS MEJORADOS)
    ============================================================ */
 function abrirModalCobro() {
   haptic(15);
@@ -378,23 +449,42 @@ function abrirModalCobro() {
     <div class="modal">
       <h3 style="color:var(--brand); font-weight:800; font-size:18px; margin-bottom:8px;">✅ Confirmar entrega</h3>
       <p style="margin-bottom:20px; font-size:14px;"><strong>${escapeHtml(orden.cliente)}</strong><br><span style="font-size:12px; color:var(--text-mute);">Total: ${formatBs(total)}${saldo > 0 && saldo !== total ? ` · Saldo: ${formatBs(saldo)}` : ''}</span></p>
-      <div style="margin-bottom:16px;"><label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Monto cobrado</label><input type="number" id="inputMonto" step="0.01" min="0" value="${montoSugerido.toFixed(2)}" inputmode="decimal" style="width:100%; padding:14px; font-size:18px; font-weight:700; text-align:center; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:8px; font-family:inherit;"></div>
-      <div style="margin-bottom:20px;"><label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px;">Método de pago</label>
-        <div id="metodosPago" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-          <button type="button" class="metodo-btn" data-metodo="Efectivo"><i class="fas fa-money-bill-wave"></i><span>Efectivo</span></button>
-          <button type="button" class="metodo-btn" data-metodo="QR"><i class="fas fa-qrcode"></i><span>QR</span></button>
-          <button type="button" class="metodo-btn" data-metodo="Transferencia"><i class="fas fa-building-columns"></i><span>Transferencia</span></button>
-          <button type="button" class="metodo-btn" data-metodo="Mixto"><i class="fas fa-shuffle"></i><span>Mixto</span></button>
+      
+      <div style="margin-bottom:16px;">
+        <label>Monto cobrado</label>
+        <input type="number" id="inputMonto" step="0.01" min="0" value="${montoSugerido.toFixed(2)}" inputmode="decimal" style="text-align:center; font-size:18px; font-weight:700;">
+      </div>
+      
+      <div style="margin-bottom:20px;">
+        <label>Método de pago</label>
+        <div id="metodosPago" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <button type="button" class="metodo-btn" data-metodo="Efectivo" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;">
+            <i class="fas fa-money-bill-wave" style="font-size:22px; color:#10B981;"></i><span>Efectivo</span>
+          </button>
+          <button type="button" class="metodo-btn" data-metodo="QR" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;">
+            <i class="fas fa-qrcode" style="font-size:22px; color:#3B82F6;"></i><span>QR</span>
+          </button>
+          <button type="button" class="metodo-btn" data-metodo="Transferencia" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;">
+            <i class="fas fa-building-columns" style="font-size:22px; color:#8B5CF6;"></i><span>Transferencia</span>
+          </button>
+          <button type="button" class="metodo-btn" data-metodo="Mixto" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;">
+            <i class="fas fa-shuffle" style="font-size:22px; color:#F59E0B;"></i><span>Mixto</span>
+          </button>
         </div>
-        <div id="detalleMixtoContainer" style="display:none; margin-top:10px;"><input type="text" id="detalleMixto" placeholder="Ej: 200 efectivo + 150 QR" maxlength="100" style="width:100%; padding:12px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px;"></div>
+        <div id="detalleMixtoContainer" style="display:none; margin-top:10px;">
+          <input type="text" id="detalleMixto" placeholder="Ej: 200 efectivo + 150 QR" maxlength="100">
+        </div>
         <div id="errorMetodo" style="color:#EF4444; font-size:12px; margin-top:8px; display:none;"></div>
       </div>
-      <div style="display:flex; gap:8px;"><button type="button" id="btnCancelarCobro" style="flex:1; padding:14px; border-radius:8px; border:1px solid var(--border); background:var(--bg-elev); color:var(--text-main); font-weight:700; cursor:pointer; font-family:inherit;">Cancelar</button><button type="button" id="btnConfirmarCobro" style="flex:1; padding:14px; border-radius:8px; border:none; background:var(--brand); color:white; font-weight:700; cursor:pointer; font-family:inherit;"><i class="fas fa-check"></i> Confirmar</button></div>
+      
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="btnCancelarCobro" class="btn-modal-cancel">Cancelar</button>
+        <button type="button" id="btnConfirmarCobro" class="btn-modal-confirm"><i class="fas fa-check"></i> Confirmar</button>
+      </div>
     </div>`;
 
   document.body.appendChild(modal);
 
-  // 🔥 ESTO ES LO QUE FALTABA: AÑADIR LA CLASE 'show'
   setTimeout(() => {
     modal.classList.add('show');
   }, 10);
@@ -443,7 +533,7 @@ async function confirmarCobro(monto, metodo) {
 }
 
 /* ============================================================
-   MODAL DE COSTO (CORREGIDO CON 'show')
+   MODAL DE COSTO (ESTILOS MEJORADOS)
    ============================================================ */
 function abrirModalCosto() {
   if (sesion.rol !== 'admin') return;
@@ -459,16 +549,37 @@ function abrirModalCosto() {
   modal.innerHTML = `
     <div class="modal">
       <h3 style="color:#10B981; font-weight:800; font-size:18px; margin-bottom:16px;"><i class="fas fa-calculator"></i> Registrar presupuesto</h3>
-      <div style="background:var(--bg-elev); border-radius:8px; padding:12px; margin-bottom:1rem; border:1px solid var(--border);"><div style="font-size:11px; color:var(--text-mute); margin-bottom:4px;">RECIBO</div><div style="font-weight:700; font-size:13px;">${escapeHtml(orden.numeroRecibo || '-')}</div><div style="font-size:12px; color:var(--text-main); margin-top:4px;">${escapeHtml(orden.cliente || '-')}</div><div style="font-size:11px; color:var(--text-mute); margin-top:2px;">${escapeHtml(orden.marca || '')} ${escapeHtml(orden.modelo || '')}</div></div>
-      <div style="margin-bottom:1rem;"><label style="display:block; font-size:11px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Monto cobrado al cliente</label><div style="background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; padding:14px; font-size:18px; font-weight:800; text-align:center; color:var(--brand);">${formatBs(monto)}</div></div>
-      <div style="margin-bottom:1rem;"><label style="display:block; font-size:11px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Costo del repuesto</label><input type="number" id="costoInput" step="0.01" min="0" value="${costoActual > 0 ? costoActual.toFixed(2) : ''}" inputmode="decimal" placeholder="0.00" style="width:100%; padding:14px; font-size:20px; font-weight:800; text-align:center; background:var(--bg-elev); color:#F59E0B; border:1px solid var(--border); border-radius:8px; font-family:inherit;"><div style="display:flex; gap:6px; margin-top:8px;"><button type="button" class="costo-preset" data-pct="0.7" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">70%</button><button type="button" class="costo-preset" data-pct="0.5" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">50%</button><button type="button" class="costo-preset" data-pct="0.4" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">40%</button></div></div>
-      <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:16px; margin-bottom:1.2rem; text-align:center;"><div style="font-size:11px; color:var(--text-mute); text-transform:uppercase; font-weight:700; letter-spacing:0.6px; margin-bottom:4px;">Ganancia neta</div><div id="gananciaPreview" style="font-size:26px; font-weight:900; color:#10B981; line-height:1;">${formatBs(gananciaInicial)}</div></div>
-      <div style="display:flex; gap:8px;"><button type="button" id="btnCancelarCosto" style="flex:1; padding:14px; border-radius:8px; border:1px solid var(--border); background:var(--bg-elev); color:var(--text-main); font-weight:700; cursor:pointer; font-family:inherit;">Cancelar</button><button type="button" id="btnGuardarCosto" style="flex:1; padding:14px; border-radius:8px; border:none; background:var(--brand); color:white; font-weight:700; cursor:pointer; font-family:inherit;"><i class="fas fa-check"></i> Guardar</button></div>
+      <div style="background:var(--bg-elev); border-radius:8px; padding:12px; margin-bottom:1rem; border:1px solid var(--border);">
+        <div style="font-size:11px; color:var(--text-mute); margin-bottom:4px;">RECIBO</div>
+        <div style="font-weight:700; font-size:13px;">${escapeHtml(orden.numeroRecibo || '-')}</div>
+        <div style="font-size:12px; color:var(--text-main); margin-top:4px;">${escapeHtml(orden.cliente || '-')}</div>
+        <div style="font-size:11px; color:var(--text-mute); margin-top:2px;">${escapeHtml(orden.marca || '')} ${escapeHtml(orden.modelo || '')}</div>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label>Monto cobrado al cliente</label>
+        <div style="background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; padding:14px; font-size:18px; font-weight:800; text-align:center; color:var(--brand);">${formatBs(monto)}</div>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label>Costo del repuesto</label>
+        <input type="number" id="costoInput" step="0.01" min="0" value="${costoActual > 0 ? costoActual.toFixed(2) : ''}" inputmode="decimal" placeholder="0.00" style="color:#F59E0B; font-weight:800; text-align:center;">
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button type="button" class="costo-preset" data-pct="0.7" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">70%</button>
+          <button type="button" class="costo-preset" data-pct="0.5" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">50%</button>
+          <button type="button" class="costo-preset" data-pct="0.4" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">40%</button>
+        </div>
+      </div>
+      <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:16px; margin-bottom:1.2rem; text-align:center;">
+        <div style="font-size:11px; color:var(--text-mute); text-transform:uppercase; font-weight:700; letter-spacing:0.6px; margin-bottom:4px;">Ganancia neta</div>
+        <div id="gananciaPreview" style="font-size:26px; font-weight:900; color:#10B981; line-height:1;">${formatBs(gananciaInicial)}</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="btnCancelarCosto" class="btn-modal-cancel">Cancelar</button>
+        <button type="button" id="btnGuardarCosto" class="btn-modal-confirm"><i class="fas fa-check"></i> Guardar</button>
+      </div>
     </div>`;
 
   document.body.appendChild(modal);
 
-  // 🔥 AÑADIR LA CLASE 'show'
   setTimeout(() => {
     modal.classList.add('show');
   }, 10);
@@ -509,7 +620,7 @@ function abrirModalCosto() {
 }
 
 /* ============================================================
-   MODAL DE FECHA (CORREGIDO CON 'show')
+   MODAL DE FECHA (ESTILOS MEJORADOS)
    ============================================================ */
 function abrirModalFecha() {
   if (sesion.rol !== 'admin') return;
@@ -528,13 +639,18 @@ function abrirModalFecha() {
     <div class="modal">
       <h3 style="color:var(--brand); font-weight:800; font-size:18px; margin-bottom:8px;"><i class="fas fa-calendar-alt"></i> Editar Fecha</h3>
       <p style="font-size:12px; color:var(--text-mute); margin-bottom:16px;">Esta acción cambiará la fecha en el panel y en los reportes.</p>
-      <div style="margin-bottom:20px;"><label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Nueva Fecha</label><input type="date" id="inputFechaOrden" value="${fechaActualStr}" style="width:100%; padding:14px; font-size:16px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:8px; font-family:inherit;"></div>
-      <div style="display:flex; gap:8px;"><button type="button" id="btnCancelarFecha" style="flex:1; padding:14px; border-radius:8px; border:1px solid var(--border); background:var(--bg-elev); color:var(--text-main); font-weight:700; cursor:pointer; font-family:inherit;">Cancelar</button><button type="button" id="btnGuardarFecha" style="flex:1; padding:14px; border-radius:8px; border:none; background:var(--brand); color:white; font-weight:700; cursor:pointer; font-family:inherit;"><i class="fas fa-save"></i> Guardar</button></div>
+      <div style="margin-bottom:20px;">
+        <label>Nueva Fecha</label>
+        <input type="date" id="inputFechaOrden" value="${fechaActualStr}">
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="btnCancelarFecha" class="btn-modal-cancel">Cancelar</button>
+        <button type="button" id="btnGuardarFecha" class="btn-modal-confirm"><i class="fas fa-save"></i> Guardar</button>
+      </div>
     </div>`;
 
   document.body.appendChild(modal);
 
-  // 🔥 AÑADIR LA CLASE 'show'
   setTimeout(() => {
     modal.classList.add('show');
   }, 10);
