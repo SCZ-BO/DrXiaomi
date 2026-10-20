@@ -193,7 +193,7 @@
     </header>
 
     <main class="app-content" id="contenido">
-      <!-- El contenido se inyecta por JS -->
+      <!-- El contenido completo (recibo, bitácora, estados, modales) se inyecta aquí por el orden.js -->
     </main>
   </div>
 
@@ -203,16 +203,15 @@
     <img src="" alt="Vista previa" id="imgViewerImg">
   </div>
 
-  <!-- 🚨 IMPORTANTE: Cargar explícitamente orden.js -->
   <script type="module" src="./orden.js"></script>
 
-  <!-- 🔥 RED DE SEGURIDAD: Si el Loader sigue visible a los 2s, lo apagamos -->
+  <!-- 🔥 RED DE SEGURIDAD -->
   <script>
     setTimeout(() => {
       const loader = document.getElementById('appLoader');
       if (loader && !loader.classList.contains('hidden')) {
         loader.classList.add('hidden');
-        console.warn('⚠️ Loader apagado por seguridad (timeout de 2s). Revisa la consola para ver el error de orden.js');
+        console.warn('⚠️ Loader apagado por seguridad (timeout de 2s).');
       }
     }, 2000);
   </script>
