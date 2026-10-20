@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · CLIENTE (Wizard PRO - Código Completo y Blindado)
+   DR. XIAOMI · CLIENTE (Wizard PRO - Código Completo y Mejorado)
    Archivo: js/cliente.js
    ============================================================ */
 
@@ -128,26 +128,58 @@ function limpiarBorrador() {
 }
 
 /* ============================================================
-   HEADER Y WIZARD
+   HEADER Y WIZARD (CON LOS NUEVOS BOTONES)
    ============================================================ */
 function configurarHeader() {
+  // 1. Botón Volver (Izquierda)
   document.getElementById('backToPanelBtn')?.addEventListener('click', () => {
     haptic(10);
     if (confirm('¿Salir? Tu borrador se guardará automáticamente.')) window.location.href = '/app/';
   });
   
-  document.getElementById('clearDraftBtn')?.addEventListener('click', () => { haptic(15); limpiarBorrador(); });
+  // 2. Botón Casa (Home)
+  document.getElementById('homeBtn')?.addEventListener('click', () => {
+    haptic(10);
+    if (confirm('¿Ir al panel principal? Tu borrador se guardará.')) window.location.href = '/app/';
+  });
 
+  // 3. Botón Limpiar Borrador
+  document.getElementById('clearDraftBtn')?.addEventListener('click', () => { 
+    haptic(15); 
+    limpiarBorrador(); 
+  });
+
+  // 4. Botón Refrescar
+  document.getElementById('btnRefresh')?.addEventListener('click', () => {
+    haptic(10);
+    const icon = document.getElementById('iconRefresh');
+    if (icon) icon.style.transform = 'rotate(360deg)';
+    setTimeout(() => { window.location.reload(); }, 300);
+  });
+
+  // 5. Botón Precios
+  document.getElementById('preciosBtn')?.addEventListener('click', () => {
+    haptic(10);
+    if (confirm('¿Ir a la lista de precios? Tu borrador se guardará.')) {
+      window.location.href = '/precio/'; 
+    }
+  });
+
+  // 6. Botón Reportes (Solo visible para Admin)
+  document.getElementById('reportesBtn')?.addEventListener('click', () => {
+    haptic(10);
+    window.location.href = '/app/reportes/';
+  });
+
+  if (sesion && sesion.rol === 'admin') {
+    const btnReportes = document.getElementById('reportesBtn');
+    if (btnReportes) btnReportes.style.display = 'flex';
+  }
+
+  // 7. Botón Salir
   document.getElementById('logoutBtn')?.addEventListener('click', () => {
     haptic(20);
     if (confirm('¿Cerrar sesión?')) logout();
-  });
-
-  document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
-    const html = document.documentElement;
-    const nuevo = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    html.setAttribute('data-theme', nuevo);
-    localStorage.setItem('theme', nuevo);
   });
 }
 
@@ -184,7 +216,7 @@ function irAPaso(nuevoPaso) {
     if (appBody) appBody.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // 🚨 ARREGLO DEFINITIVO PARA EL PASO 3
+  // 🚨 ARREGLO DEFINITIVO PARA EL PASO 3 (Lógica Inteligente)
   if (pasoActual === 3) {
     setTimeout(() => {
       const valorEnciende = document.getElementById('enciende')?.value;
