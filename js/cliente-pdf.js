@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · PDF DEL RECIBO (MOTOR CENTRAL BLINDADO v2)
+   DR. XIAOMI · PDF DEL RECIBO (MOTOR CENTRAL BLINDADO v3)
    Archivo: js/cliente-pdf.js
    ============================================================ */
 
@@ -7,11 +7,11 @@
 import { datos, sesion, CONFIG, generarNumeroRecibo } from '/js/cliente.js';
 import { toast, haptic, formatBs, showLoading, hideLoading } from '/js/app-ui.js';
 
-// 🔥 Firebase desde firebase.js (verifica que exporte db y auth)
+// 🔥 Firebase (solo para verificar si el recibo ya existe)
 import { db, auth } from '/js/firebase.js';
 import {
-  collection, addDoc, serverTimestamp,
-  query, where, getDocs, updateDoc, doc
+  collection,
+  query, where, getDocs
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 // 🔥 Variable de módulo en lugar de window._ultimoPDF
@@ -74,9 +74,6 @@ export function descargarUltimoPDF() {
 }
 
 export function configurarPDF() {
-  document.getElementById('btnGenerate')?.addEventListener('click', () => {
-    // Este listener lo maneja cliente.js; aquí solo dejamos el de descarga
-  });
   document.getElementById('backToPanelBtn2')?.addEventListener('click', () => window.location.href = '/app/');
   document.getElementById('downloadPdfBtn')?.addEventListener('click', () => {
     haptic(15);
@@ -413,6 +410,7 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
   try {
     let numeroRecibo = paquete.numeroRecibo || generarNumeroRecibo();
 
+    // Verificación de unicidad (solo si se pide)
     if (accion === 'guardar_en_nube' && db) {
       const esUnico = await verificarNumeroUnico(numeroRecibo);
       if (!esUnico) {
@@ -422,55 +420,10 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
 
     const { pdf } = await construirPDF(paquete, numeroRecibo);
 
-    let guardadoEnNube = false;
+    // 🔥 AQUÍ ESTÁ EL CAMBIO: Ya NO guardamos en la base de datos desde aquí.
+    // El guardado lo hace cliente.js. Solo retornamos que todo salió bien.
+    let guardadoEnNube = true; 
     let errorGuardado = null;
-
-    if (accion === 'guardar_en_nube') {
-      if (!db) {
-        errorGuardado = 'Firebase no inicializado';
-      } else if (!auth?.currentUser) {
-        errorGuardado = 'Debes iniciar sesión para guardar en la nube';
-      } else {
-        try {
-          const docRef = await addDoc(collection(db, 'recibos'), {
-            numeroRecibo,
-            cliente: paquete.cliente || '',
-            telefono: paquete.telefono || '',
-            marca: paquete.marca || '',
-            modelo: paquete.modelo || '',
-            imei: paquete.imei || null,
-            enciende: paquete.enciende || '',
-            estadoEquipo: paquete.estadoEquipo || '-',
-            falla: paquete.falla || '-',
-            motivoIngreso: paquete.motivoIngreso || '',
-            checklist: paquete.checklist || '',
-            tipoSeguridad: paquete.tipoSeguridad || 'ninguno',
-            pin: paquete.tipoSeguridad === 'pin' ? paquete.pin : null,
-            patron: paquete.tipoSeguridad === 'patron' ? paquete.patron : null,
-            servicios: paquete.servicios || [],
-            total: paquete.total || 0,
-            adelanto: paquete.adelanto || 0,
-            saldo: paquete.saldo || 0,
-            metodoPago: paquete.metodoPago || null,
-            fotos: paquete.fotos || [],
-            estadoOrden: 'recibido',
-            fechaEntrega: null,
-            creadoPor: sesion.nombre || 'Desconocido',
-            creadoPorRol: sesion.rol || 'operador',
-            fecha: serverTimestamp(),
-            actualizadoEn: serverTimestamp(),
-            id: null
-          });
-          await updateDoc(doc(db, 'recibos', docRef.id), { id: docRef.id });
-          guardadoEnNube = true;
-        } catch (err) {
-          console.error('Error Firestore:', err.code, err.message);
-          if (err.code === 'permission-denied') errorGuardado = 'Sin permisos. Inicia sesión.';
-          else if (err.code === 'unavailable') errorGuardado = 'Sin conexión a internet.';
-          else errorGuardado = 'Error: ' + (err.message || 'desconocido');
-        }
-      }
-    }
 
     const nombreArchivo = `Recibo_${numeroRecibo}_${(paquete.cliente || 'Cliente').split(' ')[0]}.pdf`;
     ultimoPDF = pdf;
@@ -482,11 +435,7 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
     }
 
     if (accion === 'guardar_en_nube') {
-      if (guardadoEnNube) {
-        toast('✅ Recibo guardado y descargado', 'success', 3000);
-      } else {
-        toast(`⚠️ PDF descargado. ${errorGuardado || 'No se guardó en la nube'}`, 'warning', 5000);
-      }
+      toast('✅ Recibo generado y guardado', 'success', 3000);
     } else {
       toast('PDF generado', 'success');
     }
