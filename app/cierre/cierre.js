@@ -1,12 +1,15 @@
 /* ============================================================
-   DR. XIAOMI · CIERRE DE CAJA
+   DR. XIAOMI · CIERRE DE CAJA (CON PDF Y DESCUENTO DE STOCK)
    Archivo: app/cierre/cierre.js
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
 import { toast, haptic, initTheme, formatBs, escapeHtml } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
-import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { 
+  collection, query, where, getDocs, addDoc, serverTimestamp, 
+  doc, updateDoc, increment // 🔥 IMPORTANTE: increment para el stock
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 initTheme();
 let sesion = null;
@@ -183,6 +186,7 @@ document.getElementById('btnAddExtra')?.addEventListener('click', () => {
   agregarExtra();
 });
 
+// 🔥 GUARDAR CIERRE Y DESCONTAR STOCK
 document.getElementById('btnGuardarCierre')?.addEventListener('click', async () => {
   haptic(15);
   const totalExtras = calcularTotalExtras();
@@ -195,6 +199,7 @@ document.getElementById('btnGuardarCierre')?.addEventListener('click', async () 
   }
 
   try {
+    // 1. Guardar el cierre en Firestore
     await addDoc(collection(db, 'cierres'), {
       fecha: serverTimestamp(),
       realizadoPor: sesion.nombre,
@@ -206,7 +211,7 @@ document.getElementById('btnGuardarCierre')?.addEventListener('click', async () 
       totalGlobal
     });
 
-    // Descontar stock del inventario
+    // 2. Descontar stock del inventario
     for (const v of ventasInventario) {
       const prodRef = doc(db, 'productos', v.id);
       await updateDoc(prodRef, {
@@ -215,48 +220,121 @@ document.getElementById('btnGuardarCierre')?.addEventListener('click', async () 
     }
 
     toast('Cierre guardado y stock actualizado', 'success');
+    setTimeout(() => window.location.href = '/app/', 1500);
+
   } catch (error) {
     console.error(error);
     toast('Error al guardar cierre', 'error');
   }
 });
 
-document.getElementById('btnEnviarWhatsApp')?.addEventListener('click', () => {
+// 🔥 ENVIAR CIERRE POR WHATSAPP (CON PDF)
+document.getElementById('btnEnviarWhatsApp')?.addEventListener('click', async () => {
   haptic(15);
   const totalExtras = calcularTotalExtras();
   const totalInventario = calcularTotalInventario();
   const totalGlobal = reparacionesData.total + totalExtras + totalInventario;
 
-  let msg = `*CIERRE DE CAJA - DR. XIAOMI*\n`;
-  msg += `📅 Fecha: ${new Date().toLocaleDateString('es-BO')}\n`;
-  msg += `👤 Por: ${sesion.nombre}\n\n`;
-
-  msg += `*🔧 REPARACIONES (${reparacionesData.cantidad})*\n`;
-  msg += `Total: ${formatBs(reparacionesData.total)}\n`;
-  msg += `💵 Efectivo: ${formatBs(reparacionesData.efectivo)}\n`;
-  msg += `📱 QR: ${formatBs(reparacionesData.qr)}\n`;
-  msg += `🏦 Transf: ${formatBs(reparacionesData.transf)}\n\n`;
-
-  if (ventasInventario.length > 0) {
-    msg += `*🛒 ACCESORIOS VENDIDOS*\n`;
-    ventasInventario.forEach(v => {
-      msg += `- ${v.cantidad}x ${v.nombre}: ${formatBs(v.precio * v.cantidad)}\n`;
-    });
-    msg += `\n`;
+  if (totalGlobal === 0) {
+    toast('No hay ingresos para generar el cierre', 'warning');
+    return;
   }
 
-  if (extras.length > 0) {
-    msg += `*✍️ VENTAS EXTRAS*\n`;
-    extras.forEach(ext => {
-      if (ext.desc || ext.monto > 0) msg += `- ${ext.desc || 'Venta'}: ${formatBs(ext.monto)}\n`;
-    });
-    msg += `\n`;
+  try {
+    // Generar PDF
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+
+    // Encabezado
+    pdf.setFillColor(230, 81, 0);
+    pdf.rect(0, 0, 210, 30, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(20);
+    pdf.text('DR. XIAOMI SCZ', 14, 15);
+    pdf.setFontSize(10);
+    pdf.text('Cierre de Caja Diario', 14, 22);
+
+    // Fecha y Usuario
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(12);
+    pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, 14, 45);
+    pdf.text(`Realizado por: ${sesion.nombre}`, 14, 52);
+
+    // Sección Reparaciones
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Reparaciones', 14, 65);
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`- Cantidad entregada: ${reparacionesData.cantidad}`, 18, 72);
+    pdf.text(`- Total: ${formatBs(reparacionesData.total)}`, 18, 79);
+    pdf.text(`  Efectivo: ${formatBs(reparacionesData.efectivo)} | QR: ${formatBs(reparacionesData.qr)} | Transf: ${formatBs(reparacionesData.transf)}`, 18, 86);
+
+    let y = 95;
+
+    // Sección Accesorios
+    if (ventasInventario.length > 0) {
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Accesorios Vendidos', 14, y);
+      y += 7;
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      
+      ventasInventario.forEach(v => {
+        pdf.text(`- ${v.cantidad}x ${v.nombre}: ${formatBs(v.precio * v.cantidad)}`, 18, y);
+        y += 7;
+      });
+      y += 5;
+    }
+
+    // Sección Extras
+    if (extras.length > 0) {
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Ventas Extras', 14, y);
+      y += 7;
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      
+      extras.forEach(ext => {
+        if (ext.desc || ext.monto > 0) {
+          pdf.text(`- ${ext.desc || 'Venta'}: ${formatBs(ext.monto)}`, 18, y);
+          y += 7;
+        }
+      });
+      y += 5;
+    }
+
+    // Total Destacado
+    pdf.setFillColor(240, 240, 240);
+    pdf.rect(14, y, 182, 20, 'F');
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(230, 81, 0);
+    pdf.text(`TOTAL DEL DÍA: ${formatBs(totalGlobal)}`, 105, y + 13, { align: 'center' });
+
+    // Footer
+    pdf.setFontSize(8);
+    pdf.setTextColor(120, 120, 120);
+    pdf.text('Generado automáticamente por DR. Xiaomi', 105, 280, { align: 'center' });
+
+    // Guardar PDF
+    const nombreArchivo = `Cierre_${new Date().toISOString().slice(0,10)}.pdf`;
+    pdf.save(nombreArchivo);
+    toast('PDF generado. Adjúntalo en WhatsApp.', 'success');
+
+    // Abrir WhatsApp (con el texto para avisar)
+    setTimeout(() => {
+      const mensaje = `Hola, le envío el Cierre de Caja del día ${new Date().toLocaleDateString('es-BO')}.\n\n*Total del día: ${formatBs(totalGlobal)}*\n\nLe adjunto el PDF con el detalle.`;
+      const telDueno = '59175959450';
+      window.open(`https://wa.me/${telDueno}?text=${encodeURIComponent(mensaje)}`, '_blank');
+    }, 1000);
+
+  } catch (error) {
+    console.error('Error generando PDF:', error);
+    toast('Error al generar el PDF', 'error');
   }
-
-  msg += `*📊 TOTAL DEL DÍA: ${formatBs(totalGlobal)}*`;
-
-  const telDueno = '59175959450'; 
-  window.open(`https://wa.me/${telDueno}?text=${encodeURIComponent(msg)}`, '_blank');
 });
 
 // Red de seguridad
