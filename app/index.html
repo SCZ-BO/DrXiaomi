@@ -73,26 +73,21 @@
     .chip { padding: 8px 14px; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-mute); font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: 0.2s; }
     .chip.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
 
+    /* 🔥 LISTA UNIFICADA DE INGRESOS */
     .section-title { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; margin-top: 24px; }
     
-    .orden-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; transition: 0.2s; cursor: pointer; position: relative; border-left: 3px solid var(--border); }
-    .orden-card:active { transform: scale(0.98); background: var(--bg-elev); }
-    .orden-card[data-estado="recibido"] { border-left-color: #9CA3AF; }
-    .orden-card[data-estado="reparacion"] { border-left-color: var(--brand); }
-    .orden-card[data-estado="espera-repuesto"] { border-left-color: #3B82F6; }
-    .orden-card[data-estado="listo"] { border-left-color: #FBBF24; }
-    .orden-card[data-estado="entregado"] { border-left-color: #22C55E; }
-    .orden-card[data-estado="devuelto"] { border-left-color: #EF4444; }
-
-    .venta-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid var(--success); }
+    .ingreso-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; transition: 0.2s; cursor: pointer; position: relative; border-left: 3px solid var(--border); }
+    .ingreso-card:active { transform: scale(0.98); background: var(--bg-elev); }
+    
+    /* Colores por tipo */
+    .ingreso-card[data-tipo="telefono"] { border-left-color: var(--brand); }
+    .ingreso-card[data-tipo="venta"] { border-left-color: var(--success); }
+    .ingreso-card[data-tipo="cierre"] { border-left-color: #8B5CF6; }
 
     .chip-estado { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 700; text-transform: uppercase; }
-    .chip-estado[data-estado="recibido"] { background: rgba(255, 255, 255, 0.1); color: var(--text-main); }
-    .chip-estado[data-estado="reparacion"] { background: rgba(230, 81, 0, 0.15); color: var(--brand); }
-    .chip-estado[data-estado="espera-repuesto"] { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
-    .chip-estado[data-estado="listo"] { background: rgba(251, 191, 36, 0.15); color: #FBBF24; }
-    .chip-estado[data-estado="entregado"] { background: rgba(34, 197, 94, 0.15); color: #22C55E; }
-    .chip-estado[data-estado="devuelto"] { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
+    .chip-estado[data-tipo="telefono"] { background: rgba(230, 81, 0, 0.15); color: var(--brand); }
+    .chip-estado[data-tipo="venta"] { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .chip-estado[data-tipo="cierre"] { background: rgba(139, 92, 246, 0.15); color: #8B5CF6; }
     
     .metodo-pago { font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 4px; color: #22C55E; }
 
@@ -182,11 +177,7 @@
         <div class="stat-card"><div class="stat-value brand" id="statHoy">—</div><div class="stat-label">Ingresos Hoy</div></div>
       </div>
 
-      <!-- VENTAS UNIFICADAS (VENTAS RÁPIDAS + CIERRES) -->
-      <div id="seccionVentas" style="display: none;">
-        <div class="section-title" style="color: var(--success); margin-top: 0;">🛒 Ventas e Ingresos de Hoy</div>
-        <div id="listaVentas"></div>
-      </div>
+      <div class="section-title" style="margin-top: 0;">📋 Movimientos de Hoy</div>
 
       <div class="search-bar">
         <i class="fas fa-search"></i>
@@ -194,11 +185,9 @@
       </div>
 
       <div class="filters-row" id="filtros">
-        <button class="chip active" data-filtro="todos">Todas</button>
-        <button class="chip" data-filtro="recibido">Recibidas</button>
-        <button class="chip" data-filtro="reparacion">En reparación</button>
-        <button class="chip" data-filtro="listo">Listas</button>
-        <button class="chip" data-filtro="entregado">Entregadas</button>
+        <button class="chip active" data-filtro="todos">Todos</button>
+        <button class="chip" data-filtro="telefono">Reparaciones</button>
+        <button class="chip" data-filtro="venta">Ventas</button>
       </div>
 
       <div class="cards-list" id="listaOrdenes"></div>
@@ -252,7 +241,7 @@
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="font-size: 18px; font-weight: 800;">Detalle del Recibo</h3>
+        <h3 style="font-size: 18px; font-weight: 800;">Detalle del Movimiento</h3>
         <button class="icon-btn" id="btnCloseSheet" style="background: var(--bg-elev);"><i class="fas fa-times"></i></button>
       </div>
       <div id="sheetContent"></div>
@@ -295,8 +284,7 @@
     function iniciarApp() {
       document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
       configurarEventos();
-      cargarOrdenes();
-      cargarVentasYExtras();
+      cargarDatos();
     }
 
     function parsearFecha(fechaObj) {
@@ -352,8 +340,7 @@
         if (unsubscribeVentas) { unsubscribeVentas(); unsubscribeVentas = null; }
         if (unsubscribeCierres) { unsubscribeCierres(); unsubscribeCierres = null; }
         
-        cargarOrdenes();
-        cargarVentasYExtras();
+        cargarDatos();
         
         setTimeout(() => { icon.style.animation = 'none'; toast('Lista actualizada', 'success', 1500); }, 1500);
       });
@@ -365,126 +352,26 @@
         document.querySelectorAll('#filtros .chip').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         filtroActual = btn.dataset.filtro;
-        renderizarOrdenes();
+        renderizarTodo();
       });
+      
       document.getElementById('buscador').addEventListener('input', (e) => {
         busquedaActual = e.target.value.toLowerCase().trim();
-        renderizarOrdenes();
+        renderizarTodo();
       });
 
       btnCargarMas?.addEventListener('click', cargarMasOrdenes);
     }
 
-    // CARGA UNIFICADA DE VENTAS Y EXTRAS (Igual que en Reportes)
     let ventasPanel = [];
     let ventasCierre = [];
 
-    function cargarVentasYExtras() {
-      // 1. Escuchar 'ventas'
-      const qVentas = query(collection(db, 'ventas'), limit(100));
-      unsubscribeVentas = onSnapshot(qVentas, (snapshot) => {
-        ventasPanel = snapshot.docs.map(d => ({ id: d.id, origen: 'panel', ...d.data() }));
-        procesarVentasHoy();
-      });
-
-      // 2. Escuchar 'cierres' (para extras e inventario vendido)
-      const qCierres = query(collection(db, 'cierres'), limit(100));
-      unsubscribeCierres = onSnapshot(qCierres, (snapshot) => {
-        ventasCierre = [];
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          
-          if (d.ventasInventario && d.ventasInventario.length > 0) {
-            d.ventasInventario.forEach(v => {
-              ventasCierre.push({
-                id: doc.id + '_inv',
-                origen: 'cierre',
-                concepto: `${v.cantidad}x ${v.nombre}`,
-                monto: Number(v.precio * v.cantidad) || 0,
-                metodoPago: 'Efectivo',
-                fecha: d.fecha
-              });
-            });
-          }
-
-          if (d.extras && d.extras.length > 0) {
-            d.extras.forEach(e => {
-              if (e.monto > 0) {
-                ventasCierre.push({
-                  id: doc.id + '_extra',
-                  origen: 'cierre',
-                  concepto: e.desc || 'Venta Extra',
-                  monto: Number(e.monto) || 0,
-                  metodoPago: 'Efectivo',
-                  fecha: d.fecha
-                });
-              }
-            });
-          }
-        });
-        procesarVentasHoy();
-      });
-    }
-
-    function procesarVentasHoy() {
-      const hoy = new Date(); hoy.setHours(0,0,0,0);
-      const todas = [...ventasPanel, ...ventasCierre];
-      
-      ventasHoy = todas.filter(v => {
-        const f = parsearFecha(v.fecha);
-        return f && f >= hoy;
-      });
-
-      ventasHoy.sort((a, b) => {
-        const fa = parsearFecha(a.fecha);
-        const fb = parsearFecha(b.fecha);
-        return fb - fa;
-      });
-
-      renderizarVentasHoy();
-      actualizarStats();
-    }
-
-    function renderizarVentasHoy() {
-      const seccion = document.getElementById('seccionVentas');
-      const lista = document.getElementById('listaVentas');
-      
-      if (ventasHoy.length === 0) {
-        seccion.style.display = 'none';
-        return;
-      }
-
-      seccion.style.display = 'block';
-      lista.innerHTML = ventasHoy.map(v => {
-        const fechaD = parsearFecha(v.fecha);
-        const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
-        
-        let icono = '🛒';
-        if (v.concepto === 'Botón') icono = '🔘';
-        else if (v.concepto === 'Limpieza') icono = '🧹';
-        else if (v.concepto === 'Reactivación') icono = '⚡';
-        else if (v.concepto === 'Cargador') icono = '🔌';
-
-        return `
-          <div class="venta-card">
-            <div>
-              <div style="font-size: 14px; font-weight: 700; color: var(--text-main);">${icono} ${escapeHtml(v.concepto)}</div>
-              <div style="font-size: 11px; color: var(--text-mute); margin-top: 2px;">${horaStr} · ${escapeHtml(v.metodoPago)}</div>
-            </div>
-            <div style="text-align: right;">
-              <div style="font-size: 16px; font-weight: 800; color: var(--success);">${formatBs(v.monto)}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function cargarOrdenes() {
+    function cargarDatos() {
+      // 1. Cargar Recibos
       if (unsubscribe) unsubscribe();
       if (appLoader) appLoader.classList.remove('hidden');
-
-      const q = query(collection(db, 'recibos'), limit(200));
-      unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, 
+      const qRecibos = query(collection(db, 'recibos'), limit(200));
+      unsubscribe = onSnapshot(qRecibos, { includeMetadataChanges: true }, 
         (snapshot) => {
           ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
           
@@ -499,8 +386,7 @@
           hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
           if (snapshot.docs.length > 0) ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
 
-          renderizarOrdenes();
-          actualizarStats();
+          renderizarTodo();
           if (appLoader) appLoader.classList.add('hidden');
         }, 
         (error) => {
@@ -508,71 +394,171 @@
           if (appLoader) appLoader.classList.add('hidden');
         }
       );
-    }
 
-    async function cargarMasOrdenes() {
-      if (!ultimoDocumento) return;
-      haptic(10);
-      const textoOriginal = btnCargarMas.innerHTML;
-      btnCargarMas.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
-      btnCargarMas.disabled = true;
+      // 2. Cargar Ventas Rápidas
+      if (unsubscribeVentas) unsubscribeVentas();
+      const qVentas = query(collection(db, 'ventas'), limit(100));
+      unsubscribeVentas = onSnapshot(qVentas, (snapshot) => {
+        ventasPanel = snapshot.docs.map(d => ({ id: d.id, origen: 'panel', coleccion: 'ventas', ...d.data() }));
+        procesarVentas();
+      });
 
-      try {
-        const q = query(collection(db, 'recibos'), startAfter(ultimoDocumento), limit(LIMITE_POR_PAGINA));
-        const snapshot = await getDocs(q);
-        const nuevosRecibos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        
-        ordenes = [...ordenes, ...nuevosRecibos];
-        ordenes.sort((a, b) => {
-          const fa = a.fechaEditada || a.fecha;
-          const fb = b.fechaEditada || b.fecha;
-          const da = parsearFecha(fa);
-          const db = parsearFecha(fb);
-          return db - da;
+      // 3. Cargar Cierres Extras
+      if (unsubscribeCierres) unsubscribeCierres();
+      const qCierres = query(collection(db, 'cierres'), limit(100));
+      unsubscribeCierres = onSnapshot(qCierres, (snapshot) => {
+        ventasCierre = [];
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          
+          if (d.ventasInventario && d.ventasInventario.length > 0) {
+            d.ventasInventario.forEach((v, index) => {
+              ventasCierre.push({
+                id: doc.id,
+                indexExtra: `inv_${index}`,
+                origen: 'cierre',
+                coleccion: 'cierres',
+                concepto: `${v.cantidad}x ${v.nombre}`,
+                monto: Number(v.precio * v.cantidad) || 0,
+                metodoPago: 'Efectivo',
+                fecha: d.fecha
+              });
+            });
+          }
+
+          if (d.extras && d.extras.length > 0) {
+            d.extras.forEach((e, index) => {
+              if (e.monto > 0) {
+                ventasCierre.push({
+                  id: doc.id,
+                  indexExtra: `ext_${index}`,
+                  origen: 'cierre',
+                  coleccion: 'cierres',
+                  concepto: e.desc || 'Venta Extra',
+                  monto: Number(e.monto) || 0,
+                  metodoPago: 'Efectivo',
+                  fecha: d.fecha
+                });
+              }
+            });
+          }
         });
-        
-        if (snapshot.docs.length > 0) ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
-        hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
-
-        renderizarOrdenes();
-        actualizarStats();
-      } catch (error) {
-        toast('No se pudieron cargar más', 'error');
-      } finally {
-        btnCargarMas.innerHTML = textoOriginal;
-        btnCargarMas.disabled = false;
-      }
-    }
-
-    function renderizarOrdenes() {
-      const lista = document.getElementById('listaOrdenes');
-      let filtradas = ordenes;
-      
-      if (filtroActual !== 'todos') filtradas = filtradas.filter(o => (o.estadoOrden || 'recibido') === filtroActual);
-      if (busquedaActual) {
-        filtradas = filtradas.filter(o => {
-          const texto = [o.numeroRecibo, o.cliente, o.telefono, o.marca, o.modelo].filter(Boolean).join(' ').toLowerCase();
-          return texto.includes(busquedaActual);
-        });
-      }
-      
-      if (filtradas.length === 0) {
-        lista.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><h3>${busquedaActual ? 'Sin resultados' : 'No hay órdenes'}</h3><p>${busquedaActual ? 'Prueba otra búsqueda' : 'Crea el primer recibo tocando +'}</p></div>`;
-        btnCargarMas.style.display = 'none';
-        return;
-      }
-      
-      lista.innerHTML = filtradas.map(o => renderCard(o)).join('');
-      
-      if (hayMasRecibos && !busquedaActual && filtroActual === 'todos') btnCargarMas.style.display = 'flex';
-      else btnCargarMas.style.display = 'none';
-
-      lista.querySelectorAll('.orden-card').forEach(card => {
-        card.addEventListener('click', () => { haptic(10); abrirSheet(card.dataset.id); });
+        procesarVentas();
       });
     }
 
-    function renderCard(o) {
+    function procesarVentas() {
+      const hoy = new Date(); hoy.setHours(0,0,0,0);
+      const todas = [...ventasPanel, ...ventasCierre];
+      
+      ventasHoy = todas.filter(v => {
+        const f = parsearFecha(v.fecha);
+        return f && f >= hoy;
+      });
+
+      ventasHoy.sort((a, b) => {
+        const fa = parsearFecha(a.fecha);
+        const fb = parsearFecha(b.fecha);
+        return fb - fa;
+      });
+
+      renderizarTodo();
+    }
+
+    // 🔥 UNIFICACIÓN DE LISTAS (TELÉFONOS + VENTAS)
+    function renderizarTodo() {
+      actualizarStats();
+      
+      const lista = document.getElementById('listaOrdenes');
+      let todosLosMovimientos = [];
+
+      // 1. Agregar Teléfonos
+      if (filtroActual === 'todos' || filtroActual === 'telefono') {
+        ordenes.forEach(o => {
+          const estaEntregado = o.estadoOrden === 'entregado';
+          const montoCobrado = Number(o.montoCobrado) || 0;
+          
+          // Solo mostramos teléfonos que sean ingresos (entregados y con monto) o que estén activos
+          if (estaEntregado && montoCobrado > 0) {
+            todosLosMovimientos.push({
+              tipo: 'telefono',
+              data: o,
+              fechaOrden: parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha),
+              monto: montoCobrado
+            });
+          } else if (!estaEntregado) {
+             // Mostrar activos también
+             todosLosMovimientos.push({
+              tipo: 'telefono',
+              data: o,
+              fechaOrden: parsearFecha(o.fechaEditada) || parsearFecha(o.fecha),
+              monto: Number(o.total) || 0
+            });
+          }
+        });
+      }
+
+      // 2. Agregar Ventas (Solo si el filtro es "Todos" o "Venta")
+      if (filtroActual === 'todos' || filtroActual === 'venta') {
+        ventasHoy.forEach(v => {
+          todosLosMovimientos.push({
+            tipo: v.origen === 'panel' ? 'venta' : 'cierre',
+            data: v,
+            fechaOrden: parsearFecha(v.fecha),
+            monto: v.monto
+          });
+        });
+      }
+
+      // 3. Filtrar por Búsqueda
+      if (busquedaActual) {
+        todosLosMovimientos = todosLosMovimientos.filter(m => {
+          let texto = '';
+          if (m.tipo === 'telefono') {
+            const o = m.data;
+            texto = [o.numeroRecibo, o.cliente, o.telefono, o.marca, o.modelo].filter(Boolean).join(' ').toLowerCase();
+          } else {
+            texto = m.data.concepto.toLowerCase();
+          }
+          return texto.includes(busquedaActual);
+        });
+      }
+
+      // 4. Ordenar TODO por fecha (lo más reciente arriba)
+      todosLosMovimientos.sort((a, b) => b.fechaOrden - a.fechaOrden);
+
+      // 5. Renderizar
+      if (todosLosMovimientos.length === 0) {
+        lista.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><h3>Sin movimientos</h3><p>No hay ingresos ni órdenes hoy.</p></div>`;
+        btnCargarMas.style.display = 'none';
+        return;
+      }
+
+      lista.innerHTML = todosLosMovimientos.map(m => {
+        if (m.tipo === 'telefono') {
+          return renderCardTelefono(m.data);
+        } else {
+          return renderCardVenta(m.data, m.tipo);
+        }
+      }).join('');
+
+      // Eventos
+      lista.querySelectorAll('.ingreso-card').forEach(card => {
+        card.addEventListener('click', () => {
+          haptic(10);
+          if (card.dataset.tipo === 'telefono') {
+            abrirSheetTelefono(card.dataset.id);
+          } else {
+            abrirSheetVenta(card.dataset.id, card.dataset.origen, card.dataset.extra);
+          }
+        });
+      });
+
+      if (hayMasRecibos && !busquedaActual && filtroActual === 'todos') btnCargarMas.style.display = 'flex';
+      else btnCargarMas.style.display = 'none';
+    }
+
+    function renderCardTelefono(o) {
       const estadoActual = o.estadoOrden || 'recibido';
       const estadoInfo = {
         recibido: { texto: 'Recibido', emoji: '📦' },
@@ -584,29 +570,53 @@
         cancelado: { texto: 'Cancelado', emoji: '⛔' }
       }[estadoActual] || { texto: estadoActual, emoji: '📋' };
 
-      const total = Number(o.total) || 0;
+      const total = Number(o.montoCobrado) || Number(o.total) || 0;
       const metodoPago = o.metodoPago ? o.metodoPago.replace(/\(.*\)/, '').trim() : '';
-      let serviciosTexto = '';
-      if (Array.isArray(o.servicios) && o.servicios.length > 0) {
-        serviciosTexto = o.servicios.map(s => s.desc).filter(d => d && d.trim() !== '' && d.trim() !== 'Sin descripción').join(' · ');
-      }
 
       return `
-        <div class="orden-card" data-id="${o.id}" data-estado="${estadoActual}">
+        <div class="ingreso-card" data-tipo="telefono" data-id="${o.id}" data-estado="${estadoActual}">
           <div style="display: flex; justify-content: space-between; align-items: start; gap: 10px;">
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
-                <span class="chip-estado" data-estado="${estadoActual}">${estadoInfo.emoji} ${estadoInfo.texto}</span>
+                <span class="chip-estado" data-tipo="telefono">${estadoInfo.emoji} ${estadoInfo.texto}</span>
                 <span style="font-size: 10px; color: var(--text-mute); font-weight: 600; font-family: monospace;">${o.numeroRecibo || '—'}</span>
               </div>
               <div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
               ${o.cliente ? `<div style="font-size: 12px; color: var(--text-mute); margin-bottom: 2px;">👤 ${escapeHtml(o.cliente)}</div>` : ''}
-              ${serviciosTexto ? `<div style="font-size: 11px; color: var(--text-mute); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">🔧 ${escapeHtml(serviciosTexto)}</div>` : ''}
               <div style="font-size: 10px; color: var(--text-mute); margin-top: 8px; display: flex; align-items: center; gap: 4px;"><i class="far fa-clock"></i> ${tiempoRelativo(o.fechaEditada || o.fecha)}</div>
             </div>
             <div style="text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: end; gap: 2px;">
               <div style="font-size: 16px; font-weight: 800; color: var(--brand);">${formatBs(total)}</div>
               ${metodoPago ? `<div class="metodo-pago">${getIconoMetodo(metodoPago)} ${escapeHtml(metodoPago)}</div>` : (estadoActual === 'entregado' ? `<div class="metodo-pago">✓ Pagado</div>` : '')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCardVenta(v, tipo) {
+      const fechaD = parsearFecha(v.fecha);
+      const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
+      
+      let icono = '🛒';
+      if (v.concepto === 'Botón') icono = '🔘';
+      else if (v.concepto === 'Limpieza') icono = '🧹';
+      else if (v.concepto === 'Reactivación') icono = '⚡';
+      else if (v.concepto === 'Cargador') icono = '🔌';
+
+      return `
+        <div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}">
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 10px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
+                <span class="chip-estado" data-tipo="${tipo}">${tipo === 'venta' ? '⚡ Venta' : '🛒 Extra'}</span>
+                <span style="font-size: 10px; color: var(--text-mute); font-weight: 600; font-family: monospace;">${horaStr}</span>
+              </div>
+              <div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">${icono} ${escapeHtml(v.concepto)}</div>
+              <div style="font-size: 11px; color: var(--text-mute); margin-bottom: 2px;">💵 ${escapeHtml(v.metodoPago)}</div>
+            </div>
+            <div style="text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: end; gap: 2px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--success);">${formatBs(v.monto)}</div>
             </div>
           </div>
         </div>
@@ -645,7 +655,41 @@
       document.getElementById('statHoy').textContent = formatBs(ingresosReparaciones + ingresosVentas);
     }
 
-    function abrirSheet(id) {
+    async function cargarMasOrdenes() {
+      if (!ultimoDocumento) return;
+      haptic(10);
+      const textoOriginal = btnCargarMas.innerHTML;
+      btnCargarMas.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+      btnCargarMas.disabled = true;
+
+      try {
+        const q = query(collection(db, 'recibos'), startAfter(ultimoDocumento), limit(LIMITE_POR_PAGINA));
+        const snapshot = await getDocs(q);
+        const nuevosRecibos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        
+        ordenes = [...ordenes, ...nuevosRecibos];
+        ordenes.sort((a, b) => {
+          const fa = a.fechaEditada || a.fecha;
+          const fb = b.fechaEditada || b.fecha;
+          const da = parsearFecha(fa);
+          const db = parsearFecha(fb);
+          return db - da;
+        });
+        
+        if (snapshot.docs.length > 0) ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
+        hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
+
+        renderizarTodo();
+      } catch (error) {
+        toast('No se pudieron cargar más', 'error');
+      } finally {
+        btnCargarMas.innerHTML = textoOriginal;
+        btnCargarMas.disabled = false;
+      }
+    }
+
+    // 🔥 MODAL PARA TELÉFONOS
+    function abrirSheetTelefono(id) {
       const orden = ordenes.find(o => o.id === id);
       if (!orden) return;
 
@@ -685,9 +729,6 @@
         try {
           await updateDoc(doc(db, 'recibos', id), { estadoOrden: nuevoEstado });
           toast('Estado actualizado', 'success');
-          orden.estadoOrden = nuevoEstado;
-          renderizarOrdenes();
-          actualizarStats();
           cerrarSheet();
         } catch (err) { toast('Error al actualizar', 'error'); }
       });
@@ -704,11 +745,128 @@
           try {
             await deleteDoc(doc(db, 'recibos', id));
             toast('Recibo eliminado', 'success');
-            ordenes = ordenes.filter(o => o.id !== id);
-            renderizarOrdenes();
-            actualizarStats();
             cerrarSheet();
           } catch (err) { toast('Error al eliminar', 'error'); }
+        }
+      });
+    }
+
+    // 🔥 MODAL PARA VENTAS
+    function abrirSheetVenta(id, origen, extra) {
+      const venta = ventasHoy.find(v => v.id === id && (v.indexExtra || '') === extra);
+      if (!venta) return;
+
+      const fechaD = parsearFecha(venta.fecha);
+      const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
+
+      sheetContent.innerHTML = `
+        <div style="margin-bottom: 20px;">
+          <h3 style="font-size: 18px; font-weight: 800; color: var(--success); margin: 0 0 4px 0;">${escapeHtml(venta.concepto)}</h3>
+          <p style="font-size: 13px; color: var(--text-mute); margin: 0;">${formatBs(venta.monto)} · ${horaStr} · ${escapeHtml(venta.metodoPago)}</p>
+        </div>
+        
+        ${origen === 'panel' ? `
+          <button class="btn-sheet btn-sheet-edit" id="btnEditarVenta"><i class="fas fa-edit"></i> Editar Monto / Detalle</button>
+        ` : ''}
+        
+        <button class="btn-sheet btn-sheet-danger" id="btnEliminarVenta"><i class="fas fa-trash"></i> Eliminar Venta</button>
+      `;
+
+      reciboSheet.classList.add('show');
+      haptic(15);
+
+      if (origen === 'panel') {
+        document.getElementById('btnEditarVenta')?.addEventListener('click', () => {
+          cerrarSheet();
+          abrirModalEditarVenta(venta);
+        });
+      }
+
+      document.getElementById('btnEliminarVenta')?.addEventListener('click', async () => {
+        if (!confirm('¿Eliminar esta venta permanentemente?')) return;
+        haptic(20);
+        try {
+          if (origen === 'panel') {
+            await deleteDoc(doc(db, 'ventas', id));
+            toast('Venta eliminada', 'success');
+          } else {
+            await deleteDoc(doc(db, 'cierres', id));
+            toast('Cierre eliminado', 'success');
+          }
+          cerrarSheet();
+        } catch (err) {
+          console.error(err);
+          toast('Error al eliminar', 'error');
+        }
+      });
+    }
+
+    function abrirModalEditarVenta(venta) {
+      const modal = document.createElement('div');
+      modal.className = 'sheet-backdrop';
+      modal.id = 'modalEditarVenta';
+      modal.style.display = 'flex';
+
+      modal.innerHTML = `
+        <div class="sheet">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="font-size: 18px; font-weight: 800;">Editar Venta</h3>
+            <button class="icon-btn" id="btnCloseEditV" style="background: var(--bg-elev);"><i class="fas fa-times"></i></button>
+          </div>
+          
+          <div class="input-group">
+            <label>Concepto</label>
+            <input type="text" id="editConceptoV" class="form-control" value="${escapeHtml(venta.concepto)}">
+          </div>
+
+          <div class="input-group">
+            <label>Monto (Bs.)</label>
+            <input type="number" id="editMontoV" class="form-control" value="${venta.monto}">
+          </div>
+
+          <div class="input-group">
+            <label>Método de Pago</label>
+            <select id="editMetodoV" class="form-control">
+              <option value="Efectivo" ${venta.metodoPago === 'Efectivo' ? 'selected' : ''}>💵 Efectivo</option>
+              <option value="QR" ${venta.metodoPago === 'QR' ? 'selected' : ''}>📱 QR</option>
+              <option value="Transferencia" ${venta.metodoPago === 'Transferencia' ? 'selected' : ''}>🏦 Transferencia</option>
+            </select>
+          </div>
+
+          <button class="btn-sheet btn-sheet-primary" id="btnSaveEditV">
+            <i class="fas fa-save"></i> Guardar Cambios
+          </button>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+      setTimeout(() => modal.classList.add('show'), 10);
+
+      const cerrar = () => {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
+      };
+
+      document.getElementById('btnCloseEditV').addEventListener('click', cerrar);
+      modal.addEventListener('click', (e) => { if (e.target === modal) cerrar(); });
+
+      document.getElementById('btnSaveEditV').addEventListener('click', async () => {
+        const nuevoConcepto = document.getElementById('editConceptoV').value.trim();
+        const nuevoMonto = parseFloat(document.getElementById('editMontoV').value) || 0;
+        const nuevoMetodo = document.getElementById('editMetodoV').value;
+
+        haptic(20);
+        try {
+          await updateDoc(doc(db, 'ventas', venta.id), {
+            concepto: nuevoConcepto,
+            monto: nuevoMonto,
+            metodoPago: nuevoMetodo
+          });
+          toast('Venta actualizada', 'success');
+          cerrar();
+        } catch (err) {
+          console.error(err);
+          toast('Error al actualizar', 'error');
         }
       });
     }
