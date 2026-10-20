@@ -176,8 +176,19 @@
   </div>
 
   <script type="module" src="./orden.js"></script>
+  
+  <!-- 🔥 SCRIPT DE SEGURIDAD PARA CERRAR EL LOADER -->
   <script>
-    setTimeout(() => document.getElementById('appLoader')?.classList.add('hidden'), 2000);
+    document.addEventListener('DOMContentLoaded', () => {
+      // Si en 3 segundos el loader sigue visible, lo ocultamos a la fuerza
+      setTimeout(() => {
+        const loader = document.getElementById('appLoader');
+        if (loader && !loader.classList.contains('hidden')) {
+          loader.classList.add('hidden');
+          console.warn('Loader apagado por seguridad.');
+        }
+      }, 3000);
+    });
   </script>
 </body>
 </html>
