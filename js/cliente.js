@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · CLIENTE (Wizard PRO - Código Completo)
+   DR. XIAOMI · CLIENTE (Wizard PRO - Código Completo y Corregido)
    Archivo: js/cliente.js
    ============================================================ */
 
@@ -95,9 +95,7 @@ function iniciar() {
 let timerGuardado = null;
 
 function guardarBorrador() {
-  try {
-    localStorage.setItem('drxiaomi_borrador', JSON.stringify(datos));
-  } catch (e) {}
+  try { localStorage.setItem('drxiaomi_borrador', JSON.stringify(datos)); } catch (e) {}
 }
 
 function guardarBorradorDebounce() {
@@ -142,10 +140,7 @@ function configurarHeader() {
     if (confirm('¿Salir? Tu borrador se guardará automáticamente.')) window.location.href = '/app/';
   });
   
-  document.getElementById('clearDraftBtn')?.addEventListener('click', () => {
-    haptic(15);
-    limpiarBorrador();
-  });
+  document.getElementById('clearDraftBtn')?.addEventListener('click', () => { haptic(15); limpiarBorrador(); });
 
   document.getElementById('logoutBtn')?.addEventListener('click', () => {
     haptic(20);
@@ -189,10 +184,26 @@ function irAPaso(nuevoPaso) {
   if (panel) {
     panel.classList.remove('hidden');
     panel.setAttribute('aria-hidden', 'false');
-    
-    // Hacemos scroll al tope del contenedor de la app, no de la ventana
     const appBody = document.getElementById('appBody');
     if (appBody) appBody.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // 🚨 ARREGLO: Forzar la lógica del Paso 3 al entrar (evita el bug de las tarjetas ocultas)
+  if (pasoActual === 3) {
+    const valorEnciende = document.getElementById('enciende')?.value;
+    const cardReparaciones = document.getElementById('cardReparaciones');
+    const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
+    const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
+    
+    if (valorEnciende === 'Sí' || valorEnciende === 'A veces') {
+      cardReparaciones?.classList.remove('hidden');
+      cardAuditoriaGeneral?.classList.remove('hidden');
+      cardAuditoriaFisica?.classList.add('hidden');
+    } else {
+      cardReparaciones?.classList.add('hidden');
+      cardAuditoriaGeneral?.classList.add('hidden');
+      cardAuditoriaFisica?.classList.remove('hidden');
+    }
   }
 
   actualizarBarraProgreso();
@@ -356,7 +367,7 @@ function configurarRadioGroups() {
       const valor = btn.dataset.value;
       document.getElementById('enciende').value = valor;
 
-      // LÓGICA DE COHERENCIA (Paso 3 cambia según encienda o no)
+      // LÓGICA DE COHERENCIA
       const cardReparaciones = document.getElementById('cardReparaciones');
       const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
       const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
@@ -441,7 +452,7 @@ function configurarChecklistSemáforo() {
 
   function actualizarResultadosChecklist() {
     const resultados = [];
-    document.querySelectorAll('#checklistGeneralGroup .check-item, #checklistFisicaGroup .check-item, #checklistFisicoGroup .check-item').forEach(btn => {
+    document.querySelectorAll('#checklistGeneralGroup .check-item, #checklistFisicoGroup .check-item').forEach(btn => {
       const item = btn.dataset.item;
       if (btn.classList.contains('ok')) resultados.push(`${item}: OK`);
       if (btn.classList.contains('falla')) resultados.push(`${item}: FALLA`);
