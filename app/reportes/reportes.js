@@ -1,13 +1,14 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v14)
+   DR. XIAOMI · REPORTES (VERSIÓN FINAL v15 - SOLO LECTURA)
    Archivo: app/reportes/reportes.js
-   ARREGLO: Permite borrar todo y respeta fechas editadas.
+   ARREGLO: Se quitaron los botones de editar/borrar. 
+   Todo se gestiona desde el panel principal.
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
 import { toast, haptic, initTheme, formatBs, escapeHtml } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
-import { collection, query, onSnapshot, limit, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, query, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 initTheme();
 let sesion = null;
@@ -71,7 +72,6 @@ function configurarEventos() {
   document.getElementById('btnExportar')?.addEventListener('click', exportarCSV);
 }
 
-// UTILIDAD PARA LEER CUALQUIER TIPO DE FECHA
 function parsearFecha(fechaObj) {
   if (!fechaObj) return null;
   if (typeof fechaObj.toDate === 'function') return fechaObj.toDate();
@@ -142,24 +142,21 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         const estaEntregado = d.estadoOrden === 'entregado';
         if (!estaEntregado && montoCobrado <= 0) return;
 
-        // 🔥 AQUÍ SE RESPETA LA FECHA EDITADA
+        // 🔥 Prioridad a la fecha editada manualmente
         const fechaD = parsearFecha(d.fechaEditada) || parsearFecha(d.fechaEntrega) || parsearFecha(d.fecha);
         if (!fechaD) return;
 
         const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
           datosRecibos.push({
-            id: doc.id,
             origen: 'recibo',
-            coleccion: 'recibos',
             cliente: d.cliente || 'Cliente',
             detalle: `${d.marca || ''} ${d.modelo || ''}`,
             montoCobrado: montoCobrado,
             costoRepuesto: Number(d.costoRepuesto) || 0,
             metodoPago: d.metodoPago || 'Efectivo',
             fechaReal: fechaD,
-            numeroRecibo: d.numeroRecibo || '',
-            estadoOrden: d.estadoOrden || 'recibido'
+            numeroRecibo: d.numeroRecibo || ''
           });
         }
       });
@@ -177,17 +174,14 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         const diaVenta = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaVenta >= diaInicio && diaVenta <= diaFin) {
           datosVentas.push({
-            id: doc.id,
             origen: 'venta_panel',
-            coleccion: 'ventas',
             cliente: 'Venta Rápida',
             detalle: d.concepto,
             montoCobrado: Number(d.monto) || 0,
             costoRepuesto: 0,
             metodoPago: d.metodoPago || 'Efectivo',
             fechaReal: fechaD,
-            numeroRecibo: '',
-            estadoOrden: 'entregado'
+            numeroRecibo: ''
           });
         }
       });
@@ -205,39 +199,31 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
           if (d.ventasInventario && d.ventasInventario.length > 0) {
-            d.ventasInventario.forEach((v, index) => {
+            d.ventasInventario.forEach((v) => {
               datosCierres.push({
-                id: doc.id,
-                indexExtra: `inv_${index}`,
                 origen: 'cierre',
-                coleccion: 'cierres',
                 cliente: 'Venta de Accesorio',
                 detalle: `${v.cantidad}x ${v.nombre}`,
                 montoCobrado: Number(v.precio * v.cantidad) || 0,
                 costoRepuesto: 0,
                 metodoPago: 'Efectivo',
                 fechaReal: fechaD,
-                numeroRecibo: '',
-                estadoOrden: 'entregado'
+                numeroRecibo: ''
               });
             });
           }
           if (d.extras && d.extras.length > 0) {
-            d.extras.forEach((e, index) => {
+            d.extras.forEach((e) => {
               if (e.monto > 0) {
                 datosCierres.push({
-                  id: doc.id,
-                  indexExtra: `ext_${index}`,
                   origen: 'cierre',
-                  coleccion: 'cierres',
                   cliente: 'Venta Extra',
                   detalle: e.desc || 'Varios',
                   montoCobrado: Number(e.monto) || 0,
                   costoRepuesto: 0,
                   metodoPago: 'Efectivo',
                   fechaReal: fechaD,
-                  numeroRecibo: '',
-                  estadoOrden: 'entregado'
+                  numeroRecibo: ''
                 });
               }
             });
@@ -305,8 +291,9 @@ function renderizarReporte(datos) {
     if (d.origen === 'cierre') icono = '🛒';
     else if (d.origen === 'venta_panel') icono = '⚡';
 
+    // 🔥 DISEÑO LIMPIO SIN BOTONES DE ACCIÓN
     movimientosHtml += `
-      <div class="movimiento" style="position: relative;">
+      <div class="movimiento">
         <div class="hora">${fechaStr}<br>${horaStr}</div>
         <div class="info">
           <div class="cliente">${icono} ${escapeHtml(d.cliente || 'Cliente')}</div>
@@ -318,17 +305,7 @@ function renderizarReporte(datos) {
           </div>
         </div>
         
-        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-          <div class="monto">${formatBs(monto)}</div>
-          <div style="display: flex; gap: 6px; margin-top: 4px;">
-            <button class="btn-edit-mov" data-id="${d.id}" data-origen="${d.origen}" data-coleccion="${d.coleccion}" data-extra="${d.indexExtra || ''}" style="background: rgba(59,130,246,0.1); color: #3B82F6; border: 1px solid #3B82F6; border-radius: 4px; padding: 4px 8px; font-size: 10px; cursor: pointer;">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn-del-mov" data-id="${d.id}" data-origen="${d.origen}" data-coleccion="${d.coleccion}" data-extra="${d.indexExtra || ''}" style="background: rgba(239,68,68,0.1); color: #EF4444; border: 1px solid #EF4444; border-radius: 4px; padding: 4px 8px; font-size: 10px; cursor: pointer;">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-        </div>
+        <div class="monto">${formatBs(monto)}</div>
       </div>
     `;
   }
@@ -353,145 +330,6 @@ function renderizarReporte(datos) {
   `;
 
   listaMovimientos.innerHTML = movimientosHtml;
-
-  document.querySelectorAll('.btn-del-mov').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      const coleccion = btn.dataset.coleccion;
-      const extra = btn.dataset.extra;
-
-      if (!confirm('¿Seguro que deseas eliminar este registro? Esta acción no se puede deshacer.')) return;
-      
-      haptic(20);
-      try {
-        // 🔥 AHORA SÍ PERMITE BORRAR TODO, INCLUSO EXTRAS DE CIERRES
-        if (extra) {
-           // Si es un extra de cierre, borramos el documento entero de cierre
-           await deleteDoc(doc(db, coleccion, id));
-           toast('Cierre eliminado', 'success');
-        } else {
-          await deleteDoc(doc(db, coleccion, id));
-          toast('Registro eliminado', 'success');
-        }
-      } catch (err) {
-        console.error(err);
-        toast('Error al eliminar', 'error');
-      }
-    });
-  });
-
-  document.querySelectorAll('.btn-edit-mov').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      const coleccion = btn.dataset.coleccion;
-      const extra = btn.dataset.extra;
-      const registro = datosActuales.find(d => d.id === id && d.indexExtra === extra);
-      
-      if (!registro) return;
-      abrirModalEdicion(registro);
-    });
-  });
-}
-
-function abrirModalEdicion(registro) {
-  haptic(15);
-  const modal = document.createElement('div');
-  modal.className = 'sheet-backdrop';
-  modal.id = 'modalEdicion';
-  modal.style.display = 'flex';
-
-  const esRecibo = registro.origen === 'recibo';
-
-  modal.innerHTML = `
-    <div class="sheet">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 style="font-size: 18px; font-weight: 800;">Editar ${esRecibo ? 'Recibo' : 'Venta'}</h3>
-        <button class="icon-btn" id="btnCloseEdit" style="background: var(--bg-elev);"><i class="fas fa-times"></i></button>
-      </div>
-      
-      <div class="input-group">
-        <label>Cliente / Concepto</label>
-        <input type="text" id="editCliente" class="form-control" value="${escapeHtml(registro.cliente)}" ${!esRecibo ? 'readonly style="opacity:0.5;"' : ''}>
-      </div>
-
-      <div class="input-group">
-        <label>Detalle</label>
-        <input type="text" id="editDetalle" class="form-control" value="${escapeHtml(registro.detalle)}">
-      </div>
-
-      <div class="input-group">
-        <label>Monto Cobrado (Bs.)</label>
-        <input type="number" id="editMonto" class="form-control" value="${registro.montoCobrado}">
-      </div>
-
-      <div class="input-group">
-        <label>Costo del Repuesto (Bs.)</label>
-        <input type="number" id="editCosto" class="form-control" value="${registro.costoRepuesto}">
-      </div>
-
-      <div class="input-group">
-        <label>Método de Pago</label>
-        <select id="editMetodo" class="form-control">
-          <option value="Efectivo" ${registro.metodoPago === 'Efectivo' ? 'selected' : ''}>💵 Efectivo</option>
-          <option value="QR" ${registro.metodoPago === 'QR' ? 'selected' : ''}>📱 QR</option>
-          <option value="Transferencia" ${registro.metodoPago === 'Transferencia' ? 'selected' : ''}>🏦 Transferencia</option>
-          <option value="Mixto" ${registro.metodoPago.includes('Mixto') ? 'selected' : ''}>🔀 Mixto</option>
-        </select>
-      </div>
-
-      <button class="btn-sheet btn-sheet-primary" id="btnSaveEdit">
-        <i class="fas fa-save"></i> Guardar Cambios
-      </button>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-  setTimeout(() => modal.classList.add('show'), 10);
-
-  const cerrar = () => {
-    modal.classList.remove('show');
-    setTimeout(() => modal.remove(), 300);
-  };
-
-  document.getElementById('btnCloseEdit').addEventListener('click', cerrar);
-  modal.addEventListener('click', (e) => { if (e.target === modal) cerrar(); });
-
-  document.getElementById('btnSaveEdit').addEventListener('click', async () => {
-    const nuevoMonto = parseFloat(document.getElementById('editMonto').value) || 0;
-    const nuevoCosto = parseFloat(document.getElementById('editCosto').value) || 0;
-    const nuevoDetalle = document.getElementById('editDetalle').value.trim();
-    const nuevoMetodo = document.getElementById('editMetodo').value;
-    
-    haptic(20);
-    try {
-      if (esRecibo) {
-        const nuevoCliente = document.getElementById('editCliente').value.trim();
-        await updateDoc(doc(db, 'recibos', registro.id), {
-          cliente: nuevoCliente,
-          montoCobrado: nuevoMonto,
-          costoRepuesto: nuevoCosto,
-          metodoPago: nuevoMetodo,
-          actualizadoEn: serverTimestamp()
-        });
-      } else if (registro.origen === 'venta_panel') {
-        await updateDoc(doc(db, 'ventas', registro.id), {
-          monto: nuevoMonto,
-          metodoPago: nuevoMetodo,
-          concepto: nuevoDetalle
-        });
-      } else {
-         toast('No se pueden editar registros de cierres antiguos.', 'warning');
-         return;
-      }
-      toast('Cambios guardados', 'success');
-      cerrar();
-    } catch (err) {
-      console.error(err);
-      toast('Error al guardar', 'error');
-    }
-  });
 }
 
 function exportarCSV() {
