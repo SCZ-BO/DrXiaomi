@@ -3,165 +3,167 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0A0A0B">
+  <meta name="theme-color" content="#0E0E0E">
   <title>DR. Xiaomi · Panel</title>
 
-  <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32x32.png">
+  <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
   <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
+  <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-  <link rel="stylesheet" href="/css/app-theme.css">
-  <link rel="stylesheet" href="/css/app-components.css">
-  <link rel="stylesheet" href="/css/app-layouts.css">
-  <link rel="manifest" href="/app/manifest.json">
+  
+  <link rel="manifest" href="/manifest.json">
 
   <style>
-    :root {
-      --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px;
-      --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    :root { 
+      --radius-sm: 4px; 
+      --radius-md: 8px; 
+      --radius-lg: 12px; 
+      --brand: #E65100; 
+      --brand-hover: #BF360C; 
+      --brand-light: rgba(230, 81, 0, 0.1); 
+      --bg-main: #0E0E0E; 
+      --bg-card: #181818; 
+      --bg-elev: #242424; 
+      --text-main: #F5F5F5; 
+      --text-mute: #888888; 
+      --border: #2A2A2A; 
     }
-    
-    .brand-logo-limpio { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--bg-elev-2); box-shadow: var(--shadow-sm); border: 1px solid var(--border-1); }
-    .brand-logo-limpio img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
-    .icon-btn .icon-img { width: 20px; height: 20px; object-fit: contain; display: block; pointer-events: none; opacity: 0.7; transition: 0.2s; }
-    .icon-btn .icon-img.blanco { filter: brightness(0) invert(1); }
+    [data-theme="light"] {
+      --bg-main: #F9F9F9; 
+      --bg-card: #FFFFFF; 
+      --bg-elev: #F0F0F0; 
+      --text-main: #111111; 
+      --text-mute: #666666; 
+      --border: #E0E0E0; 
+    }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-    .stat-card { background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: var(--radius-lg); padding: 16px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
-    .stat-value { font-size: 24px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 4px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    /* LAYOUT TIPO APP */
+    html, body { height: 100%; overflow: hidden; }
+    body { background-color: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
+    
+    .app-container { display: flex; flex-direction: column; height: 100%; }
+    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-main); border-bottom: 1px solid var(--border); z-index: 100; }
+    .app-content { flex: 1; overflow-y: auto; padding: 12px 12px 100px 12px; -webkit-overflow-scrolling: touch; }
+    
+    /* HEADER */
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-logo { width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .brand-text h1 { font-size: 15px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+    .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
+    
+    .header-actions { display: flex; gap: 6px; }
+    .icon-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+    .icon-btn:active { transform: scale(0.95); }
+    .icon-btn .icon-img { width: 16px; height: 16px; object-fit: contain; pointer-events: none; opacity: 0.8; filter: brightness(0) invert(1); }
+    [data-theme="light"] .icon-btn .icon-img { filter: none; }
+
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .stat-value { font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1; margin-bottom: 4px; }
     .stat-value.success { color: #22C55E; }
-    .stat-value.brand { color: var(--brand-500); }
-    .stat-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value.brand { color: var(--brand); }
+    .stat-label { font-size: 10px; font-weight: 600; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* Skeleton Loader (Mantenido por si acaso) */
-    .skeleton-card { background: var(--bg-elev-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border-1); animation: pulse 1.5s infinite; }
-    .skeleton-line { height: 12px; background: var(--bg-elev-2); border-radius: 6px; margin-bottom: 8px; }
-    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
+    /* BUSCADOR Y FILTROS */
+    .search-bar { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); display: flex; align-items: center; padding: 0 12px; margin-bottom: 12px; height: 44px; }
+    .search-bar i { color: var(--text-mute); margin-right: 8px; font-size: 14px; }
+    .search-bar input { flex: 1; background: transparent; border: none; color: var(--text-main); font-size: 14px; outline: none; font-family: inherit; }
+    .filters-row { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .filters-row::-webkit-scrollbar { display: none; }
+    .chip { padding: 8px 14px; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-mute); font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+    .chip.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
 
-    /* ============================================================ */
-    /* NUEVO LOADER PRO (LOGO + ANILLO GIRATORIO)                   */
-    /* ============================================================ */
-    .loader-overlay {
-      position: fixed; inset: 0; 
-      background: rgba(10, 10, 11, 0.85); /* Fondo oscuro semitransparente */
-      backdrop-filter: blur(8px);
-      z-index: 999999;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      transition: opacity 0.4s ease;
-    }
-    .loader-overlay.hidden { opacity: 0; pointer-events: none; }
+    /* TARJETAS DE RECIBOS */
+    .orden-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; transition: 0.2s; cursor: pointer; position: relative; border-left: 3px solid var(--border); }
+    .orden-card:active { transform: scale(0.98); background: var(--bg-elev); }
     
-    .loader-logo-container {
-      position: relative;
-      width: 90px; height: 90px;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 20px;
-    }
-    
-    /* El anillo que gira */
-    .loader-ring {
-      position: absolute; inset: 0;
-      border-radius: 50%;
-      border: 3px solid transparent;
-      border-top-color: var(--brand-500); /* Naranja Xiaomi */
-      border-bottom-color: var(--brand-500);
-      animation: spin 1.2s linear infinite;
-    }
-    
-    /* El logo circular en el centro */
-    .loader-logo-img {
-      width: 70px; height: 70px;
-      border-radius: 50%;
-      object-fit: cover;
-      background: var(--bg-elev-2);
-      border: 2px solid var(--border-1);
-      box-shadow: 0 0 20px rgba(255, 105, 0, 0.2);
-    }
-    
-    .loader-text {
-      font-size: 14px; font-weight: 600; color: var(--text-2);
-      letter-spacing: 0.5px;
-      animation: pulse 1.5s infinite;
-    }
+    /* Borde lateral por estado */
+    .orden-card[data-estado="recibido"] { border-left-color: #9CA3AF; }
+    .orden-card[data-estado="reparacion"] { border-left-color: var(--brand); }
+    .orden-card[data-estado="espera-repuesto"] { border-left-color: #3B82F6; }
+    .orden-card[data-estado="listo"] { border-left-color: #FBBF24; }
+    .orden-card[data-estado="entregado"] { border-left-color: #22C55E; }
+    .orden-card[data-estado="devuelto"] { border-left-color: #EF4444; }
 
-    /* Tarjetas de recibos (Pro y Minimalista) */
-    .orden-card { position: relative; transition: 0.2s; cursor: pointer; background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; }
-    .orden-card:active { transform: scale(0.98); background: var(--bg-elev-2) !important; }
-    
-    .chip-estado { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-    .chip-estado[data-estado="recibido"] { background: rgba(255, 255, 255, 0.1); color: var(--text-1); }
-    .chip-estado[data-estado="reparacion"] { background: rgba(255, 105, 0, 0.15); color: var(--brand-500); }
+    .chip-estado { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .chip-estado[data-estado="recibido"] { background: rgba(255, 255, 255, 0.1); color: var(--text-main); }
+    .chip-estado[data-estado="reparacion"] { background: rgba(230, 81, 0, 0.15); color: var(--brand); }
     .chip-estado[data-estado="espera-repuesto"] { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
     .chip-estado[data-estado="listo"] { background: rgba(251, 191, 36, 0.15); color: #FBBF24; }
     .chip-estado[data-estado="entregado"] { background: rgba(34, 197, 94, 0.15); color: #22C55E; }
     .chip-estado[data-estado="devuelto"] { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
     
-    .metodo-pago { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 6px; color: #22C55E; }
+    .metodo-pago { font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 4px; color: #22C55E; }
 
-    /* BOTTOM SHEET CENTRADO */
-    .sheet-backdrop { 
-      position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important;
-      background: rgba(0,0,0,0.7) !important; backdrop-filter: blur(8px) !important; z-index: 999999 !important; 
-      opacity: 0; pointer-events: none; display: flex !important; align-items: center !important; justify-content: center !important; 
-    }
-    .sheet-backdrop.show { opacity: 1 !important; pointer-events: auto !important; }
+    /* BOTÓN FLOTANTE (FAB) */
+    .btn-fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: var(--brand); color: white; border: none; box-shadow: 0 4px 16px rgba(230, 81, 0, 0.3); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; z-index: 90; transition: 0.2s; }
+    .btn-fab:active { transform: scale(0.9); }
+
+    /* BOTTOM SHEET (MODAL) */
+    .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 999999; opacity: 0; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; transition: 0.3s; }
+    .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
+    .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 20px; width: 100%; max-width: 500px; transform: translateY(100%); transition: 0.3s; border-top: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
+    .sheet-backdrop.show .sheet { transform: translateY(0); }
     
-    .sheet { 
-      background: var(--bg-elev-1) !important; border-radius: 24px !important; padding: 24px !important; width: 90% !important; max-width: 400px !important; 
-      transform: translateY(20px) scale(0.95) !important; opacity: 0; transition: 0.3s !important; border: 1px solid var(--border-1) !important; 
-      position: relative !important; box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important; max-height: 90vh !important; overflow-y: auto !important;
-    }
-    .sheet-backdrop.show .sheet { transform: translateY(0) scale(1) !important; opacity: 1 !important; }
-    
-    .btn-close-sheet { position: absolute; top: 20px; right: 20px; background: var(--bg-elev-2); border: none; color: var(--text-3); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    .btn-sheet { width: 100%; padding: 16px; border-radius: 12px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
-    .btn-sheet-primary { background: var(--brand-500); color: white; }
+    .btn-sheet { width: 100%; padding: 14px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; transition: 0.2s; }
+    .btn-sheet-primary { background: var(--brand); color: white; }
     .btn-sheet-whatsapp { background: #25D366; color: white; }
     .btn-sheet-danger { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
-    .btn-sheet-edit { background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-2); }
-    .custom-select { width: 100%; padding: 14px; border-radius: 10px; background-color: var(--bg-1) !important; color: var(--text-1) !important; border: 1px solid var(--border-1); outline: none; font-weight: 600; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill=\"%239CA3AF\" height=\"24\" viewBox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/></svg>'); background-repeat: no-repeat; background-position: right 10px center; }
+    .btn-sheet-edit { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); }
+    
+    .custom-select { width: 100%; padding: 12px; border-radius: var(--radius-sm); background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); outline: none; font-weight: 600; font-size: 14px; appearance: none; }
+
+    /* LOADER */
+    .loader-overlay { position: fixed; inset: 0; background: rgba(14, 14, 14, 0.9); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.3s; }
+    .loader-overlay.hidden { opacity: 0; pointer-events: none; }
+    .loader-ring { width: 50px; height: 50px; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-mute); }
+    .empty-state i { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-state h3 { font-size: 16px; color: var(--text-main); margin-bottom: 4px; }
   </style>
 </head>
 <body>
 
-  <!-- 🔥 LOADER OVERLAY (Se oculta al cargar) -->
+  <!-- LOADER -->
   <div class="loader-overlay" id="appLoader">
-    <div class="loader-logo-container">
-      <div class="loader-ring"></div>
-      <img src="/img/logo1.png" alt="Cargando..." class="loader-logo-img" onerror="this.src='/imagenes/web-app-manifest-192x192.png'">
-    </div>
-    <div class="loader-text">Cargando recibos...</div>
+    <div class="loader-ring"></div>
+    <div style="font-size: 13px; font-weight: 600; color: var(--text-mute);">Cargando recibos...</div>
   </div>
 
   <div class="app-container">
     <header class="app-header">
       <div class="brand">
-        <div class="brand-logo-limpio">
-          <img src="/img/logo1.png" alt="DR. Xiaomi" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand-500); font-size:20px;&quot;></i>';">
+        <div class="brand-logo">
+          <img src="/img/logo1.png" alt="DR. Xiaomi" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand); font-size:18px;&quot;></i>';">
         </div>
         <div class="brand-text">
-          <h1 style="font-size: 18px; font-weight: 800; letter-spacing: -0.5px;">DR. XIAOMI</h1>
-          <p id="userInfo" style="font-size: 12px; color: var(--text-3);">Cargando...</p>
+          <h1>DR. XIAOMI</h1>
+          <p id="userInfo">Cargando...</p>
         </div>
       </div>
-      <div class="header-actions" style="display: flex; gap: 4px;">
-        <button class="icon-btn" id="btnRefresh" title="Actualizar" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
-          <i class="fas fa-rotate" id="iconRefresh" style="color: var(--brand-500); font-size: 16px;"></i>
+      <div class="header-actions">
+        <button class="icon-btn" id="btnRefresh" title="Actualizar">
+          <i class="fas fa-rotate" id="iconRefresh" style="color: var(--brand); font-size: 14px;"></i>
         </button>
-        <button class="icon-btn" id="preciosBtn" title="Buscar precio" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
-          <img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
+        <button class="icon-btn" id="preciosBtn" title="Buscar precio">
+          <img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
         </button>
-        <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none; width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
-          <img src="/imagenes/icon-reportes.png" alt="Reportes" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
+        <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;">
+          <img src="/imagenes/icon-reportes.png" alt="Reportes" class="icon-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
         </button>
-        <button class="icon-btn" id="logoutBtn" title="Cerrar sesión" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-1);">
-          <img src="/imagenes/icon-salir.png" alt="Salir" class="icon-img blanco" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
+        <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
+          <img src="/imagenes/icon-salir.png" alt="Salir" class="icon-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
         </button>
       </div>
     </header>
@@ -179,32 +181,32 @@
       </div>
 
       <div class="filters-row" id="filtros">
-        <button class="chip chip-interactive active" data-filtro="todos">Todas</button>
-        <button class="chip chip-interactive" data-filtro="recibido">Recibidas</button>
-        <button class="chip chip-interactive" data-filtro="reparacion">En reparación</button>
-        <button class="chip chip-interactive" data-filtro="listo">Listas</button>
-        <button class="chip chip-interactive" data-filtro="entregado">Entregadas</button>
+        <button class="chip active" data-filtro="todos">Todas</button>
+        <button class="chip" data-filtro="recibido">Recibidas</button>
+        <button class="chip" data-filtro="reparacion">En reparación</button>
+        <button class="chip" data-filtro="listo">Listas</button>
+        <button class="chip" data-filtro="entregado">Entregadas</button>
       </div>
 
-      <div class="cards-list" id="listaOrdenes">
-        <!-- Skeleton se muestra mientras carga, pero el loader tapará esto -->
-        <div class="skeleton-card"><div class="skeleton-line" style="width: 40%; height: 18px;"></div><div class="skeleton-line" style="width: 70%;"></div><div class="skeleton-line" style="width: 30%;"></div></div>
-      </div>
+      <div class="cards-list" id="listaOrdenes"></div>
 
-      <button id="btnCargarMas" style="display: none; width: 100%; padding: 16px; border-radius: 12px; background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-2); font-weight: 700; cursor: pointer; margin-top: 10px; margin-bottom: 20px;">
+      <button id="btnCargarMas" style="display: none; width: 100%; padding: 14px; border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); font-weight: 600; cursor: pointer; margin-top: 10px;">
         <i class="fas fa-chevron-down"></i> Cargar más recibos
       </button>
     </main>
 
-    <button class="btn-fab" id="nuevoReciboBtn" style="position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px; border-radius: 50%; background: var(--brand-500); color: white; border: none; box-shadow: 0 4px 16px rgba(255,105,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 90;">
+    <button class="btn-fab" id="nuevoReciboBtn">
       <i class="fas fa-plus"></i>
     </button>
   </div>
 
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
-      <button class="btn-close-sheet" id="btnCloseSheet"><i class="fas fa-times"></i></button>
-      <div id="sheetContent" style="margin-top: 10px;"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 800;">Detalle del Recibo</h3>
+        <button class="icon-btn" id="btnCloseSheet" style="background: var(--bg-elev);"><i class="fas fa-times"></i></button>
+      </div>
+      <div id="sheetContent"></div>
     </div>
   </div>
 
@@ -228,7 +230,7 @@
     const reciboSheet = document.getElementById('reciboSheet');
     const sheetContent = document.getElementById('sheetContent');
     const btnCargarMas = document.getElementById('btnCargarMas');
-    const appLoader = document.getElementById('appLoader'); // 🔥 Referencia al loader
+    const appLoader = document.getElementById('appLoader');
 
     requireAuth((s) => {
       sesion = s;
@@ -255,7 +257,7 @@
         const btn = e.target.closest('[data-filtro]');
         if (!btn) return;
         haptic(10);
-        document.querySelectorAll('#filtros .chip-interactive').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#filtros .chip').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         filtroActual = btn.dataset.filtro;
         renderizarOrdenes();
@@ -274,10 +276,7 @@
         haptic(15);
         const icon = document.getElementById('iconRefresh');
         icon.style.animation = 'spin 0.8s linear infinite';
-        if (unsubscribe) {
-          unsubscribe();
-          unsubscribe = null;
-        }
+        if (unsubscribe) { unsubscribe(); unsubscribe = null; }
         cargarOrdenes();
         setTimeout(() => { icon.style.animation = 'none'; toast('Lista actualizada', 'success', 1500); }, 1500);
       });
@@ -285,66 +284,36 @@
 
     function cargarOrdenes() {
       if (unsubscribe) unsubscribe();
-
-      // 🔥 MOSTRAMOS EL LOADER
       if (appLoader) appLoader.classList.remove('hidden');
 
-      const q = query(
-        collection(db, 'recibos'), 
-        orderBy('fecha', 'desc'), 
-        limit(LIMITE_POR_PAGINA)
-      );
+      const q = query(collection(db, 'recibos'), orderBy('fecha', 'desc'), limit(LIMITE_POR_PAGINA));
 
-      unsubscribe = onSnapshot(q, 
-        { includeMetadataChanges: true },
+      unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, 
         (snapshot) => {
-          const source = snapshot.metadata.fromCache ? '💾 Caché' : '☁️ Servidor';
-          console.log(`📡 Recibos cargados desde: ${source}`);
-          
           ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
           hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
-          
-          if (snapshot.docs.length > 0) {
-            ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
-          }
+          if (snapshot.docs.length > 0) ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
 
           renderizarOrdenes();
           actualizarStats();
-
-          // 🔥 OCULTAMOS EL LOADER CUANDO YA HAY DATOS
           if (appLoader) appLoader.classList.add('hidden');
         }, 
         (error) => {
-          console.error('❌ Error cargando órdenes:', error);
-          document.getElementById('listaOrdenes').innerHTML = `
-            <div class="empty-state">
-              <i class="fas fa-exclamation-triangle" style="color: #EF4444;"></i>
-              <h3>Error al cargar</h3>
-              <p>${error.message}</p>
-            </div>`;
-          // 🔥 OCULTAMOS EL LOADER AUNQUE HAYA ERROR
+          document.getElementById('listaOrdenes').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Error</h3><p>${error.message}</p></div>`;
           if (appLoader) appLoader.classList.add('hidden');
         }
       );
     }
 
-    // 🔥 Mostrar/Ocultar loader al cargar más
     async function cargarMasOrdenes() {
       if (!ultimoDocumento) return;
-
       haptic(10);
       const textoOriginal = btnCargarMas.innerHTML;
       btnCargarMas.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
       btnCargarMas.disabled = true;
 
       try {
-        const q = query(
-          collection(db, 'recibos'), 
-          orderBy('fecha', 'desc'), 
-          startAfter(ultimoDocumento),
-          limit(LIMITE_POR_PAGINA)
-        );
-
+        const q = query(collection(db, 'recibos'), orderBy('fecha', 'desc'), startAfter(ultimoDocumento), limit(LIMITE_POR_PAGINA));
         const snapshot = await getDocs(q);
         const nuevosRecibos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         
@@ -355,8 +324,7 @@
         renderizarOrdenes();
         actualizarStats();
       } catch (error) {
-        console.error('Error cargando más:', error);
-        toast('No se pudieron cargar más recibos', 'error');
+        toast('No se pudieron cargar más', 'error');
       } finally {
         btnCargarMas.innerHTML = textoOriginal;
         btnCargarMas.disabled = false;
@@ -383,11 +351,8 @@
       
       lista.innerHTML = filtradas.map(o => renderCard(o)).join('');
       
-      if (hayMasRecibos && !busquedaActual && filtroActual === 'todos') {
-        btnCargarMas.style.display = 'flex';
-      } else {
-        btnCargarMas.style.display = 'none';
-      }
+      if (hayMasRecibos && !busquedaActual && filtroActual === 'todos') btnCargarMas.style.display = 'flex';
+      else btnCargarMas.style.display = 'none';
 
       lista.querySelectorAll('.orden-card').forEach(card => {
         card.addEventListener('click', () => { haptic(10); abrirSheet(card.dataset.id); });
@@ -399,7 +364,7 @@
       const estadoInfo = {
         recibido: { texto: 'Recibido', emoji: '📦' },
         reparacion: { texto: 'En Reparación', emoji: '🔧' },
-        'espera-repuesto': { texto: 'Esperando Repuesto', emoji: '⏳' },
+        'espera-repuesto': { texto: 'Espera Repuesto', emoji: '⏳' },
         listo: { texto: 'Listo', emoji: '✅' },
         entregado: { texto: 'Entregado', emoji: '🤝' },
         devuelto: { texto: 'Devuelto', emoji: '↩️' },
@@ -415,19 +380,19 @@
 
       return `
         <div class="orden-card" data-id="${o.id}" data-estado="${estadoActual}">
-          <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 10px;">
             <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
                 <span class="chip-estado" data-estado="${estadoActual}">${estadoInfo.emoji} ${estadoInfo.texto}</span>
-                <span style="font-size: 11px; color: var(--text-3); font-weight: 600; font-family: monospace;">${o.numeroRecibo || '—'}</span>
+                <span style="font-size: 10px; color: var(--text-mute); font-weight: 600; font-family: monospace;">${o.numeroRecibo || '—'}</span>
               </div>
-              <div style="font-size: 16px; font-weight: 700; color: var(--text-1); margin-bottom: 4px;">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
-              ${o.cliente ? `<div style="font-size: 13px; color: var(--text-2); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;"><span style="font-size: 14px;">👤</span><span>${escapeHtml(o.cliente)}</span></div>` : ''}
-              ${serviciosTexto ? `<div style="font-size: 12px; color: var(--text-3); margin-bottom: 4px; display: flex; align-items: start; gap: 6px;"><span style="font-size: 13px; flex-shrink: 0;">🔧</span><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">${escapeHtml(serviciosTexto)}</span></div>` : ''}
-              <div style="font-size: 11px; color: var(--text-3); margin-top: 10px; display: flex; align-items: center; gap: 4px;"><i class="far fa-clock"></i> ${tiempoRelativo(o.fecha)}</div>
+              <div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
+              ${o.cliente ? `<div style="font-size: 12px; color: var(--text-mute); margin-bottom: 2px;">👤 ${escapeHtml(o.cliente)}</div>` : ''}
+              ${serviciosTexto ? `<div style="font-size: 11px; color: var(--text-mute); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">🔧 ${escapeHtml(serviciosTexto)}</div>` : ''}
+              <div style="font-size: 10px; color: var(--text-mute); margin-top: 8px; display: flex; align-items: center; gap: 4px;"><i class="far fa-clock"></i> ${tiempoRelativo(o.fecha)}</div>
             </div>
-            <div style="text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: end; gap: 4px;">
-              <div style="font-size: 18px; font-weight: 800; color: var(--brand-500);">${formatBs(total)}</div>
+            <div style="text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: end; gap: 2px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--brand);">${formatBs(total)}</div>
               ${metodoPago ? `<div class="metodo-pago">${getIconoMetodo(metodoPago)} ${escapeHtml(metodoPago)}</div>` : (estadoActual === 'entregado' ? `<div class="metodo-pago">✓ Pagado</div>` : '')}
             </div>
           </div>
@@ -460,13 +425,13 @@
       if (!orden) return;
 
       sheetContent.innerHTML = `
-        <div style="margin-bottom: 24px; padding-right: 30px;">
-          <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1); margin: 0 0 6px 0;">${escapeHtml(orden.numeroRecibo)}</h3>
-          <p style="font-size: 14px; color: var(--text-2); margin: 0;">${escapeHtml(orden.cliente)} · ${escapeHtml(orden.marca)} ${escapeHtml(orden.modelo)}</p>
+        <div style="margin-bottom: 20px;">
+          <h3 style="font-size: 18px; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0;">${escapeHtml(orden.numeroRecibo)}</h3>
+          <p style="font-size: 13px; color: var(--text-mute); margin: 0;">${escapeHtml(orden.cliente)} · ${escapeHtml(orden.marca)} ${escapeHtml(orden.modelo)}</p>
         </div>
         <button class="btn-sheet btn-sheet-edit" id="btnEditarOrden"><i class="fas fa-edit"></i> Editar Orden Completa</button>
-        <div style="background: var(--bg-elev-2); padding: 16px; border-radius: 12px; margin: 20px 0;">
-          <label style="font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; margin-bottom: 10px; display: block;">Cambiar Estado</label>
+        <div style="background: var(--bg-elev); padding: 14px; border-radius: var(--radius-sm); margin: 16px 0; border: 1px solid var(--border);">
+          <label style="font-size: 10px; font-weight: 700; color: var(--text-mute); text-transform: uppercase; margin-bottom: 8px; display: block;">Cambiar Estado</label>
           <select id="selectEstado" class="custom-select">
             <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
             <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
@@ -499,7 +464,7 @@
           renderizarOrdenes();
           actualizarStats();
           cerrarSheet();
-        } catch (err) { console.error(err); toast('Error al actualizar', 'error'); }
+        } catch (err) { toast('Error al actualizar', 'error'); }
       });
 
       document.getElementById('btnWhatsApp')?.addEventListener('click', () => {
