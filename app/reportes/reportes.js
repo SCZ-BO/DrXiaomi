@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v3)
+   DR. XIAOMI · REPORTES (VERSIÓN FINAL CORREGIDA v5)
    Archivo: app/reportes/reportes.js
    ============================================================ */
 
@@ -135,19 +135,25 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       snapshot.forEach(doc => {
         const d = doc.data();
         
-        // 🔥 LEEMOS DIRECTAMENTE 'fechaEditada' SI EXISTE
+        // 🔥 FORZAMOS A LEER fechaEditada
         let fechaD = null;
         if (d.fechaEditada) {
-          fechaD = d.fechaEditada.toDate ? d.fechaEditada.toDate() : new Date(d.fechaEditada);
+          if (typeof d.fechaEditada.toDate === 'function') {
+            fechaD = d.fechaEditada.toDate();
+          } else if (d.fechaEditada.seconds !== undefined) {
+            fechaD = new Date(d.fechaEditada.seconds * 1000);
+          } else {
+            fechaD = new Date(d.fechaEditada);
+          }
         } else if (d.fechaEntrega) {
-          fechaD = d.fechaEntrega.toDate ? d.fechaEntrega.toDate() : new Date(d.fechaEntrega);
+          fechaD = typeof d.fechaEntrega.toDate === 'function' ? d.fechaEntrega.toDate() : new Date(d.fechaEntrega);
         } else if (d.fecha) {
-          fechaD = d.fecha.toDate ? d.fecha.toDate() : new Date(d.fecha);
+          fechaD = typeof d.fecha.toDate === 'function' ? d.fecha.toDate() : new Date(d.fecha);
         }
 
         if (!fechaD) return;
 
-        console.log('📅 Recibo:', d.numeroRecibo, '| fechaEditada:', d.fechaEditada, '| fechaD:', fechaD);
+        console.log('📅 Recibo:', d.numeroRecibo, '| fechaEditada (raw):', d.fechaEditada, '| fechaD (Date):', fechaD);
 
         const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
@@ -172,7 +178,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       datosCierres = [];
       snapshot.forEach(doc => {
         const d = doc.data();
-        let fechaD = d.fecha ? (d.fecha.toDate ? d.fecha.toDate() : new Date(d.fecha)) : null;
+        let fechaD = d.fecha ? (typeof d.fecha.toDate === 'function' ? d.fecha.toDate() : new Date(d.fecha)) : null;
         if (!fechaD) return;
 
         const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
