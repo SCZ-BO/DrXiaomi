@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL CORREGIDA v2)
+   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL CORREGIDA v3)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -24,14 +24,12 @@ const TIMEOUT_MS = 10000;
 // 🔥 INYECTAMOS CSS AVANZADO PARA LOS MODALES
 const styleGlobal = document.createElement('style');
 styleGlobal.textContent = `
-  /* Estilo para el botón de método de pago seleccionado */
   .metodo-btn.activo {
     background: rgba(255, 105, 0, 0.12) !important;
     border-color: #FF6900 !important;
     color: #FF6900 !important;
     transform: scale(0.98);
   }
-  /* Estilos para el modal en general */
   .modal-backdrop .modal h3 { margin-bottom: 8px; }
   .modal-backdrop .modal label {
     display: block;
@@ -42,7 +40,6 @@ styleGlobal.textContent = `
     letter-spacing: 0.6px;
     margin-bottom: 6px;
   }
-  /* Estilos para los inputs dentro del modal */
   .modal-backdrop .modal input[type="number"],
   .modal-backdrop .modal input[type="text"],
   .modal-backdrop .modal input[type="date"] {
@@ -58,7 +55,6 @@ styleGlobal.textContent = `
     transition: border-color 0.2s;
   }
   .modal-backdrop .modal input:focus { border-color: #FF6900; }
-  /* Botones dentro del modal */
   .modal-backdrop .modal .btn-modal-cancel {
     flex: 1;
     padding: 14px;
@@ -431,7 +427,7 @@ async function cambiarEstado(nuevoEstado) {
 }
 
 /* ============================================================
-   MODAL DE COBRO (ESTILOS MEJORADOS)
+   MODAL DE COBRO
    ============================================================ */
 function abrirModalCobro() {
   haptic(15);
@@ -531,7 +527,7 @@ async function confirmarCobro(monto, metodo) {
 }
 
 /* ============================================================
-   MODAL DE COSTO (ESTILOS MEJORADOS)
+   MODAL DE COSTO
    ============================================================ */
 function abrirModalCosto() {
   if (sesion.rol !== 'admin') return;
@@ -618,13 +614,12 @@ function abrirModalCosto() {
 }
 
 /* ============================================================
-   MODAL DE FECHA (ESTILOS MEJORADOS Y CORREGIDO)
+   MODAL DE FECHA (CORREGIDO: SOBRESCRIBE 'fecha')
    ============================================================ */
 function abrirModalFecha() {
   if (sesion.rol !== 'admin') return;
   haptic(15);
   let fechaActualStr = '';
-  // 🔥 USAMOS LA FECHA EDITADA SI EXISTE
   const fechaParaMostrar = orden.fechaEditada || orden.fecha;
   if (fechaParaMostrar) {
     const d = fechaParaMostrar.toDate ? fechaParaMostrar.toDate() : new Date(fechaParaMostrar);
@@ -664,12 +659,15 @@ function abrirModalFecha() {
     try {
       const nuevaFecha = new Date(nuevaFechaStr + 'T12:00:00');
       const entrada = { tipo: 'nota', texto: `Fecha de ingreso editada a: ${nuevaFecha.toLocaleDateString('es-BO')}`, autor: sesion.nombre, fecha: new Date().toISOString() };
-      // 🔥 GUARDAMOS EN 'fechaEditada' PARA NO PERDER LA ORIGINAL
+      
+      // 🔥 SOBRESCRIBIMOS 'fecha' Y GUARDAMOS EN 'fechaEditada'
       await updateDoc(doc(db, 'recibos', ordenId), { 
-        fechaEditada: nuevaFecha, 
+        fecha: nuevaFecha,              // Sobrescribe fecha original
+        fechaEditada: nuevaFecha,       // Mantiene registro de la edición
         bitacora: arrayUnion(entrada), 
         actualizadoEn: serverTimestamp() 
       });
+      
       toast('Fecha actualizada correctamente', 'success', 2500);
       modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
     } catch (err) { toast('Error al actualizar la fecha', 'error'); }
@@ -715,7 +713,6 @@ async function regenerarYEnviarPDF() {
     pdf.setTextColor(230, 81, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text('RECIBO N°', W - M - 4, 14, { align: 'right' });
     pdf.setFontSize(11); pdf.text(orden.numeroRecibo || '-', W - M - 4, 20, { align: 'right' });
     pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); 
-    // 🔥 USAMOS LA FECHA EDITADA EN EL PDF
     const fechaPdf = orden.fechaEditada || orden.fecha;
     const fechaPdfStr = fechaPdf ? (fechaPdf.toDate ? fechaPdf.toDate() : new Date(fechaPdf)).toLocaleDateString('es-BO') : new Date().toLocaleDateString('es-BO');
     pdf.text(`Fecha: ${fechaPdfStr}`, W - M - 4, 26, { align: 'right' });
