@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · VENTA DIRECTA (CON STOCK Y FECHA RETROACTIVA)
+   DR. XIAOMI · VENTA DIRECTA (VISUAL + STOCK + FECHA)
    Archivo: app/venta/venta.js
    ============================================================ */
 
@@ -7,37 +7,34 @@ import { requireAuth } from '/js/app-auth.js';
 import { toast, haptic, initTheme, formatBs, escapeHtml } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
 import { 
-  collection, addDoc, serverTimestamp, 
-  getDocs, updateDoc, doc, increment // 🔥 Importamos esto para el stock
+  collection, addDoc, serverTimestamp, getDocs, 
+  updateDoc, doc, increment 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 initTheme();
 let sesion = null;
 let metodoPago = 'Efectivo';
 let ventaActual = null;
-let inventario = []; // 🔥 Guardaremos los productos aquí
+let inventario = []; 
 
 requireAuth(async (s) => {
   sesion = s;
   document.getElementById('userInfo').textContent = sesion.nombre;
 
-  // Poner la fecha de hoy por defecto en el input
   const hoy = new Date().toISOString().split('T')[0];
   document.getElementById('fechaVenta').value = hoy;
 
-  await cargarInventario(); // 🔥 Cargamos los productos
+  await cargarInventario(); 
   configurarEventos();
-  agregarServicio();
+  agregarServicio(); 
 });
 
-// 🔥 NUEVA FUNCIÓN: Leer productos de la nube
 async function cargarInventario() {
   try {
     const snapshot = await getDocs(collection(db, 'productos'));
     inventario = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (error) {
     console.error("Error al cargar inventario:", error);
-    toast('No se pudo cargar el inventario', 'error');
   }
 }
 
@@ -49,6 +46,12 @@ function configurarEventos() {
   document.getElementById('addServicio')?.addEventListener('click', () => {
     haptic(10);
     agregarServicio();
+  });
+
+  // 🔥 Botón para abrir el buscador visual
+  document.getElementById('btnAbrirInventario')?.addEventListener('click', () => {
+    haptic(10);
+    abrirModalInventario();
   });
 
   document.getElementById('metodosGroup')?.addEventListener('click', (e) => {
@@ -81,38 +84,67 @@ function configurarEventos() {
   });
 }
 
-function agregarServicio() {
+// 🔥 FUNCIÓN QUE MUESTRA LAS FOTOS EN EL MODAL
+function abrirModalInventario() {
+  const modal = document.getElementById('modalInventario');
+  const grid = document.getElementById('modalInvGrid');
+  
+  if (inventario.length === 0) {
+    toast('El inventario está vacío', 'warning');
+    return;
+  }
+
+  grid.innerHTML = inventario.map(p => {
+    const stock = Number(p.stock) || 0;
+    const imgUrl = p.foto || 'https://via.placeholder.com/100?text=Sin+Foto';
+    return `
+      <div class="inv-card" onclick="seleccionarProductoVenta('${p.id}')" style="border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; gap: 10px; align-items: center; ${stock <= 0 ? 'opacity: 0.5; pointer-events: none;' : 'cursor: pointer;'}">
+        <img src="${imgUrl}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
+        <div style="flex: 1;">
+          <div style="font-weight: 700; font-size: 13px;">${escapeHtml(p.nombre)}</div>
+          <div style="font-size: 11px; color: var(--brand); font-weight: 700;">${formatBs(p.precio)}</div>
+          <div style="font-size: 10px; color: var(--text-mute);">Stock: ${stock}</div>
+        </div>
+        <i class="fas fa-plus-circle" style="color: var(--brand); font-size: 20px;"></i>
+      </div>
+    `;
+  }).join('');
+
+  modal.classList.add('show');
+}
+
+// 🔥 FUNCIÓN QUE SE EJECUTA AL TOCAR UN PRODUCTO
+window.seleccionarProductoVenta = function(id) {
+  const prod = inventario.find(p => p.id === id);
+  if (!prod) return;
+
+  haptic(15);
+  const list = document.getElementById('serviciosList');
+  const primerInput = list.querySelector('.servicio-desc');
+  const primerCosto = list.querySelector('.servicio-costo');
+  
+  if (primerInput && !primerInput.value) {
+    primerInput.value = prod.nombre;
+    primerCosto.value = prod.precio;
+  } else {
+    agregarServicio(prod.nombre, prod.precio);
+  }
+  
+  calcularTotal();
+  document.getElementById('modalInventario').classList.remove('show');
+  toast(`${prod.nombre} agregado`, 'success', 1000);
+};
+
+function agregarServicio(desc = '', costo = '') {
   const list = document.getElementById('serviciosList');
   const div = document.createElement('div');
   div.className = 'servicio-item';
-  div.style.position = 'relative';
-
-  // 🔥 Creamos un datalist único para este input para autocompletar
-  const listId = `inv-${Date.now()}-${Math.floor(Math.random() * 100)}`;
-  let opciones = inventario.filter(p => (Number(p.stock) || 0) > 0).map(p => `
-    <option value="${escapeHtml(p.nombre)}" data-precio="${p.precio}" data-id="${p.id}"></option>
-  `).join('');
-
   div.innerHTML = `
-    <input type="text" class="servicio-desc" placeholder="Ej. Cargador 20W" list="${listId}" autocomplete="off">
-    <datalist id="${listId}">${opciones}</datalist>
-    <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0">
+    <input type="text" class="servicio-desc" placeholder="Ej. Cargador 20W" value="${desc}" autocomplete="off">
+    <input type="number" class="servicio-costo" placeholder="Bs." step="0.01" min="0" value="${costo}">
     <button type="button" class="removeServicio"><i class="fas fa-times"></i></button>
   `;
   
-  const inputDesc = div.querySelector('.servicio-desc');
-  const inputCosto = div.querySelector('.servicio-costo');
-
-  // 🔥 MAGIA: Si selecciona un producto del datalist, ponemos su precio
-  inputDesc.addEventListener('input', (e) => {
-    const valor = e.target.value;
-    const prod = inventario.find(p => p.nombre === valor);
-    if (prod && !inputCosto.value) {
-      inputCosto.value = prod.precio;
-      calcularTotal();
-    }
-  });
-
   div.querySelector('.removeServicio').addEventListener('click', () => {
     if (list.querySelectorAll('.servicio-item').length > 1) {
       haptic(10);
@@ -121,9 +153,8 @@ function agregarServicio() {
     }
   });
 
-  inputCosto.addEventListener('input', calcularTotal);
+  div.querySelector('.servicio-costo').addEventListener('input', calcularTotal);
   list.appendChild(div);
-  inputDesc.focus();
 }
 
 function calcularTotal() {
@@ -146,7 +177,7 @@ async function registrarVenta() {
 
   let servicios = [];
   let total = 0;
-  let itemsVendidos = []; // 🔥 Para saber qué descontar del stock
+  let itemsVendidos = []; 
 
   document.querySelectorAll('.servicio-item').forEach(item => {
     const desc = item.querySelector('.servicio-desc').value.trim();
@@ -155,7 +186,6 @@ async function registrarVenta() {
       servicios.push({ desc, costo });
       total += costo;
       
-      // Si el texto coincide con un producto del inventario, lo guardamos para descontar
       const prodInventario = inventario.find(p => p.nombre === desc);
       if (prodInventario) {
         itemsVendidos.push(prodInventario.id);
@@ -179,7 +209,6 @@ async function registrarVenta() {
 
     ventaActual = { numeroRecibo, cliente: clienteNombre, telefono: clienteTelefono, servicios, total, metodoPago, fechaReal: fechaObj };
 
-    // 1. Guardar en Firebase (Recibo)
     await addDoc(collection(db, 'recibos'), {
       ...ventaActual,
       marca: 'Venta Directa',
@@ -194,16 +223,13 @@ async function registrarVenta() {
       creadoPor: sesion.nombre
     });
 
-    // 2. 🔥 RESTAR EL STOCK
     if (itemsVendidos.length > 0) {
       const promesasStock = itemsVendidos.map(id => 
         updateDoc(doc(db, 'productos', id), { stock: increment(-1) })
       );
       await Promise.all(promesasStock);
-      console.log(`✅ Stock actualizado para ${itemsVendidos.length} producto(s)`);
     }
 
-    // Mostrar Modal de Éxito
     document.getElementById('successTotal').textContent = `Total: ${formatBs(total)}`;
     document.getElementById('successModal').classList.add('show');
     
