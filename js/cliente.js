@@ -188,7 +188,7 @@ function irAPaso(nuevoPaso) {
     if (appBody) appBody.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // 🚨 ARREGLO: Forzar la lógica del Paso 3 al entrar (evita el bug de las tarjetas ocultas)
+  // 🚨 ARREGLO: Forzar la lógica del Paso 3 al entrar
   if (pasoActual === 3) {
     const valorEnciende = document.getElementById('enciende')?.value;
     const cardReparaciones = document.getElementById('cardReparaciones');
@@ -239,7 +239,7 @@ function actualizarBotones() {
 }
 
 /* ============================================================
-   VALIDACIONES INTELIGENTES (CON SCROLL AUTOMÁTICO)
+   VALIDACIONES INTELIGENTES
    ============================================================ */
 function validarPaso(paso) {
   const irAError = (idElemento, mensaje) => {
@@ -339,7 +339,7 @@ function guardarDatosPaso(paso) {
 }
 
 /* ============================================================
-   LÓGICA INTELIGENTE: PASO 2 Y 3
+   LÓGICA INTELIGENTE
    ============================================================ */
 function configurarMarca() {
   const grid = document.getElementById('marcasGrid');
@@ -367,7 +367,6 @@ function configurarRadioGroups() {
       const valor = btn.dataset.value;
       document.getElementById('enciende').value = valor;
 
-      // LÓGICA DE COHERENCIA
       const cardReparaciones = document.getElementById('cardReparaciones');
       const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
       const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
@@ -463,7 +462,7 @@ function configurarChecklistSemáforo() {
 }
 
 /* ============================================================
-   PATTERN LOCK (DIBUJO CORREGIDO Y RESPONSIVO)
+   PATTERN LOCK (BLINDADO PARA CELULARES)
    ============================================================ */
 function configurarPattern() {
   const bgCanvas = document.getElementById('bgCanvas');
@@ -503,7 +502,6 @@ function configurarPattern() {
     lnc.stroke();
   }
 
-  // MATEMÁTICA CORREGIDA PARA CELULARES
   function getPos(e) {
     const rect = lineCanvas.getBoundingClientRect();
     const t = e.touches ? e.touches[0] : e;
@@ -513,13 +511,14 @@ function configurarPattern() {
     };
   }
 
-  function hit(p) { return pts.find(pt => !pt.sel && Math.hypot(pt.x - p.x, pt.y - p.y) < r + 20); }
+  function hit(p) { return pts.find(pt => !pt.sel && Math.hypot(pt.x - p.x, pt.y - p.y) < r + 25); }
 
   function updateSeq() {
     const seq = path.map(p => p.id).join(',');
     const hiddenInput = document.getElementById('patronSecuencia');
-    if (hiddenInput) hiddenInput.value = seq;
     const display = document.getElementById('pattern-sequence');
+    
+    if (hiddenInput) hiddenInput.value = seq;
     if (display) display.textContent = seq ? path.map(p => p.id).join(' → ') : 'Sin patrón';
   }
 
@@ -527,20 +526,20 @@ function configurarPattern() {
   lineCanvas.addEventListener('mousedown', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); });
   lineCanvas.addEventListener('mousemove', (e) => {
     if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
-    if (h) { h.sel = true; path.push(h); haptic(5); drawBase(); }
+    if (h) { h.sel = true; path.push(h); haptic(10); drawBase(); updateSeq(); }
     drawLines(p);
   });
-  lineCanvas.addEventListener('mouseup', () => { drawing = false; drawLines(); });
-  lineCanvas.addEventListener('mouseleave', () => { drawing = false; drawLines(); });
+  lineCanvas.addEventListener('mouseup', () => { drawing = false; drawLines(); updateSeq(); });
+  lineCanvas.addEventListener('mouseleave', () => { drawing = false; drawLines(); updateSeq(); });
 
-  // EVENTOS CELULAR
+  // EVENTOS CELULAR (ACTUALIZAN EN TIEMPO REAL)
   lineCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); }, { passive: false });
   lineCanvas.addEventListener('touchmove', (e) => {
     if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
-    if (h) { h.sel = true; path.push(h); haptic(5); drawBase(); }
+    if (h) { h.sel = true; path.push(h); haptic(10); drawBase(); updateSeq(); }
     drawLines(p);
   }, { passive: false });
-  lineCanvas.addEventListener('touchend', (e) => { e.preventDefault(); drawing = false; drawLines(); }, { passive: false });
+  lineCanvas.addEventListener('touchend', (e) => { e.preventDefault(); drawing = false; drawLines(); updateSeq(); }, { passive: false });
 
   document.getElementById('clearPattern')?.addEventListener('click', () => {
     haptic(10); path = []; pts.forEach(p => p.sel = false); drawBase(); lnc.clearRect(0, 0, size, size); updateSeq();
@@ -550,7 +549,7 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS (CÁMARA Y GALERÍA INFALIBLE)
+   FOTOS
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
