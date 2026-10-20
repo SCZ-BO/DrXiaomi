@@ -13,9 +13,8 @@ let sesion = null;
 let rangoActual = 'hoy';
 let unsubscribeRecibos = null;
 let unsubscribeCierres = null;
-let datosActuales = []; // 🔥 Guardamos los datos para exportarlos
+let datosActuales = [];
 
-// Elementos del DOM
 const headerSubtitle = document.getElementById('headerSubtitle');
 const totalMontoEl = document.getElementById('totalMonto');
 const totalEntregasEl = document.getElementById('totalEntregas');
@@ -67,8 +66,6 @@ function configurarEventos() {
   });
 
   document.getElementById('btnVolverPanel')?.addEventListener('click', () => window.location.href = '/app/');
-
-  // 🔥 EVENTO EXPORTAR A CSV
   document.getElementById('btnExportar')?.addEventListener('click', exportarCSV);
 }
 
@@ -115,12 +112,12 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
     const procesarYRenderizar = () => {
       const todosLosDatos = [...datosRecibos, ...datosCierres];
       todosLosDatos.sort((a, b) => b.fechaReal - a.fechaReal);
-      datosActuales = todosLosDatos; // 🔥 Guardamos para el CSV
+      datosActuales = todosLosDatos;
       renderizarReporte(todosLosDatos);
       document.getElementById('appLoader')?.classList.add('hidden');
     };
 
-    // 1. Escuchar Recibos (Reparaciones + Ventas Directas)
+    // 1. Escuchar Recibos
     const qRecibos = query(
       collection(db, 'recibos'),
       where('estadoOrden', '==', 'entregado'),
@@ -131,7 +128,8 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       datosRecibos = [];
       snapshot.forEach(doc => {
         const d = doc.data();
-        // 🔥 CORRECCIÓN: Prioridad a fechaEditada
+        
+        // 🔥 CORRECCIÓN: Prioridad a fechaEditada > fechaEntrega > fecha
         let fechaD = d.fechaEditada || d.fechaEntrega || d.fecha;
         if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
         else if (fechaD) fechaD = new Date(fechaD);
@@ -151,7 +149,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
-    // 2. Escuchar Cierres (Accesorios + Ventas Extras)
+    // 2. Escuchar Cierres
     const qCierres = query(collection(db, 'cierres'), limit(500));
 
     unsubscribeCierres = onSnapshot(qCierres, (snapshot) => {
@@ -163,7 +161,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         else if (fechaD) fechaD = new Date(fechaD);
 
         if (fechaD >= inicio && fechaD <= fin) {
-          // Agregar Ventas de Inventario
           if (d.ventasInventario && d.ventasInventario.length > 0) {
             d.ventasInventario.forEach(v => {
               datosCierres.push({
@@ -177,7 +174,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
               });
             });
           }
-          // Agregar Ventas Extras Manuales
           if (d.extras && d.extras.length > 0) {
             d.extras.forEach(e => {
               if (e.monto > 0) {
@@ -287,9 +283,6 @@ function renderizarReporte(datos) {
   listaMovimientos.innerHTML = movimientosHtml;
 }
 
-// ============================================================
-// 🔥 EXPORTAR A CSV
-// ============================================================
 function exportarCSV() {
   haptic(15);
 
@@ -298,7 +291,6 @@ function exportarCSV() {
     return;
   }
 
-  // Encabezado del CSV
   let csv = 'Fecha;Hora;Tipo;Cliente;Detalle;Metodo Pago;Monto\n';
 
   datosActuales.forEach(d => {
@@ -307,7 +299,6 @@ function exportarCSV() {
     const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
     const tipo = d.origen === 'cierre' ? 'Accesorio/Extra' : 'Reparacion/Venta';
 
-    // Limpiamos el texto de caracteres problemáticos para el CSV
     const cliente = String(d.cliente || '').replace(/;/g, ',');
     const detalle = String(d.detalle || '').replace(/;/g, ',');
     const metodo = String(d.metodoPago || '').replace(/;/g, ',');
@@ -316,7 +307,6 @@ function exportarCSV() {
     csv += `${fechaStr};${horaStr};${tipo};${cliente};${detalle};${metodo};${monto}\n`;
   });
 
-  // Crear archivo y descargar (con BOM para que Excel lea bien acentos)
   const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
