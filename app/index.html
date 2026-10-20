@@ -20,26 +20,14 @@
 
   <style>
     :root { 
-      --radius-sm: 4px; 
-      --radius-md: 8px; 
-      --radius-lg: 12px; 
-      --brand: #E65100; 
-      --brand-hover: #BF360C; 
-      --brand-light: rgba(230, 81, 0, 0.1); 
-      --bg-main: #0E0E0E; 
-      --bg-card: #181818; 
-      --bg-elev: #242424; 
-      --text-main: #F5F5F5; 
-      --text-mute: #888888; 
-      --border: #2A2A2A; 
+      --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; 
+      --brand: #E65100; --brand-hover: #BF360C; --brand-light: rgba(230, 81, 0, 0.1); 
+      --bg-main: #0E0E0E; --bg-card: #181818; --bg-elev: #242424; 
+      --text-main: #F5F5F5; --text-mute: #888888; --border: #2A2A2A; 
     }
     [data-theme="light"] {
-      --bg-main: #F9F9F9; 
-      --bg-card: #FFFFFF; 
-      --bg-elev: #F0F0F0; 
-      --text-main: #111111; 
-      --text-mute: #666666; 
-      --border: #E0E0E0; 
+      --bg-main: #F9F9F9; --bg-card: #FFFFFF; --bg-elev: #F0F0F0; 
+      --text-main: #111111; --text-mute: #666666; --border: #E0E0E0; 
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -200,6 +188,17 @@
         <button class="icon-btn" id="preciosBtn" title="Buscar precio">
           <img src="/imagenes/icon-precio.png" alt="Precio" class="icon-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
         </button>
+        
+        <!-- NUEVO: Botón de Cierre de Caja -->
+        <button class="icon-btn" id="cierreBtn" title="Cierre de Caja">
+          <i class="fas fa-cash-register"></i>
+        </button>
+        
+        <!-- NUEVO: Botón de Inventario (Solo Admin) -->
+        <button class="icon-btn" id="inventarioBtn" title="Inventario" style="display: none;">
+          <i class="fas fa-box"></i>
+        </button>
+
         <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;">
           <img src="/imagenes/icon-reportes.png" alt="Reportes" class="icon-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
         </button>
@@ -236,9 +235,15 @@
       </button>
     </main>
 
-    <button class="btn-fab" id="nuevoReciboBtn">
-      <i class="fas fa-plus"></i>
-    </button>
+    <!-- NUEVO: Botones Flotantes (FAB) -->
+    <div style="position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 12px; z-index: 90;">
+      <button class="btn-fab" id="ventaRapidaBtn" title="Venta Rápida" style="width: 50px; height: 50px; font-size: 20px; background: var(--bg-card); color: var(--brand); border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.3); position: relative;">
+        <i class="fas fa-shopping-cart"></i>
+      </button>
+      <button class="btn-fab" id="nuevoReciboBtn" title="Nuevo Recibo" style="width: 56px; height: 56px; font-size: 22px; background: var(--brand); color: white; border: none; box-shadow: 0 4px 16px rgba(230, 81, 0, 0.4); position: relative;">
+        <i class="fas fa-plus"></i>
+      </button>
+    </div>
   </div>
 
   <div class="sheet-backdrop" id="reciboSheet">
@@ -280,10 +285,15 @@
 
     function iniciarApp() {
       document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
+      
+      // 🔥 Mostrar botones según rol
       if (sesion.rol === 'admin') {
         const btnRep = document.getElementById('reportesBtn');
         if (btnRep) btnRep.style.display = 'flex';
+        const btnInv = document.getElementById('inventarioBtn');
+        if (btnInv) btnInv.style.display = 'flex';
       }
+      
       configurarEventos();
       cargarOrdenes();
     }
@@ -292,6 +302,12 @@
       document.getElementById('preciosBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/precio/'; });
       document.getElementById('reportesBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/reportes/'; });
       document.getElementById('logoutBtn').addEventListener('click', () => { haptic(20); logout(); });
+      
+      // 🔥 Nuevos botones
+      document.getElementById('cierreBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cierre/'; });
+      document.getElementById('inventarioBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/inventario/'; });
+      document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/venta/'; });
+      
       document.getElementById('nuevoReciboBtn').addEventListener('click', () => { haptic(15); window.location.href = '/cliente/'; });
 
       document.getElementById('filtros').addEventListener('click', (e) => {
@@ -532,6 +548,17 @@
     function cerrarSheet() {
       if (reciboSheet) reciboSheet.classList.remove('show');
     }
+  </script>
+
+  <!-- 🔥 RED DE SEGURIDAD DEL LOADER -->
+  <script>
+    setTimeout(() => {
+      const loader = document.getElementById('appLoader');
+      if (loader && !loader.classList.contains('hidden')) {
+        loader.classList.add('hidden');
+        console.warn('⚠️ Loader apagado por seguridad (timeout de 2s).');
+      }
+    }, 2000);
   </script>
 </body>
 </html>
