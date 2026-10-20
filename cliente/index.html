@@ -33,7 +33,7 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
-    /* LAYOUT TIPO APP (Sin scroll general) */
+    /* LAYOUT TIPO APP */
     html, body { height: 100%; overflow: hidden; }
     body { background-color: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
     
@@ -45,8 +45,11 @@
     .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
     .brand-text h1 { font-size: 14px; font-weight: 700; margin: 0; }
     .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
-    .header-actions { display: flex; gap: 6px; }
-    .icon-btn { width: 30px; height: 30px; border-radius: var(--radius-sm); background: transparent; border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    
+    /* ESTILO DE BOTONES DEL HEADER UNIFICADOS */
+    .header-actions { display: flex; gap: 4px; }
+    .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+    .icon-btn:active { transform: scale(0.95); }
 
     /* PROGRESO DE PUNTOS */
     .wizard-progress { padding: 4px 0 16px 0; display: flex; justify-content: center; gap: 8px; }
@@ -131,16 +134,39 @@
 </head>
 <body>
 
+  <!-- HEADER UNIFICADO CON BOTONES DEL PANEL + BOTÓN CASA -->
   <header class="app-header">
     <div class="brand">
       <button class="icon-btn" id="backToPanelBtn"><i class="fas fa-arrow-left"></i></button>
       <div class="brand-logo"><img src="/imagenes/web-app-manifest-192x192.png" onerror="this.style.display='none'"></div>
       <div class="brand-text"><h1>NUEVO RECIBO</h1><p id="userInfo">Cargando...</p></div>
     </div>
+    
     <div class="header-actions">
-      <button class="icon-btn" id="clearDraftBtn" title="Limpiar"><i class="fas fa-trash-alt"></i></button>
-      <button class="icon-btn" id="themeToggleBtn"><i class="fas fa-sun"></i></button>
-      <button class="icon-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button>
+      <!-- 1. Botón Casa (Home) -->
+      <button class="icon-btn" id="homeBtn" title="Ir al Panel Principal">
+        <i class="fas fa-home"></i>
+      </button>
+      <!-- 2. Botón Limpiar Borrador -->
+      <button class="icon-btn" id="clearDraftBtn" title="Limpiar Borrador">
+        <i class="fas fa-trash-alt"></i>
+      </button>
+      <!-- 3. Botón Refrescar -->
+      <button class="icon-btn" id="btnRefresh" title="Actualizar">
+        <i class="fas fa-rotate" id="iconRefresh"></i>
+      </button>
+      <!-- 4. Botón Precios -->
+      <button class="icon-btn" id="preciosBtn" title="Buscar precio">
+        <img src="/imagenes/icon-precio.png" alt="Precio" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
+      </button>
+      <!-- 5. Botón Reportes (Oculto por defecto) -->
+      <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;">
+        <img src="/imagenes/icon-reportes.png" alt="Reportes" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
+      </button>
+      <!-- 6. Botón Salir -->
+      <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
+        <img src="/imagenes/icon-salir.png" alt="Salir" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
+      </button>
     </div>
   </header>
 
@@ -192,7 +218,7 @@
         </div>
       </section>
 
-      <!-- PASO 3 (SIN PLAZO DE ENTREGA) -->
+      <!-- PASO 3 (LÓGICA INTELIGENTE) -->
       <section class="wizard-panel hidden" data-panel="3" aria-hidden="true">
         <div class="step-indicator">Paso 3 · Recepción</div>
         <div class="card hidden" id="cardReparaciones">
