@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · CLIENTE (Wizard PRO)
+   DR. XIAOMI · CLIENTE (Wizard PRO - Adaptado a tu HTML)
    Archivo: js/cliente.js
    ============================================================ */
 
@@ -8,7 +8,6 @@ import { toast, haptic, initTheme, escapeHtml, formatBs, showLoading, hideLoadin
 import { db } from '/js/firebase.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Importamos tu generador de PDF
 import { generarPDFUnificado } from '/js/cliente-pdf.js';
 
 /* ============================================================
@@ -33,8 +32,8 @@ const TOTAL_PASOS = 7;
 
 const datos = {
   nombre: '', telefono: '',
-  marca: '', modelo: '', color: '', imei: '', enciende: '',
-  accesorios: '', motivoIngreso: '', falla: '', checklist: '', plazoEntrega: 'Hoy mismo',
+  marca: '', modelo: '', color: '', enciende: '',
+  motivoIngreso: '', falla: '', checklist: '',
   tipoSeguridad: 'patron', pin: '', patronSecuencia: '',
   fotos: [null, null, null, null],
   servicios: [], total: 0, adelanto: 0, saldo: 0
@@ -60,10 +59,10 @@ function iniciar() {
   const userInfo = document.getElementById('userInfo');
   if (userInfo) userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
   
-  // 1. Intentar recuperar borrador
+  // Recuperar borrador
   const hayBorrador = cargarBorrador();
 
-  // 2. Configurar todos los módulos
+  // Configurar módulos
   configurarHeader();
   configurarWizard();
   configurarMarca();
@@ -74,14 +73,13 @@ function iniciar() {
   configurarServicios();
   configurarBotonGenerarPDF();
 
-  // 3. Guardado automático (debounce)
+  // Guardado automático
   const content = document.getElementById('wizardContent');
   if (content) {
     content.addEventListener('input', guardarBorradorDebounce);
     content.addEventListener('change', guardarBorradorDebounce);
   }
 
-  // 4. Iniciar
   if (!hayBorrador) irAPaso(1);
   
   actualizarBarraProgreso();
@@ -94,9 +92,7 @@ function iniciar() {
 let timerGuardado = null;
 
 function guardarBorrador() {
-  try {
-    localStorage.setItem('drxiaomi_borrador', JSON.stringify(datos));
-  } catch (e) {}
+  try { localStorage.setItem('drxiaomi_borrador', JSON.stringify(datos)); } catch (e) {}
 }
 
 function guardarBorradorDebounce() {
@@ -113,22 +109,14 @@ function cargarBorrador() {
     
     Object.assign(datos, d);
     
-    // Rellenar inputs visuales básicos
     if (datos.nombre) document.getElementById('nombre').value = datos.nombre;
     if (datos.telefono) document.getElementById('telefono').value = datos.telefono;
     if (datos.modelo) document.getElementById('modelo').value = datos.modelo;
-    if (datos.imei) document.getElementById('imei').value = datos.imei;
+    if (datos.color) document.getElementById('color').value = datos.color;
     if (datos.falla) document.getElementById('fallaDetalle').value = datos.falla;
     
-    // Si hay color, buscar el botón y activarlo
-    if (datos.color) {
-      const colorBtn = document.querySelector(`#coloresGroup .chip-btn[data-color="${datos.color}"]`);
-      if (colorBtn) colorBtn.classList.add('active');
-      document.getElementById('color').value = datos.color;
-    }
-
     toast('Borrador recuperado', 'info', 2000);
-    irAPaso(2); // Mandar al paso 2 para continuar
+    irAPaso(2); 
     return true;
   } catch (e) { return false; }
 }
@@ -141,7 +129,7 @@ function limpiarBorrador() {
 }
 
 /* ============================================================
-   HEADER Y WIZARD
+   HEADER
    ============================================================ */
 function configurarHeader() {
   document.getElementById('backToPanelBtn')?.addEventListener('click', () => {
@@ -159,6 +147,7 @@ function configurarHeader() {
     if (confirm('¿Cerrar sesión?')) logout();
   });
 
+  // Tema
   document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
     const html = document.documentElement;
     const nuevo = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -167,6 +156,9 @@ function configurarHeader() {
   });
 }
 
+/* ============================================================
+   WIZARD
+   ============================================================ */
 function configurarWizard() {
   document.getElementById('btnPrev')?.addEventListener('click', irPasoAnterior);
   document.getElementById('btnNext')?.addEventListener('click', irPasoSiguiente);
@@ -196,7 +188,30 @@ function irAPaso(nuevoPaso) {
   if (panel) {
     panel.classList.remove('hidden');
     panel.setAttribute('aria-hidden', 'false');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const appBody = document.getElementById('appBody');
+    if (appBody) appBody.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // 🔥 LÓGICA INTELIGENTE DEL PASO 3
+  if (pasoActual === 3) {
+    setTimeout(() => {
+      const valorEnciende = document.getElementById('enciende')?.value;
+      const cardReparaciones = document.getElementById('cardReparaciones');
+      const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
+      const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
+      
+      if (!cardReparaciones) return; // Si no existe el elemento, salir
+
+      if (valorEnciende === 'Sí' || valorEnciende === 'A veces') {
+        cardReparaciones?.classList.remove('hidden');
+        cardAuditoriaGeneral?.classList.remove('hidden');
+        cardAuditoriaFisica?.classList.add('hidden');
+      } else {
+        cardReparaciones?.classList.add('hidden');
+        cardAuditoriaGeneral?.classList.add('hidden');
+        cardAuditoriaFisica?.classList.remove('hidden');
+      }
+    }, 50);
   }
 
   actualizarBarraProgreso();
@@ -205,14 +220,13 @@ function irAPaso(nuevoPaso) {
 }
 
 function actualizarBarraProgreso() {
-  document.querySelectorAll('.wizard-step').forEach(el => {
-    const step = parseInt(el.dataset.step);
-    el.classList.remove('active', 'done');
-    if (step < pasoActual) el.classList.add('done');
-    else if (step === pasoActual) el.classList.add('active');
+  const dots = document.querySelectorAll('.wizard-dot');
+  dots.forEach((dot, index) => {
+    const step = index + 1;
+    dot.classList.remove('active', 'done');
+    if (step < pasoActual) dot.classList.add('done');
+    else if (step === pasoActual) dot.classList.add('active');
   });
-  const fill = document.getElementById('wizardBarFill');
-  if (fill) fill.style.width = `${(pasoActual / TOTAL_PASOS) * 100}%`;
 }
 
 function actualizarBotones() {
@@ -232,7 +246,7 @@ function actualizarBotones() {
 }
 
 /* ============================================================
-   VALIDACIONES Y GUARDADO DE PASOS
+   VALIDACIONES
    ============================================================ */
 function validarPaso(paso) {
   if (paso === 1) {
@@ -245,9 +259,12 @@ function validarPaso(paso) {
     if (!document.getElementById('enciende')?.value) { toast('Indica si el equipo enciende', 'error'); return false; }
   }
   if (paso === 3) {
-    const motivo = document.getElementById('motivoIngreso')?.value;
-    const falla = document.getElementById('fallaDetalle')?.value.trim();
-    if (!motivo && !falla) { toast('Selecciona el motivo o escribe una falla', 'error'); return false; }
+    const enciende = document.getElementById('enciende')?.value;
+    if (enciende === 'Sí' || enciende === 'A veces') {
+      if (!document.getElementById('motivoIngreso')?.value) {
+        toast('Selecciona una reparación', 'error'); return false;
+      }
+    }
   }
   if (paso === 4) {
     const tipo = document.getElementById('tipoSeguridad')?.value;
@@ -259,7 +276,7 @@ function validarPaso(paso) {
     document.querySelectorAll('.servicio-item').forEach(item => {
       if (item.querySelector('.servicio-desc').value && parseFloat(item.querySelector('.servicio-costo').value) > 0) hayServicio = true;
     });
-    if (!hayServicio) { toast('Añade al menos un costo de reparación', 'error'); return false; }
+    if (!hayServicio) { toast('Añade al menos un costo', 'error'); return false; }
   }
   return true;
 }
@@ -272,16 +289,13 @@ function guardarDatosPaso(paso) {
   if (paso === 2) {
     datos.marca = document.getElementById('marca')?.value || '';
     datos.modelo = document.getElementById('modelo')?.value.trim() || '';
-    datos.color = document.getElementById('color')?.value || '';
-    datos.imei = document.getElementById('imei')?.value.trim() || '';
+    datos.color = document.getElementById('color')?.value.trim() || '';
     datos.enciende = document.getElementById('enciende')?.value || '';
-    datos.accesorios = document.getElementById('accesorios')?.value || '';
   }
   if (paso === 3) {
     datos.motivoIngreso = document.getElementById('motivoIngreso')?.value || '';
     datos.falla = document.getElementById('fallaDetalle')?.value.trim() || '';
     datos.checklist = document.getElementById('checklistResultados')?.value || '';
-    datos.plazoEntrega = document.getElementById('plazoEntrega')?.value || 'Hoy mismo';
   }
   if (paso === 4) {
     datos.tipoSeguridad = document.getElementById('tipoSeguridad')?.value || 'patron';
@@ -294,7 +308,7 @@ function guardarDatosPaso(paso) {
 }
 
 /* ============================================================
-   LÓGICA: MARCAS, RADIOS, CHIPS Y CHECKLIST
+   MARCAS Y RADIOS
    ============================================================ */
 function configurarMarca() {
   const grid = document.getElementById('marcasGrid');
@@ -310,7 +324,6 @@ function configurarMarca() {
 }
 
 function configurarRadioGroups() {
-  // Si el equipo enciende o no
   const enciendeGroup = document.getElementById('enciendeGroup');
   if (enciendeGroup) {
     enciendeGroup.addEventListener('click', (e) => {
@@ -323,7 +336,6 @@ function configurarRadioGroups() {
     });
   }
 
-  // Tipo de seguridad
   const tipoGroup = document.getElementById('tipoSeguridadGroup');
   if (tipoGroup) {
     tipoGroup.addEventListener('click', (e) => {
@@ -338,70 +350,30 @@ function configurarRadioGroups() {
       document.getElementById('patronContainer')?.classList.toggle('hidden', tipo !== 'patron');
     });
   }
-
-  // Accesorios
-  const accGroup = document.getElementById('accesoriosGroup');
-  if (accGroup) {
-    accGroup.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip-btn');
-      if (!btn) return;
-      haptic(8);
-      btn.classList.toggle('active');
-      const val = Array.from(accGroup.querySelectorAll('.chip-btn.active')).map(b => b.dataset.value).join(', ');
-      document.getElementById('accesorios').value = val;
-    });
-  }
-
-  // Modelos Rápidos
-  const modelosGroup = document.getElementById('modelosRapidosGroup');
-  const inputModelo = document.getElementById('modelo');
-  if (modelosGroup && inputModelo) {
-    modelosGroup.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip-btn');
-      if (!btn) return;
-      haptic(8);
-      inputModelo.value = btn.dataset.modelo;
-      modelosGroup.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-  }
-
-  // Colores
-  const coloresGroup = document.getElementById('coloresGroup');
-  const inputColorHidden = document.getElementById('color');
-  if (coloresGroup && inputColorHidden) {
-    coloresGroup.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip-btn');
-      if (!btn) return;
-      haptic(8);
-      btn.classList.toggle('active');
-      
-      if (btn.classList.contains('active')) {
-        coloresGroup.querySelectorAll('.chip-btn').forEach(b => { if (b !== btn) b.classList.remove('active'); });
-      }
-      inputColorHidden.value = btn.classList.contains('active') ? btn.dataset.color : '';
-    });
-  }
 }
 
+/* ============================================================
+   LÓGICA INTELIGENTE (CHIPS Y CHECKLIST)
+   ============================================================ */
 function configurarLogicaInteligente() {
-  // 1. Motivo de Ingreso
+  // Motivo
   const motivoGroup = document.getElementById('motivoIngresoGroup');
   if (motivoGroup) {
     motivoGroup.addEventListener('click', (e) => {
       const btn = e.target.closest('.chip-btn');
       if (!btn) return;
       haptic(8);
-      btn.classList.toggle('active');
-      const activos = Array.from(motivoGroup.querySelectorAll('.chip-btn.active')).map(b => b.dataset.value);
-      document.getElementById('motivoIngreso').value = activos.join(', ');
+      motivoGroup.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('motivoIngreso').value = btn.dataset.value;
     });
   }
 
-  // 2. Checklist Semáforo (Lógica de 3 colores)
-  const checkGroup = document.getElementById('checklistGroup');
-  if (checkGroup) {
-    checkGroup.addEventListener('click', (e) => {
+  // Checklist Semáforo
+  const configurarChecklist = (idGroup) => {
+    const group = document.getElementById(idGroup);
+    if (!group) return;
+    group.addEventListener('click', (e) => {
       const btn = e.target.closest('.check-item');
       if (!btn) return;
       haptic(10);
@@ -414,31 +386,22 @@ function configurarLogicaInteligente() {
       } else {
         btn.classList.remove('falla');
       }
-      actualizarResultadosChecklist();
+      actualizarResultados();
     });
-  }
+  };
 
-  function actualizarResultadosChecklist() {
+  configurarChecklist('checklistGeneralGroup');
+  configurarChecklist('checklistFisicoGroup');
+
+  function actualizarResultados() {
     const resultados = [];
-    document.querySelectorAll('#checklistGroup .check-item').forEach(btn => {
+    document.querySelectorAll('.check-item').forEach(btn => {
       const item = btn.dataset.item;
       if (btn.classList.contains('ok')) resultados.push(`${item}: OK`);
       if (btn.classList.contains('falla')) resultados.push(`${item}: FALLA`);
     });
-    document.getElementById('checklistResultados').value = resultados.join(', ');
-  }
-
-  // 3. Plazo de entrega
-  const plazoGroup = document.getElementById('plazoGroup');
-  if (plazoGroup) {
-    plazoGroup.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip-btn');
-      if (!btn) return;
-      haptic(8);
-      plazoGroup.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('plazoEntrega').value = btn.dataset.value;
-    });
+    const inputRes = document.getElementById('checklistResultados');
+    if (inputRes) inputRes.value = resultados.join(', ');
   }
 }
 
@@ -458,7 +421,7 @@ function configurarPattern() {
 
   const bgc = bgCanvas.getContext('2d');
   const lnc = lineCanvas.getContext('2d');
-  const size = 300, r = 22, margin = 30;
+  const size = 300, r = 20, margin = 30;
   const pts = []; let id = 1;
   for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) pts.push({ id: id++, x: margin + 120 * x, y: margin + 120 * y, sel: false });
 
@@ -489,7 +452,7 @@ function configurarPattern() {
     return { x: (t.clientX - rect.left) * (size / rect.width), y: (t.clientY - rect.top) * (size / rect.height) };
   }
 
-  function hit(p) { return pts.find(pt => !pt.sel && Math.hypot(pt.x - p.x, pt.y - p.y) < r + 12); }
+  function hit(p) { return pts.find(pt => !pt.sel && Math.hypot(pt.x - p.x, pt.y - p.y) < r + 25); }
 
   function updateSeq() {
     const seq = path.map(p => p.id).join(',');
@@ -501,19 +464,19 @@ function configurarPattern() {
   lineCanvas.addEventListener('mousedown', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); });
   lineCanvas.addEventListener('mousemove', (e) => {
     if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
-    if (h) { h.sel = true; path.push(h); haptic(5); drawBase(); }
+    if (h) { h.sel = true; path.push(h); haptic(10); drawBase(); updateSeq(); }
     drawLines(p);
   });
-  lineCanvas.addEventListener('mouseup', () => { drawing = false; drawLines(); });
-  lineCanvas.addEventListener('mouseleave', () => { drawing = false; drawLines(); });
+  lineCanvas.addEventListener('mouseup', () => { drawing = false; drawLines(); updateSeq(); });
+  lineCanvas.addEventListener('mouseleave', () => { drawing = false; drawLines(); updateSeq(); });
 
   lineCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); }, { passive: false });
   lineCanvas.addEventListener('touchmove', (e) => {
     if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
-    if (h) { h.sel = true; path.push(h); haptic(5); drawBase(); }
+    if (h) { h.sel = true; path.push(h); haptic(10); drawBase(); updateSeq(); }
     drawLines(p);
   }, { passive: false });
-  lineCanvas.addEventListener('touchend', () => { drawing = false; drawLines(); });
+  lineCanvas.addEventListener('touchend', (e) => { e.preventDefault(); drawing = false; drawLines(); updateSeq(); }, { passive: false });
 
   document.getElementById('clearPattern')?.addEventListener('click', () => {
     haptic(10); path = []; pts.forEach(p => p.sel = false); drawBase(); lnc.clearRect(0, 0, size, size); updateSeq();
@@ -523,7 +486,7 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS (MÉTODO INFALIBLE DE CLONACIÓN)
+   FOTOS
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
@@ -676,7 +639,7 @@ function crearServicioItem(desc, costo) {
   const div = document.createElement('div');
   div.className = 'servicio-item';
   div.innerHTML = `
-    <input type="text" class="servicio-desc" placeholder="Servicio" value="${desc}">
+    <input type="text" class="servicio-desc" placeholder="Ej. Cambio de pantalla" value="${desc}">
     <input type="number" class="servicio-costo" placeholder="Bs." value="${costo}" step="0.01" min="0">
     <button type="button" class="removeServicio"><i class="fas fa-times"></i></button>
   `;
@@ -730,6 +693,15 @@ function generarVistaPrevia() {
     ? `<div class="preview-section" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">${fotosValidas.map(f => `<img src="${f.dataUrl}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">`).join('')}</div>` 
     : '';
 
+  let seguridadTexto = 'Ninguna';
+  if (datos.tipoSeguridad === 'pin' && datos.pin) {
+    seguridadTexto = `PIN: ${escapeHtml(datos.pin)}`;
+  } else if (datos.tipoSeguridad === 'patron' && datos.patronSecuencia) {
+    seguridadTexto = `Patrón: ${datos.patronSecuencia.split(',').join(' → ')}`;
+  } else if (datos.tipoSeguridad === 'ninguno') {
+    seguridadTexto = 'Sin bloqueo';
+  }
+
   cont.innerHTML = `
     <div class="preview-recibo">
       <div class="preview-header">
@@ -747,14 +719,12 @@ function generarVistaPrevia() {
 
       <div class="preview-section">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>EQUIPO:</strong> <span>${escapeHtml(datos.marca)} ${escapeHtml(datos.modelo)} (${escapeHtml(datos.color || 'N/A')})</span></div>
-        <div style="display:flex;justify-content:space-between;"><strong>ENTREGA:</strong> <span>${escapeHtml(datos.plazoEntrega)}</span></div>
+        <div style="display:flex;justify-content:space-between;color:#E65100;"><strong>DESBLOQUEO:</strong> <span>${seguridadTexto}</span></div>
       </div>
 
       <div class="preview-section">
-        <div><strong>MOTIVO:</strong> ${escapeHtml(datos.motivoIngreso || 'No especificado')}</div>
-        <div style="margin-top:4px;"><strong>DETALLES:</strong> ${escapeHtml(datos.falla || '-')}</div>
+        <div><strong>MOTIVO / FALLA:</strong> ${escapeHtml(datos.motivoIngreso || datos.falla || '-')}</div>
         <div style="margin-top:4px; font-size:10px; color:#666;"><strong>CHECKLIST:</strong> ${escapeHtml(datos.checklist || 'Todo OK')}</div>
-        <div style="margin-top:4px;"><strong>ACCESORIOS:</strong> ${escapeHtml(datos.accesorios || 'Ninguno')}</div>
       </div>
 
       <table style="width:100%; font-size:11px; margin-top:10px; border-collapse:collapse;">
@@ -774,7 +744,7 @@ function generarVistaPrevia() {
 }
 
 /* ============================================================
-   GENERACIÓN DE PDF Y WHATSAPP
+   GENERACIÓN DE PDF Y GUARDADO EN FIRESTORE
    ============================================================ */
 function configurarBotonGenerarPDF() {
   const btn = document.getElementById('btnGenerate');
@@ -801,14 +771,10 @@ function configurarBotonGenerarPDF() {
         marca: datos.marca,
         modelo: datos.modelo,
         color: datos.color,
-        imei: datos.imei,
         enciende: datos.enciende,
-        estadoEquipo: datos.estado, // Compatibilidad
         falla: datos.falla,
-        motivoIngreso: datos.motivoIngreso, // NUEVO
-        checklist: datos.checklist,         // NUEVO
-        plazoEntrega: datos.plazoEntrega,
-        accesorios: datos.accesorios,
+        motivoIngreso: datos.motivoIngreso,
+        checklist: datos.checklist,
         tipoSeguridad: datos.tipoSeguridad,
         pin: datos.pin,
         patron: datos.patronSecuencia,
@@ -816,21 +782,36 @@ function configurarBotonGenerarPDF() {
         total: datos.total,
         adelanto: datos.adelanto,
         saldo: datos.saldo,
-        fotos: datos.fotos.filter(f => f && f.dataUrl).map(f => f.dataUrl)
+        fotos: datos.fotos.filter(f => f && f.dataUrl).map(f => f.dataUrl),
+        // 🔥 CAMPOS OBLIGATORIOS PARA EL PANEL
+        estadoOrden: 'recibido',
+        fecha: serverTimestamp(),
+        creadoPor: sesion.nombre,
+        montoCobrado: 0,
+        costoRepuesto: 0
       };
 
-      const exito = await generarPDFUnificado(paquete, 'guardar_en_nube');
-      
-      if (exito) {
-        localStorage.removeItem('drxiaomi_borrador');
-        document.getElementById('successNumero').textContent = num;
-        document.getElementById('successModal').classList.add('show');
-        window._ultimoRecibo = paquete;
-        configurarWhatsApp();
+      // 1. GUARDAR EN FIRESTORE PRIMERO
+      const docRef = await addDoc(collection(db, 'recibos'), paquete);
+      console.log('✅ Recibo guardado en Firestore con ID:', docRef.id);
+
+      // 2. LUEGO INTENTAR GENERAR EL PDF
+      try {
+        await generarPDFUnificado(paquete, 'guardar_en_nube');
+      } catch (pdfError) {
+        console.error('PDF falló, pero el recibo se guardó:', pdfError);
       }
+
+      // 3. MOSTRAR ÉXITO
+      localStorage.removeItem('drxiaomi_borrador');
+      document.getElementById('successNumero').textContent = num;
+      document.getElementById('successModal').classList.add('show');
+      window._ultimoRecibo = paquete;
+      configurarWhatsApp();
+
     } catch (error) {
-      console.error("Error al generar:", error);
-      toast('Error al generar el PDF', 'error');
+      console.error("Error al guardar:", error);
+      toast('Error al guardar: ' + error.message, 'error', 5000);
     } finally {
       generando = false;
       btn.innerHTML = textoOriginal;
