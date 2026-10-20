@@ -3,7 +3,7 @@
    Archivo: app/orden.js
    ============================================================ */
 
-import { requireAuth, logout } from '/js/app-auth.js';
+import { requireAuth } from '/js/app-auth.js';
 import {
   toast, haptic, initTheme, escapeHtml,
   formatBs, tiempoRelativo, showLoading, hideLoading
@@ -11,7 +11,7 @@ import {
 import { db } from '/js/firebase.js';
 import {
   doc, getDoc, updateDoc, deleteDoc,
-  serverTimestamp, arrayUnion
+  serverTimestamp, arrayUnion, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import '/js/dictado.js';
@@ -51,6 +51,7 @@ let sesion = null;
 let ordenId = null;
 let orden = null;
 let fotosNuevas = [];
+let unsubscribe = null;
 
 /* ============================================================
    INICIALIZACIÓN
@@ -63,6 +64,10 @@ requireAuth(async (s) => {
 });
 
 async function iniciar() {
+  // 🔥 OCULTAMOS EL LOADER INMEDIATAMENTE
+  const loader = document.getElementById('appLoader');
+  if (loader) loader.classList.add('hidden');
+
   const params = new URLSearchParams(window.location.search);
   ordenId = params.get('id');
 
@@ -91,42 +96,38 @@ async function iniciar() {
 }
 
 /* ============================================================
-   CARGAR ORDEN
+   CARGAR ORDEN (CON SNAPSHOT EN TIEMPO REAL)
    ============================================================ */
 async function cargarOrden() {
   showLoading('Cargando orden...');
 
   try {
     const ref = doc(db, 'recibos', ordenId);
+    
+    // 🔥 USAMOS onSnapshot PARA QUE LA PÁGINA SE ACTUALICE EN TIEMPO REAL
+    unsubscribe = onSnapshot(ref, (snap) => {
+      if (!snap.exists()) {
+        toast('Esta orden no existe o fue eliminada', 'error', 3000);
+        setTimeout(() => window.location.href = '/app/', 2000);
+        return;
+      }
 
-    const snap = await Promise.race([
-      getDoc(ref),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('TIMEOUT')), TIMEOUT_MS)
-      )
-    ]);
-
-    if (!snap.exists()) {
-      toast('Esta orden no existe o fue eliminada', 'error', 3000);
-      setTimeout(() => window.location.href = '/app/', 2000);
-      return;
-    }
-
-    orden = { id: snap.id, ...snap.data() };
-    renderOrden();
+      orden = { id: snap.id, ...snap.data() };
+      renderOrden();
+      hideLoading();
+      document.getElementById('appLoader')?.classList.add('hidden');
+    }, (error) => {
+      console.error('Error en snapshot:', error);
+      toast('Error al cargar la orden: ' + error.message, 'error', 4000);
+      hideLoading();
+      setTimeout(() => window.location.href = '/app/', 2500);
+    });
 
   } catch (err) {
     console.error('Error cargando orden:', err);
-    let mensaje = 'Error al cargar la orden';
-    if (err.message?.includes('TIMEOUT')) mensaje = 'Firestore no responde.';
-    else if (err.code === 'permission-denied') mensaje = 'Sin permisos.';
-    else if (err.code === 'unavailable') mensaje = 'Sin conexión.';
-    toast(mensaje, 'error', 4000);
-    setTimeout(() => window.location.href = '/app/', 2500);
-  } finally {
+    toast('Error al cargar la orden: ' + err.message, 'error', 4000);
     hideLoading();
-    // 🔥 APAGAMOS EL LOADER MANUALMENTE
-    document.getElementById('appLoader')?.classList.add('hidden');
+    setTimeout(() => window.location.href = '/app/', 2500);
   }
 }
 
@@ -293,7 +294,14 @@ function renderBitacora() {
    EVENTOS
    ============================================================ */
 function configurarEventosOrden() {
-  document.querySelectorAll('.estado-btn').forEach(btn => btn.addEventListener('click', () => cambiarEstado(btn.dataset.estado)));
+  console.log("🔥 Configurando eventos de la orden...");
+  
+  document.querySelectorAll('.estado-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      console.log("👉 Click en estado:", btn.dataset.estado);
+      cambiarEstado(btn.dataset.estado);
+    });
+  });
 
   const btnAddFoto = document.getElementById('btnAddFoto');
   const fotoInput = document.getElementById('fotoInput');
@@ -312,8 +320,8 @@ function configurarEventosOrden() {
   document.getElementById('btnGuardarNota')?.addEventListener('click', guardarNota);
   document.getElementById('btnContactar')?.addEventListener('click', contactarCliente);
   document.getElementById('btnEliminar')?.addEventListener('click', eliminarOrden);
-  document.getElementById('btnRegistrarCosto')?.addEventListener('click', abrirModalCosto);
-  document.getElementById('btnEditarFecha')?.addEventListener('click', abrirModalFecha);
+  document.getElementById('btnRegistrarCosto')?.addEventListener('click', () => { console.log("👉 Click en registrar costo"); abrirModalCosto(); });
+  document.getElementById('btnEditarFecha')?.addEventListener('click', () => { console.log("👉 Click en editar fecha"); abrirModalFecha(); });
   document.getElementById('btnRegenerarPDF')?.addEventListener('click', () => { haptic(15); regenerarYEnviarPDF(); });
   document.getElementById('btnVolverPanelFinal')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/'; });
 
@@ -345,14 +353,18 @@ async function cambiarEstado(nuevoEstado) {
   if (!nuevoEstado || !ESTADOS[nuevoEstado]) return;
   const estadoActual = orden.estadoOrden || 'recibido';
   if (nuevoEstado === estadoActual) { toast('Ya está en ese estado', 'info', 1500); return; }
-  if (nuevoEstado === 'entregado') { abrirModalCobro(); return; }
+  
+  if (nuevoEstado === 'entregado') { 
+    console.log("👉 Abriendo modal de cobro...");
+    abrirModalCobro(); 
+    return; 
+  }
 
   haptic(20); showLoading('Actualizando estado...');
   try {
     const entrada = { tipo: 'estado', texto: `Estado cambiado a: ${ESTADOS[nuevoEstado].texto}`, autor: sesion.nombre, fecha: new Date().toISOString() };
     await updateDoc(doc(db, 'recibos', ordenId), { estadoOrden: nuevoEstado, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
-    orden.estadoOrden = nuevoEstado; orden.bitacora = [...(orden.bitacora || []), entrada];
-    toast(`Estado: ${ESTADOS[nuevoEstado].texto}`, 'success', 2000); renderOrden();
+    toast(`Estado: ${ESTADOS[nuevoEstado].texto}`, 'success', 2000);
   } catch (err) { toast('Error al cambiar estado', 'error'); }
   finally { hideLoading(); }
 }
@@ -423,22 +435,14 @@ function abrirModalCobro() {
   modal.addEventListener('click', (e) => { if (e.target === modal) { modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300); } });
 }
 
-function cerrarModalCobro() {
-  const modal = document.getElementById('modalCobro');
-  if (!modal) return;
-  modal.style.opacity = '0';
-  setTimeout(() => modal.remove(), 300);
-}
-
 async function confirmarCobro(monto, metodo) {
-  cerrarModalCobro();
+  document.getElementById('modalCobro')?.remove();
   haptic(20);
   showLoading('Registrando entrega...');
   try {
     const entrada = { tipo: 'estado', texto: `Estado cambiado a: Entregado · Cobrado: ${formatBs(monto)} (${metodo})`, autor: sesion.nombre, fecha: new Date().toISOString() };
     await updateDoc(doc(db, 'recibos', ordenId), { estadoOrden: 'entregado', fechaEntrega: serverTimestamp(), montoCobrado: monto, metodoPago: metodo, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
-    orden.estadoOrden = 'entregado'; orden.fechaEntrega = new Date(); orden.montoCobrado = monto; orden.metodoPago = metodo; orden.bitacora = [...(orden.bitacora || []), entrada];
-    toast(`Entregado · ${formatBs(monto)} (${metodo})`, 'success', 2500); renderOrden();
+    toast(`Entregado · ${formatBs(monto)} (${metodo})`, 'success', 2500);
   } catch (err) { toast('Error al registrar entrega', 'error'); }
   finally { hideLoading(); }
 }
@@ -497,22 +501,13 @@ function abrirModalCosto() {
       const ganancia = monto - costo;
       const entrada = { tipo: 'cobro', texto: `Costo registrado: ${formatBs(costo)} · Ganancia: ${formatBs(ganancia)}`, autor: sesion.nombre, fecha: new Date().toISOString() };
       await updateDoc(doc(db, 'recibos', ordenId), { costoRepuesto: costo, gananciaNeta: ganancia, costoActualizadoEn: serverTimestamp(), costoActualizadoPor: sesion.nombre, bitacora: arrayUnion(entrada) });
-      orden.costoRepuesto = costo; orden.gananciaNeta = ganancia; orden.bitacora = [...(orden.bitacora || []), entrada];
       toast(`Costo guardado · Ganancia: ${formatBs(ganancia)}`, 'success', 2500);
       modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300);
-      renderOrden();
     } catch (err) { toast('Error al guardar el costo', 'error'); }
     finally { hideLoading(); }
   });
 
   modal.addEventListener('click', (e) => { if (e.target === modal) { modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300); } });
-}
-
-function cerrarModalCosto() {
-  const modal = document.getElementById('modalCosto');
-  if (!modal) return;
-  modal.style.opacity = '0';
-  setTimeout(() => modal.remove(), 300);
 }
 
 /* ============================================================
@@ -553,10 +548,8 @@ function abrirModalFecha() {
       const nuevaFecha = new Date(nuevaFechaStr + 'T12:00:00');
       const entrada = { tipo: 'nota', texto: `Fecha de ingreso editada a: ${nuevaFecha.toLocaleDateString('es-BO')}`, autor: sesion.nombre, fecha: new Date().toISOString() };
       await updateDoc(doc(db, 'recibos', ordenId), { fecha: nuevaFecha, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
-      orden.fecha = nuevaFecha; orden.bitacora = [...(orden.bitacora || []), entrada];
       toast('Fecha actualizada correctamente', 'success', 2500);
       modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300);
-      renderOrden();
     } catch (err) { toast('Error al actualizar la fecha', 'error'); }
     finally { hideLoading(); }
   });
@@ -668,8 +661,8 @@ async function guardarNota() {
   try {
     const entrada = { tipo: fotosNuevas.length > 0 && !texto ? 'foto' : 'nota', texto: texto || 'Foto añadida', fotos: fotosNuevas.slice(), autor: sesion.nombre, fecha: new Date().toISOString() };
     await updateDoc(doc(db, 'recibos', ordenId), { bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
-    orden.bitacora = [...(orden.bitacora || []), entrada]; fotosNuevas = [];
-    toast('Añadido a la bitácora', 'success', 2000); renderOrden();
+    fotosNuevas = [];
+    toast('Añadido a la bitácora', 'success', 2000);
   } catch (err) { toast('Error al guardar', 'error'); }
   finally { hideLoading(); }
 }
