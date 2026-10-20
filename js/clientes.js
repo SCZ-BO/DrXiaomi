@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · CLIENTE (Wizard PRO - Adaptado a tu HTML)
+   DR. XIAOMI · CLIENTE (Wizard PRO - Conectado a Firestore)
    Archivo: js/cliente.js
    ============================================================ */
 
@@ -59,10 +59,8 @@ function iniciar() {
   const userInfo = document.getElementById('userInfo');
   if (userInfo) userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
   
-  // Recuperar borrador
   const hayBorrador = cargarBorrador();
 
-  // Configurar módulos
   configurarHeader();
   configurarWizard();
   configurarMarca();
@@ -73,7 +71,6 @@ function iniciar() {
   configurarServicios();
   configurarBotonGenerarPDF();
 
-  // Guardado automático
   const content = document.getElementById('wizardContent');
   if (content) {
     content.addEventListener('input', guardarBorradorDebounce);
@@ -92,7 +89,11 @@ function iniciar() {
 let timerGuardado = null;
 
 function guardarBorrador() {
-  try { localStorage.setItem('drxiaomi_borrador', JSON.stringify(datos)); } catch (e) {}
+  try {
+    const copia = { ...datos };
+    copia.fotos = datos.fotos.map(f => f && f.dataUrl ? { dataUrl: f.dataUrl } : null);
+    localStorage.setItem('drxiaomi_borrador', JSON.stringify(copia));
+  } catch (e) {}
 }
 
 function guardarBorradorDebounce() {
@@ -108,6 +109,7 @@ function cargarBorrador() {
     if (!d.nombre) return false;
     
     Object.assign(datos, d);
+    if (!datos.fotos || datos.fotos.length !== 4) datos.fotos = [null, null, null, null];
     
     if (datos.nombre) document.getElementById('nombre').value = datos.nombre;
     if (datos.telefono) document.getElementById('telefono').value = datos.telefono;
@@ -147,7 +149,6 @@ function configurarHeader() {
     if (confirm('¿Cerrar sesión?')) logout();
   });
 
-  // Tema
   document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
     const html = document.documentElement;
     const nuevo = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -192,26 +193,25 @@ function irAPaso(nuevoPaso) {
     if (appBody) appBody.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // 🔥 LÓGICA INTELIGENTE DEL PASO 3
+  // 🔥 CORREGIDO: LÓGICA INTELIGENTE DEL PASO 3
   if (pasoActual === 3) {
-    setTimeout(() => {
-      const valorEnciende = document.getElementById('enciende')?.value;
-      const cardReparaciones = document.getElementById('cardReparaciones');
-      const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
-      const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
-      
-      if (!cardReparaciones) return; // Si no existe el elemento, salir
-
+    // Quitamos el setTimeout para que sea inmediato
+    const valorEnciende = document.getElementById('enciende')?.value;
+    const cardReparaciones = document.getElementById('cardReparaciones');
+    const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
+    const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
+    
+    if (cardReparaciones) {
       if (valorEnciende === 'Sí' || valorEnciende === 'A veces') {
-        cardReparaciones?.classList.remove('hidden');
+        cardReparaciones.classList.remove('hidden');
         cardAuditoriaGeneral?.classList.remove('hidden');
         cardAuditoriaFisica?.classList.add('hidden');
       } else {
-        cardReparaciones?.classList.add('hidden');
+        cardReparaciones.classList.add('hidden');
         cardAuditoriaGeneral?.classList.add('hidden');
         cardAuditoriaFisica?.classList.remove('hidden');
       }
-    }, 50);
+    }
   }
 
   actualizarBarraProgreso();
@@ -274,7 +274,9 @@ function validarPaso(paso) {
   if (paso === 6) {
     let hayServicio = false;
     document.querySelectorAll('.servicio-item').forEach(item => {
-      if (item.querySelector('.servicio-desc').value && parseFloat(item.querySelector('.servicio-costo').value) > 0) hayServicio = true;
+      const desc = item.querySelector('.servicio-desc')?.value;
+      const costo = parseFloat(item.querySelector('.servicio-costo')?.value) || 0;
+      if (desc && costo > 0) hayServicio = true;
     });
     if (!hayServicio) { toast('Añade al menos un costo', 'error'); return false; }
   }
@@ -356,7 +358,6 @@ function configurarRadioGroups() {
    LÓGICA INTELIGENTE (CHIPS Y CHECKLIST)
    ============================================================ */
 function configurarLogicaInteligente() {
-  // Motivo
   const motivoGroup = document.getElementById('motivoIngresoGroup');
   if (motivoGroup) {
     motivoGroup.addEventListener('click', (e) => {
@@ -369,7 +370,6 @@ function configurarLogicaInteligente() {
     });
   }
 
-  // Checklist Semáforo
   const configurarChecklist = (idGroup) => {
     const group = document.getElementById(idGroup);
     if (!group) return;
@@ -486,11 +486,15 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS
+   FOTOS (🔥 CORREGIDO CON LOS INPUTS DEL HTML)
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
   const sheet = document.getElementById('fotoSheet');
+  // Buscamos los inputs ocultos que añadimos al HTML
+  const inputCamara = document.getElementById('inputCamara');
+  const inputGaleria = document.getElementById('inputGaleria');
+  
   if (!grid) return;
 
   let slotActual = null;
@@ -515,32 +519,35 @@ function configurarFotos() {
   const cerrarSheet = () => sheet?.classList.remove('show');
   document.getElementById('btnCancelarFoto')?.addEventListener('click', cerrarSheet);
 
-  const dispararInput = (usarCamara) => {
-    const tempInput = document.createElement('input');
-    tempInput.type = 'file';
-    tempInput.accept = 'image/*';
-    if (usarCamara) tempInput.capture = 'environment';
-    tempInput.style.position = 'absolute'; tempInput.style.top = '-9999px';
+  // 🔥 Clic directo, sin crear inputs temporales
+  document.getElementById('btnTomarFoto')?.addEventListener('click', () => {
+    cerrarSheet();
+    if (inputCamara) inputCamara.click();
+    else toast('Cámara no disponible', 'error');
+  });
 
-    tempInput.addEventListener('change', async (event) => {
-      const file = event.target.files[0];
-      if (file && slotActual !== null) {
-        haptic(10);
-        try {
-          const dataUrl = await comprimirImagen(file);
-          datos.fotos[slotActual] = { file, dataUrl };
-          renderSlots(); toast('Foto añadida', 'success', 1500); guardarBorradorDebounce();
-        } catch (err) { toast('Error al procesar imagen', 'error'); }
-      }
-      slotActual = null;
-      document.body.removeChild(tempInput);
-    });
-    document.body.appendChild(tempInput);
-    tempInput.click();
-  };
+  document.getElementById('btnSubirFoto')?.addEventListener('click', () => {
+    cerrarSheet();
+    if (inputGaleria) inputGaleria.click();
+    else toast('Galería no disponible', 'error');
+  });
 
-  document.getElementById('btnTomarFoto')?.addEventListener('click', () => { cerrarSheet(); dispararInput(true); });
-  document.getElementById('btnSubirFoto')?.addEventListener('click', () => { cerrarSheet(); dispararInput(false); });
+  async function procesarFoto(e) {
+    const file = e.target.files[0];
+    if (file && slotActual !== null) {
+      haptic(10);
+      try {
+        const dataUrl = await comprimirImagen(file);
+        datos.fotos[slotActual] = { file, dataUrl };
+        renderSlots(); toast('Foto añadida', 'success', 1500); guardarBorradorDebounce();
+      } catch (err) { toast('Error al procesar imagen', 'error'); }
+    }
+    e.target.value = ''; // Limpiar el input para que se pueda volver a tomar foto
+    slotActual = null;
+  }
+
+  inputCamara?.addEventListener('change', procesarFoto);
+  inputGaleria?.addEventListener('change', procesarFoto);
 
   function renderSlots() {
     grid.querySelectorAll('.foto-slot').forEach((slot, i) => {
@@ -577,7 +584,7 @@ async function comprimirImagen(file) {
 }
 
 /* ============================================================
-   SERVICIOS Y COSTOS
+   SERVICIOS Y COSTOS (🔥 CORREGIDO)
    ============================================================ */
 function configurarServicios() {
   const list = document.getElementById('serviciosList');
@@ -632,6 +639,7 @@ function configurarServicios() {
 
   document.getElementById('adelanto')?.addEventListener('input', calcularTotal);
   
+  // 🔥 Forzar que siempre haya una casilla al entrar
   if (list.children.length === 0) list.appendChild(crearServicioItem('', ''));
 }
 
@@ -744,7 +752,7 @@ function generarVistaPrevia() {
 }
 
 /* ============================================================
-   GENERACIÓN DE PDF Y GUARDADO EN FIRESTORE
+   GENERACIÓN DE PDF Y GUARDADO EN FIRESTORE (🔥 CORREGIDO)
    ============================================================ */
 function configurarBotonGenerarPDF() {
   const btn = document.getElementById('btnGenerate');
@@ -759,11 +767,13 @@ function configurarBotonGenerarPDF() {
     guardarDatosPaso(6);
     
     const textoOriginal = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
     btn.style.opacity = '0.7';
 
     try {
       const num = generarNumeroRecibo();
+      
+      // Preparamos el paquete
       const paquete = {
         numeroRecibo: num,
         cliente: datos.nombre,
@@ -783,7 +793,6 @@ function configurarBotonGenerarPDF() {
         adelanto: datos.adelanto,
         saldo: datos.saldo,
         fotos: datos.fotos.filter(f => f && f.dataUrl).map(f => f.dataUrl),
-        // 🔥 CAMPOS OBLIGATORIOS PARA EL PANEL
         estadoOrden: 'recibido',
         fecha: serverTimestamp(),
         creadoPor: sesion.nombre,
@@ -795,7 +804,7 @@ function configurarBotonGenerarPDF() {
       const docRef = await addDoc(collection(db, 'recibos'), paquete);
       console.log('✅ Recibo guardado en Firestore con ID:', docRef.id);
 
-      // 2. LUEGO INTENTAR GENERAR EL PDF
+      // 2. LUEGO GENERAR EL PDF (capturamos el error para que no rompa el guardado)
       try {
         await generarPDFUnificado(paquete, 'guardar_en_nube');
       } catch (pdfError) {
@@ -810,8 +819,8 @@ function configurarBotonGenerarPDF() {
       configurarWhatsApp();
 
     } catch (error) {
-      console.error("Error al guardar:", error);
-      toast('Error al guardar: ' + error.message, 'error', 5000);
+      console.error("Error al guardar en Firestore:", error);
+      toast('Error al guardar en la base de datos: ' + error.message, 'error', 5000);
     } finally {
       generando = false;
       btn.innerHTML = textoOriginal;
