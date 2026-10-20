@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL)
+   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL CORREGIDA)
    Archivo: app/orden.js
    ============================================================ */
 
@@ -64,7 +64,6 @@ requireAuth(async (s) => {
 });
 
 async function iniciar() {
-  // 🔥 OCULTAMOS EL LOADER INMEDIATAMENTE
   const loader = document.getElementById('appLoader');
   if (loader) loader.classList.add('hidden');
 
@@ -96,7 +95,7 @@ async function iniciar() {
 }
 
 /* ============================================================
-   CARGAR ORDEN (CON SNAPSHOT EN TIEMPO REAL)
+   CARGAR ORDEN
    ============================================================ */
 async function cargarOrden() {
   showLoading('Cargando orden...');
@@ -104,7 +103,6 @@ async function cargarOrden() {
   try {
     const ref = doc(db, 'recibos', ordenId);
     
-    // 🔥 USAMOS onSnapshot PARA QUE LA PÁGINA SE ACTUALICE EN TIEMPO REAL
     unsubscribe = onSnapshot(ref, (snap) => {
       if (!snap.exists()) {
         toast('Esta orden no existe o fue eliminada', 'error', 3000);
@@ -294,13 +292,8 @@ function renderBitacora() {
    EVENTOS
    ============================================================ */
 function configurarEventosOrden() {
-  console.log("🔥 Configurando eventos de la orden...");
-  
   document.querySelectorAll('.estado-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      console.log("👉 Click en estado:", btn.dataset.estado);
-      cambiarEstado(btn.dataset.estado);
-    });
+    btn.addEventListener('click', () => cambiarEstado(btn.dataset.estado));
   });
 
   const btnAddFoto = document.getElementById('btnAddFoto');
@@ -320,8 +313,8 @@ function configurarEventosOrden() {
   document.getElementById('btnGuardarNota')?.addEventListener('click', guardarNota);
   document.getElementById('btnContactar')?.addEventListener('click', contactarCliente);
   document.getElementById('btnEliminar')?.addEventListener('click', eliminarOrden);
-  document.getElementById('btnRegistrarCosto')?.addEventListener('click', () => { console.log("👉 Click en registrar costo"); abrirModalCosto(); });
-  document.getElementById('btnEditarFecha')?.addEventListener('click', () => { console.log("👉 Click en editar fecha"); abrirModalFecha(); });
+  document.getElementById('btnRegistrarCosto')?.addEventListener('click', abrirModalCosto);
+  document.getElementById('btnEditarFecha')?.addEventListener('click', abrirModalFecha);
   document.getElementById('btnRegenerarPDF')?.addEventListener('click', () => { haptic(15); regenerarYEnviarPDF(); });
   document.getElementById('btnVolverPanelFinal')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/'; });
 
@@ -355,7 +348,6 @@ async function cambiarEstado(nuevoEstado) {
   if (nuevoEstado === estadoActual) { toast('Ya está en ese estado', 'info', 1500); return; }
   
   if (nuevoEstado === 'entregado') { 
-    console.log("👉 Abriendo modal de cobro...");
     abrirModalCobro(); 
     return; 
   }
@@ -370,7 +362,7 @@ async function cambiarEstado(nuevoEstado) {
 }
 
 /* ============================================================
-   MODAL DE COBRO
+   MODAL DE COBRO (CORREGIDO CON 'show')
    ============================================================ */
 function abrirModalCobro() {
   haptic(15);
@@ -381,19 +373,18 @@ function abrirModalCobro() {
   const modal = document.createElement('div');
   modal.className = 'modal-backdrop';
   modal.id = 'modalCobro';
-  modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(4px); z-index:9999999; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.3s ease;';
 
   modal.innerHTML = `
-    <div class="modal" style="background:var(--bg-card); border-radius:16px; padding:24px; width:90%; max-width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid var(--border); transform:translateY(20px); transition:transform 0.3s ease; z-index:10000000;">
+    <div class="modal">
       <h3 style="color:var(--brand); font-weight:800; font-size:18px; margin-bottom:8px;">✅ Confirmar entrega</h3>
       <p style="margin-bottom:20px; font-size:14px;"><strong>${escapeHtml(orden.cliente)}</strong><br><span style="font-size:12px; color:var(--text-mute);">Total: ${formatBs(total)}${saldo > 0 && saldo !== total ? ` · Saldo: ${formatBs(saldo)}` : ''}</span></p>
       <div style="margin-bottom:16px;"><label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Monto cobrado</label><input type="number" id="inputMonto" step="0.01" min="0" value="${montoSugerido.toFixed(2)}" inputmode="decimal" style="width:100%; padding:14px; font-size:18px; font-weight:700; text-align:center; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:8px; font-family:inherit;"></div>
       <div style="margin-bottom:20px;"><label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px;">Método de pago</label>
         <div id="metodosPago" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-          <button type="button" class="metodo-btn" data-metodo="Efectivo" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"><i class="fas fa-money-bill-wave" style="font-size:20px;"></i><span>Efectivo</span></button>
-          <button type="button" class="metodo-btn" data-metodo="QR" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"><i class="fas fa-qrcode" style="font-size:20px;"></i><span>QR</span></button>
-          <button type="button" class="metodo-btn" data-metodo="Transferencia" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"><i class="fas fa-building-columns" style="font-size:20px;"></i><span>Transferencia</span></button>
-          <button type="button" class="metodo-btn" data-metodo="Mixto" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"><i class="fas fa-shuffle" style="font-size:20px;"></i><span>Mixto</span></button>
+          <button type="button" class="metodo-btn" data-metodo="Efectivo"><i class="fas fa-money-bill-wave"></i><span>Efectivo</span></button>
+          <button type="button" class="metodo-btn" data-metodo="QR"><i class="fas fa-qrcode"></i><span>QR</span></button>
+          <button type="button" class="metodo-btn" data-metodo="Transferencia"><i class="fas fa-building-columns"></i><span>Transferencia</span></button>
+          <button type="button" class="metodo-btn" data-metodo="Mixto"><i class="fas fa-shuffle"></i><span>Mixto</span></button>
         </div>
         <div id="detalleMixtoContainer" style="display:none; margin-top:10px;"><input type="text" id="detalleMixto" placeholder="Ej: 200 efectivo + 150 QR" maxlength="100" style="width:100%; padding:12px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px;"></div>
         <div id="errorMetodo" style="color:#EF4444; font-size:12px; margin-top:8px; display:none;"></div>
@@ -402,22 +393,26 @@ function abrirModalCobro() {
     </div>`;
 
   document.body.appendChild(modal);
-  setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal').style.transform = 'translateY(0)'; }, 50);
+
+  // 🔥 ESTO ES LO QUE FALTABA: AÑADIR LA CLASE 'show'
+  setTimeout(() => {
+    modal.classList.add('show');
+  }, 10);
 
   let metodoSeleccionado = null;
 
   modal.querySelectorAll('.metodo-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       haptic(8);
-      modal.querySelectorAll('.metodo-btn').forEach(b => { b.classList.remove('activo'); b.style.background = 'var(--bg-elev)'; b.style.borderColor = 'var(--border)'; b.style.color = 'var(--text-main)'; });
-      btn.classList.add('activo'); btn.style.background = 'var(--brand-light)'; btn.style.borderColor = 'var(--brand)'; btn.style.color = 'var(--brand)';
+      modal.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('activo'));
+      btn.classList.add('activo');
       metodoSeleccionado = btn.dataset.metodo;
       document.getElementById('detalleMixtoContainer').style.display = metodoSeleccionado === 'Mixto' ? 'block' : 'none';
       document.getElementById('errorMetodo').style.display = 'none';
     });
   });
 
-  document.getElementById('btnCancelarCobro').addEventListener('click', () => { modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300); });
+  document.getElementById('btnCancelarCobro').addEventListener('click', () => { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); });
 
   document.getElementById('btnConfirmarCobro').addEventListener('click', async () => {
     const monto = parseFloat(document.getElementById('inputMonto').value) || 0;
@@ -432,7 +427,7 @@ function abrirModalCobro() {
     await confirmarCobro(monto, metodoFinal);
   });
 
-  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300); } });
+  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); } });
 }
 
 async function confirmarCobro(monto, metodo) {
@@ -448,7 +443,7 @@ async function confirmarCobro(monto, metodo) {
 }
 
 /* ============================================================
-   MODAL DE COSTO
+   MODAL DE COSTO (CORREGIDO CON 'show')
    ============================================================ */
 function abrirModalCosto() {
   if (sesion.rol !== 'admin') return;
@@ -460,10 +455,9 @@ function abrirModalCosto() {
   const modal = document.createElement('div');
   modal.className = 'modal-backdrop';
   modal.id = 'modalCosto';
-  modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(4px); z-index:9999999; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.3s ease;';
 
   modal.innerHTML = `
-    <div class="modal" style="background:var(--bg-card); border-radius:16px; padding:24px; width:90%; max-width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid var(--border); transform:translateY(20px); transition:transform 0.3s ease; z-index:10000000;">
+    <div class="modal">
       <h3 style="color:#10B981; font-weight:800; font-size:18px; margin-bottom:16px;"><i class="fas fa-calculator"></i> Registrar presupuesto</h3>
       <div style="background:var(--bg-elev); border-radius:8px; padding:12px; margin-bottom:1rem; border:1px solid var(--border);"><div style="font-size:11px; color:var(--text-mute); margin-bottom:4px;">RECIBO</div><div style="font-weight:700; font-size:13px;">${escapeHtml(orden.numeroRecibo || '-')}</div><div style="font-size:12px; color:var(--text-main); margin-top:4px;">${escapeHtml(orden.cliente || '-')}</div><div style="font-size:11px; color:var(--text-mute); margin-top:2px;">${escapeHtml(orden.marca || '')} ${escapeHtml(orden.modelo || '')}</div></div>
       <div style="margin-bottom:1rem;"><label style="display:block; font-size:11px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Monto cobrado al cliente</label><div style="background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; padding:14px; font-size:18px; font-weight:800; text-align:center; color:var(--brand);">${formatBs(monto)}</div></div>
@@ -473,7 +467,11 @@ function abrirModalCosto() {
     </div>`;
 
   document.body.appendChild(modal);
-  setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal').style.transform = 'translateY(0)'; }, 50);
+
+  // 🔥 AÑADIR LA CLASE 'show'
+  setTimeout(() => {
+    modal.classList.add('show');
+  }, 10);
 
   const costoInput = modal.querySelector('#costoInput');
   const gananciaPreview = modal.querySelector('#gananciaPreview');
@@ -492,7 +490,7 @@ function abrirModalCosto() {
     btn.addEventListener('click', () => { const pct = parseFloat(btn.dataset.pct); costoInput.value = (monto * pct).toFixed(2); actualizarPreview(); haptic(8); });
   });
 
-  document.getElementById('btnCancelarCosto').addEventListener('click', () => { modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300); });
+  document.getElementById('btnCancelarCosto').addEventListener('click', () => { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); });
 
   document.getElementById('btnGuardarCosto').addEventListener('click', async () => {
     const costo = parseFloat(costoInput.value) || 0;
@@ -502,16 +500,16 @@ function abrirModalCosto() {
       const entrada = { tipo: 'cobro', texto: `Costo registrado: ${formatBs(costo)} · Ganancia: ${formatBs(ganancia)}`, autor: sesion.nombre, fecha: new Date().toISOString() };
       await updateDoc(doc(db, 'recibos', ordenId), { costoRepuesto: costo, gananciaNeta: ganancia, costoActualizadoEn: serverTimestamp(), costoActualizadoPor: sesion.nombre, bitacora: arrayUnion(entrada) });
       toast(`Costo guardado · Ganancia: ${formatBs(ganancia)}`, 'success', 2500);
-      modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300);
+      modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
     } catch (err) { toast('Error al guardar el costo', 'error'); }
     finally { hideLoading(); }
   });
 
-  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300); } });
+  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); } });
 }
 
 /* ============================================================
-   MODAL DE FECHA
+   MODAL DE FECHA (CORREGIDO CON 'show')
    ============================================================ */
 function abrirModalFecha() {
   if (sesion.rol !== 'admin') return;
@@ -525,10 +523,9 @@ function abrirModalFecha() {
   const modal = document.createElement('div');
   modal.className = 'modal-backdrop';
   modal.id = 'modalFecha';
-  modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(4px); z-index:9999999; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.3s ease;';
 
   modal.innerHTML = `
-    <div class="modal" style="background:var(--bg-card); border-radius:16px; padding:24px; width:90%; max-width:400px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid var(--border); transform:translateY(20px); transition:transform 0.3s ease; z-index:10000000;">
+    <div class="modal">
       <h3 style="color:var(--brand); font-weight:800; font-size:18px; margin-bottom:8px;"><i class="fas fa-calendar-alt"></i> Editar Fecha</h3>
       <p style="font-size:12px; color:var(--text-mute); margin-bottom:16px;">Esta acción cambiará la fecha en el panel y en los reportes.</p>
       <div style="margin-bottom:20px;"><label style="display:block; font-size:12px; font-weight:700; color:var(--text-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;">Nueva Fecha</label><input type="date" id="inputFechaOrden" value="${fechaActualStr}" style="width:100%; padding:14px; font-size:16px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:8px; font-family:inherit;"></div>
@@ -536,9 +533,13 @@ function abrirModalFecha() {
     </div>`;
 
   document.body.appendChild(modal);
-  setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal').style.transform = 'translateY(0)'; }, 50);
 
-  document.getElementById('btnCancelarFecha').addEventListener('click', () => { modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300); });
+  // 🔥 AÑADIR LA CLASE 'show'
+  setTimeout(() => {
+    modal.classList.add('show');
+  }, 10);
+
+  document.getElementById('btnCancelarFecha').addEventListener('click', () => { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); });
 
   document.getElementById('btnGuardarFecha').addEventListener('click', async () => {
     const nuevaFechaStr = document.getElementById('inputFechaOrden').value;
@@ -549,12 +550,12 @@ function abrirModalFecha() {
       const entrada = { tipo: 'nota', texto: `Fecha de ingreso editada a: ${nuevaFecha.toLocaleDateString('es-BO')}`, autor: sesion.nombre, fecha: new Date().toISOString() };
       await updateDoc(doc(db, 'recibos', ordenId), { fecha: nuevaFecha, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
       toast('Fecha actualizada correctamente', 'success', 2500);
-      modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300);
+      modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
     } catch (err) { toast('Error al actualizar la fecha', 'error'); }
     finally { hideLoading(); }
   });
 
-  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300); } });
+  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); } });
 }
 
 /* ============================================================
