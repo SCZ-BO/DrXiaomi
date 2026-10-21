@@ -1,3 +1,9 @@
+/* ============================================================
+   DR. XIAOMI · SERVICE WORKER UNIFICADO
+   - Caché para catálogo offline
+   - Notificaciones para el panel admin
+   ============================================================ */
+
 const CACHE = 'drxiaomi-v1';
 const ASSETS = [
   './',
@@ -16,8 +22,7 @@ const ASSETS = [
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'
 ];
 
-// Rutas que NO debe manejar el service worker
-// (así no interfiere con /app/, /login/, /cliente/)
+// Rutas que NO debe manejar el service worker para caché
 const EXCLUDED_PATHS = ['/app/', '/login/', '/cliente/', '/api/'];
 
 function isExcluded(url) {
@@ -49,20 +54,42 @@ self.addEventListener('activate', (event) => {
 });
 
 /* ============================================================
-   FETCH
+   🔥 NOTIFICACIONES PUSH (NUEVO)
+   ============================================================ */
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'NOTIFICACION') {
+    const { titulo, cuerpo, icono, cantidad } = event.data;
+    
+    self.registration.showNotification(titulo, {
+      body: cuerpo,
+      icon: icono || '/img/logo1.png',
+      badge: '/img/logo1.png',
+      vibrate: [200, 100, 200],
+      tag: 'dr-xiaomi-notif',
+      renotify: true
+    });
+
+    // Actualizar el número en el icono (Badge)
+    if ('setAppBadge' in navigator) {
+      navigator.setAppBadge(cantidad || 1).catch(console.error);
+    }
+  }
+});
+
+/* ============================================================
+   FETCH (CACHÉ)
    ============================================================ */
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
-  // Solo manejar GET
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
 
-  // No interceptar rutas de la app (dejar que pasen directo a la red)
+  // No interceptar rutas de la app
   if (isExcluded(url)) return;
 
-  // No interceptar peticiones a otros dominios (Firebase, CDNs, etc.)
+  // No interceptar peticiones a otros dominios
   if (url.origin !== self.location.origin) return;
 
   // Imágenes: cache-first
@@ -73,14 +100,12 @@ self.addEventListener('fetch', (event) => {
       caches.match(req).then((cached) => {
         if (cached) return cached;
         return fetch(req).then((res) => {
-          // Solo cachear respuestas válidas
           if (res && res.status === 200 && res.type === 'basic') {
             const clone = res.clone();
             caches.open(CACHE).then((c) => c.put(req, clone)).catch(() => {});
           }
           return res;
         }).catch(() => {
-          // Fallback: devolver una respuesta vacía en vez de undefined
           return new Response('', { status: 404, statusText: 'Not Found' });
         });
       })
@@ -100,7 +125,6 @@ self.addEventListener('fetch', (event) => {
           return res;
         })
         .catch(() => {
-          // Fallback: index.html de la caché
           return caches.match('./index.html').then((cached) => {
             if (cached) return cached;
             return new Response(
