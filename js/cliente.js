@@ -196,23 +196,19 @@ function irAPaso(nuevoPaso) {
     if (appBody) appBody.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // 🔥 LÓGICA INTELIGENTE DEL PASO 3 (Corregida y conectada al Paso 2)
+  // LÓGICA INTELIGENTE DEL PASO 3
   if (pasoActual === 3) {
-    // Leemos directamente de la variable 'datos' que se acaba de actualizar en el Paso 2
     const valorEnciende = datos.enciende;
-    
     const cardReparaciones = document.getElementById('cardReparaciones');
     const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
     const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
     
     if (cardReparaciones) {
       if (valorEnciende === 'Sí' || valorEnciende === 'A veces') {
-        // Si enciende, mostramos reparaciones y auditoría general
         cardReparaciones.classList.remove('hidden');
         cardAuditoriaGeneral?.classList.remove('hidden');
         cardAuditoriaFisica?.classList.add('hidden');
       } else {
-        // Si NO enciende, ocultamos reparaciones y mostramos SOLO auditoría física
         cardReparaciones.classList.add('hidden');
         cardAuditoriaGeneral?.classList.add('hidden');
         cardAuditoriaFisica?.classList.remove('hidden');
@@ -805,9 +801,44 @@ function configurarBotonGenerarPDF() {
       const docRef = await addDoc(collection(db, 'recibos'), paquete);
       console.log('✅ Recibo guardado en Firestore con ID:', docRef.id);
 
-      // 2. LUEGO GENERAR EL PDF (capturamos el error para que no rompa el guardado)
+      // 2. LUEGO GENERAR EL PDF Y CONECTAR LOS BOTONES
       try {
-        await generarPDFUnificado(paquete, 'guardar_en_nube');
+        const resultadoPDF = await generarPDFUnificado(paquete, 'guardar_en_nube');
+        
+        // CONECTAR EL BOTÓN DE DESCARGAR
+        if (resultadoPDF && resultadoPDF.success) {
+          const btnDescargar = document.getElementById('downloadPdfBtn');
+          if (btnDescargar) {
+            btnDescargar.onclick = () => {
+              try {
+                resultadoPDF.pdf.save(resultadoPDF.nombreArchivo);
+                toast('PDF descargado', 'success');
+              } catch (e) { toast('Error al descargar', 'error'); }
+            };
+          }
+
+          // CONECTAR EL BOTÓN DE COMPARTIR NATIVO
+          const btnCompartir = document.getElementById('btnCompartirNativo');
+          if (btnCompartir) {
+            btnCompartir.onclick = async () => {
+              const blob = resultadoPDF.pdf.output('blob');
+              const file = new File([blob], resultadoPDF.nombreArchivo, { type: 'application/pdf' });
+              
+              if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                  await navigator.share({
+                    title: 'Recibo DR. Xiaomi',
+                    text: `Hola ${datos.nombre}, aquí tienes tu recibo.`,
+                    files: [file]
+                  });
+                } catch (err) { console.log('Compartir cancelado'); }
+              } else {
+                resultadoPDF.pdf.save(resultadoPDF.nombreArchivo);
+                toast('PDF descargado. Adjúntalo en WhatsApp.', 'info', 4000);
+              }
+            };
+          }
+        }
       } catch (pdfError) {
         console.error('PDF falló, pero el recibo se guardó:', pdfError);
       }
