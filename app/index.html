@@ -25,7 +25,7 @@
       --brand: #FF6900; --brand-glow: rgba(255, 105, 0, 0.25); 
       --bg-main: #09090B; --bg-card: #18181B; --bg-elev: #27272A; 
       --text-main: #FAFAFA; --text-mute: #A1A1AA; --border: rgba(255, 255, 255, 0.08); 
-      --success: #10B981;
+      --success: #10B981; --blue: #3B82F6; --yellow: #FBBF24; --red: #EF4444;
     }
     [data-theme="light"] {
       --bg-main: #F4F4F5; --bg-card: #FFFFFF; --bg-elev: #F4F4F5; 
@@ -39,7 +39,6 @@
     
     .app-container { display: flex; flex-direction: column; height: 100%; }
     
-    /* HEADER ESTILO APPLE/UBER */
     .app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: transparent; z-index: 100; padding-top: max(16px, env(safe-area-inset-top)); }
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand-logo { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
@@ -53,20 +52,15 @@
     .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); border: none; color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .icon-btn:active { transform: scale(0.92); }
     
-    /* BOTONES GIGANTES (ESTILO TARJETAS DE UBER) */
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
     .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 20px; border-radius: var(--radius-lg); font-weight: 700; font-size: 15px; border: none; cursor: pointer; transition: 0.2s; height: 130px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); position: relative; overflow: hidden; }
     .btn-hero:active { transform: scale(0.96); }
     .btn-hero i { font-size: 32px; margin-bottom: auto; }
     .btn-hero span { z-index: 2; line-height: 1.2; text-align: left; }
-    
     .btn-hero-nuevo { background: linear-gradient(135deg, var(--brand), #FF8C00); color: white; box-shadow: 0 8px 24px var(--brand-glow); }
     .btn-hero-venta { background: var(--bg-card); color: var(--success); border: 1px solid var(--border); }
-    
-    /* EFECTO DE LUZ EN BOTON NARANJA */
     .btn-hero-nuevo::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); opacity: 0.8; pointer-events: none; }
 
-    /* STATS ESTILO WIDGETS */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
     .stat-card { background: var(--bg-card); border-radius: var(--radius-md); padding: 16px 12px; display: flex; flex-direction: column; justify-content: center; text-align: left; border: 1px solid var(--border); }
     .stat-value { font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1; margin-bottom: 6px; letter-spacing: -0.5px; }
@@ -74,21 +68,21 @@
     .stat-value.brand { color: var(--brand); }
     .stat-label { font-size: 11px; font-weight: 600; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* BUSCADOR ESTILO IOS */
     .search-bar { background: var(--bg-elev); border-radius: var(--radius-pill); display: flex; align-items: center; padding: 0 16px; margin-bottom: 16px; height: 48px; border: 1px solid transparent; transition: 0.2s; }
     .search-bar:focus-within { border-color: var(--brand); background: var(--bg-card); }
     .search-bar i { color: var(--text-mute); margin-right: 10px; font-size: 16px; }
     .search-bar input { flex: 1; background: transparent; border: none; color: var(--text-main); font-size: 15px; outline: none; font-family: inherit; font-weight: 500; }
     
+    /* 🔥 FILTROS RESTAURADOS */
     .filters-row { display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
     .filters-row::-webkit-scrollbar { display: none; }
-    .chip { padding: 10px 20px; border-radius: var(--radius-pill); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-mute); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+    .chip { padding: 8px 16px; border-radius: var(--radius-pill); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-mute); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
     .chip.active { background: var(--text-main); border-color: var(--text-main); color: var(--bg-main); }
 
     .section-title { font-size: 13px; font-weight: 800; color: var(--text-main); letter-spacing: -0.3px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
     
-    /* TARJETAS DE MOVIMIENTOS (ESTILO LISTA DE CONTACTOS IOS) */
-    .ingreso-card { background: var(--bg-card); border-radius: var(--radius-md); padding: 16px; margin-bottom: 10px; transition: 0.2s; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+    /* TARJETAS DE MOVIMIENTOS CON BORDE DE COLOR */
+    .ingreso-card { background: var(--bg-card); border-radius: var(--radius-md); padding: 16px; margin-bottom: 10px; transition: 0.2s; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.02); border-left-width: 4px; border-left-style: solid; }
     .ingreso-card:active { transform: scale(0.98); background: var(--bg-elev); }
     
     .icon-circle { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 14px; flex-shrink: 0; }
@@ -106,43 +100,21 @@
     .monto.venta { color: var(--success); }
     .estado-chip { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; margin-top: 4px; display: inline-block; text-transform: uppercase; }
 
-    /* 🔥 BARRA DE NAVEGACIÓN FLOTANTE (ESTILO IOS) */
+    /* BARRA DE NAVEGACIÓN FLOTANTE (ESTILO IOS) */
     .bottom-nav { 
-      position: fixed; 
-      bottom: max(20px, env(safe-area-inset-bottom)); 
-      left: 50%; 
-      transform: translateX(-50%);
-      background: rgba(24, 24, 27, 0.85); 
-      backdrop-filter: saturate(180%) blur(20px); 
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 40px; 
-      display: flex; 
-      justify-content: space-around; 
-      align-items: center; 
-      padding: 10px 16px; 
-      width: calc(100% - 40px);
-      max-width: 380px;
-      z-index: 100; 
-      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+      position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+      background: rgba(24, 24, 27, 0.85); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 40px; display: flex; justify-content: space-around; align-items: center; 
+      padding: 10px 16px; width: calc(100% - 40px); max-width: 380px; z-index: 100; box-shadow: 0 10px 40px rgba(0,0,0,0.4);
     }
-    [data-theme="light"] .bottom-nav {
-      background: rgba(255, 255, 255, 0.85);
-      border: 1px solid rgba(0,0,0,0.05);
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-    }
+    [data-theme="light"] .bottom-nav { background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
     
-    .nav-item { 
-      display: flex; flex-direction: column; align-items: center; justify-content: center; 
-      color: var(--text-mute); gap: 6px; cursor: pointer; transition: 0.2s; 
-      background: none; border: none; width: 48px; height: 48px; border-radius: 50%;
-    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-mute); gap: 6px; cursor: pointer; transition: 0.2s; background: none; border: none; width: 48px; height: 48px; border-radius: 50%; }
     .nav-item i { font-size: 20px; transition: 0.2s; }
-    .nav-item span { font-size: 9px; font-weight: 600; display: none; }
     .nav-item:active { opacity: 0.6; transform: scale(0.9); }
     .nav-item.active { color: var(--brand); }
 
-    /* MODALES (BOTTOM SHEETS ESTILO APPLE) */
+    /* MODALES */
     .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 999999; opacity: 0; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; transition: 0.3s; }
     .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
     .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 24px; padding-bottom: max(24px, env(safe-area-inset-bottom)); width: 100%; max-width: 500px; transform: translateY(100%); transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); border-top: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
@@ -153,7 +125,7 @@
     .btn-sheet:active { transform: scale(0.98); }
     .btn-sheet-primary { background: var(--text-main); color: var(--bg-main); }
     .btn-sheet-whatsapp { background: var(--success); color: white; }
-    .btn-sheet-danger { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
+    .btn-sheet-danger { background: rgba(239, 68, 68, 0.1); color: var(--red); }
     .btn-sheet-edit { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); }
     
     .custom-select { width: 100%; padding: 16px; border-radius: var(--radius-md); background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); outline: none; font-weight: 600; font-size: 16px; appearance: none; }
@@ -164,7 +136,6 @@
     .form-control:focus { border-color: var(--brand); }
     .btn-sheet-success { background: var(--brand); color: white; }
 
-    /* LOADER */
     .loader-overlay { position: fixed; inset: 0; background: var(--bg-main); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
     .loader-overlay.hidden { opacity: 0; pointer-events: none; }
     .loader-logo-container { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
@@ -209,7 +180,6 @@
 
     <main class="app-content">
       
-      <!-- BOTONES GIGANTES -->
       <div class="hero-actions">
         <button class="btn-hero btn-hero-nuevo" id="nuevoReciboBtn">
           <i class="fas fa-mobile-screen-button"></i>
@@ -221,7 +191,6 @@
         </button>
       </div>
 
-      <!-- STATS -->
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-value" id="statActivas">—</div>
@@ -244,9 +213,14 @@
         <input type="search" id="buscador" placeholder="Buscar cliente o equipo..." autocomplete="off">
       </div>
 
+      <!-- 🔥 FILTROS RESTAURADOS -->
       <div class="filters-row" id="filtros">
         <button class="chip active" data-filtro="todos">Todos</button>
-        <button class="chip" data-filtro="telefono">Equipos</button>
+        <button class="chip" data-filtro="recibido">Recibidos</button>
+        <button class="chip" data-filtro="reparacion">Reparación</button>
+        <button class="chip" data-filtro="listo">Listos</button>
+        <button class="chip" data-filtro="entregado">Entregados</button>
+        <button class="chip" data-filtro="devuelto">Devueltos</button>
         <button class="chip" data-filtro="venta">Ventas</button>
       </div>
 
@@ -257,7 +231,6 @@
       </button>
     </main>
 
-    <!-- BARRA INFERIOR FLOTANTE -->
     <nav class="bottom-nav">
       <button class="nav-item" id="btnRefreshNav" title="Actualizar">
         <i class="fas fa-rotate" id="iconRefresh"></i>
@@ -372,7 +345,6 @@
         themeIcon.className = 'fas fa-moon';
       }
 
-      // 🔥 OCULTAR REPORTES SI NO ES ADMIN
       if (sesion.rol !== 'admin') {
         const btnReportes = document.getElementById('reportesBtn');
         if (btnReportes) btnReportes.style.display = 'none';
@@ -533,10 +505,15 @@
       const lista = document.getElementById('listaOrdenes');
       let todosLosMovimientos = [];
 
-      if (filtroActual === 'todos' || filtroActual === 'telefono') {
+      if (filtroActual === 'todos' || filtroActual === 'recibido' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
         ordenes.forEach(o => {
-          const estaEntregado = o.estadoOrden === 'entregado';
+          const estado = o.estadoOrden || 'recibido';
+          
+          if (filtroActual !== 'todos' && filtroActual !== estado) return;
+
+          const estaEntregado = estado === 'entregado';
           const montoCobrado = Number(o.montoCobrado) || 0;
+          
           if (estaEntregado && montoCobrado > 0) {
             todosLosMovimientos.push({ tipo: 'telefono', data: o, fechaOrden: parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha), monto: montoCobrado });
           } else if (!estaEntregado) {
@@ -567,7 +544,7 @@
       todosLosMovimientos.sort((a, b) => b.fechaOrden - a.fechaOrden);
 
       if (todosLosMovimientos.length === 0) {
-        lista.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><h3>Sin movimientos</h3><p>No hay ingresos ni órdenes hoy.</p></div>`;
+        lista.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><h3>Sin movimientos</h3><p>No hay resultados para este filtro.</p></div>`;
         btnCargarMas.style.display = 'none';
         return;
       }
@@ -589,26 +566,28 @@
       else btnCargarMas.style.display = 'none';
     }
 
+    // 🔥 RENDERIZADO CON COLORES POR ESTADO
     function renderCardTelefono(o) {
       const estadoActual = o.estadoOrden || 'recibido';
       const estadoInfo = {
-        recibido: { texto: 'Recibido', color: '#9CA3AF' },
-        reparacion: { texto: 'Reparación', color: 'var(--brand)' },
-        'espera-repuesto': { texto: 'Repuesto', color: '#3B82F6' },
-        listo: { texto: 'Listo', color: '#FBBF24' },
-        entregado: { texto: 'Entregado', color: 'var(--success)' },
-        devuelto: { texto: 'Devuelto', color: '#EF4444' }
+        recibido: { texto: 'Recibido', color: '#9CA3AF' }, // Gris
+        reparacion: { texto: 'Reparación', color: 'var(--brand)' }, // Naranja
+        'espera-repuesto': { texto: 'Repuesto', color: '#8B5CF6' }, // Morado
+        listo: { texto: 'Listo', color: 'var(--yellow)' }, // Amarillo
+        entregado: { texto: 'Entregado', color: 'var(--success)' }, // Verde
+        devuelto: { texto: 'Devuelto', color: 'var(--blue)' } // Azul
       }[estadoActual] || { texto: estadoActual, color: 'var(--text-mute)' };
 
       const total = Number(o.montoCobrado) || Number(o.total) || 0;
 
+      // Aplicamos el color del estado al borde izquierdo de la tarjeta
       return `
-        <div class="ingreso-card" data-tipo="telefono" data-id="${o.id}">
-          <div class="icon-circle telefono"><i class="fas fa-mobile-alt"></i></div>
+        <div class="ingreso-card" data-tipo="telefono" data-id="${o.id}" style="border-left-color: ${estadoInfo.color};">
+          <div class="icon-circle telefono" style="color: ${estadoInfo.color}; background: ${estadoInfo.color}15;"><i class="fas fa-mobile-alt"></i></div>
           <div class="info-col">
             <div class="info-title">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
             <div class="info-sub">${escapeHtml(o.cliente || 'Cliente')} · ${tiempoRelativo(o.fechaEditada || o.fecha)}</div>
-            <span class="estado-chip" style="background: ${estadoInfo.color}20; color: ${estadoInfo.color};">${estadoInfo.texto}</span>
+            <span class="estado-chip" style="background: ${estadoInfo.color}15; color: ${estadoInfo.color};">${estadoInfo.texto}</span>
           </div>
           <div class="monto-col">
             <div class="monto telefono">${formatBs(total)}</div>
@@ -627,9 +606,11 @@
       else if (v.concepto === 'Reactivación') icono = 'fa-bolt';
       else if (v.concepto === 'Cargador') icono = 'fa-plug';
 
+      const colorVenta = tipo === 'venta' ? 'var(--success)' : '#8B5CF6';
+
       return `
-        <div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}">
-          <div class="icon-circle ${tipo}"><i class="fas ${icono}"></i></div>
+        <div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}" style="border-left-color: ${colorVenta};">
+          <div class="icon-circle ${tipo}" style="color: ${colorVenta}; background: ${colorVenta}15;"><i class="fas ${icono}"></i></div>
           <div class="info-col">
             <div class="info-title">${escapeHtml(v.concepto)}</div>
             <div class="info-sub">${horaStr} · ${escapeHtml(v.metodoPago)}</div>
