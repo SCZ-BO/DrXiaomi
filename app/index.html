@@ -52,16 +52,16 @@
     .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); border: none; color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .icon-btn:active { transform: scale(0.92); }
     
-    .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-    .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 16px; border-radius: var(--radius-lg); font-weight: 700; font-size: 14px; border: none; cursor: pointer; transition: 0.2s; height: 104px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); position: relative; overflow: hidden; }
+    /* 🔥 BOTONES REDUCIDOS UN 20% ADICIONAL (Altura 83px) */
+    .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 14px; border-radius: var(--radius-lg); font-weight: 700; font-size: 13px; border: none; cursor: pointer; transition: 0.2s; height: 83px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); position: relative; overflow: hidden; }
     .btn-hero:active { transform: scale(0.96); }
-    .btn-hero i { font-size: 26px; margin-bottom: auto; }
+    .btn-hero i { font-size: 22px; margin-bottom: auto; }
     .btn-hero span { z-index: 2; line-height: 1.2; text-align: left; }
     .btn-hero-nuevo { background: linear-gradient(135deg, var(--brand), #FF8C00); color: white; box-shadow: 0 6px 20px var(--brand-glow); }
     .btn-hero-venta { background: var(--bg-card); color: var(--success); border: 1px solid var(--border); }
     .btn-hero-nuevo::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); opacity: 0.8; pointer-events: none; }
 
-    /* 🔥 TARJETAS DE STATS REDUCIDAS UN 10% EN ALTURA */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
     .stat-card { background: var(--bg-card); border-radius: var(--radius-md); padding: 12px 10px; display: flex; flex-direction: column; justify-content: center; text-align: left; border: 1px solid var(--border); }
     .stat-value { font-size: 20px; font-weight: 800; color: var(--text-main); line-height: 1; margin-bottom: 4px; letter-spacing: -0.5px; }
@@ -74,6 +74,7 @@
     .search-bar i { color: var(--text-mute); margin-right: 10px; font-size: 15px; }
     .search-bar input { flex: 1; background: transparent; border: none; color: var(--text-main); font-size: 14px; outline: none; font-family: inherit; font-weight: 500; }
     
+    /* 🔥 FILTROS SIN EL BOTÓN DE RECIBIDOS */
     .filters-row { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
     .filters-row::-webkit-scrollbar { display: none; }
     .chip { padding: 8px 16px; border-radius: var(--radius-pill); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-mute); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
@@ -210,9 +211,9 @@
         <input type="search" id="buscador" placeholder="Buscar cliente o equipo..." autocomplete="off">
       </div>
 
+      <!-- 🔥 FILTROS ACTUALIZADOS (Sin "Recibidos") -->
       <div class="filters-row" id="filtros">
         <button class="chip active" data-filtro="todos">Todos</button>
-        <button class="chip" data-filtro="recibido">Recibidos</button>
         <button class="chip" data-filtro="reparacion">Reparación</button>
         <button class="chip" data-filtro="listo">Listos</button>
         <button class="chip" data-filtro="entregado">Entregados</button>
@@ -501,10 +502,12 @@
       const lista = document.getElementById('listaOrdenes');
       let todosLosMovimientos = [];
 
-      if (filtroActual === 'todos' || filtroActual === 'recibido' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
+      // Filtrado de teléfonos
+      if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
         ordenes.forEach(o => {
           const estado = o.estadoOrden || 'recibido';
           if (filtroActual !== 'todos' && filtroActual !== estado) return;
+          
           const estaEntregado = estado === 'entregado';
           const montoCobrado = Number(o.montoCobrado) || 0;
           
@@ -516,6 +519,7 @@
         });
       }
 
+      // Filtrado de ventas
       if (filtroActual === 'todos' || filtroActual === 'venta') {
         ventasHoy.forEach(v => {
           todosLosMovimientos.push({ tipo: v.origen === 'panel' ? 'venta' : 'cierre', data: v, fechaOrden: parsearFecha(v.fecha), monto: v.monto });
