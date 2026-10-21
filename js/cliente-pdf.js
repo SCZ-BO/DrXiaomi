@@ -423,9 +423,8 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
     ultimoPDF = pdf;
     ultimoNombrePDF = nombreArchivo;
 
-    // 🔥 NO SE DESCARGA AUTOMÁTICAMENTE. LO GUARDAMOS EN MEMORIA PARA COMPARTIR.
-    // try { pdf.save(nombreArchivo); } catch (err) { console.error(...) }
-
+    // 🔥 NO SE DESCARGA AUTOMÁTICAMENTE. SE GUARDA EN MEMORIA.
+    
     if (accion === 'guardar_en_nube') {
       toast('✅ Recibo generado y guardado', 'success', 3000);
     } else {
@@ -438,7 +437,8 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
       numeroRecibo,
       errorGuardado,
       nombreArchivo,
-      pdfBlob: pdf.output('blob') // Devolvemos el archivo listo para compartir
+      pdf: pdf, // 🔥 AQUÍ ESTÁ EL ARREGLO: DEVOLVEMOS EL OBJETO PDF
+      pdfBlob: pdf.output('blob')
     };
 
   } catch (err) {
