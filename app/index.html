@@ -297,7 +297,7 @@
   </div>
 
   <script type="module">
-    import { requireAuth, logout } from '/js/app-auth.js';
+           import { requireAuth, logout } from '/js/app-auth.js';
     import { toast, haptic, initTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
     import { db } from '/js/firebase.js';
     import { collection, query, onSnapshot, limit, doc, updateDoc, deleteDoc, startAfter, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -485,12 +485,9 @@
     }
 
     function procesarVentas() {
-      const hoy = new Date(); hoy.setHours(0,0,0,0);
+      // 🔥 SE ELIMINÓ EL FILTRO DE HOY
       const todas = [...ventasPanel, ...ventasCierre];
-      ventasHoy = todas.filter(v => {
-        const f = parsearFecha(v.fecha);
-        return f && f >= hoy;
-      }).sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0));
+      ventasHoy = todas.sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0));
       renderizarTodo();
     }
 
@@ -499,7 +496,6 @@
       const lista = document.getElementById('listaOrdenes');
       let todosLosMovimientos = [];
 
-      // Filtrado de teléfonos
       if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
         ordenes.forEach(o => {
           const estado = o.estadoOrden || 'recibido';
@@ -516,7 +512,6 @@
         });
       }
 
-      // Filtrado de ventas
       if (filtroActual === 'todos' || filtroActual === 'venta') {
         ventasHoy.forEach(v => {
           todosLosMovimientos.push({ tipo: v.origen === 'panel' ? 'venta' : 'cierre', data: v, fechaOrden: parsearFecha(v.fecha), monto: v.monto });
