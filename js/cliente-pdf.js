@@ -1,20 +1,17 @@
 /* ============================================================
-   DR. XIAOMI · PDF DEL RECIBO (MOTOR CENTRAL BLINDADO v3)
+   DR. XIAOMI · PDF DEL RECIBO (MOTOR CENTRAL BLINDADO v4)
    Archivo: js/cliente-pdf.js
    ============================================================ */
 
-// 🔥 Imports separados correctamente
 import { datos, sesion, CONFIG, generarNumeroRecibo } from '/js/cliente.js';
 import { toast, haptic, formatBs, showLoading, hideLoading } from '/js/app-ui.js';
 
-// 🔥 Firebase (solo para verificar si el recibo ya existe)
 import { db, auth } from '/js/firebase.js';
 import {
   collection,
   query, where, getDocs
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-// 🔥 Variable de módulo en lugar de window._ultimoPDF
 let ultimoPDF = null;
 let ultimoNombrePDF = 'recibo.pdf';
 
@@ -410,7 +407,6 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
   try {
     let numeroRecibo = paquete.numeroRecibo || generarNumeroRecibo();
 
-    // Verificación de unicidad (solo si se pide)
     if (accion === 'guardar_en_nube' && db) {
       const esUnico = await verificarNumeroUnico(numeroRecibo);
       if (!esUnico) {
@@ -420,19 +416,15 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
 
     const { pdf } = await construirPDF(paquete, numeroRecibo);
 
-    // 🔥 AQUÍ ESTÁ EL CAMBIO: Ya NO guardamos en la base de datos desde aquí.
-    // El guardado lo hace cliente.js. Solo retornamos que todo salió bien.
     let guardadoEnNube = true; 
     let errorGuardado = null;
 
     const nombreArchivo = `Recibo_${numeroRecibo}_${(paquete.cliente || 'Cliente').split(' ')[0]}.pdf`;
     ultimoPDF = pdf;
     ultimoNombrePDF = nombreArchivo;
-    try {
-      pdf.save(nombreArchivo);
-    } catch (err) {
-      console.error('Error al descargar PDF:', err);
-    }
+
+    // 🔥 NO SE DESCARGA AUTOMÁTICAMENTE. LO GUARDAMOS EN MEMORIA PARA COMPARTIR.
+    // try { pdf.save(nombreArchivo); } catch (err) { console.error(...) }
 
     if (accion === 'guardar_en_nube') {
       toast('✅ Recibo generado y guardado', 'success', 3000);
@@ -445,7 +437,8 @@ export async function generarPDFUnificado(paquete, accion = 'guardar') {
       guardadoEnNube,
       numeroRecibo,
       errorGuardado,
-      nombreArchivo
+      nombreArchivo,
+      pdfBlob: pdf.output('blob') // Devolvemos el archivo listo para compartir
     };
 
   } catch (err) {
