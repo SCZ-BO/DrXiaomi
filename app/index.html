@@ -34,48 +34,55 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
+    /* SOLUCIÓN AL SCROLL EN IPHONE */
     html, body { height: 100%; overflow: hidden; }
     body { background-color: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
     
-    .app-container { display: flex; flex-direction: column; height: 100%; }
-    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-main); border-bottom: 1px solid var(--border); z-index: 100; }
-    .app-content { flex: 1; overflow-y: auto; padding: 12px 12px 100px 12px; -webkit-overflow-scrolling: touch; }
+    .app-container { display: flex; flex-direction: column; height: 100%; padding-bottom: env(safe-area-inset-bottom); }
     
+    /* HEADER LIMPIO */
+    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--bg-main); border-bottom: 1px solid var(--border); z-index: 100; padding-top: max(12px, env(safe-area-inset-top)); }
     .brand { display: flex; align-items: center; gap: 10px; }
     .brand-logo { width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
-    .brand-text h1 { font-size: 15px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+    .brand-text h1 { font-size: 16px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
     .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
     
-    .header-actions { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 220px; }
-    .icon-btn { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+    .app-content { flex: 1; overflow-y: auto; padding: 16px 16px 100px 16px; -webkit-overflow-scrolling: touch; }
+    
+    .header-actions { display: flex; gap: 8px; }
+    .icon-btn { width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
     .icon-btn:active { transform: scale(0.95); }
     
-    .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-    .btn-hero { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px 10px; border-radius: var(--radius-md); font-weight: 800; font-size: 14px; border: none; cursor: pointer; transition: 0.2s; text-align: center; }
+    /* BOTONES GIGANTES */
+    .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .btn-hero { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px 10px; border-radius: var(--radius-md); font-weight: 800; font-size: 14px; border: none; cursor: pointer; transition: 0.2s; text-align: center; }
     .btn-hero:active { transform: scale(0.96); }
-    .btn-hero i { font-size: 28px; }
+    .btn-hero i { font-size: 32px; }
     .btn-hero-nuevo { background: var(--brand); color: white; box-shadow: 0 4px 12px rgba(230, 81, 0, 0.3); }
     .btn-hero-venta { background: var(--bg-card); color: var(--success); border: 2px solid var(--success); }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
-    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-    .stat-value { font-size: 18px; font-weight: 800; color: var(--text-main); line-height: 1; margin-bottom: 4px; }
+    /* TARJETAS DE STATS */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .stat-value { font-size: 20px; font-weight: 800; color: var(--text-main); line-height: 1; margin-bottom: 6px; }
     .stat-value.success { color: var(--success); }
     .stat-value.brand { color: var(--brand); }
     .stat-label { font-size: 10px; font-weight: 600; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .search-bar { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); display: flex; align-items: center; padding: 0 12px; margin-bottom: 12px; height: 44px; }
+    /* BUSCADOR Y FILTROS */
+    .search-bar { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); display: flex; align-items: center; padding: 0 12px; margin-bottom: 16px; height: 44px; }
     .search-bar i { color: var(--text-mute); margin-right: 8px; font-size: 14px; }
     .search-bar input { flex: 1; background: transparent; border: none; color: var(--text-main); font-size: 14px; outline: none; font-family: inherit; }
-    .filters-row { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .filters-row { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
     .filters-row::-webkit-scrollbar { display: none; }
-    .chip { padding: 8px 14px; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-mute); font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+    .chip { padding: 8px 16px; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-mute); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: 0.2s; }
     .chip.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
 
-    .section-title { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; margin-top: 24px; }
+    .section-title { font-size: 11px; font-weight: 800; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
     
-    .ingreso-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; transition: 0.2s; cursor: pointer; position: relative; border-left: 3px solid var(--border); }
+    /* TARJETAS DE MOVIMIENTOS */
+    .ingreso-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; transition: 0.2s; cursor: pointer; position: relative; border-left: 4px solid var(--border); }
     .ingreso-card:active { transform: scale(0.98); background: var(--bg-elev); }
     
     .ingreso-card[data-tipo="telefono"] { border-left-color: var(--brand); }
@@ -87,33 +94,42 @@
     .chip-estado[data-tipo="venta"] { background: rgba(34, 197, 94, 0.15); color: var(--success); }
     .chip-estado[data-tipo="cierre"] { background: rgba(139, 92, 246, 0.15); color: #8B5CF6; }
     
-    .metodo-pago { font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 4px; color: #22C55E; }
+    .metodo-pago { font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 4px; color: var(--text-mute); }
 
+    /* NAVEGACIÓN INFERIOR (BOTTOM NAV) */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding: 10px 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); z-index: 100; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-mute); font-size: 10px; font-weight: 600; gap: 4px; cursor: pointer; transition: 0.2s; background: none; border: none; width: 20%; }
+    .nav-item i { font-size: 20px; }
+    .nav-item:active { opacity: 0.7; }
+    .nav-item.active { color: var(--brand); }
+
+    /* MODALES */
     .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 999999; opacity: 0; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; transition: 0.3s; }
     .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
-    .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 20px; width: 100%; max-width: 500px; transform: translateY(100%); transition: 0.3s; border-top: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
+    .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 20px; padding-bottom: max(20px, env(safe-area-inset-bottom)); width: 100%; max-width: 500px; transform: translateY(100%); transition: 0.3s; border-top: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
     .sheet-backdrop.show .sheet { transform: translateY(0); }
     
-    .btn-sheet { width: 100%; padding: 14px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; transition: 0.2s; }
+    .btn-sheet { width: 100%; padding: 16px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; transition: 0.2s; }
     .btn-sheet-primary { background: var(--brand); color: white; }
     .btn-sheet-whatsapp { background: #25D366; color: white; }
     .btn-sheet-danger { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
     .btn-sheet-edit { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); }
     
-    .custom-select { width: 100%; padding: 12px; border-radius: var(--radius-sm); background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); outline: none; font-weight: 600; font-size: 14px; appearance: none; }
+    .custom-select { width: 100%; padding: 16px; border-radius: var(--radius-sm); background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); outline: none; font-weight: 600; font-size: 15px; appearance: none; }
     
     .input-group { margin-bottom: 16px; }
-    .input-group label { display: block; font-size: 11px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; }
-    .form-control { width: 100%; padding: 14px; border-radius: var(--radius-sm); background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); outline: none; font-family: inherit; font-size: 15px; }
+    .input-group label { display: block; font-size: 12px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; }
+    .form-control { width: 100%; padding: 16px; border-radius: var(--radius-sm); background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); outline: none; font-family: inherit; font-size: 16px; }
     .form-control:focus { border-color: var(--brand); }
     .btn-sheet-success { background: var(--success); color: white; }
 
+    /* LOADER */
     .loader-overlay { position: fixed; inset: 0; background: rgba(14, 14, 14, 0.95); backdrop-filter: blur(8px); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
     .loader-overlay.hidden { opacity: 0; pointer-events: none; }
     .loader-logo-container { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
     .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); animation: spin 1.2s linear infinite; }
     .loader-logo-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; background: var(--bg-elev); border: 2px solid var(--border); box-shadow: 0 0 20px rgba(230, 81, 0, 0.2); }
-    .loader-text { font-size: 13px; font-weight: 600; color: var(--text-mute); letter-spacing: 0.5px; animation: pulse 1.5s infinite; }
+    .loader-text { font-size: 14px; font-weight: 600; color: var(--text-mute); letter-spacing: 0.5px; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     @keyframes spin { 100% { transform: rotate(360deg); } }
     
@@ -144,24 +160,9 @@
         </div>
       </div>
       <div class="header-actions">
-        <!-- BOTONES RESTAURADOS -->
-        <button class="icon-btn" id="preciosBtn" title="Lista de Precios">
-          <i class="fas fa-tags" style="color: var(--brand);"></i>
-        </button>
-        <button class="icon-btn" id="reportesBtn" title="Reportes">
-          <i class="fas fa-chart-bar" style="color: var(--brand);"></i>
-        </button>
-        <button class="icon-btn" id="themeToggle" title="Cambiar Tema">
-          <i class="fas fa-moon" id="themeIcon"></i>
-        </button>
+        <!-- SOLO PDF EN EL HEADER -->
         <button class="icon-btn" id="btnPDFDia" title="PDF del Día" style="color: var(--brand);">
-          <i class="fas fa-file-pdf" style="font-size: 16px;"></i>
-        </button>
-        <button class="icon-btn" id="btnRefresh" title="Actualizar">
-          <i class="fas fa-rotate" id="iconRefresh" style="color: var(--brand); font-size: 14px;"></i>
-        </button>
-        <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
-          <img src="/imagenes/icon-salir.png" alt="Salir" class="icon-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
+          <i class="fas fa-file-pdf" style="font-size: 18px;"></i>
         </button>
       </div>
     </header>
@@ -185,7 +186,7 @@
         <div class="stat-card"><div class="stat-value brand" id="statHoy">—</div><div class="stat-label">Ingresos Hoy</div></div>
       </div>
 
-      <div class="section-title" style="margin-top: 0;">📋 Movimientos de Hoy</div>
+      <div class="section-title">📋 Movimientos de Hoy</div>
 
       <div class="search-bar">
         <i class="fas fa-search"></i>
@@ -200,18 +201,42 @@
 
       <div class="cards-list" id="listaOrdenes"></div>
 
-      <button id="btnCargarMas" style="display: none; width: 100%; padding: 14px; border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); font-weight: 600; cursor: pointer; margin-top: 10px;">
+      <button id="btnCargarMas" style="display: none; width: 100%; padding: 16px; border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); font-weight: 600; cursor: pointer; margin-top: 10px;">
         <i class="fas fa-chevron-down"></i> Cargar más recibos
       </button>
     </main>
+
+    <!-- BARRA DE NAVEGACIÓN INFERIOR -->
+    <nav class="bottom-nav">
+      <button class="nav-item" id="btnRefreshNav">
+        <i class="fas fa-rotate" id="iconRefresh"></i>
+        <span>Actualizar</span>
+      </button>
+      <button class="nav-item" id="preciosBtn">
+        <i class="fas fa-tags"></i>
+        <span>Precios</span>
+      </button>
+      <button class="nav-item" id="reportesBtn">
+        <i class="fas fa-chart-bar"></i>
+        <span>Reportes</span>
+      </button>
+      <button class="nav-item" id="themeToggle">
+        <i class="fas fa-moon" id="themeIcon"></i>
+        <span>Tema</span>
+      </button>
+      <button class="nav-item" id="logoutBtn">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Salir</span>
+      </button>
+    </nav>
   </div>
 
   <!-- MODAL: VENTA RÁPIDA -->
   <div class="sheet-backdrop" id="modalVenta">
     <div class="sheet">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 style="font-size: 18px; font-weight: 800; color: var(--success);"><i class="fas fa-cash-register"></i> Venta Rápida</h3>
-        <button class="icon-btn" id="btnCloseVenta" style="background: var(--bg-elev);"><i class="fas fa-times"></i></button>
+        <h3 style="font-size: 20px; font-weight: 800; color: var(--success);"><i class="fas fa-cash-register"></i> Venta Rápida</h3>
+        <button class="icon-btn" id="btnCloseVenta" style="background: var(--bg-elev); width: 36px; height: 36px;"><i class="fas fa-times"></i></button>
       </div>
       
       <div class="input-group">
@@ -248,9 +273,9 @@
   <!-- MODAL: DETALLE RECIBO / VENTA -->
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="font-size: 18px; font-weight: 800;">Detalle del Movimiento</h3>
-        <button class="icon-btn" id="btnCloseSheet" style="background: var(--bg-elev);"><i class="fas fa-times"></i></button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="font-size: 20px; font-weight: 800;">Detalle del Movimiento</h3>
+        <button class="icon-btn" id="btnCloseSheet" style="background: var(--bg-elev); width: 36px; height: 36px;"><i class="fas fa-times"></i></button>
       </div>
       <div id="sheetContent"></div>
     </div>
@@ -294,7 +319,6 @@
       configurarEventos();
       cargarDatos();
       
-      // Inicializar icono de tema
       const themeIcon = document.getElementById('themeIcon');
       if (document.documentElement.getAttribute('data-theme') === 'light') {
         themeIcon.className = 'fas fa-sun';
@@ -312,9 +336,20 @@
     }
 
     function configurarEventos() {
-      // BOTONES DEL HEADER
+      // BOTONES DE LA BARRA INFERIOR
       document.getElementById('preciosBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/precio/'; });
       document.getElementById('reportesBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/reportes/'; });
+      document.getElementById('logoutBtn')?.addEventListener('click', () => { haptic(20); logout(); });
+      document.getElementById('btnRefreshNav')?.addEventListener('click', () => {
+        haptic(15);
+        const icon = document.getElementById('iconRefresh');
+        icon.style.animation = 'spin 0.8s linear infinite';
+        if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+        if (unsubscribeVentas) { unsubscribeVentas(); unsubscribeVentas = null; }
+        if (unsubscribeCierres) { unsubscribeCierres(); unsubscribeCierres = null; }
+        cargarDatos();
+        setTimeout(() => { icon.style.animation = 'none'; toast('Lista actualizada', 'success', 1500); }, 1500);
+      });
       
       document.getElementById('themeToggle')?.addEventListener('click', () => {
         haptic(10);
@@ -359,22 +394,6 @@
       });
 
       document.getElementById('btnPDFDia')?.addEventListener('click', generarPDFDia);
-
-      document.getElementById('logoutBtn').addEventListener('click', () => { haptic(20); logout(); });
-      
-      document.getElementById('btnRefresh')?.addEventListener('click', () => {
-        haptic(15);
-        const icon = document.getElementById('iconRefresh');
-        icon.style.animation = 'spin 0.8s linear infinite';
-        
-        if (unsubscribe) { unsubscribe(); unsubscribe = null; }
-        if (unsubscribeVentas) { unsubscribeVentas(); unsubscribeVentas = null; }
-        if (unsubscribeCierres) { unsubscribeCierres(); unsubscribeCierres = null; }
-        
-        cargarDatos();
-        
-        setTimeout(() => { icon.style.animation = 'none'; toast('Lista actualizada', 'success', 1500); }, 1500);
-      });
 
       document.getElementById('filtros').addEventListener('click', (e) => {
         const btn = e.target.closest('[data-filtro]');
@@ -600,12 +619,12 @@
                 <span class="chip-estado" data-tipo="telefono">${estadoInfo.emoji} ${estadoInfo.texto}</span>
                 <span style="font-size: 10px; color: var(--text-mute); font-weight: 600; font-family: monospace;">${o.numeroRecibo || '—'}</span>
               </div>
-              <div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
-              ${o.cliente ? `<div style="font-size: 12px; color: var(--text-mute); margin-bottom: 2px;">👤 ${escapeHtml(o.cliente)}</div>` : ''}
-              <div style="font-size: 10px; color: var(--text-mute); margin-top: 8px; display: flex; align-items: center; gap: 4px;"><i class="far fa-clock"></i> ${tiempoRelativo(o.fechaEditada || o.fecha)}</div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
+              ${o.cliente ? `<div style="font-size: 13px; color: var(--text-mute); margin-bottom: 2px;">👤 ${escapeHtml(o.cliente)}</div>` : ''}
+              <div style="font-size: 11px; color: var(--text-mute); margin-top: 8px; display: flex; align-items: center; gap: 4px;"><i class="far fa-clock"></i> ${tiempoRelativo(o.fechaEditada || o.fecha)}</div>
             </div>
             <div style="text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: end; gap: 2px;">
-              <div style="font-size: 16px; font-weight: 800; color: var(--brand);">${formatBs(total)}</div>
+              <div style="font-size: 18px; font-weight: 800; color: var(--brand);">${formatBs(total)}</div>
               ${metodoPago ? `<div class="metodo-pago">${getIconoMetodo(metodoPago)} ${escapeHtml(metodoPago)}</div>` : (estadoActual === 'entregado' ? `<div class="metodo-pago">✓ Pagado</div>` : '')}
             </div>
           </div>
@@ -631,11 +650,11 @@
                 <span class="chip-estado" data-tipo="${tipo}">${tipo === 'venta' ? '⚡ Venta' : '🛒 Extra'}</span>
                 <span style="font-size: 10px; color: var(--text-mute); font-weight: 600; font-family: monospace;">${horaStr}</span>
               </div>
-              <div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">${icono} ${escapeHtml(v.concepto)}</div>
-              <div style="font-size: 11px; color: var(--text-mute); margin-bottom: 2px;">💵 ${escapeHtml(v.metodoPago)}</div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">${icono} ${escapeHtml(v.concepto)}</div>
+              <div style="font-size: 12px; color: var(--text-mute); margin-bottom: 2px;">💵 ${escapeHtml(v.metodoPago)}</div>
             </div>
             <div style="text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: end; gap: 2px;">
-              <div style="font-size: 16px; font-weight: 800; color: var(--success);">${formatBs(v.monto)}</div>
+              <div style="font-size: 18px; font-weight: 800; color: var(--success);">${formatBs(v.monto)}</div>
             </div>
           </div>
         </div>
@@ -713,12 +732,12 @@
 
       sheetContent.innerHTML = `
         <div style="margin-bottom: 20px;">
-          <h3 style="font-size: 18px; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0;">${escapeHtml(orden.numeroRecibo)}</h3>
-          <p style="font-size: 13px; color: var(--text-mute); margin: 0;">${escapeHtml(orden.cliente)} · ${escapeHtml(orden.marca)} ${escapeHtml(orden.modelo)}</p>
+          <h3 style="font-size: 20px; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0;">${escapeHtml(orden.numeroRecibo)}</h3>
+          <p style="font-size: 14px; color: var(--text-mute); margin: 0;">${escapeHtml(orden.cliente)} · ${escapeHtml(orden.marca)} ${escapeHtml(orden.modelo)}</p>
         </div>
         <button class="btn-sheet btn-sheet-edit" id="btnEditarOrden"><i class="fas fa-edit"></i> Editar Orden Completa</button>
-        <div style="background: var(--bg-elev); padding: 14px; border-radius: var(--radius-sm); margin: 16px 0; border: 1px solid var(--border);">
-          <label style="font-size: 10px; font-weight: 700; color: var(--text-mute); text-transform: uppercase; margin-bottom: 8px; display: block;">Cambiar Estado</label>
+        <div style="background: var(--bg-elev); padding: 16px; border-radius: var(--radius-sm); margin: 16px 0; border: 1px solid var(--border);">
+          <label style="font-size: 11px; font-weight: 700; color: var(--text-mute); text-transform: uppercase; margin-bottom: 8px; display: block;">Cambiar Estado</label>
           <select id="selectEstado" class="custom-select">
             <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
             <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
@@ -778,8 +797,8 @@
 
       sheetContent.innerHTML = `
         <div style="margin-bottom: 20px;">
-          <h3 style="font-size: 18px; font-weight: 800; color: var(--success); margin: 0 0 4px 0;">${escapeHtml(venta.concepto)}</h3>
-          <p style="font-size: 13px; color: var(--text-mute); margin: 0;">${formatBs(venta.monto)} · ${horaStr} · ${escapeHtml(venta.metodoPago)}</p>
+          <h3 style="font-size: 20px; font-weight: 800; color: var(--success); margin: 0 0 4px 0;">${escapeHtml(venta.concepto)}</h3>
+          <p style="font-size: 14px; color: var(--text-mute); margin: 0;">${formatBs(venta.monto)} · ${horaStr} · ${escapeHtml(venta.metodoPago)}</p>
         </div>
         
         ${origen === 'panel' ? `
@@ -827,8 +846,8 @@
       modal.innerHTML = `
         <div class="sheet">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="font-size: 18px; font-weight: 800;">Editar Venta</h3>
-            <button class="icon-btn" id="btnCloseEditV" style="background: var(--bg-elev);"><i class="fas fa-times"></i></button>
+            <h3 style="font-size: 20px; font-weight: 800;">Editar Venta</h3>
+            <button class="icon-btn" id="btnCloseEditV" style="background: var(--bg-elev); width: 36px; height: 36px;"><i class="fas fa-times"></i></button>
           </div>
           
           <div class="input-group">
