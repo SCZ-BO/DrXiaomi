@@ -198,7 +198,7 @@
         </div>
         <div class="stat-card">
           <div class="stat-value brand" id="statHoy">—</div>
-          <div class="stat-label">Ingresos</div>
+          <div class="stat-label">Ingresos Hoy</div>
         </div>
       </div>
 
@@ -297,10 +297,29 @@
   </div>
 
   <script type="module">
-           import { requireAuth, logout } from '/js/app-auth.js';
+    import { requireAuth, logout } from '/js/app-auth.js';
     import { toast, haptic, initTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
     import { db } from '/js/firebase.js';
     import { collection, query, onSnapshot, limit, doc, updateDoc, deleteDoc, startAfter, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // 🔥 REGISTRAR SERVICE WORKER PARA NOTIFICACIONES
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.error('SW Error:', err));
+    }
+
+    // 🔥 CONTADOR DE NOTIFICACIONES
+    let contadorNotificaciones = parseInt(localStorage.getItem('drx_notif_count') || '0');
+
+    function actualizarBadge() {
+      if ('setAppBadge' in navigator) {
+        if (contadorNotificaciones > 0) {
+          navigator.setAppBadge(contadorNotificaciones).catch(console.error);
+        } else {
+          navigator.clearAppBadge().catch(console.error);
+        }
+      }
+      localStorage.setItem('drx_notif_count', contadorNotificaciones);
+    }
 
     initTheme();
     let sesion = null;
@@ -329,6 +348,15 @@
 
     function iniciarApp() {
       document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
+      
+      // Pedir permiso de notificaciones
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+      
+      // Limpiar badge después de 3 segundos
+      setTimeout(() => { contadorNotificaciones = 0; actualizarBadge(); }, 3000);
+
       configurarEventos();
       cargarDatos();
       
@@ -434,9 +462,31 @@
     function cargarDatos() {
       if (unsubscribe) unsubscribe();
       if (appLoader) appLoader.classList.remove('hidden');
+      
       const qRecibos = query(collection(db, 'recibos'), limit(200));
       unsubscribe = onSnapshot(qRecibos, { includeMetadataChanges: true }, 
         (snapshot) => {
+          // 🔥 NOTIFICACIÓN NUEVO RECIBO
+          if (!window._primerCargaRecibos) {
+            window._primerCargaRecibos = new Set(snapshot.docs.map(d => d.id));
+          } else {
+            snapshot.docChanges().forEach(change => {
+              if (change.type === 'added') {
+                const data = change.doc.data();
+                contadorNotificaciones++;
+                actualizarBadge();
+                if (navigator.serviceWorker.controller) {
+                  navigator.serviceWorker.controller.postMessage({
+                    type: 'NOTIFICACION',
+                    titulo: '📱 Nuevo Equipo Recibido',
+                    cuerpo: `${data.cliente} - ${data.marca} ${data.modelo}`,
+                    cantidad: contadorNotificaciones
+                  });
+                }
+              }
+            });
+          }
+
           ordenes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
           ordenes.sort((a, b) => {
             const fa = a.fechaEditada || a.fecha;
@@ -457,6 +507,27 @@
       if (unsubscribeVentas) unsubscribeVentas();
       const qVentas = query(collection(db, 'ventas'), limit(100));
       unsubscribeVentas = onSnapshot(qVentas, (snapshot) => {
+        // 🔥 NOTIFICACIÓN NUEVA VENTA
+        if (!window._primerCargaVentas) {
+          window._primerCargaVentas = new Set(snapshot.docs.map(d => d.id));
+        } else {
+          snapshot.docChanges().forEach(change => {
+            if (change.type === 'added') {
+              const data = change.doc.data();
+              contadorNotificaciones++;
+              actualizarBadge();
+              if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                  type: 'NOTIFICACION',
+                  titulo: '💰 Nueva Venta',
+                  cuerpo: `${data.concepto} - Bs. ${data.monto}`,
+                  cantidad: contadorNotificaciones
+                });
+              }
+            }
+          });
+        }
+
         ventasPanel = snapshot.docs.map(d => ({ id: d.id, origen: 'panel', coleccion: 'ventas', ...d.data() }));
         procesarVentas();
       });
@@ -485,7 +556,6 @@
     }
 
     function procesarVentas() {
-      // 🔥 SE ELIMINÓ EL FILTRO DE HOY
       const todas = [...ventasPanel, ...ventasCierre];
       ventasHoy = todas.sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0));
       renderizarTodo();
@@ -610,15 +680,6 @@
       `;
     }
 
-    function getIconoMetodo(metodo) {
-      const m = String(metodo || '').toLowerCase();
-      if (m.includes('efectivo')) return '💵';
-      if (m.includes('qr')) return '📱';
-      if (m.includes('transf')) return '🏦';
-      if (m.includes('mixto')) return '🔀';
-      return '💳';
-    }
-
     function actualizarStats() {
       const activas = ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
       const listas = ordenes.filter(o => o.estadoOrden === 'listo').length;
@@ -637,7 +698,12 @@
         }
       });
 
-      const ingresosVentas = ventasHoy.reduce((sum, v) => sum + (Number(v.monto) || 0), 0);
+      // 🔥 SOLO SUMAR VENTAS DE HOY AL CONTADOR
+      const ingresosVentas = ventasHoy.filter(v => {
+        const f = parsearFecha(v.fecha);
+        return f && f >= hoy;
+      }).reduce((sum, v) => sum + (Number(v.monto) || 0), 0);
+
       document.getElementById('statHoy').textContent = formatBs(ingresosReparaciones + ingresosVentas);
     }
 
