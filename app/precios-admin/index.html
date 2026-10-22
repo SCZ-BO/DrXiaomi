@@ -157,7 +157,7 @@
     if (p === 'marcocel' || p === 'marcocell') return 'MarcoCell';
     if (p === 'osmobil') return 'Osmobil';
     if (p === 'jya' || p === 'j&a') return 'J&A';
-    if (p === 'lpz' || p === 'cfh' || p === 'cfhmobile') return 'CFH mobile';
+    if (p === 'lpz' || p === 'cfh' || p === 'cfhmobile' || p === 'cfh lp') return 'CFH mobile';
     if (p === 'mrpantalla') return 'MR PANTALLA';
     return prov.trim(); // Si no coincide con ninguno, lo deja igual
   }
@@ -171,8 +171,17 @@
   });
 
   function updateProviderFilters() {
-    const providers = [...new Set(allProducts.map(p => p.proveedor))].filter(Boolean).sort();
+    // 🔥 AQUI APLICAMOS LA LIMPIEZA PARA QUE NO SALGAN REPETIDOS
+    const mapaLimpio = new Map();
+    allProducts.forEach(p => {
+      if (!p.proveedor) return;
+      const provOficial = limpiarProveedor(p.proveedor);
+      mapaLimpio.set(provOficial, provOficial);
+    });
+
+    const providers = Array.from(mapaLimpio.values()).sort();
     const container = $('providerFilters');
+    
     container.innerHTML = `<div class="chip ${currentProvider === 'all' ? 'active' : ''}" data-prov="all">Todos</div>` + 
       providers.map(p => `<div class="chip ${currentProvider === p ? 'active' : ''}" data-prov="${p}">${p}</div>`).join('');
     
@@ -187,10 +196,14 @@
 
   function applyFilters() {
     filteredProducts = allProducts.filter(p => {
-      const matchProv = currentProvider === 'all' || p.proveedor === currentProvider;
+      // 🔥 COMPARAMOS USANDO EL NOMBRE LIMPIO
+      const provOficial = limpiarProveedor(p.proveedor);
+      const matchProv = currentProvider === 'all' || provOficial === currentProvider;
+      
       const matchSearch = searchTerm === '' || 
         (p.modelo && p.modelo.toLowerCase().includes(searchTerm)) || 
         (p.marca && p.marca.toLowerCase().includes(searchTerm));
+        
       return matchProv && matchSearch;
     });
     renderList();
@@ -218,7 +231,7 @@
         </div>
         <div class="item-badges">
           <span class="badge">${p.tipo || 'LCD'}</span>
-          <span class="badge" style="background:rgba(255,105,0,0.1); color:var(--brand);">${p.proveedor}</span>
+          <span class="badge" style="background:rgba(255,105,0,0.1); color:var(--brand);">${limpiarProveedor(p.proveedor)}</span>
         </div>
         <div class="item-prices">
           <div class="price-box">
@@ -245,7 +258,14 @@
     modal.className = 'modal active';
     modal.id = 'modalForm';
     
-    const provs = [...new Set(allProducts.map(p => p.proveedor))].filter(Boolean).join(',');
+    // Sacamos la lista de proveedores únicos
+    const mapaLimpio = new Map();
+    allProducts.forEach(p => {
+      if (!p.proveedor) return;
+      const provOficial = limpiarProveedor(p.proveedor);
+      mapaLimpio.set(provOficial, provOficial);
+    });
+    const provs = Array.from(mapaLimpio.values()).join(',');
     
     modal.innerHTML = `
       <div class="modal-content">
@@ -262,7 +282,7 @@
         </div>
         <div class="form-group">
           <label>Proveedor</label>
-          <input type="text" id="fProveedor" class="form-input" value="${isEdit ? product.proveedor : ''}" list="provList" placeholder="Ej: J&A">
+          <input type="text" id="fProveedor" class="form-input" value="${isEdit ? limpiarProveedor(product.proveedor) : ''}" list="provList" placeholder="Ej: J&A">
           <datalist id="provList">${provs.split(',').map(p => `<option value="${p}">`).join('')}</datalist>
         </div>
         <div class="form-group">
@@ -347,7 +367,8 @@
       const marca = (p.marca || '').replace(/,/g, '');
       const modelo = (p.modelo || '').replace(/,/g, '');
       const tipo = (p.tipo || '').replace(/,/g, '');
-      const prov = (p.proveedor || '').replace(/,/g, '');
+      // 🔥 EXPORTAMOS CON EL NOMBRE YA LIMPIO
+      const prov = limpiarProveedor(p.proveedor).replace(/,/g, '');
       csvContent += `${marca},${modelo},${tipo},${prov},${p.compra || 0},${p.venta || 0}\n`;
     });
 
@@ -388,8 +409,8 @@
       
       snapshotActual.forEach(docSnap => {
         const data = docSnap.data();
-        // Clave única: MARCA|MODELO|PROVEEDOR
-        const key = `${(data.marca||'').toUpperCase()}|${(data.modelo||'').toUpperCase()}|${(data.proveedor||'').toUpperCase()}`;
+        // Clave única: MARCA|MODELO|PROVEEDOR (Usando la funcion limpiar)
+        const key = `${(data.marca||'').toUpperCase()}|${(data.modelo||'').toUpperCase()}|${limpiarProveedor(data.proveedor).toUpperCase()}`;
         productosExistentes.set(key, { id: docSnap.id, ...data });
       });
 
@@ -427,6 +448,8 @@
                 if (compra > 0) dataUpdate.compra = compra;
                 if (venta > 0) dataUpdate.venta = venta;
                 if (tipo) dataUpdate.tipo = tipo;
+                // Si el de la base de datos tenia un nombre viejo, lo actualizamos al limpio
+                if (prodExistente.proveedor !== proveedor) dataUpdate.proveedor = proveedor;
                 
                 if (Object.keys(dataUpdate).length > 0) {
                    batch.update(docRef, dataUpdate);
