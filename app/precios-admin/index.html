@@ -72,12 +72,12 @@
     
     /* CONTROLS & BUSCADOR */
     .controls { 
-      padding: 12px 0 0 0; /* Padding lateral 0 para que los filtros lleguen al borde */
+      padding: 12px 0 0 0; 
       display: flex; flex-direction: column; 
       background: var(--bg-main);
     }
     .search-wrapper {
-      padding: 0 16px 12px 16px; /* Solo el buscador tiene margen */
+      padding: 0 16px 12px 16px; 
     }
     .search-container { position: relative; }
     .search-input { 
@@ -89,10 +89,10 @@
     .search-input:focus { outline: none; border-color: var(--brand); background: var(--bg-card); }
     .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-mute); }
     
-    /* 🔥 NUEVO DISEÑO DE FILTROS PARA CELULAR */
+    /* FILTROS TIPO CARRUSEL */
     .filter-scroll { 
       display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; 
-      padding: 0 16px 16px 16px; /* Margen interno para que el primer y último botón no queden pegados */
+      padding: 0 16px 16px 16px; 
       -webkit-overflow-scrolling: touch;
       mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
       -webkit-mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
@@ -217,7 +217,6 @@
       </div>
     </div>
     
-    <!-- Filtros deslizables con efecto de desvanecimiento -->
     <div class="filter-scroll" id="providerFilters">
       <div class="chip active" data-prov="all">Todos</div>
     </div>
@@ -261,7 +260,8 @@
 
   onSnapshot(collection(db, "precios"), (snapshot) => {
     allProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    $('countLoader').textContent = `${allProducts.length} productos cargados`;
+    const loader = $('countLoader');
+    if (loader) loader.textContent = `${allProducts.length} productos cargados`;
     updateProviderFilters();
     applyFilters();
   });
@@ -489,7 +489,9 @@
       
       if (lines.length < 2) return alert("El archivo está vacío o no tiene el formato correcto.");
 
-      $('countLoader').textContent = "Analizando archivo y buscando coincidencias...";
+      // 🔥 FIX: Validar que el loader exista antes de actualizarlo
+      const loader = $('countLoader');
+      if (loader) loader.textContent = "Analizando archivo y buscando coincidencias...";
       
       const snapshotActual = await getDocs(collection(db, "precios"));
       const productosExistentes = new Map();
@@ -553,7 +555,11 @@
       }
 
       alert(`✅ Importación completada.\n\nProductos nuevos: ${nuevos}\nProductos actualizados: ${actualizados}`);
-      $('countLoader').textContent = `${allProducts.length} productos en total`;
+      
+      // 🔥 FIX: Validar que el loader exista antes de actualizarlo
+      const loaderFinal = $('countLoader');
+      if (loaderFinal) loaderFinal.textContent = `${allProducts.length} productos en total`;
+      
       e.target.value = '';
     };
     reader.readAsText(file);
