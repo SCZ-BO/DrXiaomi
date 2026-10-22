@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Importar Precios a Firebase</title>
+  <style>
+    body { background: #0A0A0A; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
+    button { padding: 15px 30px; background: #FF6900; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+    button:disabled { background: #555; cursor: not-allowed; }
+    #log { margin-top: 20px; background: #161616; padding: 15px; border-radius: 8px; text-align: left; height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; border: 1px solid #333; }
+  </style>
+</head>
+<body>
+  <h2>🚀 Importador de Precios a Firestore</h2>
+  <p>Este script leerá los 6 CSV y subirá los 1,329 productos a la nube.</p>
+  <button id="btnImportar">Importar a Firebase</button>
+  <div id="log">Esperando...</div>
+
+  <script type="module">
+    import { db } from '/js/firebase.js';
+    import { collection, doc, writeBatch, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const CONFIG = {
+      dataSources: [
+        { name: "J&A",          url: "/precio/data/ja2.csv" },
+        { name: "CentralCell",  url: "/precio/data/centralcel.csv" },
+        { name: "Osmobil",      url: "/precio/data/osmobil.csv" },
+        { name: "CFH LP",       url: "/precio/data/CFH.csv" },
+        { name: "BITE",         url: "/precio/data/boe.csv" },
+        { name: "MR PANTALLA",  url: "/precio/data/mrpantalla.csv" }
+      ]
+    };
+
+    const $ = id => document.getElementById(id);
+    const log = (msg) => { $("log").innerHTML += `<div>> ${msg}</div>`; $("log").scrollTop = $("log").scrollHeight; };
+
+    function parsePrice(p) {
+      if (p == null) return 0;
+      let s = String(p).trim().replace(/[^\d.,-]/g, '');
+      if (!s) return 0;
+      const lc = s.lastIndexOf(','), ld = s.lastIndexOf('.');
+      if (lc > -1 && ld > -1) {
+        if (lc > ld) s = s.replace(/\./g, '').replace(',', '.');
+        else s = s.replace(/,/g, '');
+      } else if (lc > -1) {
+        const parts = s.split(',');
+        if (parts.length === 2 && parts[1].length <= 2) s = parts[0] + '.' + parts[1];
+        else s = s.replace(/,/g, '');
+      } else if (ld > -1) {
+        const parts = s.split('.');
+        if (parts.length > 2) s = parts.join('');
+        else if (parts[1] && parts[1].length === 3) s = parts.join('');
+      }
+      const n = parseFloat(s);
+      return isNaN(n) ? 0 : Math.round(n);
+    }
+    function cleanText(t) { return t ? String(t).trim().replace(/^"|"$/g, "") : ""; }
+    function parseCSVLine(line) {
+      const r = []; let cur = "", q = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') q = !q;
+        else if ((c === "," || c === ";") && !q) { r.push(cur.trim()); cur = ""; }
+        else cur += c;
+      }
+      r.push(cur.trim());
+      return r.map(f => f.replace(/^"|"$/g, ""));
+    }
+    function normalizeTipo(raw) {
+      const t = String(raw || "").toUpperCase().trim();
+      if (!t) return "LCD";
+      if (/\b(ORIG|ORIGINAL|ORI|ORG|GENUINE|OEM|SERVICE\s*PACK|\bSP\b)\b/.test(t)) return "ORIG";
+      if (/(AMOLED|OLED|SUPER\s*AMOLED|SUPERAMOLED|RETINA)/.test(t)) return "OLED";
+      return "LCD";
+    }
+    function parseCSV(text, provider) {
+      const lines = String(text || "").split(/\r?\n/).filter(l => l.trim() !== "");
+      if (lines.length < 2) return [];
+      const data = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = parseCSVLine(lines[i]);
+        if (cols.length >= 6) {
+          const marca = cleanText(cols[0]) || "N/A";
+          const modelo = cleanText(cols[1]);
+          const tipo = normalizeTipo(cleanText(cols[2]));
+          const prov = cleanText(cols[3]) || provider;
+          const compra = parsePrice(cols[4]);
+          const venta = parsePrice(cols[5]);
+          if (modelo && modelo.toLowerCase() !== "modelo") {
+            data.push({ marca, modelo, tipo, proveedor: prov, compra, venta, activo: true });
+          }
+        } else if (cols.length >= 5) {
+          const marca = cleanText(cols[0]) || "N/A";
+          const modelo = cleanText(cols[1]);
+          const tipo = normalizeTipo(cleanText(cols[2]));
+          const compra = parsePrice(cols[3]);
+          const venta = parsePrice(cols[4]);
+          if (modelo && modelo.toLowerCase() !== "modelo") {
+            data.push({ marca, modelo, tipo, proveedor: provider, compra, venta, activo: true });
+          }
+        }
+      }
+      return data;
+    }
+
+    $("btnImportar").addEventListener("click", async () => {
+      $("btnImportar").disabled = true;
+      $("btnImportar").textContent = "Importando...";
+      log("Iniciando importación...");
+
+      try {
+        let todosLosProductos = [];
+        
+        for (const src of CONFIG.dataSources) {
+          log(`Descargando ${src.name}...`);
+          const res = await fetch(src.url);
+          const text = await res.text();
+          const parsed = parseCSV(text, src.name);
+          log(`  -> ${parsed.length} productos encontrados.`);
+          todosLosProductos.push(...parsed);
+        }
+
+        log(`Total a subir: ${todosLosProductos.length} productos.`);
+
+        log("Limpiando colección antigua si existe...");
+        const snapshot = await getDocs(collection(db, "precios"));
+        for (const document of snapshot.docs) {
+          await deleteDoc(doc(db, "precios", document.id));
+        }
+
+        const CHUNK_SIZE = 500;
+        let subidos = 0;
+        
+        for (let i = 0; i < todosLosProductos.length; i += CHUNK_SIZE) {
+          const chunk = todosLosProductos.slice(i, i + CHUNK_SIZE);
+          const batch = writeBatch(db);
+          
+          chunk.forEach(prod => {
+            const newRef = doc(collection(db, "precios"));
+            batch.set(newRef, prod);
+          });
+
+          await batch.commit();
+          subidos += chunk.length;
+          log(`✅ Subidos ${subidos} de ${todosLosProductos.length}...`);
+        }
+
+        log("🎉 ¡IMPORTACIÓN COMPLETADA CON ÉXITO!");
+        $("btnImportar").textContent = "¡Completado!";
+        
+      } catch (err) {
+        console.error(err);
+        log(`❌ ERROR: ${err.message}`);
+        $("btnImportar").disabled = false;
+        $("btnImportar").textContent = "Reintentar";
+      }
+    });
+  </script>
+</body>
+</html>
