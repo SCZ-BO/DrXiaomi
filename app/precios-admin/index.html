@@ -70,11 +70,14 @@
     .icon-btn:active { transform: scale(0.9); background: var(--border); }
     .header h1 { font-size: 16px; font-weight: 800; }
     
-    /* CONTROLS */
+    /* CONTROLS & BUSCADOR */
     .controls { 
-      padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; 
-      background: var(--bg-main); border-bottom: 1px solid var(--border);
-      z-index: 90;
+      padding: 12px 0 0 0; /* Padding lateral 0 para que los filtros lleguen al borde */
+      display: flex; flex-direction: column; 
+      background: var(--bg-main);
+    }
+    .search-wrapper {
+      padding: 0 16px 12px 16px; /* Solo el buscador tiene margen */
     }
     .search-container { position: relative; }
     .search-input { 
@@ -86,20 +89,28 @@
     .search-input:focus { outline: none; border-color: var(--brand); background: var(--bg-card); }
     .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-mute); }
     
-    /* FILTROS SCROLL HORIZONTAL */
+    /* 🔥 NUEVO DISEÑO DE FILTROS PARA CELULAR */
     .filter-scroll { 
       display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; 
-      padding-bottom: 4px; -webkit-overflow-scrolling: touch;
+      padding: 0 16px 16px 16px; /* Margen interno para que el primer y último botón no queden pegados */
+      -webkit-overflow-scrolling: touch;
+      mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
+      -webkit-mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
     }
     .filter-scroll::-webkit-scrollbar { display: none; }
+    
     .chip { 
-      padding: 8px 14px; border-radius: var(--radius-pill); 
-      background: var(--bg-elev); border: 1px solid var(--border); 
-      color: var(--text-mute); font-size: 12px; font-weight: 700; 
-      white-space: nowrap; cursor: pointer; transition: all 0.15s; 
+      padding: 8px 16px; border-radius: var(--radius-pill); 
+      background: var(--bg-card); border: 1px solid var(--border); 
+      color: var(--text-mute); font-size: 13px; font-weight: 600; 
+      white-space: nowrap; cursor: pointer; transition: all 0.2s ease; 
+      display: flex; align-items: center; justify-content: center;
     }
     .chip:active { transform: scale(0.95); }
-    .chip.active { background: var(--brand); color: white; border-color: var(--brand); box-shadow: 0 4px 12px var(--brand-light); }
+    .chip.active { 
+      background: var(--brand); color: white; border-color: var(--brand); 
+      box-shadow: 0 4px 12px var(--brand-light); font-weight: 700; 
+    }
 
     /* LISTA PRINCIPAL */
     .main-content { 
@@ -199,13 +210,16 @@
   </header>
 
   <div class="controls">
-    <div class="search-container">
-      <i class="fas fa-search search-icon"></i>
-      <input type="text" id="searchInput" class="search-input" placeholder="Buscar modelo o marca...">
+    <div class="search-wrapper">
+      <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Buscar modelo o marca...">
+      </div>
     </div>
+    
+    <!-- Filtros deslizables con efecto de desvanecimiento -->
     <div class="filter-scroll" id="providerFilters">
       <div class="chip active" data-prov="all">Todos</div>
-      <!-- Se llenan dinámicamente -->
     </div>
   </div>
 
@@ -230,7 +244,7 @@
 
   const $ = id => document.getElementById(id);
 
-  // 🔥 FUNCIÓN PARA LIMPIAR NOMBRES DE PROVEEDORES (Evita duplicados)
+  // 🔥 FUNCIÓN PARA LIMPIAR NOMBRES DE PROVEEDORES
   function limpiarProveedor(prov) {
     if (!prov) return 'Generico';
     let p = prov.trim().toLowerCase().replace(/\s+/g, '');
@@ -242,10 +256,9 @@
     if (p === 'jya' || p === 'j&a') return 'J&A';
     if (p === 'lpz' || p === 'cfh' || p === 'cfhmobile' || p === 'cfhlp') return 'CFH mobile';
     if (p === 'mrpantalla') return 'MR PANTALLA';
-    return prov.trim(); // Si no coincide con ninguno, lo deja igual
+    return prov.trim(); 
   }
 
-  // 1. Cargar datos de Firebase en tiempo real
   onSnapshot(collection(db, "precios"), (snapshot) => {
     allProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     $('countLoader').textContent = `${allProducts.length} productos cargados`;
@@ -332,7 +345,6 @@
     `).join('');
   }
 
-  // --- LÓGICA DEL MODAL (CREAR / EDITAR) ---
   function openModal(product = null) {
     const isEdit = product !== null;
     const modal = document.createElement('div');
@@ -436,7 +448,6 @@
 
   $('btnNuevo').addEventListener('click', () => openModal(null));
 
-  // --- IMPORTAR Y EXPORTAR CSV ---
   $('btnExportar').addEventListener('click', () => {
     if (allProducts.length === 0) return alert("No hay productos para exportar");
     
@@ -462,7 +473,6 @@
 
   $('btnImportar').addEventListener('click', () => $('fileInput').click());
 
-  // 🔥 IMPORTACIÓN INTELIGENTE (ACTUALIZA O CREA, NO BORRA)
   $('fileInput').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
