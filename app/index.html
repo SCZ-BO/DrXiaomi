@@ -573,12 +573,17 @@
           
           const estaEntregado = estado === 'entregado';
           const montoCobrado = Number(o.montoCobrado) || 0;
+          const montoTotal = Number(o.total) || 0;
           
-          if (estaEntregado && montoCobrado > 0) {
-            todosLosMovimientos.push({ tipo: 'telefono', data: o, fechaOrden: parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha), monto: montoCobrado });
-          } else if (!estaEntregado) {
-             todosLosMovimientos.push({ tipo: 'telefono', data: o, fechaOrden: parsearFecha(o.fechaEditada) || parsearFecha(o.fecha), monto: Number(o.total) || 0 });
-          }
+          // 🔥 SIEMPRE SE AGREGA A LA LISTA, sin importar el estado ni el monto
+          todosLosMovimientos.push({ 
+            tipo: 'telefono', 
+            data: o, 
+            fechaOrden: estaEntregado 
+              ? (parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha))
+              : (parsearFecha(o.fechaEditada) || parsearFecha(o.fecha)), 
+            monto: estaEntregado ? (montoCobrado > 0 ? montoCobrado : montoTotal) : montoTotal 
+          });
         });
       }
 
@@ -693,7 +698,9 @@
         if (o.estadoOrden === 'entregado') {
           const fEntrega = parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha);
           if (fEntrega && fEntrega >= hoy) {
-            ingresosReparaciones += Number(o.montoCobrado) || 0;
+            // 🔥 SUMA LO COBRADO. Si no se cobró, usa el total como respaldo
+            const monto = Number(o.montoCobrado) || Number(o.total) || 0;
+            ingresosReparaciones += monto;
           }
         }
       });
