@@ -1,6 +1,8 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL - CORREGIDO v6)
+   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL - v7)
    Archivo: app/orden.js
+   Cambios v7: agregar/editar/eliminar servicios con recálculo de total/saldo.
+   Solo admin puede eliminar servicios o editar costos.
    ============================================================ */
 
 import { requireAuth } from '/js/app-auth.js';
@@ -31,55 +33,40 @@ styleGlobal.textContent = `
   }
   .modal-backdrop .modal h3 { margin-bottom: 8px; }
   .modal-backdrop .modal label {
-    display: block;
-    font-size: 12px;
-    font-weight: 700;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 6px;
+    display: block; font-size: 12px; font-weight: 700;
+    color: #888; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px;
   }
   .modal-backdrop .modal input[type="number"],
   .modal-backdrop .modal input[type="text"],
   .modal-backdrop .modal input[type="date"] {
-    width: 100%;
-    padding: 14px;
-    font-size: 16px;
-    background: #242424;
-    color: #F5F5F5;
-    border: 1px solid #2C2C2C;
-    border-radius: 8px;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.2s;
+    width: 100%; padding: 14px; font-size: 16px; background: #242424;
+    color: #F5F5F5; border: 1px solid #2C2C2C; border-radius: 8px;
+    font-family: inherit; outline: none; transition: border-color 0.2s;
   }
   .modal-backdrop .modal input:focus { border-color: #FF6900; }
   .modal-backdrop .modal .btn-modal-cancel {
-    flex: 1;
-    padding: 14px;
-    border-radius: 8px;
-    border: 1px solid #2C2C2C;
-    background: #242424;
-    color: #F5F5F5;
-    font-weight: 700;
-    cursor: pointer;
-    font-family: inherit;
-    transition: 0.2s;
+    flex: 1; padding: 14px; border-radius: 8px; border: 1px solid #2C2C2C;
+    background: #242424; color: #F5F5F5; font-weight: 700; cursor: pointer;
+    font-family: inherit; transition: 0.2s;
   }
   .modal-backdrop .modal .btn-modal-cancel:active { transform: scale(0.98); }
   .modal-backdrop .modal .btn-modal-confirm {
-    flex: 1;
-    padding: 14px;
-    border-radius: 8px;
-    border: none;
-    background: #FF6900;
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-    font-family: inherit;
-    transition: 0.2s;
+    flex: 1; padding: 14px; border-radius: 8px; border: none;
+    background: #FF6900; color: white; font-weight: 700; cursor: pointer;
+    font-family: inherit; transition: 0.2s;
   }
   .modal-backdrop .modal .btn-modal-confirm:active { transform: scale(0.98); }
+
+  /* 🔥 NUEVO: estilos para servicios */
+  .servicio-row-acciones { display:flex; gap:6px; justify-content:flex-end; }
+  .btn-servicio-mini {
+    width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg-elev); color: var(--text-main); cursor: pointer;
+    display:inline-flex; align-items:center; justify-content:center; font-size: 11px;
+  }
+  .btn-servicio-mini.danger { color:#EF4444; border-color:rgba(239,68,68,0.4); }
+  .btn-servicio-mini:active { transform: scale(0.92); }
+  .tabla-servicios td.servicio-acciones { text-align:right; width: 70px; }
 `;
 document.head.appendChild(styleGlobal);
 
@@ -101,12 +88,8 @@ const ESTADOS = {
 };
 
 const ESTADO_COLORES = {
-  'recibido': '#FFFFFF',
-  'reparacion': '#FF6900',
-  'espera-repuesto': '#3B82F6',
-  'listo': '#FBBF24',
-  'entregado': '#10B981',
-  'devuelto': '#EF4444'
+  'recibido': '#FFFFFF', 'reparacion': '#FF6900', 'espera-repuesto': '#3B82F6',
+  'listo': '#FBBF24', 'entregado': '#10B981', 'devuelto': '#EF4444'
 };
 
 let sesion = null;
@@ -139,8 +122,7 @@ async function iniciar() {
   }
 
   document.getElementById('backBtn')?.addEventListener('click', () => {
-    haptic(10);
-    window.location.href = '/app/';
+    haptic(10); window.location.href = '/app/';
   });
 
   document.getElementById('themeToggle')?.addEventListener('click', () => {
@@ -161,17 +143,14 @@ async function iniciar() {
    ============================================================ */
 async function cargarOrden() {
   showLoading('Cargando orden...');
-
   try {
     const ref = doc(db, 'recibos', ordenId);
-    
     unsubscribe = onSnapshot(ref, (snap) => {
       if (!snap.exists()) {
         toast('Esta orden no existe o fue eliminada', 'error', 3000);
         setTimeout(() => window.location.href = '/app/', 2000);
         return;
       }
-
       orden = { id: snap.id, ...snap.data() };
       renderOrden();
       hideLoading();
@@ -182,13 +161,23 @@ async function cargarOrden() {
       hideLoading();
       setTimeout(() => window.location.href = '/app/', 2500);
     });
-
   } catch (err) {
     console.error('Error cargando orden:', err);
     toast('Error al cargar la orden: ' + err.message, 'error', 4000);
     hideLoading();
     setTimeout(() => window.location.href = '/app/', 2500);
   }
+}
+
+/* ============================================================
+   CÁLCULOS
+   ============================================================ */
+// 🔥 NUEVO: recalcula total y saldo a partir de servicios + adelanto
+function calcularTotalesDesdeServicios(servicios, adelanto) {
+  const total = (Array.isArray(servicios) ? servicios : [])
+    .reduce((acc, s) => acc + (Number(s.costo) || 0), 0);
+  const saldo = total - (Number(adelanto) || 0);
+  return { total, saldo };
 }
 
 /* ============================================================
@@ -211,11 +200,24 @@ function renderOrden() {
     patronTexto = orden.patron.split(',').join(' → ');
   }
 
-  const serviciosHtml = Array.isArray(orden.servicios) && orden.servicios.length > 0
-    ? orden.servicios.map(s => `
-        <tr><td>${escapeHtml(s.desc)}</td><td>${formatBs(s.costo)}</td></tr>
+  // 🔥 CAMBIO: tabla de servicios con botones editar/eliminar (solo admin elimina)
+  const serviciosArr = Array.isArray(orden.servicios) ? orden.servicios : [];
+  const serviciosHtml = serviciosArr.length > 0
+    ? serviciosArr.map((s, idx) => `
+        <tr>
+          <td>${escapeHtml(s.desc)}</td>
+          <td>${formatBs(s.costo)}</td>
+          <td class="servicio-acciones">
+            <div class="servicio-row-acciones">
+              ${sesion.rol === 'admin' ? `
+                <button class="btn-servicio-mini" data-edit-serv="${idx}" title="Editar"><i class="fas fa-pen"></i></button>
+                <button class="btn-servicio-mini danger" data-del-serv="${idx}" title="Eliminar"><i class="fas fa-trash"></i></button>
+              ` : ''}
+            </div>
+          </td>
+        </tr>
       `).join('')
-    : '<tr><td colspan="2" style="text-align:center;color:var(--text-mute);padding:12px;">Sin servicios registrados</td></tr>';
+    : '<tr><td colspan="3" style="text-align:center;color:var(--text-mute);padding:12px;">Sin servicios registrados</td></tr>';
 
   const fotosValidas = Array.isArray(orden.fotos) ? orden.fotos : [];
   const fotosHtml = fotosValidas.length > 0
@@ -252,7 +254,16 @@ function renderOrden() {
       <div class="recibo-row"><span>Por</span><span>${escapeHtml(orden.creadoPor || '-')}</span></div>
 
       <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px;">
-        <table class="tabla-servicios"><thead><tr><th>Servicio</th><th style="text-align:right;">Costo</th></tr></thead><tbody>${serviciosHtml}</tbody></table>
+        <table class="tabla-servicios">
+          <thead><tr><th>Servicio</th><th style="text-align:right;">Costo</th><th></th></tr></thead>
+          <tbody>${serviciosHtml}</tbody>
+        </table>
+
+        <!-- 🔥 NUEVO: botón para agregar servicio (visible para técnico y admin) -->
+        <button id="btnAgregarServicio" class="btn-grande" style="margin-top:12px; background:var(--bg-elev); color:var(--brand); border:1px dashed var(--brand);">
+          <i class="fas fa-plus"></i> Agregar servicio
+        </button>
+
         <div class="total-box"><span style="font-size:12px; color:var(--text-mute);">Total</span><strong>${formatBs(orden.total || 0)}</strong></div>
         ${Number(orden.adelanto) > 0 ? `<div style="display:flex; justify-content:space-between; margin-top:8px; font-size:13px;"><span style="color:var(--text-mute);">Adelanto</span><span>${formatBs(orden.adelanto)}</span></div>` : ''}
         <div class="total-box" style="background:var(--brand-light); margin-top:8px;"><span style="font-size:12px; color:var(--brand); font-weight:700;">SALDO A PAGAR</span><strong style="color:var(--brand); font-size:18px;">${formatBs(orden.saldo || 0)}</strong></div>
@@ -338,6 +349,8 @@ function renderBitacora() {
     else if (entry.tipo === 'foto') { clase = 'foto'; icono = 'fa-camera'; }
     else if (entry.tipo === 'whatsapp') { clase = 'whatsapp'; icono = 'fa-brands fa-whatsapp'; }
     else if (entry.tipo === 'cobro') { clase = 'estado'; icono = 'fa-money-bill-wave'; }
+    // 🔥 NUEVO: icono para servicios
+    else if (entry.tipo === 'servicio') { clase = 'estado'; icono = 'fa-screwdriver-wrench'; }
 
     return `<div class="bitacora-item">
       <div class="bitacora-icono ${clase}"><i class="fas ${icono}"></i></div>
@@ -380,6 +393,23 @@ function configurarEventosOrden() {
   document.getElementById('btnRegenerarPDF')?.addEventListener('click', () => { haptic(15); regenerarYEnviarPDF(); });
   document.getElementById('btnVolverPanelFinal')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/'; });
 
+  // 🔥 NUEVO: botón agregar servicio
+  document.getElementById('btnAgregarServicio')?.addEventListener('click', () => abrirModalServicio());
+
+  // 🔥 NUEVO: botones editar/eliminar servicio
+  document.querySelectorAll('[data-edit-serv]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.editServ, 10);
+      abrirModalServicio(idx);
+    });
+  });
+  document.querySelectorAll('[data-del-serv]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.delServ, 10);
+      eliminarServicio(idx);
+    });
+  });
+
   document.querySelectorAll('[data-ver-img]').forEach(img => {
     img.addEventListener('click', () => {
       haptic(10);
@@ -402,17 +432,131 @@ function configurarEventosOrden() {
 }
 
 /* ============================================================
+   🔥 NUEVO: MODAL DE SERVICIO (agregar / editar)
+   ============================================================ */
+function abrirModalServicio(idxEditar = null) {
+  haptic(15);
+  const esEdicion = idxEditar !== null && idxEditar !== undefined;
+  const servicios = Array.isArray(orden.servicios) ? orden.servicios : [];
+  const actual = esEdicion ? servicios[idxEditar] : null;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop';
+  modal.id = 'modalServicio';
+
+  modal.innerHTML = `
+    <div class="modal">
+      <h3 style="color:var(--brand); font-weight:800; font-size:18px; margin-bottom:8px;">
+        <i class="fas fa-screwdriver-wrench"></i> ${esEdicion ? 'Editar servicio' : 'Agregar servicio'}
+      </h3>
+      <p style="font-size:12px; color:var(--text-mute); margin-bottom:16px;">El total y el saldo se recalculan automáticamente.</p>
+
+      <div style="margin-bottom:14px;">
+        <label>Descripción</label>
+        <input type="text" id="servDesc" maxlength="120" placeholder="Ej: Cambio de pantalla" value="${actual ? escapeHtml(actual.desc) : ''}">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label>Costo (Bs)</label>
+        <input type="number" id="servCosto" step="0.01" min="0" inputmode="decimal" placeholder="0.00" value="${actual ? Number(actual.costo).toFixed(2) : ''}" style="text-align:center; font-weight:700; color:var(--brand);">
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="btnCancelarServicio" class="btn-modal-cancel">Cancelar</button>
+        <button type="button" id="btnGuardarServicio" class="btn-modal-confirm"><i class="fas fa-check"></i> Guardar</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('show'), 10);
+
+  document.getElementById('btnCancelarServicio').addEventListener('click', () => {
+    modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
+  });
+
+  document.getElementById('btnGuardarServicio').addEventListener('click', async () => {
+    const desc = (document.getElementById('servDesc').value || '').trim();
+    const costo = parseFloat(document.getElementById('servCosto').value) || 0;
+    if (!desc) { toast('Escribe una descripción', 'error'); return; }
+    if (costo < 0) { toast('El costo no puede ser negativo', 'error'); return; }
+
+    await guardarServicio(idxEditar, { desc, costo });
+    modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
+  });
+
+  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); } });
+}
+
+async function guardarServicio(idxEditar, { desc, costo }) {
+  haptic(20); showLoading('Guardando servicio...');
+  try {
+    const servicios = Array.isArray(orden.servicios) ? [...orden.servicios] : [];
+    let textoBitacora = '';
+
+    if (idxEditar !== null && idxEditar !== undefined) {
+      const anterior = servicios[idxEditar];
+      servicios[idxEditar] = { desc, costo };
+      textoBitacora = `Servicio editado: "${anterior?.desc || '-'}" (${formatBs(anterior?.costo || 0)}) → "${desc}" (${formatBs(costo)})`;
+    } else {
+      servicios.push({ desc, costo });
+      textoBitacora = `Servicio agregado: "${desc}" (${formatBs(costo)})`;
+    }
+
+    const { total, saldo } = calcularTotalesDesdeServicios(servicios, orden.adelanto);
+    const entrada = { tipo: 'servicio', texto: textoBitacora, autor: sesion.nombre, fecha: new Date().toISOString() };
+
+    await updateDoc(doc(db, 'recibos', ordenId), {
+      servicios,
+      total,
+      saldo,
+      bitacora: arrayUnion(entrada),
+      actualizadoEn: serverTimestamp()
+    });
+
+    toast(idxEditar !== null ? 'Servicio actualizado' : 'Servicio agregado', 'success', 2000);
+  } catch (err) {
+    console.error('Error guardando servicio:', err);
+    toast('Error al guardar el servicio', 'error');
+  } finally { hideLoading(); }
+}
+
+async function eliminarServicio(idx) {
+  if (sesion.rol !== 'admin') { toast('Solo el admin puede eliminar servicios', 'error'); return; }
+  haptic(15);
+  const servicios = Array.isArray(orden.servicios) ? [...orden.servicios] : [];
+  const servicio = servicios[idx];
+  if (!servicio) return;
+
+  const ok = confirm(`¿Eliminar el servicio "${servicio.desc}" (${formatBs(servicio.costo)})?\n\nEl total y el saldo se recalcularán.`);
+  if (!ok) return;
+
+  showLoading('Eliminando servicio...');
+  try {
+    servicios.splice(idx, 1);
+    const { total, saldo } = calcularTotalesDesdeServicios(servicios, orden.adelanto);
+    const entrada = { tipo: 'servicio', texto: `Servicio eliminado: "${servicio.desc}" (${formatBs(servicio.costo)})`, autor: sesion.nombre, fecha: new Date().toISOString() };
+
+    await updateDoc(doc(db, 'recibos', ordenId), {
+      servicios,
+      total,
+      saldo,
+      bitacora: arrayUnion(entrada),
+      actualizadoEn: serverTimestamp()
+    });
+    toast('Servicio eliminado', 'success', 2000);
+  } catch (err) {
+    console.error('Error eliminando servicio:', err);
+    toast('Error al eliminar el servicio', 'error');
+  } finally { hideLoading(); }
+}
+
+/* ============================================================
    CAMBIAR ESTADO
    ============================================================ */
 async function cambiarEstado(nuevoEstado) {
   if (!nuevoEstado || !ESTADOS[nuevoEstado]) return;
   const estadoActual = orden.estadoOrden || 'recibido';
   if (nuevoEstado === estadoActual) { toast('Ya está en ese estado', 'info', 1500); return; }
-  
-  if (nuevoEstado === 'entregado') { 
-    abrirModalCobro(); 
-    return; 
-  }
+  if (nuevoEstado === 'entregado') { abrirModalCobro(); return; }
 
   haptic(20); showLoading('Actualizando estado...');
   try {
@@ -440,34 +584,23 @@ function abrirModalCobro() {
     <div class="modal">
       <h3 style="color:var(--brand); font-weight:800; font-size:18px; margin-bottom:8px;">✅ Confirmar entrega</h3>
       <p style="margin-bottom:20px; font-size:14px;"><strong>${escapeHtml(orden.cliente)}</strong><br><span style="font-size:12px; color:var(--text-mute);">Total: ${formatBs(total)}${saldo > 0 && saldo !== total ? ` · Saldo: ${formatBs(saldo)}` : ''}</span></p>
-      
       <div style="margin-bottom:16px;">
         <label>Monto cobrado</label>
         <input type="number" id="inputMonto" step="0.01" min="0" value="${montoSugerido.toFixed(2)}" inputmode="decimal" style="text-align:center; font-size:18px; font-weight:700;">
       </div>
-      
       <div style="margin-bottom:20px;">
         <label>Método de pago</label>
         <div id="metodosPago" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <button type="button" class="metodo-btn" data-metodo="Efectivo" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;">
-            <i class="fas fa-money-bill-wave" style="font-size:22px; color:#10B981;"></i><span>Efectivo</span>
-          </button>
-          <button type="button" class="metodo-btn" data-metodo="QR" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;">
-            <i class="fas fa-qrcode" style="font-size:22px; color:#3B82F6;"></i><span>QR</span>
-          </button>
-          <button type="button" class="metodo-btn" data-metodo="Transferencia" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;">
-            <i class="fas fa-building-columns" style="font-size:22px; color:#8B5CF6;"></i><span>Transferencia</span>
-          </button>
-          <button type="button" class="metodo-btn" data-metodo="Mixto" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;">
-            <i class="fas fa-shuffle" style="font-size:22px; color:#F59E0B;"></i><span>Mixto</span>
-          </button>
+          <button type="button" class="metodo-btn" data-metodo="Efectivo" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;"><i class="fas fa-money-bill-wave" style="font-size:22px; color:#10B981;"></i><span>Efectivo</span></button>
+          <button type="button" class="metodo-btn" data-metodo="QR" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;"><i class="fas fa-qrcode" style="font-size:22px; color:#3B82F6;"></i><span>QR</span></button>
+          <button type="button" class="metodo-btn" data-metodo="Transferencia" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;"><i class="fas fa-building-columns" style="font-size:22px; color:#8B5CF6;"></i><span>Transferencia</span></button>
+          <button type="button" class="metodo-btn" data-metodo="Mixto" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;"><i class="fas fa-shuffle" style="font-size:22px; color:#F59E0B;"></i><span>Mixto</span></button>
         </div>
         <div id="detalleMixtoContainer" style="display:none; margin-top:10px;">
           <input type="text" id="detalleMixto" placeholder="Ej: 200 efectivo + 150 QR" maxlength="100">
         </div>
         <div id="errorMetodo" style="color:#EF4444; font-size:12px; margin-top:8px; display:none;"></div>
       </div>
-      
       <div style="display:flex; gap:8px;">
         <button type="button" id="btnCancelarCobro" class="btn-modal-cancel">Cancelar</button>
         <button type="button" id="btnConfirmarCobro" class="btn-modal-confirm"><i class="fas fa-check"></i> Confirmar</button>
@@ -475,13 +608,9 @@ function abrirModalCobro() {
     </div>`;
 
   document.body.appendChild(modal);
-
-  setTimeout(() => {
-    modal.classList.add('show');
-  }, 10);
+  setTimeout(() => modal.classList.add('show'), 10);
 
   let metodoSeleccionado = null;
-
   modal.querySelectorAll('.metodo-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       haptic(8);
@@ -570,10 +699,7 @@ function abrirModalCosto() {
     </div>`;
 
   document.body.appendChild(modal);
-
-  setTimeout(() => {
-    modal.classList.add('show');
-  }, 10);
+  setTimeout(() => modal.classList.add('show'), 10);
 
   const costoInput = modal.querySelector('#costoInput');
   const gananciaPreview = modal.querySelector('#gananciaPreview');
@@ -611,7 +737,7 @@ function abrirModalCosto() {
 }
 
 /* ============================================================
-   MODAL DE FECHA (CORREGIDO: SOBRESCRIBE 'fecha')
+   MODAL DE FECHA
    ============================================================ */
 function abrirModalFecha() {
   if (sesion.rol !== 'admin') return;
@@ -642,10 +768,7 @@ function abrirModalFecha() {
     </div>`;
 
   document.body.appendChild(modal);
-
-  setTimeout(() => {
-    modal.classList.add('show');
-  }, 10);
+  setTimeout(() => modal.classList.add('show'), 10);
 
   document.getElementById('btnCancelarFecha').addEventListener('click', () => { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); });
 
@@ -656,15 +779,12 @@ function abrirModalFecha() {
     try {
       const nuevaFecha = new Date(nuevaFechaStr + 'T12:00:00');
       const entrada = { tipo: 'nota', texto: `Fecha de ingreso editada a: ${nuevaFecha.toLocaleDateString('es-BO')}`, autor: sesion.nombre, fecha: new Date().toISOString() };
-      
-      // 🔥 GUARDAMOS EN 'fecha' Y EN 'fechaEditada'
-      await updateDoc(doc(db, 'recibos', ordenId), { 
-        fecha: nuevaFecha,              // Sobrescribe fecha original
-        fechaEditada: nuevaFecha,       // Mantiene registro de la edición
-        bitacora: arrayUnion(entrada), 
-        actualizadoEn: serverTimestamp() 
+      await updateDoc(doc(db, 'recibos', ordenId), {
+        fecha: nuevaFecha,
+        fechaEditada: nuevaFecha,
+        bitacora: arrayUnion(entrada),
+        actualizadoEn: serverTimestamp()
       });
-      
       toast('Fecha actualizada correctamente', 'success', 2500);
       modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
     } catch (err) { toast('Error al actualizar la fecha', 'error'); }
@@ -709,7 +829,7 @@ async function regenerarYEnviarPDF() {
     pdf.setFillColor(255, 255, 255); pdf.roundedRect(W - M - 60, 8, 60, 24, 3, 3, 'F');
     pdf.setTextColor(230, 81, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text('RECIBO N°', W - M - 4, 14, { align: 'right' });
     pdf.setFontSize(11); pdf.text(orden.numeroRecibo || '-', W - M - 4, 20, { align: 'right' });
-    pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); 
+    pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8);
     const fechaPdf = orden.fechaEditada || orden.fecha;
     const fechaPdfStr = fechaPdf ? (fechaPdf.toDate ? fechaPdf.toDate() : new Date(fechaPdf)).toLocaleDateString('es-BO') : new Date().toLocaleDateString('es-BO');
     pdf.text(`Fecha: ${fechaPdfStr}`, W - M - 4, 26, { align: 'right' });
