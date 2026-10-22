@@ -3,20 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#FF6900" id="metaThemeColor">
+  <meta name="theme-color" content="#0A0A0A" id="metaThemeColor">
   <meta name="description" content="Catálogo de pantallas y repuestos">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>DR. XIAOMI | Catálogo</title>
 
   <script>
     (function() {
       try {
         const sesion = JSON.parse(localStorage.getItem('drx_sesion') || 'null');
-        if (!sesion || !sesion.rol) {
-          window.location.replace('/app/');
-        }
-      } catch (e) {
-        window.location.replace('/app/');
-      }
+        if (!sesion || !sesion.rol) window.location.replace('/app/');
+      } catch (e) { window.location.replace('/app/'); }
     })();
   </script>
 
@@ -31,222 +29,363 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    /* ===================== TOKENS NATIVOS ===================== */
     :root {
-      --xiaomi-orange: #FF6900;
-      --xiaomi-orange-dark: #E55A00;
-      --xiaomi-orange-soft: #FF8A3C;
-      --xiaomi-orange-glow: rgba(255, 105, 0, 0.15);
+      --orange: #FF6900;
+      --orange-dark: #E55A00;
+      --orange-glow: rgba(255,105,0,0.18);
       --gold-1: #FFD700;
       --gold-2: #FFA500;
-      --gold-glow: rgba(255, 200, 0, 0.35);
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
-      --shadow-lg: 0 20px 40px rgba(0,0,0,0.12);
-      --transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1);
-      --transition-fast: all 0.12s cubic-bezier(0.2, 0.9, 0.4, 1);
+      --gold-glow: rgba(255,200,0,0.35);
+      --r-sm: 10px;
+      --r-md: 16px;
+      --r-lg: 22px;
+      --r-pill: 999px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 8px 24px rgba(0,0,0,0.10);
+      --shadow-lg: 0 20px 48px rgba(0,0,0,0.18);
+      --ease: cubic-bezier(0.2, 0.9, 0.4, 1);
+      --ease-fast: cubic-bezier(0.2, 0.9, 0.4, 1);
+      --blur: saturate(180%) blur(24px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       --safe-top: env(safe-area-inset-top, 0px);
+      --nav-h: 64px;
     }
     [data-theme="light"] {
-      --bg-primary: #F5F5F7; --bg-secondary: #FFFFFF; --bg-card: #FFFFFF;
-      --bg-glass: rgba(255,255,255,0.72);
-      --text-primary: #1D1D1F; --text-secondary: #6E6E73; --text-tertiary: #8A8A8E;
-      --border: #E5E5EA; --border-soft: #F0F0F3; --card-border: #EEEEF1;
-      --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-      --suggestion-bg: #FFFFFF; --suggestion-hover: #F5F5F7;
-      --overlay: rgba(0,0,0,0.45);
+      --bg: #F2F2F7;
+      --bg-elev: #FFFFFF;
+      --bg-grouped: #FFFFFF;
+      --bg-glass: rgba(242,242,247,0.82);
+      --bg-input: #E9E9EE;
+      --text: #000000;
+      --text-2: #3C3C43;
+      --text-3: #8E8E93;
+      --sep: rgba(60,60,67,0.12);
+      --sep-opaque: #E5E5EA;
+      --card-border: rgba(60,60,67,0.08);
+      --suggestion: rgba(255,255,255,0.96);
+      --suggestion-hover: #F2F2F7;
+      --overlay: rgba(0,0,0,0.35);
     }
     [data-theme="dark"] {
-      --bg-primary: #0A0A0A; --bg-secondary: #1A1A1A; --bg-card: #141414;
-      --bg-glass: rgba(20,20,20,0.72);
-      --text-primary: #F5F5F7; --text-secondary: #A1A1A6; --text-tertiary: #7A7A80;
-      --border: #232326; --border-soft: #1C1C1E; --card-border: #1F1F22;
-      --card-shadow: none;
-      --suggestion-bg: #141414; --suggestion-hover: #1F1F22;
-      --overlay: rgba(0,0,0,0.75);
+      --bg: #000000;
+      --bg-elev: #1C1C1E;
+      --bg-grouped: #1C1C1E;
+      --bg-glass: rgba(0,0,0,0.78);
+      --bg-input: #1C1C1E;
+      --text: #FFFFFF;
+      --text-2: #EBEBF5;
+      --text-3: #8E8E93;
+      --sep: rgba(84,84,88,0.36);
+      --sep-opaque: #38383A;
+      --card-border: rgba(84,84,88,0.28);
+      --suggestion: rgba(28,28,30,0.98);
+      --suggestion-hover: #2C2C2E;
+      --overlay: rgba(0,0,0,0.7);
     }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; overscroll-behavior-y: none; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); overflow-x: hidden; width: 100%; height: 100dvh; transition: background 0.3s ease; -webkit-font-smoothing: antialiased; user-select: none; }
-    .app { max-width: 100%; height: 100dvh; margin: 0 auto; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-primary); position: relative; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      overflow: hidden; width: 100%; height: 100dvh;
+      -webkit-font-smoothing: antialiased; user-select: none;
+      letter-spacing: -0.01em;
+    }
+    .app {
+      max-width: 100%; height: 100dvh; margin: 0 auto;
+      display: flex; flex-direction: column; overflow: hidden;
+      background: var(--bg); position: relative;
+    }
 
-    /* ============ HEADER MINIMALISTA ============ */
-    .header { background: var(--bg-primary); border-bottom: 1px solid var(--border-soft); padding: calc(12px + var(--safe-top)) 16px 10px; flex-shrink: 0; position: relative; z-index: 50; }
-    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    /* ============ HEADER NATIVO ============ */
+    .header {
+      background: var(--bg-glass);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border-bottom: 0.5px solid var(--sep);
+      padding: calc(10px + var(--safe-top)) 16px 10px;
+      flex-shrink: 0; position: relative; z-index: 50;
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .logo { display: flex; align-items: center; gap: 10px; }
-    .logo-icon { width: 36px; height: 36px; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .logo-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; display: block; }
-    .logo h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; color: var(--text-primary); }
-    .logo span { font-weight: 500; color: var(--text-tertiary); font-size: 13px; }
+    .logo-icon {
+      width: 38px; height: 38px; border-radius: 10px; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      background: var(--bg-elev); border: 0.5px solid var(--card-border);
+    }
+    .logo-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .logo h1 { font-size: 16px; font-weight: 800; letter-spacing: -0.4px; color: var(--text); }
+    .logo span { font-weight: 500; color: var(--text-3); font-size: 13px; }
 
-    .header-actions { display: flex; gap: 4px; }
-    .icon-btn { background: transparent; border: none; border-radius: 4px; padding: 0; color: var(--text-secondary); cursor: pointer; font-size: 15px; transition: var(--transition-fast); display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; position: relative; overflow: hidden; }
-    .icon-btn:hover { background: var(--bg-secondary); }
-    .icon-btn:active { transform: scale(0.9); color: var(--xiaomi-orange); }
-    .icon-btn.tech-active { background: var(--xiaomi-orange) !important; color: white !important; }
+    .header-actions { display: flex; gap: 2px; }
+    .icon-btn {
+      background: transparent; border: none; border-radius: var(--r-pill);
+      padding: 0; color: var(--text-2); cursor: pointer; font-size: 16px;
+      transition: transform 0.12s var(--ease-fast), background 0.15s;
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; position: relative; overflow: hidden;
+    }
+    .icon-btn:active { transform: scale(0.88); background: var(--bg-input); }
+    .icon-btn.tech-active { background: var(--orange) !important; color: white !important; }
 
-    /* ============ SEARCH ============ */
+    /* ============ SEARCH NATIVO ============ */
     .search-wrapper { position: relative; }
     .search-container { position: relative; }
-    .search-input { width: 100%; padding: 11px 80px 11px 38px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 14px; font-weight: 500; transition: var(--transition); }
-    .search-input:focus { outline: none; border-color: var(--xiaomi-orange); background: var(--bg-card); }
-    .search-input::placeholder { color: var(--text-tertiary); font-weight: 400; }
-    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-size: 13px; pointer-events: none; }
-    .search-actions { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); display: flex; gap: 2px; align-items: center; }
-    .search-actions button { background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; font-size: 12px; padding: 6px 8px; border-radius: 20px; transition: var(--transition); }
-    .search-actions button:hover { color: var(--text-primary); }
-    .search-loader { width: 16px; height: 16px; border: 2px solid var(--border); border-top: 2px solid var(--xiaomi-orange); border-radius: 50%; animation: spinLoader 0.6s linear infinite; margin-right: 4px; display: inline-block; }
-    @keyframes spinLoader { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .search-input {
+      width: 100%; padding: 11px 80px 11px 40px;
+      background: var(--bg-input); border: 1px solid transparent;
+      border-radius: var(--r-sm); color: var(--text);
+      font-size: 15px; font-weight: 500; transition: border-color 0.2s, background 0.2s;
+      font-family: inherit;
+    }
+    .search-input:focus { outline: none; border-color: var(--orange); background: var(--bg-elev); }
+    .search-input::placeholder { color: var(--text-3); font-weight: 400; }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: 14px; pointer-events: none; }
+    .search-actions { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: flex; gap: 2px; align-items: center; }
+    .search-actions button { background: transparent; border: none; color: var(--text-3); cursor: pointer; font-size: 12px; padding: 6px 8px; border-radius: var(--r-pill); transition: color 0.15s; }
+    .search-actions button:hover { color: var(--text); }
+    .search-loader { width: 16px; height: 16px; border: 2px solid var(--sep); border-top: 2px solid var(--orange); border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 4px; display: inline-block; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* ============ SUGGESTIONS ============ */
-    .suggestions-panel { position: absolute; top: 100%; left: 0; right: 0; margin-top: 6px; background: var(--suggestion-bg); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-lg); max-height: min(300px, 40vh); overflow-y: auto; display: none; z-index: 60; }
-    .suggestions-panel.active { display: block; animation: panelIn 0.18s ease; }
+    /* ============ SUGGESTIONS NATIVO ============ */
+    .suggestions-panel {
+      position: absolute; top: 100%; left: 0; right: 0; margin-top: 6px;
+      background: var(--suggestion);
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      border: 0.5px solid var(--sep); border-radius: var(--r-md);
+      box-shadow: var(--shadow-lg); max-height: min(320px, 44vh); overflow-y: auto;
+      display: none; z-index: 60;
+    }
+    .suggestions-panel.active { display: block; animation: panelIn 0.18s var(--ease); }
     @keyframes panelIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-    .suggestion-header { padding: 10px 14px; font-size: 10px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-soft); background: var(--bg-primary); position: sticky; top: 0; }
-    .suggestion-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border-soft); display: flex; align-items: center; gap: 10px; transition: var(--transition-fast); font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .suggestion-header {
+      padding: 10px 16px; font-size: 11px; font-weight: 700; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 0.5px solid var(--sep); background: var(--suggestion);
+      position: sticky; top: 0; backdrop-filter: var(--blur);
+    }
+    .suggestion-item {
+      padding: 12px 16px; cursor: pointer;
+      border-bottom: 0.5px solid var(--sep);
+      display: flex; align-items: center; gap: 12px;
+      transition: background 0.12s; font-size: 14px; font-weight: 500; color: var(--text);
+    }
     .suggestion-item:last-child { border-bottom: none; }
-    .suggestion-item:hover { background: var(--suggestion-hover); }
-    .suggestion-item:active { background: var(--suggestion-hover); transform: scale(0.99); }
-    .suggestion-item i { color: var(--text-tertiary); font-size: 12px; width: 16px; }
-    
-    /* 🔥 ARREGLO DEL RESALTADO: Se eliminó la clase rota y se usa una simple negrita naranja */
-    .highlight-text { color: var(--xiaomi-orange); font-weight: 800; }
-    
-    .suggestion-price-tag { font-size: 9px; color: var(--text-tertiary); background: var(--bg-primary); padding: 2px 7px; border-radius: 4px; font-weight: 600; }
-    .recent-header { padding: 8px 14px 4px; font-size: 9px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
-    .recent-item { padding: 8px 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); transition: var(--transition-fast); }
+    .suggestion-item:active { background: var(--suggestion-hover); }
+    .suggestion-item i { color: var(--text-3); font-size: 13px; width: 18px; }
+    .highlight-text { color: var(--orange); font-weight: 800; }
+    .suggestion-price-tag { font-size: 10px; color: var(--text-3); background: var(--bg-input); padding: 3px 8px; border-radius: var(--r-pill); font-weight: 700; }
+    .recent-header { padding: 10px 16px 4px; font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .recent-item { padding: 10px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-2); transition: background 0.12s; }
     .recent-item:active { background: var(--suggestion-hover); }
 
-    /* ============ FILTROS MINIMALISTAS ============ */
-    .quick-filters { padding: 8px 16px 10px; display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; background: var(--bg-primary); border-bottom: 1px solid var(--border-soft); }
+    /* ============ FILTROS ============ */
+    .quick-filters {
+      padding: 10px 16px 12px; display: flex; gap: 6px; overflow-x: auto;
+      scrollbar-width: none; background: var(--bg-glass);
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      border-bottom: 0.5px solid var(--sep);
+    }
     .quick-filters::-webkit-scrollbar { display: none; }
-    .filter-chip { padding: 5px 12px; border-radius: 4px; font-size: 11.5px; font-weight: 600; background: transparent; color: var(--text-tertiary); border: 1px solid var(--border); cursor: pointer; white-space: nowrap; transition: var(--transition-fast); position: relative; overflow: hidden; letter-spacing: -0.1px; }
-    .filter-chip:hover { color: var(--text-secondary); border-color: var(--text-tertiary); }
-    .filter-chip.active { background: var(--xiaomi-orange); color: white; border-color: var(--xiaomi-orange); }
-    .filter-chip[data-filter="ORIG"].active { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: #4A2800; border-color: var(--gold-2); }
+    .filter-chip {
+      padding: 7px 14px; border-radius: var(--r-pill);
+      font-size: 12.5px; font-weight: 600; background: transparent;
+      color: var(--text-3); border: 1px solid var(--sep);
+      cursor: pointer; white-space: nowrap;
+      transition: all 0.12s var(--ease-fast); letter-spacing: -0.1px;
+    }
     .filter-chip:active { transform: scale(0.96); }
+    .filter-chip.active { background: var(--orange); color: white; border-color: var(--orange); }
+    .filter-chip[data-filter="ORIG"].active { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: #4A2800; border-color: var(--gold-2); }
 
-    /* ============ MAIN CONTENT ============ */
+    /* ============ MAIN ============ */
     .main-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; position: relative; }
-    .cards-view { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; padding-bottom: calc(90px + var(--safe-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
+    .cards-view { display: flex; flex-direction: column; gap: 0; width: 100%; box-sizing: border-box; padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 20px); }
 
-    /* ============ PRODUCT CARD MINIMALISTA ============ */
-    .product-card { background: var(--bg-card); border-radius: 6px; padding: 14px 16px; border: 1px solid var(--card-border); position: relative; opacity: 0; transform: translateY(6px); animation: cardIn 0.3s cubic-bezier(0.2, 0.9, 0.4, 1) forwards; content-visibility: auto; contain-intrinsic-size: 0 100px; width: 100%; max-width: 100%; box-sizing: border-box; }
+    /* ============ PRODUCT CARD NATIVA ============ */
+    .product-card {
+      background: var(--bg-elev);
+      padding: 16px 18px 14px 22px;
+      position: relative; width: 100%; box-sizing: border-box;
+      border-bottom: 0.5px solid var(--sep);
+      transition: background 0.15s;
+      opacity: 0; transform: translateY(4px);
+      animation: cardIn 0.3s var(--ease) forwards;
+      content-visibility: auto; contain-intrinsic-size: 0 112px;
+    }
     @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
-    .product-card::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 2px; background: var(--xiaomi-orange); border-radius: 0; }
+    .product-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px; background: var(--orange);
+    }
     .product-card.is-orig::before { background: linear-gradient(180deg, var(--gold-1), var(--gold-2)); }
-    .product-card:active { background: var(--bg-secondary); }
+    .product-card:active { background: var(--bg-input); }
 
-    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; padding-left: 8px; gap: 10px; }
-    .card-brand { font-size: 10px; font-weight: 700; color: var(--xiaomi-orange); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 10px; }
+    .card-brand { font-size: 10.5px; font-weight: 800; color: var(--orange); letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 2px; }
     .product-card.is-orig .card-brand { color: #B8860B; }
     [data-theme="dark"] .product-card.is-orig .card-brand { color: var(--gold-1); }
-    .card-model { font-size: 15px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.2px; word-break: break-word; line-height: 1.3; }
+    .card-model { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; word-break: break-word; line-height: 1.28; }
 
-    .fav-btn { background: transparent; border: none; color: var(--text-tertiary); font-size: 15px; cursor: pointer; padding: 2px; transition: var(--transition-fast); flex-shrink: 0; opacity: 0.6; }
+    .fav-btn { background: transparent; border: none; color: var(--text-3); font-size: 17px; cursor: pointer; padding: 4px; transition: transform 0.12s, color 0.15s; flex-shrink: 0; opacity: 0.7; }
     .fav-btn.active { color: #FFB800; opacity: 1; }
     .fav-btn:active { transform: scale(0.85); }
 
-    .card-specs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; padding-left: 8px; }
-    .card-type { padding: 3px 9px; border-radius: 4px; font-size: 10px; font-weight: 600; background: var(--bg-primary); color: var(--text-tertiary); letter-spacing: 0.2px; }
-    .card-type.oled { background: rgba(255, 105, 0, 0.1); color: var(--xiaomi-orange); }
-    .card-type.orig { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: #4A2800; font-weight: 800; letter-spacing: 0.3px; }
+    .card-specs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .card-type { padding: 3px 9px; border-radius: var(--r-pill); font-size: 10px; font-weight: 700; background: var(--bg-input); color: var(--text-2); }
+    .card-type.oled { background: rgba(255,105,0,0.12); color: var(--orange); }
+    .card-type.orig { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: #4A2800; }
     .card-type.orig::before { content: '👑 '; font-size: 9px; }
+    .supplier-badge { padding: 3px 9px; border-radius: var(--r-pill); font-size: 10px; font-weight: 700; background: rgba(255,105,0,0.1); color: var(--orange); }
+    [data-theme="dark"] .supplier-badge { background: rgba(255,105,0,0.16); }
+    .price-badge { padding: 3px 9px; border-radius: var(--r-pill); font-size: 10px; font-weight: 700; background: rgba(16,185,129,0.1); color: #10B981; }
+    [data-theme="dark"] .price-badge { background: rgba(16,185,129,0.16); }
 
-    .supplier-badge { padding: 3px 9px; border-radius: 4px; font-size: 10px; font-weight: 600; background: rgba(255,105,0,0.08); color: var(--xiaomi-orange); }
-    [data-theme="dark"] .supplier-badge { background: rgba(255,105,0,0.15); }
-
-    .price-badge { padding: 3px 9px; border-radius: 4px; font-size: 10px; font-weight: 600; background: rgba(16, 185, 129, 0.08); color: #10B981; }
-    [data-theme="dark"] .price-badge { background: rgba(16, 185, 129, 0.15); }
-
-    .card-price-row { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--border-soft); padding-left: 8px; gap: 10px; flex-wrap: wrap; }
-    .card-price { font-size: 20px; font-weight: 800; color: var(--text-primary); cursor: pointer; transition: var(--transition); letter-spacing: -0.5px; padding: 3px 8px; border-radius: 4px; margin-left: -8px; }
-    .card-price:active { color: var(--xiaomi-orange); background: var(--xiaomi-orange-glow); }
-    .card-actions-group { display: flex; gap: 5px; }
-    .image-btn, .whatsapp-btn { border: none; padding: 6px 12px; border-radius: 4px; font-size: 10.5px; font-weight: 700; cursor: pointer; transition: var(--transition-fast); display: flex; align-items: center; gap: 4px; position: relative; overflow: hidden; }
+    .card-price-row { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 0.5px solid var(--sep); gap: 10px; flex-wrap: wrap; }
+    .card-price { font-size: 21px; font-weight: 800; color: var(--text); cursor: pointer; transition: color 0.15s, background 0.15s; letter-spacing: -0.6px; padding: 3px 8px; border-radius: var(--r-sm); margin-left: -8px; }
+    .card-price:active { color: var(--orange); background: var(--orange-glow); }
+    .card-actions-group { display: flex; gap: 6px; }
+    .image-btn, .whatsapp-btn {
+      border: none; padding: 7px 12px; border-radius: var(--r-pill);
+      font-size: 11px; font-weight: 700; cursor: pointer;
+      transition: transform 0.12s, opacity 0.15s;
+      display: flex; align-items: center; gap: 5px; font-family: inherit;
+    }
     .image-btn:active, .whatsapp-btn:active { transform: scale(0.92); }
-    .image-btn { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
-    .image-btn:hover { border-color: var(--text-tertiary); }
+    .image-btn { background: var(--bg-input); color: var(--text-2); }
     .whatsapp-btn { background: #25D366; color: white; }
 
-    /* ============ BOTTOM NAV ============ */
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-primary); border-top: 1px solid var(--border-soft); display: flex; padding: 6px 20px calc(10px + var(--safe-bottom)); gap: 12px; z-index: 100; }
-    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 8px; border: none; background: transparent; color: var(--text-tertiary); border-radius: 6px; cursor: pointer; font-size: 9.5px; font-weight: 600; transition: var(--transition-fast); position: relative; text-decoration: none; }
-    .nav-item.active { color: var(--xiaomi-orange); }
-    .nav-item i { font-size: 17px; transition: var(--transition-fast); }
-    .nav-item.active i { transform: scale(1.1); filter: drop-shadow(0 0 6px rgba(255, 105, 0, 0.5)); }
+    /* ============ BOTTOM NAV NATIVA ============ */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-glass);
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      border-top: 0.5px solid var(--sep);
+      display: flex; padding: 6px 16px calc(6px + var(--safe-bottom));
+      gap: 0; z-index: 100; height: var(--nav-h);
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 4px 8px; border: none; background: transparent;
+      color: var(--text-3); border-radius: var(--r-sm); cursor: pointer;
+      font-size: 10px; font-weight: 600; text-decoration: none;
+      transition: color 0.15s;
+    }
+    .nav-item.active { color: var(--orange); }
+    .nav-item i { font-size: 20px; transition: transform 0.15s; }
+    .nav-item.active i { transform: scale(1.08); }
     .nav-item:active i { transform: scale(0.85); }
 
-    /* ============ MODAL ============ */
+    /* ============ MODAL SHEET NATIVO ============ */
     .modal { display: none; position: fixed; inset: 0; background: var(--overlay); z-index: 200; align-items: flex-end; justify-content: center; }
-    .modal.active { display: flex; animation: modalFade 0.18s ease; }
-    @keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
-    .modal-content { background: var(--bg-card); border-radius: 6px 6px 0 0; padding: 20px 20px calc(20px + var(--safe-bottom)); width: 100%; max-width: 520px; border: 1px solid var(--border); border-bottom: none; animation: sheetUp 0.3s cubic-bezier(0.2, 0.9, 0.4, 1); position: relative; }
+    .modal.active { display: flex; animation: fade 0.2s ease; }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    .modal-content {
+      background: var(--bg-elev);
+      border-radius: var(--r-lg) var(--r-lg) 0 0;
+      padding: 12px 20px calc(20px + var(--safe-bottom));
+      width: 100%; max-width: 540px;
+      border-top: 0.5px solid var(--sep);
+      animation: sheetUp 0.32s var(--ease); position: relative;
+      box-shadow: var(--shadow-lg);
+    }
     @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    .sheet-handle { width: 32px; height: 3px; background: var(--border); border-radius: 3px; margin: -8px auto 14px; }
-    .modal-content h3 { margin-bottom: 16px; font-size: 17px; font-weight: 700; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
-    .modal-buttons { display: flex; gap: 8px; }
-    .modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 13px; transition: var(--transition-fast); }
+    .sheet-handle { width: 36px; height: 5px; background: var(--sep-opaque); border-radius: var(--r-pill); margin: 0 auto 14px; }
+    .modal-content h3 { margin-bottom: 14px; font-size: 19px; font-weight: 800; letter-spacing: -0.4px; display: flex; align-items: center; gap: 8px; }
+    .modal-buttons { display: flex; gap: 8px; margin-top: 16px; }
+    .modal-buttons button {
+      flex: 1; padding: 14px; border: none; border-radius: var(--r-md);
+      cursor: pointer; font-weight: 700; font-size: 14px;
+      transition: transform 0.12s; font-family: inherit;
+    }
     .modal-buttons button:active { transform: scale(0.97); }
-    .modal-buttons button:last-child { background: var(--xiaomi-orange); color: white; }
+    .modal-buttons button:last-child { background: var(--orange); color: white; }
 
-    /* ============ TOAST ============ */
-    .toast { position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%; transform: translateX(-50%); background: var(--bg-card); padding: 10px 18px; border-radius: 6px; color: var(--text-primary); font-size: 12px; font-weight: 600; z-index: 150; animation: fadeInUp 0.25s ease; border: 1px solid var(--border); box-shadow: var(--shadow-lg); max-width: 90%; text-align: center; }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    /* ============ TOAST NATIVO ============ */
+    .toast {
+      position: fixed; bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px);
+      left: 50%; transform: translateX(-50%);
+      background: var(--bg-elev);
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      padding: 12px 20px; border-radius: var(--r-pill);
+      color: var(--text); font-size: 13px; font-weight: 600;
+      z-index: 150; animation: toastIn 0.25s var(--ease);
+      border: 0.5px solid var(--sep);
+      box-shadow: var(--shadow-lg); max-width: 90%; text-align: center;
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
     /* ============ RESULTS COUNT ============ */
-    .results-count { padding: 10px 18px 6px; font-size: 11px; font-weight: 600; color: var(--text-tertiary); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .results-count .offline-tag { font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: var(--bg-secondary); color: var(--text-tertiary); border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 4px; }
-    .results-count .offline-tag.on { color: #FF9500; border-color: #FF9500; }
+    .results-count { padding: 10px 18px 6px; font-size: 11.5px; font-weight: 600; color: var(--text-3); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .results-count .offline-tag { font-size: 9.5px; font-weight: 700; padding: 3px 9px; border-radius: var(--r-pill); background: var(--bg-input); color: var(--text-3); display: inline-flex; align-items: center; gap: 5px; }
+    .results-count .offline-tag.on { color: #FF9500; }
     .results-count .offline-tag .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
     /* ============ EMPTY STATE ============ */
-    .empty-state { text-align: center; padding: 50px 20px; color: var(--text-tertiary); }
-    .empty-state i { font-size: 44px; opacity: 0.15; margin-bottom: 12px; }
-    .empty-state p { font-size: 13px; }
-    .empty-state .btn-google { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; padding: 10px 18px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 4px; color: var(--text-primary); font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; transition: var(--transition-fast); }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-3); }
+    .empty-state i { font-size: 52px; opacity: 0.18; margin-bottom: 14px; }
+    .empty-state p { font-size: 14px; }
+    .empty-state .btn-google {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 18px;
+      padding: 12px 20px; background: var(--bg-elev); border: 0.5px solid var(--sep);
+      border-radius: var(--r-pill); color: var(--text); font-size: 13px; font-weight: 700;
+      font-family: inherit; cursor: pointer; text-decoration: none; transition: transform 0.12s;
+    }
     .empty-state .btn-google:active { transform: scale(0.95); }
 
-    .main-content::-webkit-scrollbar { width: 2px; }
-    .main-content::-webkit-scrollbar-track { background: transparent; }
-    .main-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .main-content::-webkit-scrollbar { width: 0; }
 
-    .ptr-indicator { position: absolute; top: 0; left: 50%; transform: translateX(-50%) translateY(-60px); background: var(--bg-card); border: 1px solid var(--border); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--xiaomi-orange); z-index: 10; transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0; font-size: 14px; }
+    .ptr-indicator {
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%) translateY(-60px);
+      background: var(--bg-elev); border: 0.5px solid var(--sep);
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--orange); z-index: 10;
+      transition: transform 0.2s, opacity 0.2s; opacity: 0; font-size: 14px;
+      box-shadow: var(--shadow-md);
+    }
     .ptr-indicator.visible { opacity: 1; }
-    .ptr-indicator.spinning i { animation: spinLoader 0.8s linear infinite; }
+    .ptr-indicator.spinning i { animation: spin 0.8s linear infinite; }
 
-    .ripple { position: absolute; border-radius: 50%; background: currentColor; opacity: 0.2; transform: scale(0); animation: rippleAnim 0.5s ease-out; pointer-events: none; }
+    .ripple { position: absolute; border-radius: 50%; background: currentColor; opacity: 0.18; transform: scale(0); animation: rippleAnim 0.5s ease-out; pointer-events: none; }
     @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
 
-    /* ============ SPLASH NATIVO ============ */
-    .splash { position: fixed; inset: 0; background: rgba(14, 14, 14, 0.95); backdrop-filter: blur(8px); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
+    /* ============ SPLASH ============ */
+    .splash { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
     .splash.hidden { opacity: 0; pointer-events: none; }
-    
     .loader-logo-container { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-    .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--xiaomi-orange); border-bottom-color: var(--xiaomi-orange); animation: spinLoader 1.2s linear infinite; }
-    .loader-logo-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; background: var(--bg-elev); border: 2px solid var(--border); box-shadow: 0 0 20px rgba(230, 81, 0, 0.2); }
-    .loader-text { font-size: 13px; font-weight: 600; color: var(--text-mute); letter-spacing: 0.5px; animation: pulse 1.5s infinite; }
+    .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--orange); border-bottom-color: var(--orange); animation: spin 1.2s linear infinite; }
+    .loader-logo-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; background: var(--bg-elev); border: 2px solid var(--sep); }
+    .loader-text { font-size: 13px; font-weight: 600; color: var(--text-3); letter-spacing: 0.4px; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
-    .scroll-top-btn { position: fixed; bottom: calc(84px + var(--safe-bottom)); right: 14px; width: 40px; height: 40px; border-radius: 6px; background: var(--bg-card); color: var(--xiaomi-orange); border: 1px solid var(--border); cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; z-index: 90; opacity: 0; transform: translateY(20px) scale(0.8); pointer-events: none; transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1); }
+    .scroll-top-btn {
+      position: fixed; bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px); right: 16px;
+      width: 42px; height: 42px; border-radius: 50%; background: var(--bg-elev);
+      color: var(--orange); border: 0.5px solid var(--sep); cursor: pointer; font-size: 15px;
+      display: flex; align-items: center; justify-content: center; z-index: 90;
+      opacity: 0; transform: translateY(20px) scale(0.8); pointer-events: none;
+      transition: all 0.25s var(--ease); box-shadow: var(--shadow-md);
+    }
     .scroll-top-btn.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
     .scroll-top-btn:active { transform: scale(0.9); }
 
-    /* ============ FICHA TÉCNICA (IA) ============ */
-    #modalSpecs .modal-content { max-height: 85vh; overflow-y: auto; padding-bottom: calc(20px + var(--safe-bottom)); }
-    .spec-loading { text-align: center; padding: 30px; color: var(--text-tertiary); font-size: 13px; }
+    #modalSpecs .modal-content { max-height: 85vh; overflow-y: auto; }
+    .spec-loading { text-align: center; padding: 30px; color: var(--text-3); font-size: 13px; }
 
     @media (min-width: 640px) {
-      .app { max-width: 500px; }
+      .app { max-width: 500px; border-left: 0.5px solid var(--sep); border-right: 0.5px solid var(--sep); }
       .modal { align-items: center; padding: 20px; }
-      .modal-content { border-radius: 6px; border-bottom: 1px solid var(--border); }
+      .modal-content { border-radius: var(--r-lg); border-bottom: 0.5px solid var(--sep); }
       .sheet-handle { display: none; }
     }
   </style>
 </head>
 <body>
 
-<!-- LOADER NATIVO -->
+<!-- SPLASH -->
 <div class="splash" id="splash">
   <div class="loader-logo-container">
     <div class="loader-ring"></div>
@@ -261,7 +400,7 @@
       <div class="logo">
         <div class="logo-icon">
           <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi"
-               onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--xiaomi-orange); font-size:16px;&quot;></i>';">
+               onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--orange); font-size:16px;&quot;></i>';">
         </div>
         <h1>DR XIAOMI <span>Catálogo</span></h1>
       </div>
@@ -336,7 +475,7 @@
     cacheMetaKey: "drxiaomi_cache_meta_v1",
     favoritesKey: "drxiaomi_favs_v1",
     recentKey: "drxiaomi_recent_v1",
-   specsApiBase: "https://api-mobilespecs.azharimm.dev/v2"
+    specsApiBase: "https://api-mobilespecs.azharimm.dev/v2"
   };
 
   let allData = [];
@@ -417,7 +556,6 @@
     return `hace ${dias} día${dias > 1 ? 's' : ''}`;
   }
 
-  // PARSERS
   function parsePrice(priceStr) {
     if (priceStr == null) return 0;
     let s = String(priceStr).trim().replace(/[^\d.,-]/g, '');
@@ -487,7 +625,6 @@
     return data;
   }
 
-  // BÚSQUEDA
   function performPreciseSearch(data, term) {
     if (!term.trim()) return data;
     const tokens = getTokens(term);
@@ -542,14 +679,12 @@
     }
     return Array.from(map.values()).sort((a, b) => b.score - a.score).slice(0, 8);
   }
-  
-  // 🔥 FUNCIÓN HIGHLIGHT ARREGLADA
+
   function highlight(text, term) {
     if (!term.trim()) return escapeHtml(text);
     const tokens = getTokens(term);
     let r = escapeHtml(text);
     tokens.forEach(t => {
-      // Escapa caracteres especiales para evitar errores en la RegExp
       const safeT = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const rx = new RegExp(`(${safeT})`, 'gi');
       r = r.replace(rx, '<span class="highlight-text">$1</span>');
@@ -557,7 +692,6 @@
     return r;
   }
 
-  // FAVORITOS / RECIENTES
   function loadFavorites() {
     try { favorites = new Set(JSON.parse(localStorage.getItem(CONFIG.favoritesKey) || "[]")); }
     catch { favorites = new Set(); }
@@ -589,7 +723,6 @@
     try { localStorage.setItem(CONFIG.recentKey, JSON.stringify(recentSearches)); } catch {}
   }
 
-  // CACHE
   function readCachedCSV(name) {
     try {
       const raw = localStorage.getItem(CONFIG.cachePrefix + name);
@@ -741,7 +874,7 @@
           <i class="fas fa-mobile-alt"></i>
           <div style="flex:1;min-width:0;">
             <div>${highlight(s.modelo, term)}</div>
-            <div style="font-size:10px;color:var(--text-tertiary);">${escapeHtml(s.marca)} · ${s.venta.toLocaleString()} Bs</div>
+            <div style="font-size:11px;color:var(--text-3);">${escapeHtml(s.marca)} · ${s.venta.toLocaleString()} Bs</div>
           </div>
           <span class="suggestion-price-tag">${s.tipo}</span>
         </div>
@@ -869,9 +1002,6 @@
     haptic(20);
   };
 
-  // ============================================================
-  // 🧠 FICHA TÉCNICA (AHORA CON GEMINI AI)
-  // ============================================================
   window.openFicha = async function(id) {
     const p = filteredData.find(x => x.id === id) || allData.find(x => x.id === id);
     if (!p) return showToast("Producto no encontrado");
@@ -885,7 +1015,7 @@
       <div class="modal-content">
         <div class="sheet-handle"></div>
         <h3 style="display:flex;align-items:center;gap:8px;">
-          <i class="fas fa-info-circle" style="color:var(--xiaomi-orange);"></i>
+          <i class="fas fa-info-circle" style="color:var(--orange);"></i>
           Ficha Técnica (IA)
         </h3>
         <div id="specsContent" class="spec-loading">
@@ -893,16 +1023,14 @@
           Generando ficha con IA para "${escapeHtml(p.modelo)}"...
         </div>
         <div class="modal-buttons" style="margin-top:16px;">
-          <button onclick="window.cerrarFicha()" style="background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border);">Cerrar</button>
+          <button onclick="window.cerrarFicha()" style="background:var(--bg-input);color:var(--text);">Cerrar</button>
         </div>
       </div>
     `;
     document.body.appendChild(modal);
 
     try {
-      // 🔥 TU LLAVE API AQUÍ
-      const GEMINI_API_KEY = "AQ.Ab8RN6LGWz6t8ZIMcO8zW1eT7xW_I8YWEB2TEyeVuNQzJndZ6g"; 
-      
+      const GEMINI_API_KEY = "AQ.Ab8RN6LGWz6t8ZIMcO8zW1eT7xW_I8YWEB2TEyeVuNQzJndZ6g";
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`;
 
       const prompt = `Eres un experto técnico en reparación de celulares en Bolivia. Genera una ficha técnica breve y útil para un técnico sobre el modelo: ${p.marca} ${p.modelo}. 
@@ -912,38 +1040,30 @@
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
 
       const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error.message || "Error en la API de Gemini");
-      }
-      
-      if (!data.candidates || !data.candidates[0].content.parts[0].text) {
-        throw new Error("La IA no devolvió respuesta.");
-      }
+
+      if (data.error) throw new Error(data.error.message || "Error en la API de Gemini");
+      if (!data.candidates || !data.candidates[0].content.parts[0].text) throw new Error("La IA no devolvió respuesta.");
 
       const textoIA = data.candidates[0].content.parts[0].text;
       const textoHTML = textoIA.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
       const content = document.getElementById('specsContent');
       if (content) {
-        content.innerHTML = `<div style="font-size:13px; line-height:1.6; color:var(--text-secondary); text-align:left;">${textoHTML}</div>`;
+        content.innerHTML = `<div style="font-size:14px; line-height:1.6; color:var(--text-2); text-align:left;">${textoHTML}</div>`;
         content.classList.remove('spec-loading');
       }
 
       haptic(15);
-
     } catch (err) {
       console.error('Error con Gemini:', err);
       const content = document.getElementById('specsContent');
       if (content) {
         content.innerHTML = `
-          <div style="text-align:center;padding:30px;color:var(--text-tertiary);">
+          <div style="text-align:center;padding:30px;color:var(--text-3);">
             <i class="fas fa-exclamation-triangle" style="font-size:32px;opacity:0.3;margin-bottom:10px;display:block;"></i>
             <p>Error al generar la ficha con IA</p>
             <p style="font-size:11px; color:#EF4444;">${err.message}</p>
@@ -963,15 +1083,15 @@
     if (!data.length) { showToast("Nada para comparar"); return; }
     let html = '<div style="display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto;">';
     data.forEach(p => {
-      const accent = p.tipo === 'ORIG' ? 'var(--gold-2)' : 'var(--xiaomi-orange)';
-      html += `<div style="background:var(--bg-secondary);padding:12px;border-radius:6px;border-left:3px solid ${accent};">
+      const accent = p.tipo === 'ORIG' ? 'var(--gold-2)' : 'var(--orange)';
+      html += `<div style="background:var(--bg-input);padding:12px;border-radius:var(--r-sm);border-left:3px solid ${accent};">
         <div style="font-size:11px;color:${accent};font-weight:700;">${escapeHtml(p.marca)}</div>
         <div style="font-size:14px;font-weight:600;margin:3px 0;">${escapeHtml(p.modelo)}</div>
-        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">${p.tipo}${techMode ? ' · ' + escapeHtml(p.proveedor) : ''}</div>
+        <div style="font-size:11px;color:var(--text-2);margin-bottom:6px;">${p.tipo}${techMode ? ' · ' + escapeHtml(p.proveedor) : ''}</div>
         <div style="font-size:18px;font-weight:700;">${p.venta.toLocaleString()} Bs</div>
       </div>`;
     });
-    html += '</div><div class="modal-buttons" style="margin-top:14px;"><button onclick="window.closeCompare()" style="flex:1;padding:12px;background:var(--xiaomi-orange);border:none;border-radius:6px;color:white;font-weight:600;cursor:pointer;">Cerrar</button></div>';
+    html += '</div><div class="modal-buttons" style="margin-top:14px;"><button onclick="window.closeCompare()" style="flex:1;padding:12px;background:var(--orange);border:none;border-radius:var(--r-md);color:white;font-weight:600;cursor:pointer;">Cerrar</button></div>';
     document.getElementById("compareModal")?.remove();
     document.body.insertAdjacentHTML("beforeend",
       `<div id="compareModal" class="modal active"><div class="modal-content"><div class="sheet-handle"></div><h3>Comparar</h3>${html}</div></div>`);
@@ -985,19 +1105,19 @@
     modal.innerHTML = `
       <div class="modal-content" style="text-align: center;">
         <div class="sheet-handle"></div>
-        <div style="font-size: 42px; margin-bottom: 10px;"><i class="fas fa-microchip" style="color:var(--xiaomi-orange);"></i></div>
-        <h3 style="justify-content: center; margin-bottom: 10px; display: flex; font-size: 16px;">Modo Técnico</h3>
-        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 6px; line-height: 1.5;">
-          ¿Confirmas que eres el <strong style="color: var(--xiaomi-orange);">técnico de DR. XIAOMI</strong>?
+        <div style="font-size: 44px; margin-bottom: 12px;"><i class="fas fa-microchip" style="color:var(--orange);"></i></div>
+        <h3 style="justify-content: center; margin-bottom: 10px; display: flex; font-size: 18px;">Modo Técnico</h3>
+        <p style="color: var(--text-2); font-size: 14px; margin-bottom: 8px; line-height: 1.5;">
+          ¿Confirmas que eres el <strong style="color: var(--orange);">técnico de DR. XIAOMI</strong>?
         </p>
-        <p style="color: var(--text-tertiary); font-size: 11px; margin-bottom: 20px; line-height: 1.5;">
+        <p style="color: var(--text-3); font-size: 12px; margin-bottom: 22px; line-height: 1.5;">
           Se mostrarán los precios de compra y proveedores.
         </p>
         <div class="modal-buttons">
-          <button onclick="window.cerrarModalTecnico()" style="background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border);">
+          <button onclick="window.cerrarModalTecnico()" style="background: var(--bg-input); color: var(--text);">
             Cancelar
           </button>
-          <button onclick="window.confirmarModoTecnico()" style="background: var(--xiaomi-orange); color: white;">
+          <button onclick="window.confirmarModoTecnico()" style="background: var(--orange); color: white;">
             <i class="fas fa-check"></i> Sí
           </button>
         </div>
@@ -1025,7 +1145,7 @@
     const icon = document.querySelector("#themeToggle i");
     if (icon) icon.className = t === "dark" ? "fas fa-sun" : "fas fa-moon";
     const meta = document.getElementById("metaThemeColor");
-    if (meta) meta.setAttribute("content", t === "dark" ? "#0A0A0A" : "#FF6900");
+    if (meta) meta.setAttribute("content", t === "dark" ? "#000000" : "#F2F2F7");
     localStorage.setItem("theme", t);
   }
   function toggleTheme() { applyTheme(currentTheme === "light" ? "dark" : "light"); haptic(15); }
@@ -1098,7 +1218,7 @@
 
   function showSkeleton() {
     if (!container) return;
-    container.innerHTML = `<div class="cards-view">${Array(6).fill().map(() => `<div class="product-card" style="height:100px;animation:none;opacity:1;transform:none;"><div style="background:linear-gradient(90deg, var(--border) 25%, transparent 50%, var(--border) 75%); background-size:200% 100%; animation:loading 1.5s infinite; border-radius:6px; height:100%;"></div></div>`).join('')}</div>`;
+    container.innerHTML = `<div class="cards-view">${Array(6).fill().map(() => `<div class="product-card" style="height:112px;animation:none;opacity:1;transform:none;"><div style="background:linear-gradient(90deg, var(--sep-opaque) 25%, transparent 50%, var(--sep-opaque) 75%); background-size:200% 100%; animation:loading 1.5s infinite; border-radius:var(--r-sm); height:100%;"></div></div>`).join('')}</div>`;
     if (!document.getElementById("skeletonKeyframes")) {
       const s = document.createElement("style");
       s.id = "skeletonKeyframes";
@@ -1107,7 +1227,7 @@
     }
   }
   function showOfflineEmpty() {
-    container.innerHTML = `<div class="empty-state"><i class="fas fa-wifi"></i><p style="font-weight:600;margin-bottom:6px;">Sin conexión</p><p style="font-size:12px;">Conéctate una vez para descargar el catálogo.</p><button onclick="location.reload()" style="margin-top:14px;padding:10px 20px;background:var(--xiaomi-orange);border:none;border-radius:6px;color:white;font-weight:600;cursor:pointer;font-family:inherit;font-size:12px;">Reintentar</button></div>`;
+    container.innerHTML = `<div class="empty-state"><i class="fas fa-wifi"></i><p style="font-weight:600;margin-bottom:6px;">Sin conexión</p><p style="font-size:12px;">Conéctate una vez para descargar el catálogo.</p><button onclick="location.reload()" style="margin-top:14px;padding:10px 20px;background:var(--orange);border:none;border-radius:var(--r-pill);color:white;font-weight:600;cursor:pointer;font-family:inherit;font-size:12px;">Reintentar</button></div>`;
   }
 
   function setupEventListeners() {
