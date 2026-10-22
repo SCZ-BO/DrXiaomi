@@ -147,6 +147,21 @@
 
   const $ = id => document.getElementById(id);
 
+  // 🔥 FUNCIÓN PARA LIMPIAR NOMBRES DE PROVEEDORES (Evita duplicados)
+  function limpiarProveedor(prov) {
+    if (!prov) return 'Generico';
+    let p = prov.trim().toLowerCase().replace(/\s+/g, '');
+    if (p === 'boe') return 'BOE';
+    if (p === 'bite') return 'BITE';
+    if (p === 'centralcel') return 'CentralCell';
+    if (p === 'marcocel' || p === 'marcocell') return 'MarcoCell';
+    if (p === 'osmobil') return 'Osmobil';
+    if (p === 'jya' || p === 'j&a') return 'J&A';
+    if (p === 'lpz' || p === 'cfh' || p === 'cfhmobile') return 'CFH mobile';
+    if (p === 'mrpantalla') return 'MR PANTALLA';
+    return prov.trim(); // Si no coincide con ninguno, lo deja igual
+  }
+
   // 1. Cargar datos de Firebase en tiempo real
   onSnapshot(collection(db, "precios"), (snapshot) => {
     allProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -277,7 +292,7 @@
       const data = {
         marca: $('fMarca').value.toUpperCase().trim(),
         modelo: $('fModelo').value.trim(),
-        proveedor: $('fProveedor').value.trim(),
+        proveedor: limpiarProveedor($('fProveedor').value),
         tipo: $('fTipo').value.toUpperCase().trim() || 'LCD',
         compra: parseFloat($('fCompra').value) || 0,
         venta: parseFloat($('fVenta').value) || 0,
@@ -348,11 +363,12 @@
 
   $('btnImportar').addEventListener('click', () => $('fileInput').click());
 
+  // 🔥 IMPORTACIÓN INTELIGENTE (ACTUALIZA O CREA, NO BORRA)
   $('fileInput').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!confirm("⚠️ ATENCIÓN: Al importar, se borrarán todos los precios actuales de la nube y se reemplazarán por los del archivo. ¿Deseas continuar?")) {
+    if (!confirm("¿Deseas importar este archivo?\n\nSi un modelo ya existe (misma marca, modelo y proveedor), se actualizarán sus precios. Si no existe, se agregará como nuevo. No se borrará nada.")) {
       e.target.value = '';
       return;
     }
@@ -364,19 +380,24 @@
       
       if (lines.length < 2) return alert("El archivo está vacío o no tiene el formato correcto.");
 
-      $('countLoader').textContent = "Limpiando base de datos...";
+      $('countLoader').textContent = "Analizando archivo y buscando coincidencias...";
       
-      // Borrar existentes
-      const snapshot = await getDocs(collection(db, "precios"));
-      for (const docSnap of snapshot.docs) {
-        await deleteDoc(doc(db, "precios", docSnap.id));
-      }
+      // 1. Traer todos los productos actuales de Firebase para comparar
+      const snapshotActual = await getDocs(collection(db, "precios"));
+      const productosExistentes = new Map();
+      
+      snapshotActual.forEach(docSnap => {
+        const data = docSnap.data();
+        // Clave única: MARCA|MODELO|PROVEEDOR
+        const key = `${(data.marca||'').toUpperCase()}|${(data.modelo||'').toUpperCase()}|${(data.proveedor||'').toUpperCase()}`;
+        productosExistentes.set(key, { id: docSnap.id, ...data });
+      });
 
-      $('countLoader').textContent = "Subiendo nuevos productos...";
-      
       const CHUNK_SIZE = 500;
-      let totalSubidos = 0;
-
+      let actualizados = 0;
+      let nuevos = 0;
+      
+      // 2. Procesar el CSV
       for (let i = 1; i < lines.length; i += CHUNK_SIZE) {
         const chunk = lines.slice(i, i + CHUNK_SIZE);
         const batch = writeBatch(db);
@@ -385,30 +406,50 @@
           const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
           if (cols.length >= 5) {
             const es6 = cols.length >= 6;
-            const data = {
-              marca: cols[0] || 'N/A',
-              modelo: cols[1] || '',
-              tipo: es6 ? (cols[2] || 'LCD') : (cols[2] || 'LCD'),
-              proveedor: es6 ? (cols[3] || 'Generico') : (cols[3] || 'Generico'),
-              compra: parseFloat(es6 ? cols[4] : cols[3]) || 0,
-              venta: parseFloat(es6 ? cols[5] : cols[4]) || 0,
-              activo: true,
-              creadoEn: serverTimestamp()
-            };
             
-            if (data.modelo) {
-              const newRef = doc(collection(db, "precios"));
-              batch.set(newRef, data);
-              totalSubidos++;
+            const marca = (cols[0] || 'N/A').toUpperCase();
+            const modelo = (cols[1] || '').toUpperCase();
+            const tipo = es6 ? (cols[2] || 'LCD').toUpperCase() : (cols[2] || 'LCD').toUpperCase();
+            // 🔥 AQUI USAMOS LA FUNCION LIMPIAR PROVEEDOR
+            const proveedor = limpiarProveedor(es6 ? (cols[3] || 'Generico') : (cols[3] || 'Generico'));
+            const compra = parseFloat(es6 ? cols[4] : cols[3]) || 0;
+            const venta = parseFloat(es6 ? cols[5] : cols[4]) || 0;
+            
+            if (modelo) {
+              const key = `${marca}|${modelo}|${proveedor.toUpperCase()}`;
+              
+              if (productosExistentes.has(key)) {
+                // 🔥 SI YA EXISTE: Actualizamos el documento
+                const prodExistente = productosExistentes.get(key);
+                const docRef = doc(db, "precios", prodExistente.id);
+                
+                const dataUpdate = {};
+                if (compra > 0) dataUpdate.compra = compra;
+                if (venta > 0) dataUpdate.venta = venta;
+                if (tipo) dataUpdate.tipo = tipo;
+                
+                if (Object.keys(dataUpdate).length > 0) {
+                   batch.update(docRef, dataUpdate);
+                   actualizados++;
+                }
+              } else {
+                // 🔥 SI NO EXISTE: Lo creamos
+                const newRef = doc(collection(db, "precios"));
+                batch.set(newRef, {
+                  marca, modelo, tipo, proveedor, compra, venta,
+                  activo: true, creadoEn: serverTimestamp()
+                });
+                nuevos++;
+              }
             }
           }
         });
         
         await batch.commit();
-        $('countLoader').textContent = `Subidos ${totalSubidos}...`;
       }
 
-      alert(`✅ Importación completada. Se subieron ${totalSubidos} productos.`);
+      alert(`✅ Importación completada.\n\nProductos nuevos: ${nuevos}\nProductos actualizados: ${actualizados}`);
+      $('countLoader').textContent = `${allProducts.length} productos en total`;
       e.target.value = '';
     };
     reader.readAsText(file);
