@@ -771,6 +771,12 @@
         try {
           await updateDoc(doc(db, 'recibos', id), { estadoOrden: nuevoEstado });
           toast('Estado actualizado', 'success');
+          
+          // 🔥 RESETEAR FILTRO A "TODOS" PARA QUE EL EQUIPO NO DESAPAREZCA
+          filtroActual = 'todos';
+          document.querySelectorAll('#filtros .chip').forEach(b => b.classList.remove('active'));
+          document.querySelector('#filtros .chip[data-filtro="todos"]')?.classList.add('active');
+          
           cerrarSheet();
         } catch (err) { toast('Error al actualizar', 'error'); }
       });
