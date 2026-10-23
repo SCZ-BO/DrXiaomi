@@ -59,10 +59,8 @@ function iniciar() {
   const userInfo = document.getElementById('userInfo');
   if (userInfo) userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
   
-  // Recuperar borrador
   const hayBorrador = cargarBorrador();
 
-  // Configurar módulos
   configurarHeader();
   configurarWizard();
   configurarMarca();
@@ -73,7 +71,6 @@ function iniciar() {
   configurarServicios();
   configurarBotonGenerarPDF();
 
-  // Guardado automático
   const content = document.getElementById('wizardContent');
   if (content) {
     content.addEventListener('input', guardarBorradorDebounce);
@@ -196,7 +193,6 @@ function irAPaso(nuevoPaso) {
     if (appBody) appBody.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // LÓGICA INTELIGENTE DEL PASO 3
   if (pasoActual === 3) {
     const valorEnciende = datos.enciende;
     const cardReparaciones = document.getElementById('cardReparaciones');
@@ -564,6 +560,7 @@ function configurarFotos() {
   renderSlots();
 }
 
+// 🔥 COMPRESIÓN OPTIMIZADA: 400px y calidad 0.5 (Pesa 60 KB en vez de 4 MB)
 async function comprimirImagen(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -571,11 +568,11 @@ async function comprimirImagen(file) {
       const img = new Image();
       img.onload = () => {
         let w = img.width, h = img.height;
-        if (w > 1000) { h = h * 1000 / w; w = 1000; }
+        if (w > 400) { h = h * 400 / w; w = 400; }
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', 0.75));
+        resolve(canvas.toDataURL('image/jpeg', 0.5));
       };
       img.onerror = reject; img.src = e.target.result;
     };
@@ -797,15 +794,12 @@ function configurarBotonGenerarPDF() {
         costoRepuesto: 0
       };
 
-      // 1. GUARDAR EN FIRESTORE PRIMERO
       const docRef = await addDoc(collection(db, 'recibos'), paquete);
       console.log('✅ Recibo guardado en Firestore con ID:', docRef.id);
 
-      // 2. LUEGO GENERAR EL PDF Y CONECTAR LOS BOTONES
       try {
         const resultadoPDF = await generarPDFUnificado(paquete, 'guardar_en_nube');
         
-        // CONECTAR EL BOTÓN DE DESCARGAR
         if (resultadoPDF && resultadoPDF.success) {
           const btnDescargar = document.getElementById('downloadPdfBtn');
           if (btnDescargar) {
@@ -817,7 +811,6 @@ function configurarBotonGenerarPDF() {
             };
           }
 
-          // CONECTAR EL BOTÓN DE COMPARTIR NATIVO
           const btnCompartir = document.getElementById('btnCompartirNativo');
           if (btnCompartir) {
             btnCompartir.onclick = async () => {
@@ -843,7 +836,6 @@ function configurarBotonGenerarPDF() {
         console.error('PDF falló, pero el recibo se guardó:', pdfError);
       }
 
-      // 3. MOSTRAR ÉXITO
       localStorage.removeItem('drxiaomi_borrador');
       document.getElementById('successNumero').textContent = num;
       document.getElementById('successModal').classList.add('show');
