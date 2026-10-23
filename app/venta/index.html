@@ -163,10 +163,11 @@
           <button type="button" class="metodo-btn" data-metodo="QR">
             <i class="fas fa-qrcode"></i> QR
           </button>
-          <button type="button" class="metodo-btn" data-metodo="Transferencia">
+          <!-- 🔥 ESTOS BOTONES SE OCULTAN SI ES TÉCNICO -->
+          <button type="button" class="metodo-btn" data-metodo="Transferencia" id="btnMetodoTransf">
             <i class="fas fa-university"></i> Transf.
           </button>
-          <button type="button" class="metodo-btn" data-metodo="Mixto">
+          <button type="button" class="metodo-btn" data-metodo="Mixto" id="btnMetodoMixto">
             <i class="fas fa-random"></i> Mixto
           </button>
         </div>
@@ -216,6 +217,20 @@
       </div>
     </div>
   </div>
+
+  <!-- 🔥 SCRIPT DE SEGURIDAD PARA OCULTAR OPCIONES AL TÉCNICO -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const sesion = JSON.parse(localStorage.getItem('drx_sesion') || 'null');
+        if (sesion && sesion.rol !== 'admin') {
+          // Si es técnico, ocultamos Transferencia y Mixto
+          document.getElementById('btnMetodoTransf').style.display = 'none';
+          document.getElementById('btnMetodoMixto').style.display = 'none';
+        }
+      } catch (e) {}
+    });
+  </script>
 
   <script type="module" src="/app/venta/venta.js"></script>
   
