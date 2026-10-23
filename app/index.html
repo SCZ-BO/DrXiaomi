@@ -260,8 +260,10 @@
           <option value="Limpieza">Limpieza</option>
           <option value="Reactivación">Reactivación</option>
           <option value="Cargador">Cargador</option>
-          <option value="Otro">Otro</option>
+          <!-- 🔥 LA OPCIÓN OTRO SE LLENA DESDE JS SEGÚN EL ROL -->
         </select>
+        <!-- 🔥 CAMPO EXTRA PARA "OTRO" -->
+        <input type="text" id="ventaConceptoOtro" class="form-control" placeholder="Especifique qué se vendió" style="display: none; margin-top: 10px;">
       </div>
 
       <div class="input-group">
@@ -274,7 +276,7 @@
         <select id="ventaMetodo" class="form-control">
           <option value="Efectivo">💵 Efectivo</option>
           <option value="QR">📱 QR</option>
-          <option value="Transferencia">🏦 Transferencia</option>
+          <!-- 🔥 LA OPCIÓN TRANSFERENCIA SE LLENA DESDE JS SEGÚN EL ROL -->
         </select>
       </div>
 
@@ -312,10 +314,10 @@
 
       <div class="input-group">
         <label>Método de Pago</label>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+        <div id="metodosPagoGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
             <button class="btn-sheet" data-metodo="Efectivo" style="background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); margin-bottom:0;">💵 Efectivo</button>
             <button class="btn-sheet" data-metodo="QR" style="background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); margin-bottom:0;">📱 QR</button>
-            <button class="btn-sheet" data-metodo="Transferencia" style="background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); margin-bottom:0; grid-column: span 2;">🏦 Transferencia</button>
+            <!-- 🔥 BOTÓN TRANSFERENCIA SE AGREGA DESDE JS SI ES ADMIN -->
         </div>
       </div>
 
@@ -328,7 +330,6 @@
   <script type="module">
     import { requireAuth, logout } from '/js/app-auth.js';
     import { toast, haptic, initTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
-    // 🔥 AQUÍ IMPORTAMOS select PARA NO DESCARGAR LAS FOTOS
     import { db } from '/js/firebase.js';
     import { collection, query, onSnapshot, limit, doc, updateDoc, deleteDoc, startAfter, getDocs, addDoc, serverTimestamp, orderBy, select } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -387,6 +388,7 @@
       
       setTimeout(() => { contadorNotificaciones = 0; actualizarBadge(); }, 3000);
 
+      configurarPermisosPorRol();
       configurarEventos();
       cargarDatos();
       
@@ -400,6 +402,40 @@
       if (sesion.rol !== 'admin') {
         const btnReportes = document.getElementById('reportesBtn');
         if (btnReportes) btnReportes.style.display = 'none';
+      }
+    }
+
+    // 🔥 NUEVA FUNCIÓN: CONFIGURAR QUÉ OPCIONES VE CADA ROL
+    function configurarPermisosPorRol() {
+      const esAdmin = sesion.rol === 'admin';
+
+      // 1. En Venta Rápida: Solo el admin puede ver "Otro"
+      const selConcepto = document.getElementById('ventaConcepto');
+      if (esAdmin) {
+        const optOtro = document.createElement('option');
+        optOtro.value = 'Otro';
+        optOtro.textContent = 'Otro';
+        selConcepto.appendChild(optOtro);
+      }
+
+      // 2. En Venta Rápida: Solo el admin puede ver "Transferencia"
+      const selMetodo = document.getElementById('ventaMetodo');
+      if (esAdmin) {
+        const optTransf = document.createElement('option');
+        optTransf.value = 'Transferencia';
+        optTransf.textContent = '🏦 Transferencia';
+        selMetodo.appendChild(optTransf);
+      }
+
+      // 3. En el modal de Entrega: Solo el admin puede ver "Transferencia"
+      if (esAdmin) {
+        const gridPago = document.getElementById('metodosPagoGrid');
+        const btnTransf = document.createElement('button');
+        btnTransf.className = 'btn-sheet';
+        btnTransf.dataset.metodo = 'Transferencia';
+        btnTransf.style = 'background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); margin-bottom:0; grid-column: span 2;';
+        btnTransf.textContent = '🏦 Transferencia';
+        gridPago.appendChild(btnTransf);
       }
     }
 
@@ -450,31 +486,53 @@
       document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta.classList.remove('show'));
       modalVenta?.addEventListener('click', (e) => { if (e.target === modalVenta) modalVenta.classList.remove('show'); });
       
+      // 🔥 MOSTRAR INPUT EXTRA SI ELIGE "OTRO" (Solo admin podrá elegirlo)
+      document.getElementById('ventaConcepto')?.addEventListener('change', (e) => {
+        const inputOtro = document.getElementById('ventaConceptoOtro');
+        if (e.target.value === 'Otro') {
+          inputOtro.style.display = 'block';
+          inputOtro.focus();
+        } else {
+          inputOtro.style.display = 'none';
+          inputOtro.value = '';
+        }
+      });
+
       document.getElementById('btnCloseSheet')?.addEventListener('click', cerrarSheet);
       reciboSheet?.addEventListener('click', (e) => { if (e.target === reciboSheet) cerrarSheet(); });
 
       document.getElementById('btnClosePago')?.addEventListener('click', () => modalPago.classList.remove('show'));
       modalPago?.addEventListener('click', (e) => { if (e.target === modalPago) modalPago.classList.remove('show'); });
 
-      document.querySelectorAll('#modalPago [data-metodo]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          haptic(10);
-          document.querySelectorAll('#modalPago [data-metodo]').forEach(b => {
-            b.style.borderColor = 'var(--border)';
-            b.style.color = 'var(--text-main)';
-          });
-          btn.style.borderColor = 'var(--brand)';
-          btn.style.color = 'var(--brand)';
-          metodoPagoSeleccionado = btn.dataset.metodo;
+      // 🔥 Selección de método de pago en el modal de entrega
+      document.getElementById('metodosPagoGrid')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-metodo]');
+        if (!btn) return;
+        haptic(10);
+        
+        document.querySelectorAll('#metodosPagoGrid [data-metodo]').forEach(b => {
+          b.style.borderColor = 'var(--border)';
+          b.style.color = 'var(--text-main)';
         });
+        btn.style.borderColor = 'var(--brand)';
+        btn.style.color = 'var(--brand)';
+        metodoPagoSeleccionado = btn.dataset.metodo;
       });
 
       document.getElementById('btnConfirmarPago')?.addEventListener('click', confirmarEntregaConPago);
 
+      // Guardar Venta Rápida
       document.getElementById('btnGuardarVenta')?.addEventListener('click', async () => {
-        const concepto = document.getElementById('ventaConcepto').value;
+        let concepto = document.getElementById('ventaConcepto').value;
         const monto = parseFloat(document.getElementById('ventaMonto').value);
         const metodo = document.getElementById('ventaMetodo').value;
+
+        // Si es admin y eligió "Otro", usamos el input de texto
+        if (concepto === 'Otro') {
+          const conceptoOtro = document.getElementById('ventaConceptoOtro').value.trim();
+          if (!conceptoOtro) { toast('Especifica qué se vendió', 'error'); return; }
+          concepto = conceptoOtro;
+        }
 
         if (!monto || monto <= 0) { toast('Ingresa un monto válido', 'error'); return; }
 
@@ -488,6 +546,9 @@
           toast('Venta registrada', 'success');
           modalVenta.classList.remove('show');
           document.getElementById('ventaMonto').value = '';
+          document.getElementById('ventaConceptoOtro').value = '';
+          document.getElementById('ventaConceptoOtro').style.display = 'none';
+          document.getElementById('ventaConcepto').value = 'Botón';
         } catch (err) {
           toast('Error al guardar', 'error');
         }
@@ -518,7 +579,6 @@
       if (unsubscribe) unsubscribe();
       if (appLoader) appLoader.classList.remove('hidden');
       
-      // 🔥 SOLO TRAEMOS LOS CAMPOS NECESARIOS (EXCLUIMOS 'fotos')
       const qRecibos = query(
         collection(db, 'recibos'), 
         orderBy('fecha', 'desc'), 
@@ -812,6 +872,7 @@
 
       const esAdmin = sesion.rol === 'admin';
       
+      // 🔥 EL TÉCNICO NO PUEDE VER "ENTREGADO" EN EL SELECT
       const opcionesEstado = esAdmin ? `
         <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
         <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
@@ -860,6 +921,7 @@
       document.getElementById('btnActualizarEstado')?.addEventListener('click', async () => {
         const nuevoEstado = document.getElementById('selectEstado').value;
         
+        // 🔥 SI ELIGE ENTREGADO, ABRIR MODAL DE PAGO
         if (nuevoEstado === 'entregado') {
           cerrarSheet();
           abrirModalPago(orden);
@@ -902,7 +964,7 @@
       
       document.getElementById('pagoMonto').value = orden.saldo > 0 ? orden.saldo : orden.total;
       
-      document.querySelectorAll('#modalPago [data-metodo]').forEach(b => {
+      document.querySelectorAll('#metodosPagoGrid [data-metodo]').forEach(b => {
         b.style.borderColor = 'var(--border)';
         b.style.color = 'var(--text-main)';
       });
@@ -1009,7 +1071,7 @@
             <select id="editMetodoV" class="form-control">
               <option value="Efectivo" ${venta.metodoPago === 'Efectivo' ? 'selected' : ''}>💵 Efectivo</option>
               <option value="QR" ${venta.metodoPago === 'QR' ? 'selected' : ''}>📱 QR</option>
-              <option value="Transferencia" ${venta.metodoPago === 'Transferencia' ? 'selected' : ''}>🏦 Transferencia</option>
+              ${sesion.rol === 'admin' ? `<option value="Transferencia" ${venta.metodoPago === 'Transferencia' ? 'selected' : ''}>🏦 Transferencia</option>` : ''}
             </select>
           </div>
           <button class="btn-sheet btn-sheet-primary" id="btnSaveEditV">Guardar Cambios</button>
