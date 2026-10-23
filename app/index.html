@@ -106,10 +106,17 @@
     }
     [data-theme="light"] .bottom-nav { background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
     
+    /* 🔥 NUEVOS COLORES DE ICONOS EN EL NAV */
     .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-mute); gap: 6px; cursor: pointer; transition: 0.2s; background: none; border: none; width: 44px; height: 44px; border-radius: 50%; }
     .nav-item i { font-size: 18px; transition: 0.2s; }
     .nav-item:active { opacity: 0.6; transform: scale(0.9); }
-    .nav-item.active { color: var(--brand); }
+    
+    /* Colores específicos por ID de botón */
+    #btnRefreshNav i { color: #3B82F6; } /* Azul */
+    #preciosBtn i { color: #FBBF24; }    /* Amarillo */
+    #reportesBtn i { color: #10B981; }   /* Verde */
+    #btnPDFDia i { color: #FF6900; }     /* Naranja */
+    #logoutBtn i { color: #EF4444; }     /* Rojo */
 
     .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 999999; opacity: 0; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; transition: 0.3s; }
     .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
