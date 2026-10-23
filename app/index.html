@@ -296,18 +296,46 @@
     </div>
   </div>
 
+  <!-- MODAL: MÉTODO DE PAGO AL ENTREGAR -->
+  <div class="sheet-backdrop" id="modalPago">
+    <div class="sheet">
+      <div class="sheet-grip"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h3 style="font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Confirmar Entrega</h3>
+        <button class="icon-btn" id="btnClosePago" style="background: var(--bg-elev); box-shadow: none;"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <div class="input-group">
+        <label>Monto Cobrado (Bs.)</label>
+        <input type="number" id="pagoMonto" class="form-control" placeholder="0.00" inputmode="decimal">
+      </div>
+
+      <div class="input-group">
+        <label>Método de Pago</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+            <button class="btn-sheet" data-metodo="Efectivo" style="background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); margin-bottom:0;">💵 Efectivo</button>
+            <button class="btn-sheet" data-metodo="QR" style="background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); margin-bottom:0;">📱 QR</button>
+            <button class="btn-sheet" data-metodo="Transferencia" style="background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); margin-bottom:0; grid-column: span 2;">🏦 Transferencia</button>
+        </div>
+      </div>
+
+      <button class="btn-sheet btn-sheet-success" id="btnConfirmarPago" style="margin-top: 20px;">
+        Confirmar y Entregar
+      </button>
+    </div>
+  </div>
+
   <script type="module">
     import { requireAuth, logout } from '/js/app-auth.js';
     import { toast, haptic, initTheme, tiempoRelativo, formatBs, escapeHtml } from '/js/app-ui.js';
+    // 🔥 AQUÍ IMPORTAMOS select PARA NO DESCARGAR LAS FOTOS
     import { db } from '/js/firebase.js';
-    import { collection, query, onSnapshot, limit, doc, updateDoc, deleteDoc, startAfter, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { collection, query, onSnapshot, limit, doc, updateDoc, deleteDoc, startAfter, getDocs, addDoc, serverTimestamp, orderBy, select } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // 🔥 REGISTRAR SERVICE WORKER PARA NOTIFICACIONES
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(err => console.error('SW Error:', err));
     }
 
-    // 🔥 CONTADOR DE NOTIFICACIONES
     let contadorNotificaciones = parseInt(localStorage.getItem('drx_notif_count') || '0');
 
     function actualizarBadge() {
@@ -331,12 +359,16 @@
     let unsubscribeVentas = null;
     let unsubscribeCierres = null; 
     
-    const LIMITE_POR_PAGINA = 10;
+    const LIMITE_POR_PAGINA = 15;
     let ultimoDocumento = null;
     let hayMasRecibos = true;
 
+    let ordenAEntregar = null;
+    let metodoPagoSeleccionado = null;
+
     const reciboSheet = document.getElementById('reciboSheet');
     const modalVenta = document.getElementById('modalVenta');
+    const modalPago = document.getElementById('modalPago');
     const sheetContent = document.getElementById('sheetContent');
     const btnCargarMas = document.getElementById('btnCargarMas');
     const appLoader = document.getElementById('appLoader');
@@ -349,12 +381,10 @@
     function iniciarApp() {
       document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
       
-      // Pedir permiso de notificaciones
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission();
       }
       
-      // Limpiar badge después de 3 segundos
       setTimeout(() => { contadorNotificaciones = 0; actualizarBadge(); }, 3000);
 
       configurarEventos();
@@ -423,6 +453,24 @@
       document.getElementById('btnCloseSheet')?.addEventListener('click', cerrarSheet);
       reciboSheet?.addEventListener('click', (e) => { if (e.target === reciboSheet) cerrarSheet(); });
 
+      document.getElementById('btnClosePago')?.addEventListener('click', () => modalPago.classList.remove('show'));
+      modalPago?.addEventListener('click', (e) => { if (e.target === modalPago) modalPago.classList.remove('show'); });
+
+      document.querySelectorAll('#modalPago [data-metodo]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          haptic(10);
+          document.querySelectorAll('#modalPago [data-metodo]').forEach(b => {
+            b.style.borderColor = 'var(--border)';
+            b.style.color = 'var(--text-main)';
+          });
+          btn.style.borderColor = 'var(--brand)';
+          btn.style.color = 'var(--brand)';
+          metodoPagoSeleccionado = btn.dataset.metodo;
+        });
+      });
+
+      document.getElementById('btnConfirmarPago')?.addEventListener('click', confirmarEntregaConPago);
+
       document.getElementById('btnGuardarVenta')?.addEventListener('click', async () => {
         const concepto = document.getElementById('ventaConcepto').value;
         const monto = parseFloat(document.getElementById('ventaMonto').value);
@@ -470,10 +518,16 @@
       if (unsubscribe) unsubscribe();
       if (appLoader) appLoader.classList.remove('hidden');
       
-      const qRecibos = query(collection(db, 'recibos'), limit(200));
+      // 🔥 SOLO TRAEMOS LOS CAMPOS NECESARIOS (EXCLUIMOS 'fotos')
+      const qRecibos = query(
+        collection(db, 'recibos'), 
+        orderBy('fecha', 'desc'), 
+        limit(LIMITE_POR_PAGINA),
+        select('cliente', 'telefono', 'marca', 'modelo', 'estadoOrden', 'total', 'saldo', 'montoCobrado', 'metodoPago', 'fecha', 'fechaEntrega', 'fechaEditada', 'numeroRecibo')
+      );
+
       unsubscribe = onSnapshot(qRecibos, { includeMetadataChanges: true }, 
         (snapshot) => {
-          // 🔥 NOTIFICACIÓN NUEVO RECIBO
           if (!window._primerCargaRecibos) {
             window._primerCargaRecibos = new Set(snapshot.docs.map(d => d.id));
           } else {
@@ -514,7 +568,6 @@
       if (unsubscribeVentas) unsubscribeVentas();
       const qVentas = query(collection(db, 'ventas'), limit(100));
       unsubscribeVentas = onSnapshot(qVentas, (snapshot) => {
-        // 🔥 NOTIFICACIÓN NUEVA VENTA
         if (!window._primerCargaVentas) {
           window._primerCargaVentas = new Set(snapshot.docs.map(d => d.id));
         } else {
@@ -731,7 +784,13 @@
       btnCargarMas.disabled = true;
 
       try {
-        const q = query(collection(db, 'recibos'), startAfter(ultimoDocumento), limit(LIMITE_POR_PAGINA));
+        const q = query(
+          collection(db, 'recibos'), 
+          startAfter(ultimoDocumento), 
+          orderBy('fecha', 'desc'), 
+          limit(LIMITE_POR_PAGINA),
+          select('cliente', 'telefono', 'marca', 'modelo', 'estadoOrden', 'total', 'saldo', 'montoCobrado', 'metodoPago', 'fecha', 'fechaEntrega', 'fechaEditada', 'numeroRecibo')
+        );
         const snapshot = await getDocs(q);
         const nuevosRecibos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         ordenes = [...ordenes, ...nuevosRecibos];
@@ -751,6 +810,27 @@
       const orden = ordenes.find(o => o.id === id);
       if (!orden) return;
 
+      const esAdmin = sesion.rol === 'admin';
+      
+      const opcionesEstado = esAdmin ? `
+        <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
+        <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
+        <option value="espera-repuesto" ${orden.estadoOrden === 'espera-repuesto' ? 'selected' : ''}>⏳ Esperando repuesto</option>
+        <option value="listo" ${orden.estadoOrden === 'listo' ? 'selected' : ''}>✅ Listo para entregar</option>
+        <option value="entregado" ${orden.estadoOrden === 'entregado' ? 'selected' : ''}>🤝 Entregado</option>
+        <option value="devuelto" ${orden.estadoOrden === 'devuelto' ? 'selected' : ''}>↩️ Devuelto</option>
+      ` : `
+        <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
+        <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
+        <option value="espera-repuesto" ${orden.estadoOrden === 'espera-repuesto' ? 'selected' : ''}>⏳ Esperando repuesto</option>
+        <option value="listo" ${orden.estadoOrden === 'listo' ? 'selected' : ''}>✅ Listo para entregar</option>
+        <option value="devuelto" ${orden.estadoOrden === 'devuelto' ? 'selected' : ''}>↩️ Devuelto</option>
+      `;
+
+      const btnEliminarHtml = esAdmin ? `
+        <button class="btn-sheet btn-sheet-danger" id="btnEliminar"><i class="fas fa-trash"></i> Eliminar</button>
+      ` : '';
+
       sheetContent.innerHTML = `
         <div style="margin-bottom: 24px;">
           <h3 style="font-size: 24px; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0; letter-spacing: -0.5px;">${escapeHtml(orden.numeroRecibo)}</h3>
@@ -760,18 +840,13 @@
         <div style="background: var(--bg-elev); padding: 16px; border-radius: var(--radius-md); margin: 16px 0; border: 1px solid var(--border);">
           <label style="font-size: 11px; font-weight: 700; color: var(--text-mute); text-transform: uppercase; margin-bottom: 8px; display: block;">Estado del Equipo</label>
           <select id="selectEstado" class="custom-select">
-            <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
-            <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
-            <option value="espera-repuesto" ${orden.estadoOrden === 'espera-repuesto' ? 'selected' : ''}>⏳ Esperando repuesto</option>
-            <option value="listo" ${orden.estadoOrden === 'listo' ? 'selected' : ''}>✅ Listo para entregar</option>
-            <option value="entregado" ${orden.estadoOrden === 'entregado' ? 'selected' : ''}>🤝 Entregado</option>
-            <option value="devuelto" ${orden.estadoOrden === 'devuelto' ? 'selected' : ''}>↩️ Devuelto</option>
+            ${opcionesEstado}
           </select>
         </div>
         <div style="display: flex; flex-direction: column;">
           <button class="btn-sheet btn-sheet-primary" id="btnActualizarEstado"><i class="fas fa-check"></i> Guardar Estado</button>
           <button class="btn-sheet btn-sheet-whatsapp" id="btnWhatsApp"><i class="fab fa-whatsapp"></i> WhatsApp</button>
-          <button class="btn-sheet btn-sheet-danger" id="btnEliminar"><i class="fas fa-trash"></i> Eliminar</button>
+          ${btnEliminarHtml}
         </div>
       `;
 
@@ -784,6 +859,13 @@
 
       document.getElementById('btnActualizarEstado')?.addEventListener('click', async () => {
         const nuevoEstado = document.getElementById('selectEstado').value;
+        
+        if (nuevoEstado === 'entregado') {
+          cerrarSheet();
+          abrirModalPago(orden);
+          return;
+        }
+
         try {
           await updateDoc(doc(db, 'recibos', id), { estadoOrden: nuevoEstado });
           toast('Estado actualizado', 'success');
@@ -812,6 +894,55 @@
           } catch (err) { toast('Error al eliminar', 'error'); }
         }
       });
+    }
+
+    function abrirModalPago(orden) {
+      ordenAEntregar = orden;
+      metodoPagoSeleccionado = null;
+      
+      document.getElementById('pagoMonto').value = orden.saldo > 0 ? orden.saldo : orden.total;
+      
+      document.querySelectorAll('#modalPago [data-metodo]').forEach(b => {
+        b.style.borderColor = 'var(--border)';
+        b.style.color = 'var(--text-main)';
+      });
+
+      modalPago.classList.add('show');
+      haptic(15);
+    }
+
+    async function confirmarEntregaConPago() {
+      const monto = parseFloat(document.getElementById('pagoMonto').value);
+      
+      if (!metodoPagoSeleccionado) {
+        toast('Selecciona un método de pago', 'error');
+        return;
+      }
+      if (!monto || monto <= 0) {
+        toast('Ingresa un monto válido', 'error');
+        return;
+      }
+
+      haptic(20);
+      try {
+        await updateDoc(doc(db, 'recibos', ordenAEntregar.id), {
+          estadoOrden: 'entregado',
+          fechaEntrega: serverTimestamp(),
+          montoCobrado: monto,
+          metodoPago: metodoPagoSeleccionado
+        });
+        
+        toast('Equipo entregado y pago registrado', 'success');
+        modalPago.classList.remove('show');
+        
+        filtroActual = 'todos';
+        document.querySelectorAll('#filtros .chip').forEach(b => b.classList.remove('active'));
+        document.querySelector('#filtros .chip[data-filtro="todos"]')?.classList.add('active');
+        
+      } catch (err) {
+        console.error(err);
+        toast('Error al entregar', 'error');
+      }
     }
 
     function abrirSheetVenta(id, origen, extra) {
