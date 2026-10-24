@@ -1,18 +1,21 @@
 /* ============================================================
-   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL - v7)
+   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL - v8)
    Archivo: app/orden.js
-   Cambios v7: agregar/editar/eliminar servicios con recálculo de total/saldo.
-   Solo admin puede eliminar servicios o editar costos.
+   Cambios v8:
+     - Integración con el nuevo orden.html (modal de servicio en HTML,
+       toast del HTML, iconos con gradiente, theme del HTML).
+     - Se eliminó listener duplicado de themeToggle (lo maneja el HTML).
+     - Se mantiene todo lo de v7: agregar/editar/eliminar servicios.
    ============================================================ */
 
 import { requireAuth } from '/js/app-auth.js';
 import {
-  toast, haptic, initTheme, escapeHtml,
+  toast as toastUI, haptic, initTheme, escapeHtml,
   formatBs, tiempoRelativo, showLoading, hideLoading
 } from '/js/app-ui.js';
 import { db } from '/js/firebase.js';
 import {
-  doc, getDoc, updateDoc, deleteDoc,
+  doc, updateDoc, deleteDoc,
   serverTimestamp, arrayUnion, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -21,8 +24,6 @@ import '/js/dictado.js';
 /* ============================================================
    CONFIGURACIÓN Y ESTILOS GLOBALES
    ============================================================ */
-const TIMEOUT_MS = 10000;
-
 const styleGlobal = document.createElement('style');
 styleGlobal.textContent = `
   .metodo-btn.activo {
@@ -99,9 +100,41 @@ let fotosNuevas = [];
 let unsubscribe = null;
 
 /* ============================================================
+   TOAST ADAPTADO AL HTML NUEVO (usa #toast con icono colorido)
+   ============================================================ */
+function toast(msg, tipo = 'success', duracion = 2500) {
+  // Si el HTML tiene el #toast nuevo, lo usamos.
+  const toastEl = document.getElementById('toast');
+  const toastText = document.getElementById('toastText');
+  const toastIcon = document.getElementById('toastIcon');
+
+  if (toastEl && toastText && toastIcon) {
+    toastText.textContent = msg;
+    // Icono y color según tipo
+    let iconClass = 'fas fa-check-circle';
+    let color = '#34C759'; // verde
+    if (tipo === 'error') { iconClass = 'fas fa-times-circle'; color = '#FF3B30'; }
+    else if (tipo === 'info') { iconClass = 'fas fa-info-circle'; color = '#0A84FF'; }
+    else if (tipo === 'warning') { iconClass = 'fas fa-exclamation-triangle'; color = '#FFB800'; }
+    toastIcon.className = iconClass;
+    toastIcon.style.color = color;
+    toastEl.classList.add('show');
+    clearTimeout(toastEl._timer);
+    toastEl._timer = setTimeout(() => toastEl.classList.remove('show'), duracion);
+    return;
+  }
+
+  // Fallback: usar el toast de app-ui.js
+  toastUI(msg, tipo, duracion);
+}
+
+/* ============================================================
    INICIALIZACIÓN
    ============================================================ */
-initTheme();
+// 🔥 CAMBIO: NO llamamos initTheme() aquí porque el HTML ya maneja
+// el tema con su propio script (theme-color dinámico + prefers-color-scheme).
+// Si lo dejamos, se cambia dos veces y vuelve al original.
+// initTheme();
 
 requireAuth(async (s) => {
   sesion = s;
@@ -121,19 +154,15 @@ async function iniciar() {
     return;
   }
 
+  // Back button
   document.getElementById('backBtn')?.addEventListener('click', () => {
     haptic(10); window.location.href = '/app/';
   });
 
-  document.getElementById('themeToggle')?.addEventListener('click', () => {
-    haptic(10);
-    const html = document.documentElement;
-    const nuevo = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    html.setAttribute('data-theme', nuevo);
-    localStorage.setItem('theme', nuevo);
-    const icon = document.querySelector('#themeToggle i');
-    if (icon) icon.className = nuevo === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
-  });
+  // 🔥 CAMBIO: Eliminado el listener de themeToggle.
+  // El HTML ya lo maneja con localStorage + prefers-color-scheme.
+  // Si lo dejamos aquí, el tema cambia dos veces (se anula).
+  // document.getElementById('themeToggle')?.addEventListener('click', () => { ... });
 
   await cargarOrden();
 }
@@ -172,7 +201,6 @@ async function cargarOrden() {
 /* ============================================================
    CÁLCULOS
    ============================================================ */
-// 🔥 NUEVO: recalcula total y saldo a partir de servicios + adelanto
 function calcularTotalesDesdeServicios(servicios, adelanto) {
   const total = (Array.isArray(servicios) ? servicios : [])
     .reduce((acc, s) => acc + (Number(s.costo) || 0), 0);
@@ -200,7 +228,6 @@ function renderOrden() {
     patronTexto = orden.patron.split(',').join(' → ');
   }
 
-  // 🔥 CAMBIO: tabla de servicios con botones editar/eliminar (solo admin elimina)
   const serviciosArr = Array.isArray(orden.servicios) ? orden.servicios : [];
   const serviciosHtml = serviciosArr.length > 0
     ? serviciosArr.map((s, idx) => `
@@ -210,8 +237,12 @@ function renderOrden() {
           <td class="servicio-acciones">
             <div class="servicio-row-acciones">
               ${sesion.rol === 'admin' ? `
-                <button class="btn-servicio-mini" data-edit-serv="${idx}" title="Editar"><i class="fas fa-pen"></i></button>
-                <button class="btn-servicio-mini danger" data-del-serv="${idx}" title="Eliminar"><i class="fas fa-trash"></i></button>
+                <button class="btn-servicio-mini" data-edit-serv="${idx}" title="Editar">
+                  <i class="fas fa-pen icon-gradiente-ambar"></i>
+                </button>
+                <button class="btn-servicio-mini danger" data-del-serv="${idx}" title="Eliminar">
+                  <i class="fas fa-trash icon-gradiente-rojo"></i>
+                </button>
               ` : ''}
             </div>
           </td>
@@ -261,7 +292,7 @@ function renderOrden() {
 
         <!-- 🔥 NUEVO: botón para agregar servicio (visible para técnico y admin) -->
         <button id="btnAgregarServicio" class="btn-grande" style="margin-top:12px; background:var(--bg-elev); color:var(--brand); border:1px dashed var(--brand);">
-          <i class="fas fa-plus"></i> Agregar servicio
+          <i class="fas fa-plus icon-gradiente-verde"></i> Agregar servicio
         </button>
 
         <div class="total-box"><span style="font-size:12px; color:var(--text-mute);">Total</span><strong>${formatBs(orden.total || 0)}</strong></div>
@@ -276,8 +307,12 @@ function renderOrden() {
     <div class="card">
       <div class="card-title">📱 Acciones</div>
       <div style="display:flex; gap:12px; margin-top:8px;">
-        <button class="btn-grande btn-whatsapp" id="btnContactar" style="flex:1;"><i class="fab fa-whatsapp"></i> Contactar</button>
-        <button class="btn-grande btn-pdf" id="btnRegenerarPDF" style="flex:1;"><i class="fas fa-file-pdf"></i> Enviar PDF</button>
+        <button class="btn-grande btn-whatsapp" id="btnContactar" style="flex:1;">
+          <i class="fab fa-whatsapp"></i> Contactar
+        </button>
+        <button class="btn-grande btn-pdf" id="btnRegenerarPDF" style="flex:1;">
+          <i class="fas fa-file-pdf"></i> Enviar PDF
+        </button>
       </div>
     </div>
 
@@ -296,8 +331,8 @@ function renderOrden() {
           <div class="recibo-row"><span>Costo del repuesto</span><span style="color:#FF9500; font-weight:700;">${Number(orden.costoRepuesto) > 0 ? formatBs(orden.costoRepuesto) : 'Sin asignar'}</span></div>
           <div class="recibo-row" style="background:rgba(16,185,129,0.1); padding:8px; border-radius:8px; margin-top:8px;"><span style="color:#10B981; font-weight:700;">Ganancia neta</span><span style="color:#10B981; font-weight:800; font-size:16px;">${formatBs(ganancia)}</span></div>
         ` : `<p style="font-size:12px; color:var(--text-mute); text-align:center; margin-bottom:12px;">Esta orden aún no tiene cobro registrado.</p>`}
-        <button id="btnRegistrarCosto" class="btn-grande btn-pdf" style="margin-top:12px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border);"><i class="fas fa-calculator"></i> ${Number(orden.costoRepuesto) > 0 ? 'Editar costo' : 'Registrar costo'}</button>
-        <button id="btnEditarFecha" class="btn-grande" style="margin-top:8px; background:var(--bg-elev); color:var(--brand); border:1px solid var(--brand);"><i class="fas fa-calendar-alt"></i> Editar fecha</button>
+        <button id="btnRegistrarCosto" class="btn-grande btn-pdf" style="margin-top:12px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border);"><i class="fas fa-calculator icon-gradiente-ambar"></i> ${Number(orden.costoRepuesto) > 0 ? 'Editar costo' : 'Registrar costo'}</button>
+        <button id="btnEditarFecha" class="btn-grande" style="margin-top:8px; background:var(--bg-elev); color:var(--brand); border:1px solid var(--brand);"><i class="fas fa-calendar-alt icon-gradiente-azul"></i> Editar fecha</button>
       </div>
     ` : ''}
 
@@ -344,16 +379,15 @@ function renderBitacora() {
   if (ordenada.length === 0) return `<div style="text-align:center; padding:20px; color:var(--text-mute); font-size:13px;"><i class="fas fa-clipboard-list" style="font-size:24px; opacity:0.4; margin-bottom:8px; display:block;"></i>No hay entradas en la bitácora aún</div>`;
 
   return ordenada.map(entry => {
-    let clase = 'nota', icono = 'fa-sticky-note';
-    if (entry.tipo === 'estado') { clase = 'estado'; icono = 'fa-exchange-alt'; }
-    else if (entry.tipo === 'foto') { clase = 'foto'; icono = 'fa-camera'; }
-    else if (entry.tipo === 'whatsapp') { clase = 'whatsapp'; icono = 'fa-brands fa-whatsapp'; }
-    else if (entry.tipo === 'cobro') { clase = 'estado'; icono = 'fa-money-bill-wave'; }
-    // 🔥 NUEVO: icono para servicios
-    else if (entry.tipo === 'servicio') { clase = 'estado'; icono = 'fa-screwdriver-wrench'; }
+    let clase = 'nota', icono = 'fa-sticky-note', color = '';
+    if (entry.tipo === 'estado') { clase = 'estado'; icono = 'fa-exchange-alt'; color = 'icon-gradiente-azul'; }
+    else if (entry.tipo === 'foto') { clase = 'foto'; icono = 'fa-camera'; color = 'icon-gradiente-morado'; }
+    else if (entry.tipo === 'whatsapp') { clase = 'whatsapp'; icono = 'fa-brands fa-whatsapp'; color = 'icon-gradiente-verde'; }
+    else if (entry.tipo === 'cobro') { clase = 'estado'; icono = 'fa-money-bill-wave'; color = 'icon-gradiente-verde'; }
+    else if (entry.tipo === 'servicio') { clase = 'estado'; icono = 'fa-screwdriver-wrench'; color = 'icon-gradiente-ambar'; }
 
     return `<div class="bitacora-item">
-      <div class="bitacora-icono ${clase}"><i class="fas ${icono}"></i></div>
+      <div class="bitacora-icono ${clase}"><i class="fas ${icono} ${color}"></i></div>
       <div class="bitacora-content">
         <div class="bitacora-header"><span class="bitacora-autor">${escapeHtml(entry.autor || 'Sistema')}</span><span class="bitacora-fecha">${tiempoRelativo(entry.fecha)}</span></div>
         <div class="bitacora-texto">${escapeHtml(entry.texto || '')}</div>
@@ -393,10 +427,10 @@ function configurarEventosOrden() {
   document.getElementById('btnRegenerarPDF')?.addEventListener('click', () => { haptic(15); regenerarYEnviarPDF(); });
   document.getElementById('btnVolverPanelFinal')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/'; });
 
-  // 🔥 NUEVO: botón agregar servicio
+  // Botón agregar servicio
   document.getElementById('btnAgregarServicio')?.addEventListener('click', () => abrirModalServicio());
 
-  // 🔥 NUEVO: botones editar/eliminar servicio
+  // Botones editar/eliminar servicio
   document.querySelectorAll('[data-edit-serv]').forEach(btn => {
     btn.addEventListener('click', () => {
       const idx = parseInt(btn.dataset.editServ, 10);
@@ -432,7 +466,7 @@ function configurarEventosOrden() {
 }
 
 /* ============================================================
-   🔥 NUEVO: MODAL DE SERVICIO (agregar / editar)
+   🔥 NUEVO: MODAL DE SERVICIO (usa el del HTML nuevo)
    ============================================================ */
 function abrirModalServicio(idxEditar = null) {
   haptic(15);
@@ -440,32 +474,83 @@ function abrirModalServicio(idxEditar = null) {
   const servicios = Array.isArray(orden.servicios) ? orden.servicios : [];
   const actual = esEdicion ? servicios[idxEditar] : null;
 
+  const backdrop = document.getElementById('modalServicioBackdrop');
+  if (!backdrop) {
+    // Fallback: si el HTML no tiene el modal, inyectarlo (por si acaso)
+    console.warn('modalServicioBackdrop no encontrado en HTML, inyectando.');
+    return abrirModalServicioFallback(idxEditar);
+  }
+
+  const tituloEl = document.getElementById('modalServicioTitulo');
+  const descEl = document.getElementById('servicioDescripcion');
+  const costoEl = document.getElementById('servicioCosto');
+
+  if (tituloEl) tituloEl.textContent = esEdicion ? 'Editar servicio' : 'Agregar servicio';
+  if (descEl) descEl.value = actual ? actual.desc : '';
+  if (costoEl) costoEl.value = actual ? Number(actual.costo).toFixed(2) : '';
+
+  backdrop.classList.add('show');
+
+  // Limpiar listeners anteriores clonando botones
+  const btnCancelar = document.getElementById('modalServicioCancelar');
+  const btnGuardar = document.getElementById('modalServicioGuardar');
+
+  const nuevoCancelar = btnCancelar.cloneNode(true);
+  const nuevoGuardar = btnGuardar.cloneNode(true);
+  btnCancelar.parentNode.replaceChild(nuevoCancelar, btnCancelar);
+  btnGuardar.parentNode.replaceChild(nuevoGuardar, btnGuardar);
+
+  function cerrarModal() {
+    backdrop.classList.remove('show');
+  }
+
+  nuevoCancelar.addEventListener('click', cerrarModal);
+
+  nuevoGuardar.addEventListener('click', async () => {
+    const desc = (document.getElementById('servicioDescripcion').value || '').trim();
+    const costo = parseFloat(document.getElementById('servicioCosto').value) || 0;
+    if (!desc) { toast('Escribe una descripción', 'error'); return; }
+    if (costo < 0) { toast('El costo no puede ser negativo', 'error'); return; }
+
+    await guardarServicio(idxEditar, { desc, costo });
+    cerrarModal();
+  });
+
+  // Cerrar al tocar el backdrop
+  backdrop.onclick = (e) => { if (e.target === backdrop) cerrarModal(); };
+
+  // Focus en descripción
+  setTimeout(() => descEl?.focus(), 100);
+}
+
+// Fallback por si el HTML no tiene el modal (no debería pasar con el nuevo HTML)
+function abrirModalServicioFallback(idxEditar = null) {
+  const esEdicion = idxEditar !== null && idxEditar !== undefined;
+  const servicios = Array.isArray(orden.servicios) ? orden.servicios : [];
+  const actual = esEdicion ? servicios[idxEditar] : null;
+
   const modal = document.createElement('div');
   modal.className = 'modal-backdrop';
   modal.id = 'modalServicio';
-
   modal.innerHTML = `
     <div class="modal">
       <h3 style="color:var(--brand); font-weight:800; font-size:18px; margin-bottom:8px;">
         <i class="fas fa-screwdriver-wrench"></i> ${esEdicion ? 'Editar servicio' : 'Agregar servicio'}
       </h3>
       <p style="font-size:12px; color:var(--text-mute); margin-bottom:16px;">El total y el saldo se recalculan automáticamente.</p>
-
       <div style="margin-bottom:14px;">
         <label>Descripción</label>
         <input type="text" id="servDesc" maxlength="120" placeholder="Ej: Cambio de pantalla" value="${actual ? escapeHtml(actual.desc) : ''}">
       </div>
       <div style="margin-bottom:20px;">
         <label>Costo (Bs)</label>
-        <input type="number" id="servCosto" step="0.01" min="0" inputmode="decimal" placeholder="0.00" value="${actual ? Number(actual.costo).toFixed(2) : ''}" style="text-align:center; font-weight:700; color:var(--brand);">
+        <input type="number" id="servCosto" step="0.01" min="0" inputmode="decimal" placeholder="0.00" value="${actual ? Number(actual.costo).toFixed(2) : ''}">
       </div>
-
       <div style="display:flex; gap:8px;">
         <button type="button" id="btnCancelarServicio" class="btn-modal-cancel">Cancelar</button>
         <button type="button" id="btnGuardarServicio" class="btn-modal-confirm"><i class="fas fa-check"></i> Guardar</button>
       </div>
     </div>`;
-
   document.body.appendChild(modal);
   setTimeout(() => modal.classList.add('show'), 10);
 
@@ -478,7 +563,6 @@ function abrirModalServicio(idxEditar = null) {
     const costo = parseFloat(document.getElementById('servCosto').value) || 0;
     if (!desc) { toast('Escribe una descripción', 'error'); return; }
     if (costo < 0) { toast('El costo no puede ser negativo', 'error'); return; }
-
     await guardarServicio(idxEditar, { desc, costo });
     modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
   });
