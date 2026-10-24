@@ -2,35 +2,107 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Tu Recibo - DR. XIAOMI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   
   <style>
-    body { font-family: 'Inter', sans-serif; background: #f4f4f5; color: #18181b; margin: 0; padding: 20px; display: flex; justify-content: center; }
-    .card { background: white; width: 100%; max-width: 400px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
-    .header { background: #FF6900; color: white; padding: 20px; text-align: center; }
-    .header h1 { margin: 0; font-size: 20px; font-weight: 800; }
-    .header p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; }
-    .body { padding: 20px; }
-    .row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; border-bottom: 1px dashed #eee; padding-bottom: 8px; }
-    .row strong { color: #666; font-weight: 600; }
-    .total { font-size: 24px; font-weight: 800; color: #FF6900; text-align: center; margin: 20px 0; }
-    .btn { display: block; width: 100%; padding: 16px; background: #10B981; color: white; text-align: center; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 16px; border: none; cursor: pointer; margin-bottom: 10px; }
-    .btn-pdf { background: #FF6900; }
-    .btn-disabled { background: #ccc; cursor: not-allowed; }
-    .estado { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 10px; }
-    .loading { text-align: center; padding: 40px; color: #666; }
-    .aviso { background: #FEF3C7; border: 1px solid #F59E0B; color: #92400E; padding: 12px; border-radius: 8px; font-size: 12px; text-align: center; margin-bottom: 16px; font-weight: 600; }
-    .aviso-rojo { background: #FEE2E2; border: 1px solid #EF4444; color: #991B1B; }
+    :root {
+      --bg-main: #09090B;
+      --bg-card: #18181B;
+      --text-main: #FAFAFA;
+      --text-mute: #A1A1AA;
+      --border: rgba(255,255,255,0.08);
+      --brand: #FF6900;
+      --success: #10B981;
+      --danger: #EF4444;
+      --warning: #FBBF24;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: var(--bg-main); 
+      color: var(--text-main); 
+      display: flex; 
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .card { 
+      background: var(--bg-card); 
+      width: 100%; 
+      max-width: 420px; 
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header { 
+      background: linear-gradient(135deg, var(--brand), #FF8C00); 
+      color: white; 
+      padding: 30px 20px; 
+      text-align: center; 
+    }
+    .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
+    .header p { font-size: 14px; opacity: 0.9; font-weight: 500; }
+
+    .body { padding: 20px; flex: 1; }
+    
+    .aviso { 
+      padding: 12px; border-radius: 10px; font-size: 12px; text-align: center; 
+      margin-bottom: 20px; font-weight: 600; line-height: 1.4;
+    }
+    .aviso-warning { background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); color: var(--warning); }
+    .aviso-danger { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--danger); }
+
+    .estado-container { text-align: center; margin-bottom: 24px; }
+    .estado { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+    .row span:first-child { color: var(--text-mute); font-weight: 500; }
+    .row span:last-child { font-weight: 600; text-align: right; max-width: 60%; }
+
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    .servicios-title { font-size: 12px; text-transform: uppercase; font-weight: 700; color: var(--text-mute); margin-bottom: 12px; letter-spacing: 0.5px; }
+    
+    .total-box { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px; margin-top: 20px; border: 1px solid var(--border); }
+    .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: var(--text-mute); }
+    .total-row:last-child { margin-bottom: 0; font-size: 20px; font-weight: 800; color: var(--text-main); margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+    .text-success { color: var(--success) !important; }
+    .text-danger { color: var(--danger) !important; }
+
+    .btn { 
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 16px; background: var(--brand); color: white; 
+      text-align: center; text-decoration: none; border-radius: 12px; 
+      font-weight: 700; font-size: 15px; border: none; cursor: pointer; 
+      margin-bottom: 12px; transition: 0.2s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-wsp { background: #25D366; }
+    .btn-disabled { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-mute); cursor: not-allowed; }
+
+    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: var(--text-mute); font-size: 14px; font-weight: 500; }
+    .spinner { width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
   <div class="card" id="appCard">
-    <div class="loading">Cargando tu recibo...</div>
+    <div class="loading">
+      <div class="spinner"></div>
+      Cargando tu recibo...
+    </div>
   </div>
 
   <script type="module">
@@ -42,7 +114,7 @@
     const appCard = document.getElementById('appCard');
 
     if (!reciboId) {
-      appCard.innerHTML = '<div class="loading" style="color:#EF4444">No se encontró el recibo.</div>';
+      appCard.innerHTML = '<div class="loading" style="color:var(--danger)"><i class="fas fa-times-circle" style="font-size:30px; margin-bottom:10px;"></i>No se especificó un recibo.</div>';
     } else {
       buscarRecibo(reciboId);
     }
@@ -53,7 +125,7 @@
         const snap = await getDocs(q);
 
         if (snap.empty) {
-          appCard.innerHTML = '<div class="loading" style="color:#EF4444">Recibo no encontrado o eliminado.</div>';
+          appCard.innerHTML = '<div class="loading" style="color:var(--danger)">Recibo no encontrado o eliminado.</div>';
           return;
         }
 
@@ -61,7 +133,7 @@
         renderizarRecibo(recibo, id);
       } catch (error) {
         console.error(error);
-        appCard.innerHTML = '<div class="loading" style="color:#EF4444">Error al conectar.</div>';
+        appCard.innerHTML = '<div class="loading" style="color:var(--danger)">Error de conexión.</div>';
       }
     }
 
@@ -69,13 +141,15 @@
       let estadoTexto = 'Recibido';
       let estadoColor = '#9CA3AF';
       
-      if (r.estadoOrden === 'reparacion') { estadoTexto = 'En Reparación'; estadoColor = '#FF6900'; }
-      else if (r.estadoOrden === 'listo') { estadoTexto = 'Listo para Entregar'; estadoColor = '#FBBF24'; }
-      else if (r.estadoOrden === 'entregado') { estadoTexto = 'Entregado'; estadoColor = '#10B981'; }
+      if (r.estadoOrden === 'reparacion') { estadoTexto = 'En Reparación'; estadoColor = 'var(--brand)'; }
+      else if (r.estadoOrden === 'espera-repuesto') { estadoTexto = 'Esperando Repuesto'; estadoColor = '#8B5CF6'; }
+      else if (r.estadoOrden === 'listo') { estadoTexto = 'Listo para Entregar'; estadoColor = 'var(--warning)'; }
+      else if (r.estadoOrden === 'entregado') { estadoTexto = 'Entregado'; estadoColor = 'var(--success)'; }
+      else if (r.estadoOrden === 'devuelto') { estadoTexto = 'Devuelto'; estadoColor = 'var(--blue)'; }
 
       // 🔥 LÓGICA DE VENCIMIENTO (30 DÍAS)
       let avisoHtml = '';
-      let botonDescargaHtml = `<button class="btn btn-pdf" id="btnDescargar">⬇️ Descargar PDF</button>`;
+      let botonDescargaHtml = `<button class="btn" id="btnDescargar"><i class="fas fa-file-pdf"></i> Descargar Recibo PDF</button>`;
       let diasRestantes = 30;
       
       if (r.estadoOrden === 'entregado' && r.fechaEntrega) {
@@ -84,42 +158,68 @@
         diasRestantes = 30 - diasTranscurridos;
 
         if (diasRestantes <= 0) {
-          avisoHtml = `<div class="aviso aviso-rojo">⚠️ Este enlace de descarga ha expirado (más de 30 días desde la entrega).</div>`;
-          botonDescargaHtml = `<button class="btn btn-disabled" disabled>❌ PDF Expirado</button>`;
+          avisoHtml = `<div class="aviso aviso-danger">⚠️ Este enlace de descarga ha expirado (más de 30 días desde la entrega).</div>`;
+          botonDescargaHtml = `<button class="btn btn-disabled" disabled><i class="fas fa-lock"></i> PDF Expirado</button>`;
         } else if (diasRestantes <= 15) {
-          avisoHtml = `<div class="aviso">⏳ Atención: Te quedan <b>${diasRestantes} días</b> para descargar este PDF. ¡Guárdalo en tu celular!</div>`;
+          avisoHtml = `<div class="aviso aviso-warning">⏳ Te quedan <b>${diasRestantes} días</b> para descargar este PDF. ¡Guárdalo en tu celular!</div>`;
         }
       }
+
+      // Formatear fecha de ingreso
+      let fechaIngreso = '-';
+      if (r.fechaEditada || r.fecha) {
+        let f = (r.fechaEditada || r.fecha);
+        let d = f.toDate ? f.toDate() : new Date(f);
+        fechaIngreso = d.toLocaleDateString('es-BO', { day: '2-digit', month: 'short', year: 'numeric' });
+      }
+
+      const serviciosHtml = (r.servicios || []).map(s => `
+        <div class="row">
+          <span>${s.desc}</span> 
+          <span>Bs. ${Number(s.costo).toFixed(2)}</span>
+        </div>
+      `).join('');
 
       appCard.innerHTML = `
         <div class="header">
           <h1>DR. XIAOMI</h1>
           <p>Recibo N°: ${r.numeroRecibo}</p>
         </div>
+        
         <div class="body">
-          
           ${avisoHtml}
 
-          <div style="text-align:center; margin-bottom: 20px;">
+          <div class="estado-container">
             <span class="estado" style="background: ${estadoColor}20; color: ${estadoColor};">${estadoTexto}</span>
           </div>
           
-          <div class="row"><strong>Cliente:</strong> <span>${r.cliente}</span></div>
-          <div class="row"><strong>Equipo:</strong> <span>${r.marca} ${r.modelo}</span></div>
-          <div class="row"><strong>Falla:</strong> <span>${r.falla || '-'}</span></div>
+          <div class="row"><span>Cliente</span> <span>${r.cliente}</span></div>
+          <div class="row"><span>Equipo</span> <span>${r.marca} ${r.modelo}</span></div>
+          <div class="row"><span>Falla reportada</span> <span>${r.falla || 'No especificada'}</span></div>
+          <div class="row"><span>Fecha de Ingreso</span> <span>${fechaIngreso}</span></div>
           
-          <div style="margin-top: 20px;">
-            <h3 style="font-size: 14px; color: #666;">Servicios:</h3>
-            ${(r.servicios || []).map(s => `<div class="row"><span>${s.desc}</span> <strong>Bs. ${s.costo}</strong></div>`).join('')}
+          <div class="divider"></div>
+          
+          <div class="servicios-title">Servicios Realizados</div>
+          ${serviciosHtml || '<div class="row"><span>Sin servicios</span><span>-</span></div>'}
+
+          <div class="total-box">
+            <div class="total-row"><span>Total</span> <span>Bs. ${Number(r.total || 0).toFixed(2)}</span></div>
+            ${r.adelanto > 0 ? `<div class="total-row"><span>Adelanto</span> <span>Bs. ${Number(r.adelanto).toFixed(2)}</span></div>` : ''}
+            <div class="total-row">
+              <span>${r.saldo > 0 ? 'Saldo Pendiente' : 'Estado'}</span> 
+              <span class="${r.saldo > 0 ? 'text-danger' : 'text-success'}">
+                ${r.saldo > 0 ? `Bs. ${Number(r.saldo).toFixed(2)}` : '✅ Pagado'}
+              </span>
+            </div>
           </div>
 
-          <div class="total">Total: Bs. ${r.total}</div>
-          <div class="total" style="font-size: 16px; color: ${r.saldo > 0 ? '#EF4444' : '#10B981'}">
-            ${r.saldo > 0 ? `Saldo pendiente: Bs. ${r.saldo}` : '✅ Pagado'}
+          <div style="margin-top: 24px;">
+            ${botonDescargaHtml}
+            <a class="btn btn-wsp" href="https://wa.me/59175959450?text=Hola,%20consulto%20por%20mi%20recibo%20${r.numeroRecibo}">
+              <i class="fab fa-whatsapp"></i> Contactar al Taller
+            </a>
           </div>
-
-          ${botonDescargaHtml}
-          <a class="btn" href="https://wa.me/59175959450?text=Hola,%20consulto%20por%20mi%20recibo%20${r.numeroRecibo}">💬 Contactar al Taller</a>
         </div>
       `;
 
@@ -133,25 +233,42 @@
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
 
+      // Header PDF
       pdf.setFillColor(230, 81, 0); pdf.rect(0, 0, 210, 40, 'F');
       pdf.setTextColor(255, 255, 255); pdf.setFontSize(22); pdf.setFont('helvetica', 'bold');
       pdf.text('DR. XIAOMI SCZ', 20, 20);
+      pdf.setFontSize(10); pdf.setFont('helvetica', 'normal');
+      pdf.text('Servicio Tecnico Especializado', 20, 28);
       
-      pdf.setTextColor(0, 0, 0); pdf.setFontSize(12);
+      // Info Cliente
+      pdf.setTextColor(0, 0, 0); pdf.setFontSize(12); pdf.setFont('helvetica', 'bold');
       pdf.text(`Recibo: ${r.numeroRecibo}`, 20, 50);
-      pdf.text(`Cliente: ${r.cliente}`, 20, 60);
-      pdf.text(`Equipo: ${r.marca} ${r.modelo}`, 20, 70);
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(11);
+      pdf.text(`Cliente: ${r.cliente}`, 20, 58);
+      pdf.text(`Equipo: ${r.marca} ${r.modelo}`, 20, 65);
+      pdf.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 72);
       
+      // Tabla de Servicios
       pdf.autoTable({
         startY: 80,
-        head: [['Servicio', 'Costo']],
-        body: (r.servicios || []).map(s => [s.desc, `Bs. ${s.costo}`]),
-        headStyles: { fillColor: [230, 81, 0] }
+        head: [['Descripcion del Servicio', 'Costo']],
+        body: (r.servicios || []).map(s => [s.desc, `Bs. ${Number(s.costo).toFixed(2)}`]),
+        headStyles: { fillColor: [230, 81, 0] },
+        columnStyles: { 1: { halign: 'right' } }
       });
 
-      let finalY = pdf.lastAutoTable.finalY + 10;
-      pdf.setFontSize(14); pdf.text(`TOTAL: Bs. ${r.total}`, 20, finalY);
-      pdf.setFontSize(12); pdf.text(`SALDO: Bs. ${r.saldo}`, 20, finalY + 10);
+      // Totales
+      let finalY = pdf.lastAutoTable.finalY + 15;
+      pdf.setFontSize(12); pdf.setFont('helvetica', 'normal');
+      pdf.text(`Total: Bs. ${Number(r.total || 0).toFixed(2)}`, 140, finalY);
+      
+      if (r.adelanto > 0) {
+        pdf.text(`Adelanto: Bs. ${Number(r.adelanto).toFixed(2)}`, 140, finalY + 8);
+        finalY += 8;
+      }
+      
+      pdf.setFontSize(14); pdf.setFont('helvetica', 'bold');
+      pdf.text(`SALDO: Bs. ${Number(r.saldo || 0).toFixed(2)}`, 140, finalY + 10);
 
       pdf.save(`Recibo_${r.numeroRecibo}.pdf`);
     }
