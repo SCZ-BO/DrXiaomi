@@ -8,7 +8,8 @@ import { toast, haptic, initTheme, escapeHtml, formatBs, showLoading, hideLoadin
 import { db } from '/js/firebase.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-import { generarPDFUnificado } from '/js/cliente-pdf.js';
+// 🔥 IMPORTANTE: Ya no necesitamos importar generarPDFUnificado aquí, 
+// porque el PDF se genera en la página pública del recibo.
 
 /* ============================================================
    CONFIGURACIÓN GENERAL
@@ -69,7 +70,7 @@ function iniciar() {
   configurarPattern();
   configurarFotos();
   configurarServicios();
-  configurarBotonGenerarPDF();
+  configurarBotonGenerar();
 
   const content = document.getElementById('wizardContent');
   if (content) {
@@ -193,9 +194,7 @@ function irAPaso(nuevoPaso) {
     if (appBody) appBody.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // 🔥 CORREGIDO: LÓGICA INTELIGENTE DEL PASO 3
   if (pasoActual === 3) {
-    // Quitamos el setTimeout para que sea inmediato
     const valorEnciende = document.getElementById('enciende')?.value;
     const cardReparaciones = document.getElementById('cardReparaciones');
     const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
@@ -486,12 +485,11 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS (🔥 CORREGIDO CON LOS INPUTS DEL HTML)
+   FOTOS
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
   const sheet = document.getElementById('fotoSheet');
-  // Buscamos los inputs ocultos que añadimos al HTML
   const inputCamara = document.getElementById('inputCamara');
   const inputGaleria = document.getElementById('inputGaleria');
   
@@ -519,7 +517,6 @@ function configurarFotos() {
   const cerrarSheet = () => sheet?.classList.remove('show');
   document.getElementById('btnCancelarFoto')?.addEventListener('click', cerrarSheet);
 
-  // 🔥 Clic directo, sin crear inputs temporales
   document.getElementById('btnTomarFoto')?.addEventListener('click', () => {
     cerrarSheet();
     if (inputCamara) inputCamara.click();
@@ -542,7 +539,7 @@ function configurarFotos() {
         renderSlots(); toast('Foto añadida', 'success', 1500); guardarBorradorDebounce();
       } catch (err) { toast('Error al procesar imagen', 'error'); }
     }
-    e.target.value = ''; // Limpiar el input para que se pueda volver a tomar foto
+    e.target.value = '';
     slotActual = null;
   }
 
@@ -584,7 +581,7 @@ async function comprimirImagen(file) {
 }
 
 /* ============================================================
-   SERVICIOS Y COSTOS (🔥 CORREGIDO)
+   SERVICIOS Y COSTOS
    ============================================================ */
 function configurarServicios() {
   const list = document.getElementById('serviciosList');
@@ -639,7 +636,6 @@ function configurarServicios() {
 
   document.getElementById('adelanto')?.addEventListener('input', calcularTotal);
   
-  // 🔥 Forzar que siempre haya una casilla al entrar
   if (list.children.length === 0) list.appendChild(crearServicioItem('', ''));
 }
 
@@ -752,9 +748,9 @@ function generarVistaPrevia() {
 }
 
 /* ============================================================
-   GENERACIÓN DE PDF Y GUARDADO EN FIRESTORE (🔥 CORREGIDO)
+   GUARDADO EN FIRESTORE (Y ENVÍO DE LINK)
    ============================================================ */
-function configurarBotonGenerarPDF() {
+function configurarBotonGenerar() {
   const btn = document.getElementById('btnGenerate');
   if (!btn) return;
   let generando = false;
@@ -773,7 +769,6 @@ function configurarBotonGenerarPDF() {
     try {
       const num = generarNumeroRecibo();
       
-      // Preparamos el paquete
       const paquete = {
         numeroRecibo: num,
         cliente: datos.nombre,
@@ -800,23 +795,17 @@ function configurarBotonGenerarPDF() {
         costoRepuesto: 0
       };
 
-      // 1. GUARDAR EN FIRESTORE PRIMERO
+      // 🔥 GUARDAR EN FIRESTORE
       const docRef = await addDoc(collection(db, 'recibos'), paquete);
       console.log('✅ Recibo guardado en Firestore con ID:', docRef.id);
 
-      // 2. LUEGO GENERAR EL PDF (capturamos el error para que no rompa el guardado)
-      try {
-        await generarPDFUnificado(paquete, 'guardar_en_nube');
-      } catch (pdfError) {
-        console.error('PDF falló, pero el recibo se guardó:', pdfError);
-      }
-
-      // 3. MOSTRAR ÉXITO
+      // 🔥 ÉXITO
       localStorage.removeItem('drxiaomi_borrador');
       document.getElementById('successNumero').textContent = num;
       document.getElementById('successModal').classList.add('show');
       window._ultimoRecibo = paquete;
-      configurarWhatsApp();
+      
+      configurarWhatsApp(); // Prepara el botón de WhatsApp con el link
 
     } catch (error) {
       console.error("Error al guardar en Firestore:", error);
@@ -845,7 +834,11 @@ function configurarWhatsApp() {
     if (!recibo) return;
     
     haptic(15);
-    const mensaje = `Hola ${recibo.cliente.split(' ')[0]},\n\nRecibo de ingreso generado.\n\nN Recibo: ${recibo.numeroRecibo}\nEquipo: ${recibo.marca} ${recibo.modelo}\nTotal: ${formatBs(recibo.total)}\n${recibo.saldo > 0 ? `Saldo pendiente: ${formatBs(recibo.saldo)}` : ''}\n\nConsulta el estado en: ${CONFIG.urlApp}/?recibo=${recibo.numeroRecibo}\n\n${CONFIG.nombreTienda}\nTel: ${CONFIG.telefono}`;
+    
+    // 🔥 AQUÍ ESTÁ EL CAMBIO CLAVE: Enviamos el link a la página pública
+    const urlRecibo = `${CONFIG.urlApp}/recibo/?id=${recibo.numeroRecibo}`;
+    
+    const mensaje = `Hola ${recibo.cliente.split(' ')[0]},\n\nHemos recibido tu equipo *${recibo.marca} ${recibo.modelo}*.\n\n📄 *Puedes ver y descargar tu recibo aquí:*\n${urlRecibo}\n\nN° Recibo: ${recibo.numeroRecibo}\nTotal: ${formatBs(recibo.total)}\n${recibo.saldo > 0 ? `Saldo pendiente: ${formatBs(recibo.saldo)}` : '✅ Pagado'}\n\nTe avisaremos por este medio cuando esté listo.\n\n${CONFIG.nombreTienda}`;
     
     window.open(`https://wa.me/591${recibo.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`, '_blank');
   });
