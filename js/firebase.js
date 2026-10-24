@@ -1,12 +1,13 @@
 /* ============================================================
-   DR. XIAOMI · CONFIGURACIÓN FIREBASE (OPTIMIZADA)
+   DR. XIAOMI · CONFIGURACIÓN FIREBASE (OPTIMIZADA + CACHÉ)
    Archivo: js/firebase.js
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   initializeFirestore, 
-  memoryLocalCache 
+  persistentLocalCache, 
+  persistentMultipleTabManager 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
@@ -24,9 +25,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// 🔥 Usamos memoria caché en lugar de disco para que sea instantáneo
+// 🔥 AHORA LOS DATOS SE GUARDAN EN EL CELULAR (CACHÉ PERSISTENTE)
 export const db = initializeFirestore(app, {
-  localCache: memoryLocalCache()
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
 });
 
 export const auth = getAuth(app);
@@ -34,4 +37,4 @@ export const storage = getStorage(app);
 
 export { app };
 
-console.log('🔥 Firebase inicializado (Optimizado con nueva API Key):', firebaseConfig.projectId);
+console.log('🔥 Firebase inicializado con Caché Persistente:', firebaseConfig.projectId);
