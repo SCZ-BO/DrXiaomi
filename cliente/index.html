@@ -21,7 +21,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- LIBRERÍAS PDF -->
+  <!-- LIBRERÍAS PDF (Mantenemos jsPDF por si acaso, pero ya no se usa aquí) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -33,7 +33,6 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
-    /* LAYOUT TIPO APP (Sin scroll general) */
     html, body { height: 100%; overflow: hidden; }
     body { background-color: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
     
@@ -46,21 +45,16 @@
     .brand-text h1 { font-size: 14px; font-weight: 700; margin: 0; }
     .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
     
-    /* BOTONES DEL HEADER UNIFICADOS */
     .header-actions { display: flex; gap: 6px; }
     .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
     .icon-btn:active { transform: scale(0.95); }
 
-    /* PROGRESO DE PUNTOS */
     .wizard-progress { padding: 4px 0 16px 0; display: flex; justify-content: center; gap: 8px; }
     .wizard-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg-elev); transition: 0.3s; }
     .wizard-dot.active { background: var(--brand); transform: scale(1.2); }
     .wizard-dot.done { background: var(--brand); opacity: 0.5; }
 
-    /* SUBTÍTULOS SUTILES */
     .step-indicator { font-size: 11px; font-weight: 600; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    
-    /* FORMULARIOS */
     .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; }
     
     .field { position: relative; margin-bottom: 10px; }
@@ -69,7 +63,6 @@
     .field label { position: absolute; left: 12px; top: 12px; font-size: 13px; color: var(--text-mute); transition: 0.2s; pointer-events: none; }
     .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label, .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label { top: 4px; font-size: 9px; font-weight: 700; color: var(--brand); }
 
-    /* BOTONES RECTANGULARES */
     .field-title { font-size: 11px; font-weight: 700; margin-bottom: 8px; display: block; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
     .marcas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
     .marca-btn { padding: 10px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; font-size: 11px; cursor: pointer; transition: 0.2s; }
@@ -105,7 +98,6 @@
     .resumen-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 500; margin-bottom: 10px; }
     .resumen-saldo { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; color: var(--brand); font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
 
-    /* FOOTER FIJO ABAJO */
     .wizard-footer { 
       padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); 
       background: var(--bg-main); border-top: 1px solid var(--border); 
@@ -131,17 +123,11 @@
     .preview-section { background: #f9fafb; border-radius: var(--radius-sm); padding: 10px; margin-bottom: 10px; border: 1px solid #eee; }
     .preview-totales { border-top: 1px solid #ddd; margin-top: 6px; padding-top: 6px; }
 
-    /* 🔥 ESTILO PARA INPUTS OCULTOS DE CÁMARA */
-    .hidden-file-input {
-      position: absolute; width: 1px; height: 1px; opacity: 0; z-index: -1;
-    }
+    .hidden-file-input { position: absolute; width: 1px; height: 1px; opacity: 0; z-index: -1; }
   </style>
 </head>
 <body>
 
-  <!-- ========================================== -->
-  <!-- HEADER CON LOS MISMOS BOTONES DEL PANEL    -->
-  <!-- ========================================== -->
   <header class="app-header">
     <div class="brand">
       <button class="icon-btn" id="backToPanelBtn"><i class="fas fa-arrow-left"></i></button>
@@ -150,41 +136,21 @@
     </div>
     
     <div class="header-actions">
-      <!-- 1. Botón Casa -->
-      <button class="icon-btn" id="homeBtn" title="Ir al Panel Principal">
-        <i class="fas fa-home"></i>
-      </button>
-      
-      <!-- 2. Botón Cambiar Tema (Sol/Luna) -->
-      <button class="icon-btn" id="themeToggleBtn" title="Cambiar Tema">
-        <i class="fas fa-sun"></i>
-      </button>
-
-      <!-- 3. Botón Limpiar Borrador -->
-      <button class="icon-btn" id="clearDraftBtn" title="Limpiar Borrador">
-        <i class="fas fa-trash-alt"></i>
-      </button>
-
-      <!-- 4. Botón Precios -->
+      <button class="icon-btn" id="homeBtn" title="Ir al Panel Principal"><i class="fas fa-home"></i></button>
+      <button class="icon-btn" id="themeToggleBtn" title="Cambiar Tema"><i class="fas fa-sun"></i></button>
+      <button class="icon-btn" id="clearDraftBtn" title="Limpiar Borrador"><i class="fas fa-trash-alt"></i></button>
       <button class="icon-btn" id="preciosBtn" title="Buscar precio">
         <img src="/imagenes/icon-precio.png" alt="Precio" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
       </button>
-
-      <!-- 5. Botón Reportes (Oculto por defecto) -->
       <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;">
-        <img src="/imagenes/icon-reportes.png" alt="Reportes" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;&gt;</i>';">
+        <img src="/imagenes/icon-reportes.png" alt="Reportes" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
       </button>
-
-      <!-- 6. Botón Salir -->
       <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
-        <img src="/imagenes/icon-salir.png" alt="Salir" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;&gt;</i>';">
+        <img src="/imagenes/icon-salir.png" alt="Salir" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
       </button>
     </div>
   </header>
 
-  <!-- ========================================== -->
-  <!-- CONTENIDO DEL WIZARD                       -->
-  <!-- ========================================== -->
   <div class="app-body" id="appBody">
     <div class="wizard-progress" id="wizardProgress">
       <div class="wizard-dot active"></div><div class="wizard-dot"></div><div class="wizard-dot"></div>
@@ -352,24 +318,21 @@
   <footer class="wizard-footer" id="wizardFooter">
     <button type="button" class="btn btn-secondary" id="btnPrev" style="display: none;"><i class="fas fa-arrow-left"></i></button>
     <button type="button" class="btn btn-primary" id="btnNext">Siguiente <i class="fas fa-arrow-right"></i></button>
-    <button type="button" class="btn btn-primary" id="btnGenerate" style="display: none;"><i class="fas fa-file-pdf"></i> Generar Recibo</button>
+    <button type="button" class="btn btn-primary" id="btnGenerate" style="display: none;"><i class="fas fa-paper-plane"></i> Generar y Enviar</button>
   </footer>
 
+  <!-- MODAL DE ÉXITO (Actualizado para enviar Link) -->
   <div class="modal-backdrop" id="successModal">
     <div class="modal">
       <div style="font-size: 48px; color: #22C55E; margin-bottom: 16px;"><i class="fas fa-check-circle"></i></div>
-      <h3 style="font-size: 20px; margin-bottom: 8px;">¡Recibo generado!</h3>
+      <h3 style="font-size: 20px; margin-bottom: 8px;">¡Recibo guardado!</h3>
       <p style="font-size: 14px; color: var(--text-mute); margin-bottom: 24px;" id="successNumero">REC-XXX</p>
+      
       <div style="display: flex; flex-direction: column; gap: 10px;">
-        <!-- 🔥 BOTÓN PRINCIPAL: COMPARTIR PDF NATIVO -->
-        <button class="btn" style="background:#25D366;color:white;" id="btnCompartirNativo"><i class="fas fa-share-alt"></i> Compartir Recibo (PDF)</button>
+        <!-- 🔥 BOTÓN PRINCIPAL: ENVIAR LINK POR WHATSAPP -->
+        <button class="btn" style="background:#25D366;color:white;" id="sendWhatsappBtn"><i class="fab fa-whatsapp"></i> Enviar recibo por WhatsApp</button>
         
-        <!-- BOTÓN SECUNDARIO: WHATSAPP SOLO TEXTO -->
-        <button class="btn btn-secondary" id="sendWhatsappBtn"><i class="fab fa-whatsapp"></i> Enviar texto primero</button>
-        
-        <!-- BOTÓN DE DESCARGA MANUAL -->
-        <button class="btn btn-primary" id="downloadPdfBtn"><i class="fas fa-download"></i> Descargar PDF</button>
-        
+        <!-- BOTÓN SECUNDARIO: IR AL PANEL -->
         <button class="btn btn-secondary" id="backToPanelBtn2">Volver al panel</button>
       </div>
     </div>
@@ -384,9 +347,9 @@
     </div>
   </div>
 
-  <!-- 🔥 INPUTS OCULTOS PARA LA CÁMARA -->
-  <input type="file" id="inputCamara" accept="image/*,dummy/allowAndroidCamera" capture="environment" class="hidden-file-input">
-  <input type="file" id="inputGaleria" accept="image/*,dummy/allowAndroidCamera" class="hidden-file-input">
+  <!-- 🔥 INPUTS OCULTOS PARA LA CÁMARA (Limpios) -->
+  <input type="file" id="inputCamara" accept="image/*" capture="environment" class="hidden-file-input">
+  <input type="file" id="inputGaleria" accept="image/*" class="hidden-file-input">
 
   <script type="module" src="/js/cliente.js"></script>
 </body>
