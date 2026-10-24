@@ -1,429 +1,884 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#FF6900">
-  <title>Tu Recibo - DR. XIAOMI</title>
+/* ============================================================
+   DR. XIAOMI · CLIENTE (Wizard PRO - Versión Final Blindada)
+   Archivo: js/cliente.js
+   ============================================================ */
 
-  <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
-  <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
+import { requireAuth, logout } from '/js/app-auth.js';
+import { toast, haptic, initTheme, escapeHtml, formatBs, showLoading, hideLoading } from '/js/app-ui.js';
+import { db } from '/js/firebase.js';
+import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  <meta property="og:title" content="Recibo de Reparación - DR. XIAOMI SCZ">
-  <meta property="og:description" content="Haz clic aquí para ver el estado de tu equipo y descargar tu comprobante en PDF.">
-  <meta property="og:image" content="https://xiaomi.scz.red/imagenes/web-app-manifest-192x192.png">
-  <meta property="og:url" content="https://xiaomi.scz.red/recibo/">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="DR. XIAOMI SCZ">
-  <meta name="twitter:card" content="summary_large_image">
+import { generarPDFUnificado } from '/js/cliente-pdf.js';
+
+/* ============================================================
+   CONFIGURACIÓN GENERAL
+   ============================================================ */
+const CONFIG = {
+  nombreTienda: 'DR. XIAOMI SCZ',
+  eslogan: 'Servicio Técnico Especializado',
+  direccion: 'Centro Comercial Cañoto #K1, Santa Cruz',
+  telefono: '75959450',
+  web: 'xiaomi.scz.red',
+  urlApp: 'https://xiaomi.scz.red',
+  logoUrl: 'https://xiaomi.scz.red/img/logo1.png'
+};
+
+/* ============================================================
+   ESTADO GLOBAL
+   ============================================================ */
+let sesion = null;
+let pasoActual = 1;
+const TOTAL_PASOS = 7;
+
+const datos = {
+  nombre: '', telefono: '',
+  marca: '', modelo: '', color: '', enciende: '',
+  motivoIngreso: '', falla: '', checklist: '',
+  tipoSeguridad: 'patron', pin: '', patronSecuencia: '',
+  fotos: [null, null, null, null],
+  servicios: [], total: 0, adelanto: 0, saldo: 0
+};
+
+export {
+  sesion, datos, CONFIG, generarNumeroRecibo, configurarWhatsApp,
+  showLoading, hideLoading, toast, haptic, formatBs, escapeHtml,
+  db, collection, addDoc, serverTimestamp
+};
+
+/* ============================================================
+   INICIALIZACIÓN
+   ============================================================ */
+initTheme();
+
+requireAuth((s) => {
+  sesion = s;
+  iniciar();
+});
+
+function iniciar() {
+  const userInfo = document.getElementById('userInfo');
+  if (userInfo) userInfo.textContent = `${sesion.icono || ''} ${sesion.nombre}`;
   
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  const hayBorrador = cargarBorrador();
+
+  configurarHeader();
+  configurarWizard();
+  configurarMarca();
+  configurarRadioGroups();
+  configurarLogicaInteligente();
+  configurarPattern();
+  configurarFotos();
+  configurarServicios();
+  configurarBotonGenerarPDF();
+
+  const content = document.getElementById('wizardContent');
+  if (content) {
+    content.addEventListener('input', guardarBorradorDebounce);
+    content.addEventListener('change', guardarBorradorDebounce);
+  }
+
+  if (!hayBorrador) irAPaso(1);
   
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  actualizarBarraProgreso();
+  actualizarBotones();
+}
+
+/* ============================================================
+   PERSISTENCIA (BORRADOR)
+   ============================================================ */
+let timerGuardado = null;
+
+function guardarBorrador() {
+  try {
+    const copia = { ...datos };
+    copia.fotos = datos.fotos.map(f => f && f.dataUrl ? { dataUrl: f.dataUrl } : null);
+    localStorage.setItem('drxiaomi_borrador', JSON.stringify(copia));
+  } catch (e) {}
+}
+
+function guardarBorradorDebounce() {
+  clearTimeout(timerGuardado);
+  timerGuardado = setTimeout(guardarBorrador, 500);
+}
+
+function cargarBorrador() {
+  try {
+    const guardado = localStorage.getItem('drxiaomi_borrador');
+    if (!guardado) return false;
+    const d = JSON.parse(guardado);
+    if (!d.nombre) return false;
+    
+    Object.assign(datos, d);
+    if (!datos.fotos || datos.fotos.length !== 4) datos.fotos = [null, null, null, null];
+    
+    if (datos.nombre) document.getElementById('nombre').value = datos.nombre;
+    if (datos.telefono) document.getElementById('telefono').value = datos.telefono;
+    if (datos.modelo) document.getElementById('modelo').value = datos.modelo;
+    if (datos.color) document.getElementById('color').value = datos.color;
+    if (datos.falla) document.getElementById('fallaDetalle').value = datos.falla;
+    
+    toast('Borrador recuperado', 'info', 2000);
+    irAPaso(2); 
+    return true;
+  } catch (e) { return false; }
+}
+
+function limpiarBorrador() {
+  if (confirm('¿Borrar todo y empezar un recibo nuevo?')) {
+    localStorage.removeItem('drxiaomi_borrador');
+    window.location.reload();
+  }
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+function configurarHeader() {
+  document.getElementById('backToPanelBtn')?.addEventListener('click', () => {
+    haptic(10);
+    if (confirm('¿Salir? Tu borrador se guardará automáticamente.')) window.location.href = '/app/';
+  });
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  document.getElementById('clearDraftBtn')?.addEventListener('click', () => {
+    haptic(15);
+    limpiarBorrador();
+  });
+
+  document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    haptic(20);
+    if (confirm('¿Cerrar sesión?')) logout();
+  });
+
+  document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
+    const html = document.documentElement;
+    const nuevo = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', nuevo);
+    localStorage.setItem('theme', nuevo);
+  });
+}
+
+/* ============================================================
+   WIZARD Y LÓGICA INTELIGENTE
+   ============================================================ */
+function configurarWizard() {
+  document.getElementById('btnPrev')?.addEventListener('click', irPasoAnterior);
+  document.getElementById('btnNext')?.addEventListener('click', irPasoSiguiente);
+}
+
+function irPasoSiguiente() {
+  if (!validarPaso(pasoActual)) return;
+  guardarDatosPaso(pasoActual);
+  if (pasoActual < TOTAL_PASOS) irAPaso(pasoActual + 1);
+}
+
+function irPasoAnterior() {
+  guardarDatosPaso(pasoActual);
+  if (pasoActual > 1) irAPaso(pasoActual - 1);
+}
+
+function irAPaso(nuevoPaso) {
+  haptic(10);
+  pasoActual = nuevoPaso;
+
+  document.querySelectorAll('.wizard-panel').forEach(p => {
+    p.classList.add('hidden');
+    p.setAttribute('aria-hidden', 'true');
+  });
   
-  <style>
-    :root {
-      --bg-main: #09090B; --bg-card: rgba(24, 24, 27, 0.7); --bg-elev: #27272A;
-      --text-main: #FAFAFA; --text-mute: #A1A1AA; --border: rgba(255,255,255,0.08);
-      --brand: #FF6900; --brand-glow: rgba(255, 105, 0, 0.3); --success: #10B981; --danger: #EF4444; --warning: #FBBF24;
+  const panel = document.querySelector(`[data-panel="${pasoActual}"]`);
+  if (panel) {
+    panel.classList.remove('hidden');
+    panel.setAttribute('aria-hidden', 'false');
+    const appBody = document.getElementById('appBody');
+    if (appBody) appBody.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  if (pasoActual === 3) {
+    const valorEnciende = datos.enciende;
+    const cardReparaciones = document.getElementById('cardReparaciones');
+    const cardAuditoriaGeneral = document.getElementById('cardAuditoriaGeneral');
+    const cardAuditoriaFisica = document.getElementById('cardAuditoriaFisica');
+    
+    if (cardReparaciones) {
+      if (valorEnciende === 'Sí' || valorEnciende === 'A veces') {
+        cardReparaciones.classList.remove('hidden');
+        cardAuditoriaGeneral?.classList.remove('hidden');
+        cardAuditoriaFisica?.classList.add('hidden');
+      } else {
+        cardReparaciones.classList.add('hidden');
+        cardAuditoriaGeneral?.classList.add('hidden');
+        cardAuditoriaFisica?.classList.remove('hidden');
+      }
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; background-image: radial-gradient(circle at 50% 0%, rgba(255, 105, 0, 0.15), transparent 60%), radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.1), transparent 60%); background-attachment: fixed; }
-    .card { width: 100%; max-width: 440px; min-height: 100vh; display: flex; flex-direction: column; position: relative; overflow: hidden; }
-    .header { background: linear-gradient(135deg, #FF6900, #E55A00); color: white; padding: 20px; position: relative; border-radius: 0 0 30px 30px; box-shadow: 0 10px 30px var(--brand-glow); z-index: 2; display: flex; align-items: center; gap: 15px; }
-    .header::after { content: ''; position: absolute; inset: 0; background: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="p" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23p)"/></svg>'); border-radius: 0 0 30px 30px; pointer-events: none; }
-    .header-logo-container { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; position: relative; z-index: 3; animation: breathe 3s ease-in-out infinite; flex-shrink: 0; }
-    .header-logo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-    @keyframes breathe { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); } 50% { box-shadow: 0 0 15px 5px rgba(255,255,255,0.1); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); } }
-    .header-text { position: relative; z-index: 3; }
-    .header h1 { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 2px; line-height: 1; }
-    .header p { font-size: 12px; opacity: 0.9; font-weight: 600; background: rgba(0,0,0,0.2); display: inline-block; padding: 4px 10px; border-radius: 20px;}
-    .body { padding: 20px; flex: 1; z-index: 2; }
-    .glass-card { background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
-    .glass-card:nth-child(1) { animation-delay: 0.1s; }
-    .glass-card:nth-child(2) { animation-delay: 0.2s; }
-    .glass-card:nth-child(3) { animation-delay: 0.3s; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .aviso { padding: 14px; border-radius: 12px; font-size: 13px; text-align: center; margin-bottom: 20px; font-weight: 600; line-height: 1.4; backdrop-filter: blur(10px); }
-    .aviso-warning { background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.4); color: var(--warning); }
-    .aviso-danger { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: var(--danger); }
-    .estado-container { text-align: center; margin-bottom: 24px; }
-    .estado { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 30px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-    .row { display: flex; justify-content: space-between; margin-bottom: 14px; font-size: 14px; }
-    .row span:first-child { color: var(--text-mute); font-weight: 500; }
-    .row span:last-child { font-weight: 700; text-align: right; max-width: 60%; color: var(--text-main); }
-    .servicios-title { font-size: 11px; text-transform: uppercase; font-weight: 800; color: var(--text-mute); margin-bottom: 12px; letter-spacing: 1px; }
-    .total-box { background: rgba(0,0,0,0.2); border-radius: 16px; padding: 16px; margin-top: 20px; border: 1px solid var(--border); }
-    .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: var(--text-mute); font-weight: 500;}
-    .total-row:last-child { margin-bottom: 0; font-size: 22px; font-weight: 900; color: var(--text-main); margin-top: 12px; padding-top: 16px; border-top: 1px dashed var(--border); letter-spacing: -0.5px;}
-    .text-success { color: var(--success) !important; }
-    .text-danger { color: var(--danger) !important; }
-    .btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 18px; background: var(--brand); color: white; text-align: center; text-decoration: none; border-radius: 16px; font-weight: 700; font-size: 16px; border: none; cursor: pointer; margin-bottom: 12px; transition: 0.2s; position: relative; overflow: hidden; box-shadow: 0 8px 20px rgba(255, 105, 0, 0.3); }
-    .btn:active { transform: scale(0.96); }
-    .btn-wsp { background: #25D366; box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3); }
-    .btn-disabled { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-mute); cursor: not-allowed; box-shadow: none; }
-    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: var(--text-mute); font-size: 14px; font-weight: 500; }
-    .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-    .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 80px; font-weight: 900; color: rgba(255,255,255,0.03); pointer-events: none; white-space: nowrap; z-index: 1; text-transform: uppercase; }
-    .install-sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 9999; opacity: 0; pointer-events: none; transition: 0.3s; }
-    .install-sheet-overlay.show { opacity: 1; pointer-events: auto; }
-    .install-sheet { position: fixed; bottom: -100%; left: 0; right: 0; margin: 0 auto; max-width: 440px; background: #18181B; border-radius: 24px 24px 0 0; padding: 24px; padding-bottom: max(24px, env(safe-area-inset-bottom)); z-index: 10000; transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1); border-top: 1px solid rgba(255,255,255,0.1); box-shadow: 0 -10px 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; text-align: center; }
-    .install-sheet.show { bottom: 0; }
-    .install-icon { width: 64px; height: 64px; background: linear-gradient(135deg, #FF6900, #E55A00); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: white; margin-bottom: 16px; box-shadow: 0 8px 20px rgba(255,105,0,0.4); }
-    .install-sheet h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; color: white; }
-    .install-sheet p { font-size: 14px; color: #A1A1AA; margin-bottom: 24px; line-height: 1.4; }
-    .btn-install-main { background: linear-gradient(135deg, #FF6900, #E55A00); color: white; width: 100%; padding: 16px; border-radius: 14px; font-weight: 800; font-size: 16px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(255,105,0,0.3); margin-bottom: 12px; }
-    .btn-install-cancel { background: transparent; color: #A1A1AA; width: 100%; padding: 12px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; }
-  </style>
-</head>
-<body>
+  }
 
-  <div class="card" id="appCard">
-    <div class="loading">
-      <div class="spinner"></div>
-      Cargando tu recibo...
+  actualizarBarraProgreso();
+  actualizarBotones();
+  if (pasoActual === 7) generarVistaPrevia();
+}
+
+function actualizarBarraProgreso() {
+  const dots = document.querySelectorAll('.wizard-dot');
+  dots.forEach((dot, index) => {
+    const step = index + 1;
+    dot.classList.remove('active', 'done');
+    if (step < pasoActual) dot.classList.add('done');
+    else if (step === pasoActual) dot.classList.add('active');
+  });
+}
+
+function actualizarBotones() {
+  const btnPrev = document.getElementById('btnPrev');
+  const btnNext = document.getElementById('btnNext');
+  const btnGenerate = document.getElementById('btnGenerate');
+  if (!btnPrev || !btnNext || !btnGenerate) return;
+
+  btnPrev.style.display = pasoActual === 1 ? 'none' : 'flex';
+  if (pasoActual === TOTAL_PASOS) {
+    btnNext.style.display = 'none';
+    btnGenerate.style.display = 'flex';
+  } else {
+    btnNext.style.display = 'flex';
+    btnGenerate.style.display = 'none';
+  }
+}
+
+/* ============================================================
+   VALIDACIONES
+   ============================================================ */
+function validarPaso(paso) {
+  if (paso === 1) {
+    if (!document.getElementById('nombre')?.value.trim()) { toast('Falta el nombre del cliente', 'error'); return false; }
+    if (document.getElementById('telefono')?.value.length < 7) { toast('El teléfono debe tener al menos 7 dígitos', 'error'); return false; }
+  }
+  if (paso === 2) {
+    if (!document.getElementById('marca')?.value) { toast('Selecciona una marca', 'error'); return false; }
+    if (!document.getElementById('modelo')?.value.trim()) { toast('Falta el modelo del equipo', 'error'); return false; }
+    if (!document.getElementById('enciende')?.value) { toast('Indica si el equipo enciende', 'error'); return false; }
+  }
+  if (paso === 3) {
+    const enciende = document.getElementById('enciende')?.value;
+    if (enciende === 'Sí' || enciende === 'A veces') {
+      if (!document.getElementById('motivoIngreso')?.value) {
+        toast('Selecciona una reparación', 'error'); return false;
+      }
+    }
+  }
+  if (paso === 4) {
+    const tipo = document.getElementById('tipoSeguridad')?.value;
+    if (tipo === 'patron' && !document.getElementById('patronSecuencia')?.value) { toast('Dibuja el patrón', 'error'); return false; }
+    if (tipo === 'pin' && !document.getElementById('pinInput')?.value.trim()) { toast('Ingresa el PIN', 'error'); return false; }
+  }
+  if (paso === 6) {
+    let hayServicio = false;
+    document.querySelectorAll('.servicio-item').forEach(item => {
+      const desc = item.querySelector('.servicio-desc')?.value;
+      const costo = parseFloat(item.querySelector('.servicio-costo')?.value) || 0;
+      if (desc && costo > 0) hayServicio = true;
+    });
+    if (!hayServicio) { toast('Añade al menos un costo', 'error'); return false; }
+  }
+  return true;
+}
+
+function guardarDatosPaso(paso) {
+  if (paso === 1) {
+    datos.nombre = document.getElementById('nombre')?.value.trim() || '';
+    datos.telefono = document.getElementById('telefono')?.value.trim() || '';
+  }
+  if (paso === 2) {
+    datos.marca = document.getElementById('marca')?.value || '';
+    datos.modelo = document.getElementById('modelo')?.value.trim() || '';
+    datos.color = document.getElementById('color')?.value.trim() || '';
+    datos.enciende = document.getElementById('enciende')?.value || '';
+  }
+  if (paso === 3) {
+    datos.motivoIngreso = document.getElementById('motivoIngreso')?.value || '';
+    datos.falla = document.getElementById('fallaDetalle')?.value.trim() || '';
+    datos.checklist = document.getElementById('checklistResultados')?.value || '';
+  }
+  if (paso === 4) {
+    datos.tipoSeguridad = document.getElementById('tipoSeguridad')?.value || 'patron';
+    datos.pin = document.getElementById('pinInput')?.value.trim() || '';
+    datos.patronSecuencia = document.getElementById('patronSecuencia')?.value || '';
+  }
+  if (paso === 6) {
+    recolectarServicios();
+  }
+}
+
+/* ============================================================
+   MARCAS Y RADIOS
+   ============================================================ */
+function configurarMarca() {
+  const grid = document.getElementById('marcasGrid');
+  if (!grid) return;
+  grid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.marca-btn');
+    if (!btn) return;
+    haptic(8);
+    grid.querySelectorAll('.marca-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('marca').value = btn.dataset.marca;
+  });
+}
+
+function configurarRadioGroups() {
+  const enciendeGroup = document.getElementById('enciendeGroup');
+  if (enciendeGroup) {
+    enciendeGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.radio-option');
+      if (!btn) return;
+      haptic(8);
+      enciendeGroup.querySelectorAll('.radio-option').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('enciende').value = btn.dataset.value;
+    });
+  }
+
+  const tipoGroup = document.getElementById('tipoSeguridadGroup');
+  if (tipoGroup) {
+    tipoGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.radio-option');
+      if (!btn) return;
+      haptic(8);
+      tipoGroup.querySelectorAll('.radio-option').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tipo = btn.dataset.value;
+      document.getElementById('tipoSeguridad').value = tipo;
+      document.getElementById('pinContainer')?.classList.toggle('hidden', tipo !== 'pin');
+      document.getElementById('patronContainer')?.classList.toggle('hidden', tipo !== 'patron');
+    });
+  }
+}
+
+/* ============================================================
+   LÓGICA INTELIGENTE (CHIPS Y CHECKLIST)
+   ============================================================ */
+function configurarLogicaInteligente() {
+  const motivoGroup = document.getElementById('motivoIngresoGroup');
+  if (motivoGroup) {
+    motivoGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip-btn');
+      if (!btn) return;
+      haptic(8);
+      motivoGroup.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('motivoIngreso').value = btn.dataset.value;
+    });
+  }
+
+  const configurarChecklist = (idGroup) => {
+    const group = document.getElementById(idGroup);
+    if (!group) return;
+    group.addEventListener('click', (e) => {
+      const btn = e.target.closest('.check-item');
+      if (!btn) return;
+      haptic(10);
+      
+      if (!btn.classList.contains('ok') && !btn.classList.contains('falla')) {
+        btn.classList.add('ok'); 
+      } else if (btn.classList.contains('ok')) {
+        btn.classList.remove('ok');
+        btn.classList.add('falla');
+      } else {
+        btn.classList.remove('falla');
+      }
+      actualizarResultados();
+    });
+  };
+
+  configurarChecklist('checklistGeneralGroup');
+  configurarChecklist('checklistFisicoGroup');
+
+  function actualizarResultados() {
+    const resultados = [];
+    document.querySelectorAll('.check-item').forEach(btn => {
+      const item = btn.dataset.item;
+      if (btn.classList.contains('ok')) resultados.push(`${item}: OK`);
+      if (btn.classList.contains('falla')) resultados.push(`${item}: FALLA`);
+    });
+    const inputRes = document.getElementById('checklistResultados');
+    if (inputRes) inputRes.value = resultados.join(', ');
+  }
+}
+
+/* ============================================================
+   PATTERN LOCK
+   ============================================================ */
+function configurarPattern() {
+  const bgCanvas = document.getElementById('bgCanvas');
+  const lineCanvas = document.getElementById('lineCanvas');
+  if (!bgCanvas || !lineCanvas) return;
+
+  if (!document.getElementById('patronSecuencia')) {
+    const input = document.createElement('input');
+    input.type = 'hidden'; input.id = 'patronSecuencia';
+    document.body.appendChild(input);
+  }
+
+  const bgc = bgCanvas.getContext('2d');
+  const lnc = lineCanvas.getContext('2d');
+  const size = 300, r = 20, margin = 30;
+  const pts = []; let id = 1;
+  for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) pts.push({ id: id++, x: margin + 120 * x, y: margin + 120 * y, sel: false });
+
+  let path = [], drawing = false;
+
+  function drawBase() {
+    bgc.clearRect(0, 0, size, size);
+    pts.forEach(p => {
+      bgc.beginPath(); bgc.arc(p.x, p.y, r, 0, 2 * Math.PI);
+      bgc.fillStyle = p.sel ? '#E65100' : 'transparent'; bgc.fill();
+      bgc.strokeStyle = p.sel ? '#E65100' : '#555'; bgc.lineWidth = 3; bgc.stroke();
+    });
+  }
+
+  function drawLines(current) {
+    lnc.clearRect(0, 0, size, size);
+    if (path.length === 0) return;
+    lnc.strokeStyle = '#E65100'; lnc.lineWidth = 6; lnc.lineCap = 'round'; lnc.lineJoin = 'round';
+    lnc.beginPath(); lnc.moveTo(path[0].x, path[0].y);
+    path.forEach(p => lnc.lineTo(p.x, p.y));
+    if (drawing && current) lnc.lineTo(current.x, current.y);
+    lnc.stroke();
+  }
+
+  function getPos(e) {
+    const rect = lineCanvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: (t.clientX - rect.left) * (size / rect.width), y: (t.clientY - rect.top) * (size / rect.height) };
+  }
+
+  function hit(p) { return pts.find(pt => !pt.sel && Math.hypot(pt.x - p.x, pt.y - p.y) < r + 25); }
+
+  function updateSeq() {
+    const seq = path.map(p => p.id).join(',');
+    document.getElementById('patronSecuencia').value = seq;
+    const display = document.getElementById('pattern-sequence');
+    if (display) display.textContent = seq ? path.map(p => p.id).join(' → ') : 'Sin patrón';
+  }
+
+  lineCanvas.addEventListener('mousedown', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); });
+  lineCanvas.addEventListener('mousemove', (e) => {
+    if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
+    if (h) { h.sel = true; path.push(h); haptic(10); drawBase(); updateSeq(); }
+    drawLines(p);
+  });
+  lineCanvas.addEventListener('mouseup', () => { drawing = false; drawLines(); updateSeq(); });
+  lineCanvas.addEventListener('mouseleave', () => { drawing = false; drawLines(); updateSeq(); });
+
+  lineCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; path = []; pts.forEach(p => p.sel = false); updateSeq(); drawBase(); }, { passive: false });
+  lineCanvas.addEventListener('touchmove', (e) => {
+    if (!drawing) return; e.preventDefault(); const p = getPos(e); const h = hit(p);
+    if (h) { h.sel = true; path.push(h); haptic(10); drawBase(); updateSeq(); }
+    drawLines(p);
+  }, { passive: false });
+  lineCanvas.addEventListener('touchend', (e) => { e.preventDefault(); drawing = false; drawLines(); updateSeq(); }, { passive: false });
+
+  document.getElementById('clearPattern')?.addEventListener('click', () => {
+    haptic(10); path = []; pts.forEach(p => p.sel = false); drawBase(); lnc.clearRect(0, 0, size, size); updateSeq();
+  });
+
+  drawBase();
+}
+
+/* ============================================================
+   FOTOS
+   ============================================================ */
+function configurarFotos() {
+  const grid = document.getElementById('fotosGrid');
+  const sheet = document.getElementById('fotoSheet');
+  const inputCamara = document.getElementById('inputCamara');
+  const inputGaleria = document.getElementById('inputGaleria');
+  
+  if (!grid) return;
+
+  let slotActual = null;
+
+  grid.addEventListener('click', (e) => {
+    const slot = e.target.closest('.foto-slot');
+    if (!slot) return;
+
+    if (e.target.closest('.foto-remove')) {
+      e.stopPropagation(); haptic(15);
+      const idx = parseInt(slot.dataset.slot);
+      datos.fotos[idx] = null; renderSlots(); return;
+    }
+
+    const idx = parseInt(slot.dataset.slot);
+    if (datos.fotos[idx]) return;
+
+    slotActual = idx; haptic(10);
+    if (sheet) sheet.classList.add('show');
+  });
+
+  const cerrarSheet = () => sheet?.classList.remove('show');
+  document.getElementById('btnCancelarFoto')?.addEventListener('click', cerrarSheet);
+
+  document.getElementById('btnTomarFoto')?.addEventListener('click', () => {
+    cerrarSheet();
+    if (inputCamara) inputCamara.click();
+    else toast('Cámara no disponible', 'error');
+  });
+
+  document.getElementById('btnSubirFoto')?.addEventListener('click', () => {
+    cerrarSheet();
+    if (inputGaleria) inputGaleria.click();
+    else toast('Galería no disponible', 'error');
+  });
+
+  async function procesarFoto(e) {
+    const file = e.target.files[0];
+    if (file && slotActual !== null) {
+      haptic(10);
+      try {
+        const dataUrl = await comprimirImagen(file);
+        datos.fotos[slotActual] = { file, dataUrl };
+        renderSlots(); toast('Foto añadida', 'success', 1500); guardarBorradorDebounce();
+      } catch (err) { toast('Error al procesar imagen', 'error'); }
+    }
+    e.target.value = ''; 
+    slotActual = null;
+  }
+
+  inputCamara?.addEventListener('change', procesarFoto);
+  inputGaleria?.addEventListener('change', procesarFoto);
+
+  function renderSlots() {
+    grid.querySelectorAll('.foto-slot').forEach((slot, i) => {
+      const f = datos.fotos[i];
+      if (f && f.dataUrl) {
+        slot.classList.add('filled');
+        slot.innerHTML = `<img src="${f.dataUrl}" alt="Foto"><button type="button" class="foto-remove"><i class="fas fa-times"></i></button>`;
+      } else {
+        slot.classList.remove('filled');
+        slot.innerHTML = `<i class="fas fa-camera"></i><span>Añadir</span>`;
+      }
+    });
+  }
+  renderSlots();
+}
+
+async function comprimirImagen(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > 400) { h = h * 400 / w; w = 400; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.5));
+      };
+      img.onerror = reject; img.src = e.target.result;
+    };
+    reader.onerror = reject; reader.readAsDataURL(file);
+  });
+}
+
+/* ============================================================
+   SERVICIOS Y COSTOS
+   ============================================================ */
+function configurarServicios() {
+  const list = document.getElementById('serviciosList');
+  const btnAdd = document.getElementById('addServicio');
+  const preciosGroup = document.getElementById('preciosRapidosGroup');
+  if (!list || !btnAdd) return;
+
+  list.addEventListener('input', (e) => {
+    if (e.target.classList.contains('servicio-costo')) calcularTotal();
+  });
+
+  list.addEventListener('click', (e) => {
+    if (e.target.closest('.removeServicio')) {
+      haptic(15);
+      const item = e.target.closest('.servicio-item');
+      if (list.querySelectorAll('.servicio-item').length > 1) {
+        item.remove(); calcularTotal();
+      }
+    }
+  });
+
+  btnAdd.addEventListener('click', () => {
+    haptic(10);
+    const item = crearServicioItem('', '');
+    list.appendChild(item);
+    item.querySelector('.servicio-desc').focus();
+  });
+
+  if (preciosGroup) {
+    preciosGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip-btn');
+      if (!btn) return;
+      haptic(8);
+      const precio = btn.dataset.precio;
+      let llenado = false;
+      
+      document.querySelectorAll('.servicio-costo').forEach(input => {
+        if (!input.value && !llenado) {
+          input.value = precio;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          llenado = true;
+        }
+      });
+
+      if (!llenado) {
+        const item = crearServicioItem('Reparación extra', precio);
+        list.appendChild(item);
+        calcularTotal();
+      }
+    });
+  }
+
+  document.getElementById('adelanto')?.addEventListener('input', calcularTotal);
+  
+  if (list.children.length === 0) list.appendChild(crearServicioItem('', ''));
+}
+
+function crearServicioItem(desc, costo) {
+  const div = document.createElement('div');
+  div.className = 'servicio-item';
+  div.innerHTML = `
+    <input type="text" class="servicio-desc" placeholder="Ej. Cambio de pantalla" value="${desc}">
+    <input type="number" class="servicio-costo" placeholder="Bs." value="${costo}" step="0.01" min="0">
+    <button type="button" class="removeServicio"><i class="fas fa-times"></i></button>
+  `;
+  return div;
+}
+
+function calcularTotal() {
+  let total = 0;
+  document.querySelectorAll('.servicio-costo').forEach(input => {
+    total += parseFloat(input.value) || 0;
+  });
+  
+  const adelanto = parseFloat(document.getElementById('adelanto')?.value) || 0;
+  const totalDisplay = document.getElementById('costoTotalDisplay');
+  const saldoDisplay = document.getElementById('saldoDisplay');
+  const costoTotalInput = document.getElementById('costoTotal');
+  
+  if (costoTotalInput) costoTotalInput.value = total.toFixed(2);
+  if (totalDisplay) totalDisplay.textContent = formatBs(total);
+  if (saldoDisplay) saldoDisplay.textContent = formatBs(Math.max(0, total - adelanto));
+}
+
+function recolectarServicios() {
+  datos.servicios = [];
+  document.querySelectorAll('.servicio-item').forEach(item => {
+    const desc = item.querySelector('.servicio-desc')?.value.trim() || '';
+    const costo = parseFloat(item.querySelector('.servicio-costo')?.value) || 0;
+    if (desc || costo > 0) {
+      datos.servicios.push({ desc: desc || 'Reparación', costo });
+    }
+  });
+  datos.total = parseFloat(document.getElementById('costoTotal')?.value) || 0;
+  datos.adelanto = parseFloat(document.getElementById('adelanto')?.value) || 0;
+  datos.saldo = Math.max(0, datos.total - datos.adelanto);
+}
+
+/* ============================================================
+   VISTA PREVIA (PASO 7)
+   ============================================================ */
+function generarVistaPrevia() {
+  guardarDatosPaso(6);
+  const cont = document.getElementById('previewContainer');
+  if (!cont) return;
+
+  const serviciosHtml = datos.servicios.map(s => 
+    `<tr><td>${escapeHtml(s.desc)}</td><td style="text-align:right">${formatBs(s.costo)}</td></tr>`
+  ).join('');
+
+  const fotosValidas = datos.fotos.filter(f => f && f.dataUrl);
+  const fotosHtml = fotosValidas.length > 0 
+    ? `<div class="preview-section" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">${fotosValidas.map(f => `<img src="${f.dataUrl}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">`).join('')}</div>` 
+    : '';
+
+  let seguridadTexto = 'Ninguna';
+  if (datos.tipoSeguridad === 'pin' && datos.pin) {
+    seguridadTexto = `PIN: ${escapeHtml(datos.pin)}`;
+  } else if (datos.tipoSeguridad === 'patron' && datos.patronSecuencia) {
+    seguridadTexto = `Patrón: ${datos.patronSecuencia.split(',').join(' → ')}`;
+  } else if (datos.tipoSeguridad === 'ninguno') {
+    seguridadTexto = 'Sin bloqueo';
+  }
+
+  cont.innerHTML = `
+    <div class="preview-recibo">
+      <div class="preview-header">
+        <img src="${CONFIG.logoUrl}" onerror="this.style.display='none'">
+        <div>
+          <h3 style="margin:0;font-size:16px;">${CONFIG.nombreTienda}</h3>
+          <p style="margin:0;font-size:10px;">Recibo de Ingreso</p>
+        </div>
+      </div>
+      
+      <div class="preview-section">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>CLIENTE:</strong> <span>${escapeHtml(datos.nombre)}</span></div>
+        <div style="display:flex;justify-content:space-between;"><strong>TELÉFONO:</strong> <span>${escapeHtml(datos.telefono)}</span></div>
+      </div>
+
+      <div class="preview-section">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>EQUIPO:</strong> <span>${escapeHtml(datos.marca)} ${escapeHtml(datos.modelo)} (${escapeHtml(datos.color || 'N/A')})</span></div>
+        <div style="display:flex;justify-content:space-between;color:#E65100;"><strong>DESBLOQUEO:</strong> <span>${seguridadTexto}</span></div>
+      </div>
+
+      <div class="preview-section">
+        <div><strong>MOTIVO / FALLA:</strong> ${escapeHtml(datos.motivoIngreso || datos.falla || '-')}</div>
+        <div style="margin-top:4px; font-size:10px; color:#666;"><strong>CHECKLIST:</strong> ${escapeHtml(datos.checklist || 'Todo OK')}</div>
+      </div>
+
+      <table style="width:100%; font-size:11px; margin-top:10px; border-collapse:collapse;">
+        <thead><tr style="border-bottom:1px solid #ddd;"><th align="left" style="padding:6px 0;">Servicio</th><th align="right" style="padding:6px 0;">Costo</th></tr></thead>
+        <tbody>${serviciosHtml}</tbody>
+      </table>
+
+      <div class="preview-totales">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Total:</span><b>${formatBs(datos.total)}</b></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Adelanto:</span><b>${formatBs(datos.adelanto)}</b></div>
+        <div style="display:flex;justify-content:space-between;color:#E65100;font-size:14px;margin-top:8px;"><span>SALDO A PAGAR:</span><b>${formatBs(datos.saldo)}</b></div>
+      </div>
+
+      ${fotosHtml}
     </div>
-  </div>
+  `;
+}
 
-  <div class="install-sheet-overlay" id="installOverlay"></div>
-  <div class="install-sheet" id="installSheet">
-    <div class="install-icon"><i class="fas fa-mobile-screen-button"></i></div>
-    <h3>Instala nuestra App</h3>
-    <p>Recibe notificaciones en tiempo real y revisa el estado de tu reparación sin abrir el navegador.</p>
-    <button class="btn-install-main" id="btnConfirmInstall"><i class="fas fa-download"></i> Instalar Ahora</button>
-    <button class="btn-install-cancel" id="btnCancelInstall">Quizás más tarde</button>
-  </div>
+/* ============================================================
+   GENERACIÓN DE PDF Y GUARDADO EN FIRESTORE
+   ============================================================ */
+function configurarBotonGenerarPDF() {
+  const btn = document.getElementById('btnGenerate');
+  if (!btn) return;
+  let generando = false;
 
-  <script type="module">
-    import { db } from '/js/firebase.js';
-    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  btn.addEventListener('click', async () => {
+    if (generando) return;
+    if (!validarPaso(6)) return;
+    
+    generando = true;
+    guardarDatosPaso(6);
+    
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    btn.style.opacity = '0.7';
 
-    const params = new URLSearchParams(window.location.search);
-    const reciboId = params.get('id');
-    const appCard = document.getElementById('appCard');
+    try {
+      const num = generarNumeroRecibo();
+      const paquete = {
+        numeroRecibo: num,
+        cliente: datos.nombre,
+        telefono: datos.telefono,
+        marca: datos.marca,
+        modelo: datos.modelo,
+        color: datos.color,
+        enciende: datos.enciende,
+        falla: datos.falla,
+        motivoIngreso: datos.motivoIngreso,
+        checklist: datos.checklist,
+        tipoSeguridad: datos.tipoSeguridad,
+        pin: datos.pin,
+        patron: datos.patronSecuencia,
+        servicios: datos.servicios,
+        total: datos.total,
+        adelanto: datos.adelanto,
+        saldo: datos.saldo,
+        fotos: datos.fotos.filter(f => f && f.dataUrl).map(f => f.dataUrl),
+        estadoOrden: 'recibido',
+        fecha: serverTimestamp(),
+        creadoPor: sesion.nombre,
+        montoCobrado: 0,
+        costoRepuesto: 0
+      };
 
-    let deferredPrompt;
-    const installOverlay = document.getElementById('installOverlay');
-    const installSheet = document.getElementById('installSheet');
-    const btnConfirmInstall = document.getElementById('btnConfirmInstall');
-    const btnCancelInstall = document.getElementById('btnCancelInstall');
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      setTimeout(() => {
-        if (!localStorage.getItem('ocultar_install_banner')) {
-          installOverlay.classList.add('show');
-          installSheet.classList.add('show');
-        }
-      }, 2000);
-    });
-
-    function cerrarSheetInstall() {
-      installOverlay.classList.remove('show');
-      installSheet.classList.remove('show');
-    }
-
-    btnCancelInstall?.addEventListener('click', () => {
-      cerrarSheetInstall();
-      localStorage.setItem('ocultar_install_banner', 'true');
-    });
-
-    btnConfirmInstall?.addEventListener('click', async () => {
-      if (!deferredPrompt) {
-        alert('Para instalar la app, abre el menú de tu navegador y selecciona "Añadir a pantalla de inicio".');
-        return;
-      }
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') cerrarSheetInstall();
-      deferredPrompt = null;
-    });
-
-    if (!reciboId) {
-      appCard.innerHTML = '<div class="loading" style="color:var(--danger)"><i class="fas fa-times-circle" style="font-size:40px; margin-bottom:15px;"></i>No se especificó un recibo.</div>';
-    } else {
-      buscarRecibo(reciboId);
-    }
-
-    async function buscarRecibo(id) {
-      try {
-        const q = query(collection(db, 'recibos'), where('numeroRecibo', '==', id));
-        const snap = await getDocs(q);
-
-        if (snap.empty) {
-          appCard.innerHTML = '<div class="loading" style="color:var(--danger)"><i class="fas fa-search-minus" style="font-size:40px; margin-bottom:15px;"></i>Recibo no encontrado o eliminado.</div>';
-          return;
-        }
-
-        const recibo = snap.docs[0].data();
-        renderizarRecibo(recibo, id);
-      } catch (error) {
-        console.error(error);
-        appCard.innerHTML = '<div class="loading" style="color:var(--danger)"><i class="fas fa-wifi" style="font-size:40px; margin-bottom:15px;"></i>Error de conexión.</div>';
-      }
-    }
-
-    function renderizarRecibo(r, id) {
-      let estadoTexto = 'Recibido'; let estadoColor = '#9CA3AF'; let estadoIcono = 'fa-box';
-      if (r.estadoOrden === 'reparacion') { estadoTexto = 'En Reparación'; estadoColor = 'var(--brand)'; estadoIcono = 'fa-screwdriver-wrench'; }
-      else if (r.estadoOrden === 'espera-repuesto') { estadoTexto = 'Esperando Repuesto'; estadoColor = '#8B5CF6'; estadoIcono = 'fa-clock'; }
-      else if (r.estadoOrden === 'listo') { estadoTexto = 'Listo para Entregar'; estadoColor = 'var(--warning)'; estadoIcono = 'fa-check-circle'; }
-      else if (r.estadoOrden === 'entregado') { estadoTexto = 'Entregado'; estadoColor = 'var(--success)'; estadoIcono = 'fa-handshake'; }
-      else if (r.estadoOrden === 'devuelto') { estadoTexto = 'Devuelto'; estadoColor = '#3B82F6'; estadoIcono = 'fa-rotate-left'; }
-
-      let avisoHtml = ''; let botonDescargaHtml = `<button class="btn" id="btnDescargar"><i class="fas fa-file-pdf"></i> Descargar Recibo PDF</button>`; let diasRestantes = 30;
-      if (r.estadoOrden === 'entregado' && r.fechaEntrega) {
-        let fecha = r.fechaEntrega.toDate ? r.fechaEntrega.toDate() : new Date(r.fechaEntrega);
-        diasRestantes = 30 - Math.floor((new Date() - fecha) / (1000 * 60 * 60 * 24));
-        if (diasRestantes <= 0) { avisoHtml = `<div class="aviso aviso-danger">⚠️ Este enlace de descarga ha expirado.</div>`; botonDescargaHtml = `<button class="btn btn-disabled" disabled><i class="fas fa-lock"></i> PDF Expirado</button>`; }
-        else if (diasRestantes <= 15) { avisoHtml = `<div class="aviso aviso-warning">⏳ Te quedan <b>${diasRestantes} días</b> para descargar este PDF. ¡Guárdalo!</div>`; }
-      }
-
-      let fechaIngreso = '-';
-      if (r.fechaEditada || r.fecha) {
-        let d = (r.fechaEditada || r.fecha).toDate ? (r.fechaEditada || r.fecha).toDate() : new Date(r.fechaEditada || r.fecha);
-        fechaIngreso = d.toLocaleDateString('es-BO', { day: '2-digit', month: 'short', year: 'numeric' });
-      }
-
-      const serviciosHtml = (r.servicios || []).map(s => `<div class="row"><span>${s.desc}</span><span>Bs. ${Number(s.costo).toFixed(2)}</span></div>`).join('');
-
-      appCard.innerHTML = `
-        <div class="watermark">DR. XIAOMI</div>
-        <div class="header">
-          <div class="header-logo-container"><img src="/imagenes/web-app-manifest-192x192.png" alt="Logo" class="header-logo" onerror="this.style.display='none'"></div>
-          <div class="header-text"><h1>DR. XIAOMI</h1><p>Recibo N°: ${r.numeroRecibo}</p></div>
-        </div>
-        <div class="body">
-          ${avisoHtml}
-          <div class="estado-container"><span class="estado" style="background: ${estadoColor}20; color: ${estadoColor}; border: 1px solid ${estadoColor}40;"><i class="fas ${estadoIcono}"></i> ${estadoTexto}</span></div>
-          <div class="glass-card">
-            <div class="row"><span>Cliente</span> <span>${r.cliente}</span></div>
-            <div class="row"><span>Equipo</span> <span>${r.marca} ${r.modelo}</span></div>
-            <div class="row"><span>Falla reportada</span> <span>${r.falla || 'No especificada'}</span></div>
-            <div class="row"><span>Fecha de Ingreso</span> <span>${fechaIngreso}</span></div>
-          </div>
-          <div class="glass-card">
-            <div class="servicios-title">Servicios Realizados</div>
-            ${serviciosHtml || '<div class="row"><span>Sin servicios</span><span>-</span></div>'}
-            <div class="total-box">
-              <div class="total-row"><span>Total</span> <span>Bs. ${Number(r.total || 0).toFixed(2)}</span></div>
-              ${r.adelanto > 0 ? `<div class="total-row"><span>Adelanto</span> <span>Bs. ${Number(r.adelanto).toFixed(2)}</span></div>` : ''}
-              <div class="total-row"><span>${r.saldo > 0 ? 'Saldo Pendiente' : 'Estado'}</span> <span class="${r.saldo > 0 ? 'text-danger' : 'text-success'}">${r.saldo > 0 ? `Bs. ${Number(r.saldo).toFixed(2)}` : '✅ Pagado'}</span></div>
-            </div>
-          </div>
-          <div style="margin-top: 10px;">
-            ${botonDescargaHtml}
-            <a class="btn btn-wsp" href="https://wa.me/59175959450?text=Hola,%20consulto%20por%20mi%20recibo%20${r.numeroRecibo}"><i class="fab fa-whatsapp"></i> Contactar al Taller</a>
-          </div>
-        </div>
-      `;
-
-      if (diasRestantes > 0 || r.estadoOrden !== 'entregado') {
-        document.getElementById('btnDescargar')?.addEventListener('click', () => generarPDFPremium(r));
-      }
-    }
-
-    // =====================================================================
-    // 🔥 MOTOR DE PDF FORMATO TICKET (TODO EN UNA SOLA TIRA LARGA)
-    // =====================================================================
-    async function generarPDFPremium(r) {
-      const btn = document.getElementById('btnDescargar');
-      const textoOriginal = btn.innerHTML;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
-      btn.style.opacity = '0.7';
-      btn.disabled = true;
+      const docRef = await addDoc(collection(db, 'recibos'), paquete);
+      console.log('✅ Recibo guardado en Firestore con ID:', docRef.id);
 
       try {
-        const { jsPDF } = window.jspdf;
+        const resultadoPDF = await generarPDFUnificado(paquete, 'guardar_en_nube');
         
-        // 🔥 FORMATO TICKET (Ancho 80mm, Alto dinámico)
-        const pdf = new jsPDF({ unit: 'mm', format: [80, 250] });
-        const W = 80, M = 5, CW = W - M * 2;
-        let y = 0;
+        if (resultadoPDF && resultadoPDF.success) {
+          const btnDescargar = document.getElementById('downloadPdfBtn');
+          if (btnDescargar) {
+            btnDescargar.onclick = () => {
+              try {
+                resultadoPDF.pdf.save(resultadoPDF.nombreArchivo);
+                toast('PDF descargado', 'success');
+              } catch (e) { toast('Error al descargar', 'error'); }
+            };
+          }
 
-        const logoDataUrl = await getLogoDataUrl();
-        const qrDataUrl = await getQRDataUrl(`https://xiaomi.scz.red/recibo/?id=${r.numeroRecibo}`);
-
-        // 1. ENCABEZADO NARANJA
-        pdf.setFillColor(255, 105, 0); pdf.rect(0, 0, W, 25, 'F');
-        
-        if (logoDataUrl) {
-          try {
-            pdf.setFillColor(255, 255, 255);
-            pdf.circle(W / 2, 8, 5, 'F'); // Logo al centro
-            pdf.addImage(logoDataUrl, 'PNG', W / 2 - 4, 4, 8, 8); 
-          } catch (e) {}
+          const btnCompartir = document.getElementById('btnCompartirNativo');
+          if (btnCompartir) {
+            btnCompartir.onclick = async () => {
+              const blob = resultadoPDF.pdf.output('blob');
+              const file = new File([blob], resultadoPDF.nombreArchivo, { type: 'application/pdf' });
+              
+              if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                  await navigator.share({
+                    title: 'Recibo DR. Xiaomi',
+                    text: `Hola ${datos.nombre}, aquí tienes tu recibo.`,
+                    files: [file]
+                  });
+                } catch (err) { console.log('Compartir cancelado'); }
+              } else {
+                resultadoPDF.pdf.save(resultadoPDF.nombreArchivo);
+                toast('PDF descargado. Adjúntalo en WhatsApp.', 'info', 4000);
+              }
+            };
+          }
         }
-
-        pdf.setTextColor(255, 255, 255); 
-        pdf.setFont('helvetica', 'bold'); 
-        pdf.setFontSize(14);
-        pdf.text('DR. XIAOMI SCZ', W / 2, 19, { align: 'center' });
-        
-        pdf.setFontSize(7); 
-        pdf.setFont('helvetica', 'normal');
-        pdf.text('Servicio Técnico Especializado', W / 2, 23, { align: 'center' });
-
-        y = 30;
-
-        // 2. DATOS DEL RECIBO (Texto simple)
-        pdf.setTextColor(30, 30, 30); 
-        pdf.setFont('helvetica', 'bold'); 
-        pdf.setFontSize(10);
-        pdf.text(`RECIBO: ${r.numeroRecibo}`, W / 2, y, { align: 'center' });
-        y += 5;
-        
-        pdf.setFont('helvetica', 'normal'); 
-        pdf.setFontSize(8);
-        pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, W / 2, y, { align: 'center' });
-        y += 6;
-
-        // Línea divisoria
-        pdf.setDrawColor(200, 200, 200); pdf.setLineWidth(0.3);
-        pdf.line(M, y, W - M, y);
-        y += 5;
-
-        // 3. DATOS CLIENTE
-        pdf.setFontSize(8); pdf.setTextColor(100, 100, 100);
-        pdf.text('CLIENTE:', M, y); y += 4;
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9);
-        pdf.text((r.cliente || '').slice(0, 25), M, y); y += 4;
-        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(100, 100, 100);
-        pdf.text(`Tel: ${r.telefono || ''}`, M, y); y += 6;
-
-        // 4. DATOS EQUIPO
-        pdf.setTextColor(100, 100, 100);
-        pdf.text('EQUIPO:', M, y); y += 4;
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9);
-        pdf.text(`${r.marca || ''} ${r.modelo || ''}`.slice(0, 25), M, y); y += 4;
-        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(100, 100, 100);
-        pdf.text(`Enciende: ${r.enciende || 'Sí'}`, M, y); y += 6;
-
-        // 5. FALLA
-        pdf.setTextColor(100, 100, 100);
-        pdf.text('FALLA:', M, y); y += 4;
-        pdf.setTextColor(30, 30, 30);
-        pdf.text(pdf.splitTextToSize(r.falla || 'No especificada', CW), M, y); y += 6;
-
-        // 6. CLAVE
-        pdf.setTextColor(100, 100, 100);
-        pdf.text('CLAVE:', M, y); y += 4;
-        pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold');
-        let segInfo = r.tipoSeguridad === 'pin' ? `PIN: ${r.pin}` : (r.patron ? `Patrón: ${r.patron.split(',').join('-')}` : 'Sin clave');
-        pdf.text(segInfo, M, y); y += 6;
-
-        // Línea divisoria
-        pdf.setDrawColor(200, 200, 200); pdf.line(M, y, W - M, y); y += 5;
-
-        // 7. TABLA DE SERVICIOS (Ticket)
-        pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8);
-        pdf.text('SERVICIOS', M, y); 
-        pdf.text('COSTO', W - M, y, { align: 'right' }); 
-        y += 4;
-
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'normal');
-        (r.servicios || []).forEach(s => {
-          pdf.text(s.desc.slice(0, 30), M, y);
-          pdf.text(`Bs. ${Number(s.costo).toFixed(2)}`, W - M, y, { align: 'right' });
-          y += 5;
-        });
-
-        y += 2;
-        pdf.setDrawColor(200, 200, 200); pdf.line(M, y, W - M, y); y += 5;
-
-        // 8. TOTALES
-        pdf.setFontSize(9); pdf.setTextColor(100, 100, 100);
-        pdf.text('Total:', M, y);
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold');
-        pdf.text(`Bs. ${Number(r.total || 0).toFixed(2)}`, W - M, y, { align: 'right' });
-        y += 5;
-
-        if (r.adelanto > 0) {
-          pdf.setFont('helvetica', 'normal'); pdf.setTextColor(100, 100, 100);
-          pdf.text('Adelanto:', M, y);
-          pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold');
-          pdf.text(`- Bs. ${Number(r.adelanto).toFixed(2)}`, W - M, y, { align: 'right' });
-          y += 5;
-        }
-
-        pdf.setFillColor(255, 245, 235);
-        pdf.roundedRect(M, y - 2, CW, 10, 2, 2, 'F');
-        pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11);
-        pdf.text('SALDO:', M + 2, y + 4);
-        pdf.text(`Bs. ${Number(r.saldo || 0).toFixed(2)}`, W - M - 2, y + 4, { align: 'right' });
-        y += 14;
-
-        // 9. QR Y BANNER
-        if (qrDataUrl) {
-          try {
-            pdf.addImage(qrDataUrl, 'PNG', W / 2 - 10, y, 20, 20);
-            y += 22;
-            pdf.setTextColor(100, 100, 100); pdf.setFontSize(7);
-            pdf.text('Escanea para ver tu recibo', W / 2, y, { align: 'center' });
-          } catch (e) {}
-        }
-
-        // 10. PIE DE PÁGINA
-        pdf.setFillColor(255, 105, 0); pdf.rect(0, y + 5, W, 10, 'F');
-        pdf.setTextColor(255, 255, 255); pdf.setFontSize(7); pdf.setFont('helvetica', 'bold');
-        pdf.text('¡Gracias por confiar en DR. XIAOMI!', W / 2, y + 11, { align: 'center' });
-
-        // 🔥 GUARDAR EL PDF (con alto dinámico para que no sobre espacio)
-        const finalY = y + 15;
-        pdf.save(`Recibo_${r.numeroRecibo}.pdf`);
-
-      } catch (err) {
-        console.error("Error generando PDF:", err);
-        alert("Hubo un error al generar el PDF. Revisa tu conexión.");
-      } finally {
-        btn.innerHTML = textoOriginal;
-        btn.style.opacity = '1';
-        btn.disabled = false;
+      } catch (pdfError) {
+        console.error('PDF falló, pero el recibo se guardó:', pdfError);
       }
-    }
 
-    async function getLogoDataUrl() {
-      return new Promise((resolve) => {
-        const img = new Image(); img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          try {
-            const c = document.createElement('canvas');
-            c.width = img.width; c.height = img.height;
-            c.getContext('2d').drawImage(img, 0, 0);
-            resolve(c.toDataURL('image/png'));
-          } catch (e) { resolve(''); }
-        };
-        img.onerror = () => resolve('');
-        img.src = '/imagenes/web-app-manifest-192x192.png';
-      });
-    }
+      localStorage.removeItem('drxiaomi_borrador');
+      document.getElementById('successNumero').textContent = num;
+      document.getElementById('successModal').classList.add('show');
+      window._ultimoRecibo = paquete;
+      configurarWhatsApp();
 
-    async function getQRDataUrl(texto) {
-      return new Promise((resolve) => {
-        if (typeof QRCode === 'undefined') { resolve(''); return; }
-        const div = document.createElement('div');
-        div.style.cssText = 'position:absolute;left:-9999px;';
-        document.body.appendChild(div);
-        try {
-          new QRCode(div, { text: texto, width: 256, height: 256, correctLevel: QRCode.CorrectLevel.M });
-          setTimeout(() => {
-            const canvas = div.querySelector('canvas'), img = div.querySelector('img');
-            let dataUrl = canvas ? canvas.toDataURL('image/png') : (img && img.src ? img.src : '');
-            div.remove(); resolve(dataUrl);
-          }, 200);
-        } catch (e) { div.remove(); resolve(''); }
-      });
+    } catch (error) {
+      console.error("Error al guardar en Firestore:", error);
+      toast('Error al guardar en la base de datos: ' + error.message, 'error', 5000);
+    } finally {
+      generando = false;
+      btn.innerHTML = textoOriginal;
+      btn.style.opacity = '1';
     }
-  </script>
-</body>
-</html>
+  });
+
+  document.getElementById('backToPanelBtn2')?.addEventListener('click', () => {
+    window.location.href = '/app/';
+  });
+}
+
+function configurarWhatsApp() {
+  const btn = document.getElementById('sendWhatsappBtn');
+  if (!btn) return;
+  
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  
+  newBtn.addEventListener('click', () => {
+    const recibo = window._ultimoRecibo;
+    if (!recibo) return;
+    
+    haptic(15);
+    
+    // 🔥 CORRECCIÓN AQUÍ: Usamos la URL completa para que no agregue la ruta actual
+    const urlRecibo = `https://xiaomi.scz.red/recibo/?id=${recibo.numeroRecibo}`;
+    
+    const mensaje = `Hola ${recibo.cliente.split(' ')[0]},\n\nHemos recibido tu equipo *${recibo.marca} ${recibo.modelo}*.\n\n📄 *Puedes ver y descargar tu recibo aquí:*\n${urlRecibo}\n\nN° Recibo: ${recibo.numeroRecibo}\nTotal: ${formatBs(recibo.total)}\n${recibo.saldo > 0 ? `Saldo pendiente: ${formatBs(recibo.saldo)}` : '✅ Pagado'}\n\nTe avisaremos por este medio cuando esté listo.\n\nDR. XIAOMI SCZ`;
+    
+    window.open(`https://wa.me/591${recibo.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`, '_blank');
+  });
+}
+
+function generarNumeroRecibo() {
+  const f = new Date();
+  return `REC-${String(f.getDate()).padStart(2, '0')}${String(f.getMonth() + 1).padStart(2, '0')}${String(f.getFullYear()).slice(-2)}-${String(f.getHours()).padStart(2, '0')}${String(f.getMinutes()).padStart(2, '0')}${String(f.getSeconds()).padStart(2, '0')}`;
+}
