@@ -3,8 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#09090B">
+  <meta name="theme-color" content="#FF6900">
   <title>Tu Recibo - DR. XIAOMI</title>
+
+  <!-- 🔥 FAVICONS -->
+  <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
+  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
+  <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
+
+  <!-- 🔥 VISTA PREVIA PARA WHATSAPP Y REDES SOCIALES (Open Graph) -->
+  <meta property="og:title" content="Recibo de Reparación - DR. XIAOMI SCZ">
+  <meta property="og:description" content="Haz clic aquí para ver el estado de tu equipo y descargar tu comprobante en PDF.">
+  <meta property="og:image" content="https://xiaomi.scz.red/imagenes/web-app-manifest-192x192.png">
+  <meta property="og:url" content="https://xiaomi.scz.red/recibo/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="DR. XIAOMI SCZ">
+  <meta name="twitter:card" content="summary_large_image">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,20 +74,37 @@
     .header { 
       background: linear-gradient(135deg, #FF6900, #E55A00); 
       color: white; 
-      padding: 40px 20px 30px; 
+      padding: 30px 20px 25px; 
       text-align: center; 
       position: relative;
       border-radius: 0 0 30px 30px;
       box-shadow: 0 10px 30px var(--brand-glow);
       z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     .header::after {
       content: ''; position: absolute; inset: 0;
       background: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="p" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23p)"/></svg>');
       border-radius: 0 0 30px 30px; pointer-events: none;
     }
-    .header h1 { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 6px; position: relative; z-index: 3; }
-    .header p { font-size: 15px; opacity: 0.9; font-weight: 600; position: relative; z-index: 3; background: rgba(0,0,0,0.2); display: inline-block; padding: 4px 12px; border-radius: 20px;}
+    
+    .header-logo {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: white;
+      padding: 4px;
+      object-fit: cover;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      position: relative;
+      z-index: 3;
+    }
+
+    .header h1 { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 6px; position: relative; z-index: 3; }
+    .header p { font-size: 14px; opacity: 0.9; font-weight: 600; position: relative; z-index: 3; background: rgba(0,0,0,0.2); display: inline-block; padding: 4px 12px; border-radius: 20px;}
 
     .body { padding: 20px; flex: 1; z-index: 2; }
 
@@ -147,7 +179,6 @@
     .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    /* 🔥 MARCA DE AGUA */
     .watermark {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg);
       font-size: 80px; font-weight: 900; color: rgba(255,255,255,0.03); pointer-events: none;
@@ -162,17 +193,6 @@
       <div class="spinner"></div>
       Cargando tu recibo...
     </div>
-  </div>
-
-  <!-- Modal para instalar PWA -->
-  <div id="installPrompt" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); width:90%; max-width:400px; background:#18181B; border:1px solid #FF6900; border-radius:16px; padding:16px; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.8); align-items:center; gap:12px;">
-    <img src="/imagenes/web-app-manifest-192x192.png" style="width:40px; height:40px; border-radius:10px;">
-    <div style="flex:1;">
-      <h4 style="margin:0; font-size:14px; color:white;">Instalar App</h4>
-      <p style="margin:0; font-size:11px; color:#A1A1AA;">Sigue el estado de tu equipo</p>
-    </div>
-    <button id="btnInstallPwa" style="background:#FF6900; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:bold; font-size:12px;">Instalar</button>
-    <button id="btnCloseInstall" style="background:transparent; color:#A1A1AA; border:none; font-size:16px; padding:4px;"><i class="fas fa-times"></i></button>
   </div>
 
   <script type="module">
@@ -218,7 +238,6 @@
       else if (r.estadoOrden === 'entregado') { estadoTexto = 'Entregado'; estadoColor = 'var(--success)'; estadoIcono = 'fa-handshake'; }
       else if (r.estadoOrden === 'devuelto') { estadoTexto = 'Devuelto'; estadoColor = '#3B82F6'; estadoIcono = 'fa-rotate-left'; }
 
-      // 🔥 LÓGICA DE VENCIMIENTO (30 DÍAS)
       let avisoHtml = '';
       let botonDescargaHtml = `<button class="btn" id="btnDescargar"><i class="fas fa-file-pdf"></i> Descargar Recibo PDF</button>`;
       let diasRestantes = 30;
@@ -229,14 +248,13 @@
         diasRestantes = 30 - diasTranscurridos;
 
         if (diasRestantes <= 0) {
-          avisoHtml = `<div class="aviso aviso-danger">⚠️ Este enlace de descarga ha expirado (más de 30 días desde la entrega).</div>`;
+          avisoHtml = `<div class="aviso aviso-danger">⚠️ Este enlace de descarga ha expirado.</div>`;
           botonDescargaHtml = `<button class="btn btn-disabled" disabled><i class="fas fa-lock"></i> PDF Expirado</button>`;
         } else if (diasRestantes <= 15) {
-          avisoHtml = `<div class="aviso aviso-warning">⏳ Te quedan <b>${diasRestantes} días</b> para descargar este PDF. ¡Guárdalo en tu celular!</div>`;
+          avisoHtml = `<div class="aviso aviso-warning">⏳ Te quedan <b>${diasRestantes} días</b> para descargar este PDF. ¡Guárdalo!</div>`;
         }
       }
 
-      // Formatear fecha de ingreso
       let fechaIngreso = '-';
       if (r.fechaEditada || r.fecha) {
         let f = (r.fechaEditada || r.fecha);
@@ -255,6 +273,7 @@
         <div class="watermark">DR. XIAOMI</div>
         
         <div class="header">
+          <img src="/imagenes/web-app-manifest-192x192.png" alt="Logo" class="header-logo" onerror="this.style.display='none'">
           <h1>DR. XIAOMI</h1>
           <p>Recibo N°: ${r.numeroRecibo}</p>
         </div>
@@ -294,7 +313,6 @@
           <div style="margin-top: 10px;">
             ${botonDescargaHtml}
             
-            <!-- 🔥 BOTÓN PARA INSTALAR LA PWA -->
             <button class="btn btn-install" id="btnInstallTrigger">
               <i class="fas fa-mobile-screen-button" style="color:var(--brand);"></i> Instalar App de Seguimiento
             </button>
@@ -306,20 +324,15 @@
         </div>
       `;
 
-      // Conectar el botón de PDF
       if (diasRestantes > 0 || r.estadoOrden !== 'entregado') {
         document.getElementById('btnDescargar')?.addEventListener('click', () => generarPDF(r, id));
       }
 
-      // Lógica del botón de instalar App (PWA)
       let deferredPrompt;
       const btnInstallTrigger = document.getElementById('btnInstallTrigger');
-      const installPromptUI = document.getElementById('installPrompt');
-      
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        btnInstallTrigger.style.display = 'flex'; // Mostrar botón si el navegador lo soporta
       });
 
       btnInstallTrigger?.addEventListener('click', async () => {
@@ -340,7 +353,6 @@
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
 
-      // Header PDF
       pdf.setFillColor(255, 105, 0); pdf.rect(0, 0, 210, 45, 'F');
       pdf.setTextColor(255, 255, 255); pdf.setFontSize(24); pdf.setFont('helvetica', 'bold');
       pdf.text('DR. XIAOMI SCZ', 20, 22);
@@ -348,7 +360,6 @@
       pdf.text('Servicio Tecnico Especializado', 20, 30);
       pdf.text('Centro Comercial Canoto #K1 - Tel: 75959450', 20, 36);
       
-      // Info Cliente
       pdf.setTextColor(0, 0, 0); pdf.setFontSize(14); pdf.setFont('helvetica', 'bold');
       pdf.text(`Recibo: ${r.numeroRecibo}`, 20, 60);
       pdf.setFont('helvetica', 'normal'); pdf.setFontSize(12);
@@ -356,7 +367,6 @@
       pdf.text(`Equipo: ${r.marca} ${r.modelo}`, 20, 78);
       pdf.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 86);
       
-      // Tabla de Servicios
       pdf.autoTable({
         startY: 95,
         head: [['Descripcion del Servicio', 'Costo']],
@@ -365,7 +375,6 @@
         columnStyles: { 1: { halign: 'right' } }
       });
 
-      // Totales
       let finalY = pdf.lastAutoTable.finalY + 20;
       pdf.setFontSize(12); pdf.setFont('helvetica', 'normal');
       pdf.text(`Total: Bs. ${Number(r.total || 0).toFixed(2)}`, 130, finalY);
