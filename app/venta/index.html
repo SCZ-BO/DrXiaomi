@@ -12,13 +12,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <!-- Librerías PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
   <style>
     :root { 
-      --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; 
+      --radius-sm: 8px; --radius-md: 14px; --radius-lg: 20px; 
       --brand: #E65100; --brand-hover: #BF360C; --brand-light: rgba(230, 81, 0, 0.1); 
       --bg-main: #0E0E0E; --bg-card: #181818; --bg-elev: #242424; 
       --text-main: #F5F5F5; --text-mute: #888888; --border: #2A2A2A; 
@@ -73,7 +72,6 @@
 
     .total-display { text-align: right; font-size: 24px; font-weight: 800; color: var(--brand); margin-top: 10px; }
 
-    /* Modales (Sheet y Dialog) */
     .sheet-backdrop, .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 9999; }
     .sheet-backdrop { align-items: flex-end; }
     .sheet-backdrop.show, .modal-backdrop.show { opacity: 1; pointer-events: auto; }
@@ -84,7 +82,6 @@
     .modal { background: var(--bg-card); padding: 20px; border-radius: var(--radius-md); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
     .hidden { display: none !important; }
     
-    /* Estilos para el inventario en el modal */
     .inv-card { border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; gap: 10px; align-items: center; margin-bottom: 8px; cursor: pointer; transition: 0.2s; }
     .inv-card:hover { background: var(--bg-elev); }
     .inv-card img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; }
@@ -93,7 +90,6 @@
     .inv-precio { font-size: 11px; color: var(--brand); font-weight: 700; }
     .inv-stock { font-size: 10px; color: var(--text-mute); }
 
-    /* Loader */
     .loader-overlay { position: fixed; inset: 0; background: rgba(14, 14, 14, 0.95); backdrop-filter: blur(8px); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
     .loader-overlay.hidden { opacity: 0; pointer-events: none; }
     .loader-ring { position: absolute; width: 90px; height: 90px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); animation: spin 1.2s linear infinite; }
@@ -120,7 +116,6 @@
     </header>
 
     <main class="app-content">
-      <!-- Datos del Cliente -->
       <div class="card">
         <label class="field-title">Datos del Cliente (Opcional)</label>
         <div class="field">
@@ -137,23 +132,17 @@
         </div>
       </div>
 
-      <!-- Productos -->
       <div class="card">
         <label class="field-title">Productos o Servicios</label>
-        
-        <!-- BOTÓN VISUAL DEL INVENTARIO -->
         <button type="button" id="btnAbrirInventario" class="btn btn-primary" style="width: 100%; margin-bottom: 12px; background: #0284C7; color: white;">
           <i class="fas fa-box-open"></i> Buscar repuesto con foto
         </button>
-
         <div id="serviciosList"></div>
-        
         <button type="button" id="addServicio" class="btn btn-secondary" style="width: 100%; margin-top: 6px; font-size: 12px; padding: 10px;">
           <i class="fas fa-plus"></i> Añadir otro manual
         </button>
       </div>
 
-      <!-- Método de Pago -->
       <div class="card">
         <label class="field-title">Método de Pago</label>
         <div class="metodos-grid" id="metodosGroup">
@@ -163,7 +152,6 @@
           <button type="button" class="metodo-btn" data-metodo="QR">
             <i class="fas fa-qrcode"></i> QR
           </button>
-          <!-- 🔥 ESTOS BOTONES SE OCULTAN SI ES TÉCNICO -->
           <button type="button" class="metodo-btn" data-metodo="Transferencia" id="btnMetodoTransf">
             <i class="fas fa-university"></i> Transf.
           </button>
@@ -174,57 +162,44 @@
         <input type="hidden" id="metodoPago" value="Efectivo">
       </div>
 
-      <!-- Total -->
       <div class="card">
         <div class="field-title" style="margin-bottom: 0;">Total a cobrar</div>
         <div class="total-display" id="totalDisplay">Bs. 0.00</div>
       </div>
 
-      <!-- Botón de registrar -->
       <button type="button" class="btn btn-primary" id="btnGenerarVenta" style="width: 100%; padding: 16px; font-size: 16px;">
         <i class="fas fa-check"></i> Registrar Venta
       </button>
     </main>
   </div>
 
-  <!-- MODAL DE INVENTARIO (Fotos) -->
   <div class="sheet-backdrop" id="modalInventario">
     <div class="sheet">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="font-size: 18px; font-weight: 800;">Seleccionar Repuesto</h3>
         <button type="button" class="icon-btn" onclick="document.getElementById('modalInventario').classList.remove('show')"><i class="fas fa-times"></i></button>
       </div>
-      <div id="modalInvGrid" style="overflow-y: auto; flex: 1; padding-bottom: 20px;">
-        <!-- Aquí se inyectan los productos -->
-      </div>
+      <div id="modalInvGrid" style="overflow-y: auto; flex: 1; padding-bottom: 20px;"></div>
     </div>
   </div>
 
-  <!-- MODAL DE ÉXITO -->
   <div class="modal-backdrop" id="successModal">
     <div class="modal">
       <div style="font-size: 48px; color: #22C55E; margin-bottom: 16px;"><i class="fas fa-check-circle"></i></div>
       <h3 style="font-size: 20px; margin-bottom: 8px;">¡Venta registrada!</h3>
       <p style="font-size: 16px; color: var(--brand); font-weight: 800; margin-bottom: 24px;" id="successTotal">Total</p>
-      
       <div style="display: flex; flex-direction: column; gap: 10px;">
-        <button class="btn btn-whatsapp" id="btnGenerarPDF">
-          <i class="fas fa-file-pdf"></i> Generar PDF
-        </button>
-        <button class="btn btn-secondary" id="btnCerrarModal">
-          <i class="fas fa-home"></i> Volver al panel
-        </button>
+        <button class="btn btn-whatsapp" id="btnGenerarPDF"><i class="fas fa-file-pdf"></i> Generar PDF</button>
+        <button class="btn btn-secondary" id="btnCerrarModal"><i class="fas fa-home"></i> Volver al panel</button>
       </div>
     </div>
   </div>
 
-  <!-- 🔥 SCRIPT DE SEGURIDAD PARA OCULTAR OPCIONES AL TÉCNICO -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       try {
         const sesion = JSON.parse(localStorage.getItem('drx_sesion') || 'null');
         if (sesion && sesion.rol !== 'admin') {
-          // Si es técnico, ocultamos Transferencia y Mixto
           document.getElementById('btnMetodoTransf').style.display = 'none';
           document.getElementById('btnMetodoMixto').style.display = 'none';
         }
@@ -234,7 +209,6 @@
 
   <script type="module" src="/app/venta/venta.js"></script>
   
-  <!-- Red de seguridad del loader -->
   <script>
     setTimeout(() => {
       const loader = document.getElementById('appLoader');
