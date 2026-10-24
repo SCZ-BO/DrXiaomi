@@ -14,83 +14,35 @@
   
   <style>
     :root {
-      --bg-main: #09090B;
-      --bg-card: #18181B;
-      --text-main: #FAFAFA;
-      --text-mute: #A1A1AA;
-      --border: rgba(255,255,255,0.08);
-      --brand: #FF6900;
-      --success: #10B981;
-      --danger: #EF4444;
-      --warning: #FBBF24;
+      --bg-main: #09090B; --bg-card: #18181B; --text-main: #FAFAFA; --text-mute: #A1A1AA;
+      --border: rgba(255,255,255,0.08); --brand: #FF6900; --success: #10B981; --danger: #EF4444; --warning: #FBBF24;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    
-    body { 
-      font-family: 'Inter', sans-serif; 
-      background: var(--bg-main); 
-      color: var(--text-main); 
-      display: flex; 
-      justify-content: center;
-      min-height: 100vh;
-    }
-
-    .card { 
-      background: var(--bg-card); 
-      width: 100%; 
-      max-width: 420px; 
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .header { 
-      background: linear-gradient(135deg, var(--brand), #FF8C00); 
-      color: white; 
-      padding: 30px 20px; 
-      text-align: center; 
-    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; }
+    .card { background: var(--bg-card); width: 100%; max-width: 420px; min-height: 100vh; display: flex; flex-direction: column; }
+    .header { background: linear-gradient(135deg, var(--brand), #FF8C00); color: white; padding: 30px 20px; text-align: center; }
     .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
     .header p { font-size: 14px; opacity: 0.9; font-weight: 500; }
-
     .body { padding: 20px; flex: 1; }
-    
-    .aviso { 
-      padding: 12px; border-radius: 10px; font-size: 12px; text-align: center; 
-      margin-bottom: 20px; font-weight: 600; line-height: 1.4;
-    }
+    .aviso { padding: 12px; border-radius: 10px; font-size: 12px; text-align: center; margin-bottom: 20px; font-weight: 600; line-height: 1.4; }
     .aviso-warning { background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); color: var(--warning); }
     .aviso-danger { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--danger); }
-
     .estado-container { text-align: center; margin-bottom: 24px; }
     .estado { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    
     .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
     .row span:first-child { color: var(--text-mute); font-weight: 500; }
     .row span:last-child { font-weight: 600; text-align: right; max-width: 60%; }
-
     .divider { height: 1px; background: var(--border); margin: 20px 0; }
-
     .servicios-title { font-size: 12px; text-transform: uppercase; font-weight: 700; color: var(--text-mute); margin-bottom: 12px; letter-spacing: 0.5px; }
-    
     .total-box { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px; margin-top: 20px; border: 1px solid var(--border); }
     .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: var(--text-mute); }
     .total-row:last-child { margin-bottom: 0; font-size: 20px; font-weight: 800; color: var(--text-main); margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
     .text-success { color: var(--success) !important; }
     .text-danger { color: var(--danger) !important; }
-
-    .btn { 
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; padding: 16px; background: var(--brand); color: white; 
-      text-align: center; text-decoration: none; border-radius: 12px; 
-      font-weight: 700; font-size: 15px; border: none; cursor: pointer; 
-      margin-bottom: 12px; transition: 0.2s;
-    }
+    .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 16px; background: var(--brand); color: white; text-align: center; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; border: none; cursor: pointer; margin-bottom: 12px; transition: 0.2s; }
     .btn:active { transform: scale(0.98); }
     .btn-wsp { background: #25D366; }
     .btn-disabled { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-mute); cursor: not-allowed; }
-
     .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: var(--text-mute); font-size: 14px; font-weight: 500; }
     .spinner { width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -114,7 +66,7 @@
     const appCard = document.getElementById('appCard');
 
     if (!reciboId) {
-      appCard.innerHTML = '<div class="loading" style="color:var(--danger)"><i class="fas fa-times-circle" style="font-size:30px; margin-bottom:10px;"></i>No se especificó un recibo.</div>';
+      appCard.innerHTML = '<div class="loading" style="color:var(--danger)">No se especificó un recibo.</div>';
     } else {
       buscarRecibo(reciboId);
     }
@@ -147,7 +99,6 @@
       else if (r.estadoOrden === 'entregado') { estadoTexto = 'Entregado'; estadoColor = 'var(--success)'; }
       else if (r.estadoOrden === 'devuelto') { estadoTexto = 'Devuelto'; estadoColor = 'var(--blue)'; }
 
-      // 🔥 LÓGICA DE VENCIMIENTO (30 DÍAS)
       let avisoHtml = '';
       let botonDescargaHtml = `<button class="btn" id="btnDescargar"><i class="fas fa-file-pdf"></i> Descargar Recibo PDF</button>`;
       let diasRestantes = 30;
@@ -165,7 +116,6 @@
         }
       }
 
-      // Formatear fecha de ingreso
       let fechaIngreso = '-';
       if (r.fechaEditada || r.fecha) {
         let f = (r.fechaEditada || r.fecha);
@@ -223,7 +173,6 @@
         </div>
       `;
 
-      // Conectar el botón solo si no expiró
       if (diasRestantes > 0 || r.estadoOrden !== 'entregado') {
         document.getElementById('btnDescargar')?.addEventListener('click', () => generarPDF(r, id));
       }
@@ -233,14 +182,12 @@
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
 
-      // Header PDF
       pdf.setFillColor(230, 81, 0); pdf.rect(0, 0, 210, 40, 'F');
       pdf.setTextColor(255, 255, 255); pdf.setFontSize(22); pdf.setFont('helvetica', 'bold');
       pdf.text('DR. XIAOMI SCZ', 20, 20);
       pdf.setFontSize(10); pdf.setFont('helvetica', 'normal');
       pdf.text('Servicio Tecnico Especializado', 20, 28);
       
-      // Info Cliente
       pdf.setTextColor(0, 0, 0); pdf.setFontSize(12); pdf.setFont('helvetica', 'bold');
       pdf.text(`Recibo: ${r.numeroRecibo}`, 20, 50);
       pdf.setFont('helvetica', 'normal'); pdf.setFontSize(11);
@@ -248,7 +195,6 @@
       pdf.text(`Equipo: ${r.marca} ${r.modelo}`, 20, 65);
       pdf.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 72);
       
-      // Tabla de Servicios
       pdf.autoTable({
         startY: 80,
         head: [['Descripcion del Servicio', 'Costo']],
@@ -257,7 +203,6 @@
         columnStyles: { 1: { halign: 'right' } }
       });
 
-      // Totales
       let finalY = pdf.lastAutoTable.finalY + 15;
       pdf.setFontSize(12); pdf.setFont('helvetica', 'normal');
       pdf.text(`Total: Bs. ${Number(r.total || 0).toFixed(2)}`, 140, finalY);
