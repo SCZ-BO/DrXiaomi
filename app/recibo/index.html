@@ -12,7 +12,7 @@
   <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
 
-  <!-- 🔥 VISTA PREVIA PARA WHATSAPP Y REDES SOCIALES (Open Graph) -->
+  <!-- 🔥 VISTA PREVIA PARA WHATSAPP -->
   <meta property="og:title" content="Recibo de Reparación - DR. XIAOMI SCZ">
   <meta property="og:description" content="Haz clic aquí para ver el estado de tu equipo y descargar tu comprobante en PDF.">
   <meta property="og:image" content="https://xiaomi.scz.red/imagenes/web-app-manifest-192x192.png">
@@ -70,41 +70,59 @@
       overflow: hidden;
     }
 
-    /* 🔥 HEADER INMERSIVO */
+    /* 🔥 HEADER REDISEÑADO (Logo al lado) */
     .header { 
       background: linear-gradient(135deg, #FF6900, #E55A00); 
       color: white; 
-      padding: 30px 20px 25px; 
-      text-align: center; 
+      padding: 20px; 
       position: relative;
       border-radius: 0 0 30px 30px;
       box-shadow: 0 10px 30px var(--brand-glow);
       z-index: 2;
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      align-items: center; /* Alinea el logo y el texto horizontalmente */
+      gap: 15px;
     }
+    
     .header::after {
       content: ''; position: absolute; inset: 0;
       background: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="p" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23p)"/></svg>');
       border-radius: 0 0 30px 30px; pointer-events: none;
     }
     
-    .header-logo {
-      width: 70px;
-      height: 70px;
+    /* 🔥 LOGO CON ANIMACIÓN Y BORDE FINO */
+    .header-logo-container {
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
-      background: white;
-      padding: 4px;
-      object-fit: cover;
-      margin-bottom: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.4); /* Borde más fino y elegante */
+      display: flex;
+      align-items: center;
+      justify-content: center;
       position: relative;
       z-index: 3;
+      animation: breathe 3s ease-in-out infinite; /* Animación de respiración */
+      flex-shrink: 0; /* Evita que se aplaste */
     }
 
-    .header h1 { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 6px; position: relative; z-index: 3; }
-    .header p { font-size: 14px; opacity: 0.9; font-weight: 600; position: relative; z-index: 3; background: rgba(0,0,0,0.2); display: inline-block; padding: 4px 12px; border-radius: 20px;}
+    .header-logo {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    /* Animación de respiración (Glow) */
+    @keyframes breathe {
+      0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+      50% { box-shadow: 0 0 15px 5px rgba(255,255,255,0.1); }
+      100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+    }
+
+    .header-text { position: relative; z-index: 3; }
+    .header h1 { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 2px; line-height: 1; }
+    .header p { font-size: 12px; opacity: 0.9; font-weight: 600; background: rgba(0,0,0,0.2); display: inline-block; padding: 4px 10px; border-radius: 20px;}
 
     .body { padding: 20px; flex: 1; z-index: 2; }
 
@@ -272,10 +290,15 @@
       appCard.innerHTML = `
         <div class="watermark">DR. XIAOMI</div>
         
+        <!-- 🔥 HEADER CON LOGO AL LADO -->
         <div class="header">
-          <img src="/imagenes/web-app-manifest-192x192.png" alt="Logo" class="header-logo" onerror="this.style.display='none'">
-          <h1>DR. XIAOMI</h1>
-          <p>Recibo N°: ${r.numeroRecibo}</p>
+          <div class="header-logo-container">
+            <img src="/imagenes/web-app-manifest-192x192.png" alt="Logo" class="header-logo" onerror="this.style.display='none'">
+          </div>
+          <div class="header-text">
+            <h1>DR. XIAOMI</h1>
+            <p>Recibo N°: ${r.numeroRecibo}</p>
+          </div>
         </div>
         
         <div class="body">
