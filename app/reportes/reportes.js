@@ -1,8 +1,6 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (VERSIÓN FINAL v15 - SOLO LECTURA)
+   DR. XIAOMI · REPORTES (OPTIMIZADO - CARGA INSTANTÁNEA)
    Archivo: app/reportes/reportes.js
-   ARREGLO: Se quitaron los botones de editar/borrar. 
-   Todo se gestiona desde el panel principal.
    ============================================================ */
 
 import { requireAuth, logout } from '/js/app-auth.js';
@@ -133,7 +131,8 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       document.getElementById('appLoader')?.classList.add('hidden');
     };
 
-    const qRecibos = query(collection(db, 'recibos'), limit(500));
+    // 🔥 LÍMITE REDUCIDO A 100 PARA VELOCIDAD
+    const qRecibos = query(collection(db, 'recibos'), limit(100));
     unsubscribeRecibos = onSnapshot(qRecibos, (snapshot) => {
       datosRecibos = [];
       snapshot.forEach(doc => {
@@ -142,7 +141,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         const estaEntregado = d.estadoOrden === 'entregado';
         if (!estaEntregado && montoCobrado <= 0) return;
 
-        // 🔥 Prioridad a la fecha editada manualmente
         const fechaD = parsearFecha(d.fechaEditada) || parsearFecha(d.fechaEntrega) || parsearFecha(d.fecha);
         if (!fechaD) return;
 
@@ -163,7 +161,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
-    const qVentas = query(collection(db, 'ventas'), limit(500));
+    const qVentas = query(collection(db, 'ventas'), limit(100));
     unsubscribeVentas = onSnapshot(qVentas, (snapshot) => {
       datosVentas = [];
       snapshot.forEach(doc => {
@@ -178,7 +176,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
             cliente: 'Venta Rápida',
             detalle: d.concepto,
             montoCobrado: Number(d.monto) || 0,
-            costoRepuesto: 0,
+            costoRepuesto: Number(d.costo) || 0,
             metodoPago: d.metodoPago || 'Efectivo',
             fechaReal: fechaD,
             numeroRecibo: ''
@@ -188,7 +186,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
-    const qCierres = query(collection(db, 'cierres'), limit(500));
+    const qCierres = query(collection(db, 'cierres'), limit(100));
     unsubscribeCierres = onSnapshot(qCierres, (snapshot) => {
       datosCierres = [];
       snapshot.forEach(doc => {
@@ -291,7 +289,6 @@ function renderizarReporte(datos) {
     if (d.origen === 'cierre') icono = '🛒';
     else if (d.origen === 'venta_panel') icono = '⚡';
 
-    // 🔥 DISEÑO LIMPIO SIN BOTONES DE ACCIÓN
     movimientosHtml += `
       <div class="movimiento">
         <div class="hora">${fechaStr}<br>${horaStr}</div>
