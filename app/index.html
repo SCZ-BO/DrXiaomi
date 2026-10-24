@@ -265,6 +265,7 @@
           <option value="Limpieza">Limpieza</option>
           <option value="Reactivación">Reactivación</option>
           <option value="Cargador">Cargador</option>
+          <option value="Otro">Otro</option>
         </select>
         <input type="text" id="ventaConceptoOtro" class="form-control" placeholder="Especifique qué se vendió" style="display: none; margin-top: 10px;">
       </div>
@@ -410,12 +411,6 @@
       const esAdmin = sesion.rol === 'admin';
 
       if (esAdmin) {
-        const selConcepto = document.getElementById('ventaConcepto');
-        const optOtro = document.createElement('option');
-        optOtro.value = 'Otro';
-        optOtro.textContent = 'Otro';
-        selConcepto.appendChild(optOtro);
-
         const selMetodo = document.getElementById('ventaMetodo');
         const optTransf = document.createElement('option');
         optTransf.value = 'Transferencia';
@@ -913,7 +908,6 @@
         window.location.href = `/app/orden.html?id=${id}`;
       });
 
-      // 🔥 LÓGICA DE ACTUALIZACIÓN DE ESTADO CON AVISO
       document.getElementById('btnActualizarEstado')?.addEventListener('click', async () => {
         const nuevoEstado = document.getElementById('selectEstado').value;
         
@@ -933,7 +927,6 @@
           
           cerrarSheet();
 
-          // 🔥 AVISO DE WHATSAPP CUANDO ESTÁ LISTO
           if (nuevoEstado === 'listo' && orden.telefono) {
             setTimeout(() => {
               if (confirm(`El equipo está listo. ¿Deseas avisar a ${orden.cliente.split(' ')[0]} por WhatsApp?`)) {
@@ -941,14 +934,15 @@
                 const tel = orden.telefono.replace(/\D/g, '');
                 window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank');
               }
-            }, 500); // Pequeño delay para que se cierre el modal
+            }, 500);
           }
 
         } catch (err) { toast('Error al actualizar', 'error'); }
       });
 
       document.getElementById('btnWhatsApp')?.addEventListener('click', () => {
-        const mensaje = `Hola ${orden.cliente.split(' ')[0]}, tu equipo ${orden.marca} ${orden.modelo} está en estado: *${orden.estadoOrden || 'recibido'}*.\n\nN Recibo: ${orden.numeroRecibo}\nPuedes revisarlo en: https://xiaomi.scz.red/?recibo=${orden.numeroRecibo}`;
+        const urlRecibo = `${window.location.origin}/recibo/?id=${orden.numeroRecibo}`;
+        const mensaje = `Hola ${orden.cliente.split(' ')[0]}, tu equipo *${orden.marca} ${orden.modelo}* ya está en nuestro taller.\n\n📄 *Puedes ver tu recibo aquí:*\n${urlRecibo}\n\nN° Recibo: ${orden.numeroRecibo}\n\n¡Gracias por confiar en DR. XIAOMI!`;
         const tel = orden.telefono.replace(/\D/g, '');
         window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank');
         cerrarSheet();
@@ -1058,6 +1052,14 @@
       modal.id = 'modalEditarVenta';
       modal.style.display = 'flex';
 
+      const esAdmin = sesion.rol === 'admin';
+      const campoCosto = esAdmin ? `
+        <div class="input-group">
+          <label>Costo del Producto (Bs.)</label>
+          <input type="number" id="editCostoV" class="form-control" value="${venta.costo || 0}" placeholder="0.00">
+        </div>
+      ` : '';
+
       modal.innerHTML = `
         <div class="sheet">
           <div class="sheet-grip"></div>
@@ -1070,15 +1072,16 @@
             <input type="text" id="editConceptoV" class="form-control" value="${escapeHtml(venta.concepto)}">
           </div>
           <div class="input-group">
-            <label>Monto (Bs.)</label>
+            <label>Monto Cobrado (Bs.)</label>
             <input type="number" id="editMontoV" class="form-control" value="${venta.monto}">
           </div>
+          ${campoCosto}
           <div class="input-group">
             <label>Método de Pago</label>
             <select id="editMetodoV" class="form-control">
               <option value="Efectivo" ${venta.metodoPago === 'Efectivo' ? 'selected' : ''}>💵 Efectivo</option>
               <option value="QR" ${venta.metodoPago === 'QR' ? 'selected' : ''}>📱 QR</option>
-              ${sesion.rol === 'admin' ? `<option value="Transferencia" ${venta.metodoPago === 'Transferencia' ? 'selected' : ''}>🏦 Transferencia</option>` : ''}
+              ${esAdmin ? `<option value="Transferencia" ${venta.metodoPago === 'Transferencia' ? 'selected' : ''}>🏦 Transferencia</option>` : ''}
             </select>
           </div>
           <button class="btn-sheet btn-sheet-primary" id="btnSaveEditV">Guardar Cambios</button>
@@ -1100,12 +1103,14 @@
         const nuevoConcepto = document.getElementById('editConceptoV').value.trim();
         const nuevoMonto = parseFloat(document.getElementById('editMontoV').value) || 0;
         const nuevoMetodo = document.getElementById('editMetodoV').value;
+        const nuevoCosto = document.getElementById('editCostoV') ? (parseFloat(document.getElementById('editCostoV').value) || 0) : 0;
 
         haptic(20);
         try {
           await updateDoc(doc(db, 'ventas', venta.id), {
             concepto: nuevoConcepto,
             monto: nuevoMonto,
+            costo: nuevoCosto,
             metodoPago: nuevoMetodo
           });
           toast('Venta actualizada', 'success');
