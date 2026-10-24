@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Recibo - DR. XIAOMI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #f4f4f5; color: #18181b; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    .card { background: white; width: 100%; max-width: 400px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+    .header { background: #FF6900; color: white; padding: 20px; text-align: center; }
+    .header h1 { margin: 0; font-size: 20px; font-weight: 800; }
+    .header p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; }
+    .body { padding: 20px; }
+    .row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; border-bottom: 1px dashed #eee; padding-bottom: 8px; }
+    .row strong { color: #666; font-weight: 600; }
+    .total { font-size: 24px; font-weight: 800; color: #FF6900; text-align: center; margin: 20px 0; }
+    .btn { display: block; width: 100%; padding: 16px; background: #10B981; color: white; text-align: center; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 16px; border: none; cursor: pointer; margin-bottom: 10px; }
+    .btn-pdf { background: #FF6900; }
+    .btn-disabled { background: #ccc; cursor: not-allowed; }
+    .estado { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 10px; }
+    .loading { text-align: center; padding: 40px; color: #666; }
+    .aviso { background: #FEF3C7; border: 1px solid #F59E0B; color: #92400E; padding: 12px; border-radius: 8px; font-size: 12px; text-align: center; margin-bottom: 16px; font-weight: 600; }
+    .aviso-rojo { background: #FEE2E2; border: 1px solid #EF4444; color: #991B1B; }
+  </style>
+</head>
+<body>
+
+  <div class="card" id="appCard">
+    <div class="loading">Cargando tu recibo...</div>
+  </div>
+
+  <script type="module">
+    import { db } from '/js/firebase.js';
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const params = new URLSearchParams(window.location.search);
+    const reciboId = params.get('id');
+    const appCard = document.getElementById('appCard');
+
+    if (!reciboId) {
+      appCard.innerHTML = '<div class="loading" style="color:#EF4444">No se encontró el recibo.</div>';
+    } else {
+      buscarRecibo(reciboId);
+    }
+
+    async function buscarRecibo(id) {
+      try {
+        const q = query(collection(db, 'recibos'), where('numeroRecibo', '==', id));
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+          appCard.innerHTML = '<div class="loading" style="color:#EF4444">Recibo no encontrado o eliminado.</div>';
+          return;
+        }
+
+        const recibo = snap.docs[0].data();
+        renderizarRecibo(recibo, id);
+      } catch (error) {
+        console.error(error);
+        appCard.innerHTML = '<div class="loading" style="color:#EF4444">Error al conectar.</div>';
+      }
+    }
+
+    function renderizarRecibo(r, id) {
+      let estadoTexto = 'Recibido';
+      let estadoColor = '#9CA3AF';
+      
+      if (r.estadoOrden === 'reparacion') { estadoTexto = 'En Reparación'; estadoColor = '#FF6900'; }
+      else if (r.estadoOrden === 'listo') { estadoTexto = 'Listo para Entregar'; estadoColor = '#FBBF24'; }
+      else if (r.estadoOrden === 'entregado') { estadoTexto = 'Entregado'; estadoColor = '#10B981'; }
+
+      // 🔥 LÓGICA DE VENCIMIENTO (30 DÍAS)
+      let avisoHtml = '';
+      let botonDescargaHtml = `<button class="btn btn-pdf" id="btnDescargar">⬇️ Descargar PDF</button>`;
+      let diasRestantes = 30;
+      
+      if (r.estadoOrden === 'entregado' && r.fechaEntrega) {
+        let fecha = r.fechaEntrega.toDate ? r.fechaEntrega.toDate() : new Date(r.fechaEntrega);
+        let diasTranscurridos = Math.floor((new Date() - fecha) / (1000 * 60 * 60 * 24));
+        diasRestantes = 30 - diasTranscurridos;
+
+        if (diasRestantes <= 0) {
+          avisoHtml = `<div class="aviso aviso-rojo">⚠️ Este enlace de descarga ha expirado (más de 30 días desde la entrega).</div>`;
+          botonDescargaHtml = `<button class="btn btn-disabled" disabled>❌ PDF Expirado</button>`;
+        } else if (diasRestantes <= 15) {
+          avisoHtml = `<div class="aviso">⏳ Atención: Te quedan <b>${diasRestantes} días</b> para descargar este PDF. ¡Guárdalo en tu celular!</div>`;
+        }
+      }
+
+      appCard.innerHTML = `
+        <div class="header">
+          <h1>DR. XIAOMI</h1>
+          <p>Recibo N°: ${r.numeroRecibo}</p>
+        </div>
+        <div class="body">
+          
+          ${avisoHtml}
+
+          <div style="text-align:center; margin-bottom: 20px;">
+            <span class="estado" style="background: ${estadoColor}20; color: ${estadoColor};">${estadoTexto}</span>
+          </div>
+          
+          <div class="row"><strong>Cliente:</strong> <span>${r.cliente}</span></div>
+          <div class="row"><strong>Equipo:</strong> <span>${r.marca} ${r.modelo}</span></div>
+          <div class="row"><strong>Falla:</strong> <span>${r.falla || '-'}</span></div>
+          
+          <div style="margin-top: 20px;">
+            <h3 style="font-size: 14px; color: #666;">Servicios:</h3>
+            ${(r.servicios || []).map(s => `<div class="row"><span>${s.desc}</span> <strong>Bs. ${s.costo}</strong></div>`).join('')}
+          </div>
+
+          <div class="total">Total: Bs. ${r.total}</div>
+          <div class="total" style="font-size: 16px; color: ${r.saldo > 0 ? '#EF4444' : '#10B981'}">
+            ${r.saldo > 0 ? `Saldo pendiente: Bs. ${r.saldo}` : '✅ Pagado'}
+          </div>
+
+          ${botonDescargaHtml}
+          <a class="btn" href="https://wa.me/59175959450?text=Hola,%20consulto%20por%20mi%20recibo%20${r.numeroRecibo}">💬 Contactar al Taller</a>
+        </div>
+      `;
+
+      // Conectar el botón solo si no expiró
+      if (diasRestantes > 0 || r.estadoOrden !== 'entregado') {
+        document.getElementById('btnDescargar')?.addEventListener('click', () => generarPDF(r, id));
+      }
+    }
+
+    async function generarPDF(r, id) {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+
+      pdf.setFillColor(230, 81, 0); pdf.rect(0, 0, 210, 40, 'F');
+      pdf.setTextColor(255, 255, 255); pdf.setFontSize(22); pdf.setFont('helvetica', 'bold');
+      pdf.text('DR. XIAOMI SCZ', 20, 20);
+      
+      pdf.setTextColor(0, 0, 0); pdf.setFontSize(12);
+      pdf.text(`Recibo: ${r.numeroRecibo}`, 20, 50);
+      pdf.text(`Cliente: ${r.cliente}`, 20, 60);
+      pdf.text(`Equipo: ${r.marca} ${r.modelo}`, 20, 70);
+      
+      pdf.autoTable({
+        startY: 80,
+        head: [['Servicio', 'Costo']],
+        body: (r.servicios || []).map(s => [s.desc, `Bs. ${s.costo}`]),
+        headStyles: { fillColor: [230, 81, 0] }
+      });
+
+      let finalY = pdf.lastAutoTable.finalY + 10;
+      pdf.setFontSize(14); pdf.text(`TOTAL: Bs. ${r.total}`, 20, finalY);
+      pdf.setFontSize(12); pdf.text(`SALDO: Bs. ${r.saldo}`, 20, finalY + 10);
+
+      pdf.save(`Recibo_${r.numeroRecibo}.pdf`);
+    }
+  </script>
+</body>
+</html>
