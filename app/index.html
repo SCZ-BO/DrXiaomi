@@ -56,6 +56,16 @@
     .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 14px; border-radius: var(--radius-lg); font-weight: 700; font-size: 13px; border: none; cursor: pointer; transition: 0.2s; height: 83px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); position: relative; overflow: hidden; }
     .btn-hero:active { transform: scale(0.96); }
     .btn-hero i { font-size: 22px; margin-bottom: auto; }
+    
+    /* 🔥 NUEVO: Estilos para las imágenes personalizadas de los botones */
+    .btn-hero img {
+      width: 28px; 
+      height: 28px; 
+      object-fit: contain; 
+      margin-bottom: auto;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+
     .btn-hero span { z-index: 2; line-height: 1.2; text-align: left; }
     .btn-hero-nuevo { background: linear-gradient(135deg, var(--brand), #FF8C00); color: white; box-shadow: 0 6px 20px var(--brand-glow); }
     .btn-hero-venta { background: var(--bg-card); color: var(--success); border: 1px solid var(--border); }
@@ -182,12 +192,15 @@
     <main class="app-content">
       
       <div class="hero-actions">
+        <!-- 🔥 NUEVO: Usando la imagen del teléfono roto -->
         <button class="btn-hero btn-hero-nuevo" id="nuevoReciboBtn">
-          <i class="fas fa-mobile-screen-button"></i>
+          <img src="/app/imagenes/iconos telefo.png" alt="Nuevo Equipo" style="filter: brightness(0) invert(1);">
           <span>Nuevo<br>Equipo</span>
         </button>
+        
+        <!-- 🔥 NUEVO: Usando la imagen del rayo verde -->
         <button class="btn-hero btn-hero-venta" id="ventaRapidaBtn">
-          <i class="fas fa-cash-register"></i>
+          <img src="/app/imagenes/ventarapida.png" alt="Venta Rápida">
           <span>Venta<br>Rápida</span>
         </button>
       </div>
@@ -545,6 +558,12 @@
         document.querySelectorAll('#filtros .chip').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         filtroActual = btn.dataset.filtro;
+        
+        // 🔥 FIX: Limpiar el buscador al cambiar de filtro para que no haya conflicto
+        busquedaActual = '';
+        const buscador = document.getElementById('buscador');
+        if (buscador) buscador.value = '';
+        
         renderizarTodo();
       });
       
@@ -563,10 +582,10 @@
       if (unsubscribe) unsubscribe();
       if (appLoader) appLoader.classList.remove('hidden');
       
+      // 🔥 FIX: Quitamos el limit(15) para traer TODOS los recibos y que el filtro funcione bien.
       const qRecibos = query(
         collection(db, 'recibos'), 
-        orderBy('fecha', 'desc'), 
-        limit(LIMITE_POR_PAGINA)
+        orderBy('fecha', 'desc')
       );
 
       unsubscribe = onSnapshot(qRecibos, { includeMetadataChanges: true }, 
@@ -602,8 +621,7 @@
             const fb = b.fechaEditada || b.fecha;
             return (parsearFecha(fb) || 0) - (parsearFecha(fa) || 0);
           });
-          hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
-          if (snapshot.docs.length > 0) ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
+          hayMasRecibos = false; // 🔥 FIX: Ya no hay paginación
           renderizarTodo();
           if (appLoader) appLoader.classList.add('hidden');
         }, 
@@ -674,10 +692,17 @@
       const lista = document.getElementById('listaOrdenes');
       let todosLosMovimientos = [];
 
+      // 🔥 FIX: Filtro de recibos (incluye todos los estados)
       if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
         ordenes.forEach(o => {
           const estado = o.estadoOrden || 'recibido';
-          if (filtroActual !== 'todos' && filtroActual !== estado) return;
+          
+          // 🔥 FIX: Si filtro es 'reparacion', incluir 'reparacion' y 'espera-repuesto'
+          if (filtroActual === 'reparacion') {
+            if (estado !== 'reparacion' && estado !== 'espera-repuesto' && estado !== 'recibido') return;
+          } else if (filtroActual !== 'todos' && filtroActual !== estado) {
+            return;
+          }
           
           const estaEntregado = estado === 'entregado';
           const montoCobrado = Number(o.montoCobrado) || 0;
@@ -694,6 +719,7 @@
         });
       }
 
+      // 🔥 FIX: Filtro de ventas
       if (filtroActual === 'todos' || filtroActual === 'venta') {
         ventasHoy.forEach(v => {
           todosLosMovimientos.push({ tipo: v.origen === 'panel' ? 'venta' : 'cierre', data: v, fechaOrden: parsearFecha(v.fecha), monto: v.monto });
@@ -734,8 +760,8 @@
         });
       });
 
-      if (hayMasRecibos && !busquedaActual && filtroActual === 'todos') btnCargarMas.style.display = 'block';
-      else btnCargarMas.style.display = 'none';
+      // 🔥 FIX: Ya no hay paginación
+      btnCargarMas.style.display = 'none';
     }
 
     function renderCardTelefono(o) {
@@ -825,36 +851,8 @@
     }
 
     async function cargarMasOrdenes() {
-      if (!ultimoDocumento) return;
-      haptic(10);
-      const textoOriginal = btnCargarMas.innerHTML;
-      btnCargarMas.innerHTML = 'Cargando...';
-      btnCargarMas.disabled = true;
-
-      try {
-        const q = query(
-          collection(db, 'recibos'), 
-          startAfter(ultimoDocumento), 
-          orderBy('fecha', 'desc'), 
-          limit(LIMITE_POR_PAGINA)
-        );
-        const snapshot = await getDocs(q);
-        const nuevosRecibos = snapshot.docs.map(d => {
-          const data = d.data();
-          delete data.fotos;
-          return { id: d.id, ...data };
-        });
-        ordenes = [...ordenes, ...nuevosRecibos];
-        ordenes.sort((a, b) => (parsearFecha(b.fechaEditada || b.fecha) || 0) - (parsearFecha(a.fechaEditada || a.fecha) || 0));
-        if (snapshot.docs.length > 0) ultimoDocumento = snapshot.docs[snapshot.docs.length - 1];
-        hayMasRecibos = snapshot.docs.length === LIMITE_POR_PAGINA;
-        renderizarTodo();
-      } catch (error) {
-        toast('No se pudieron cargar más', 'error');
-      } finally {
-        btnCargarMas.innerHTML = textoOriginal;
-        btnCargarMas.disabled = false;
-      }
+      // 🔥 FIX: Función deshabilitada porque ahora traemos todos los recibos
+      return;
     }
 
     function abrirSheetTelefono(id) {
