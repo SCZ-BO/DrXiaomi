@@ -85,6 +85,10 @@ function renderProductos() {
 
   grid.innerHTML = productos.map(p => {
     const stock = Number(p.stock) || 0;
+    const costo = Number(p.costo) || 0;
+    const precio = Number(p.precio) || 0;
+    const ganancia = precio - costo; // 🔥 Calculamos la ganancia
+
     let stockClass = '';
     if (stock === 0) stockClass = 'stock-cero';
     else if (stock <= 3) stockClass = 'stock-bajo';
@@ -96,7 +100,14 @@ function renderProductos() {
         <img src="${imgUrl}" alt="${escapeHtml(p.nombre)}" class="producto-img">
         <div class="producto-info">
           <div class="producto-nombre">${escapeHtml(p.nombre || 'Sin nombre')}</div>
-          <div class="producto-precio">${formatBs(p.precio || 0)}</div>
+          <div class="producto-precio">${formatBs(precio)}</div>
+          
+          <!-- 🔥 MOSTRAMOS COSTO Y GANANCIA -->
+          <div class="producto-costos">
+            <span>Costo: ${formatBs(costo)}</span>
+            <span class="producto-ganancia">Ganancia: ${formatBs(ganancia)}</span>
+          </div>
+          
           <div class="producto-stock ${stockClass}">Stock: ${stock}</div>
         </div>
         <button class="btn-stock" data-id="${p.id}" data-stock="${stock}" ${stock <= 0 ? 'disabled' : ''}>
@@ -130,6 +141,7 @@ function renderProductos() {
 
 function abrirModal() {
   document.getElementById('inputNombre').value = '';
+  document.getElementById('inputCosto').value = ''; // 🔥 Limpiar costo
   document.getElementById('inputPrecio').value = '';
   document.getElementById('inputStock').value = '';
   fotoDataUrl = '';
@@ -157,6 +169,7 @@ function renderFotoPreview() {
 
 async function guardarProducto() {
   const nombre = document.getElementById('inputNombre').value.trim();
+  const costo = parseFloat(document.getElementById('inputCosto').value) || 0; // 🔥 Nuevo campo
   const precio = parseFloat(document.getElementById('inputPrecio').value) || 0;
   const stock = parseInt(document.getElementById('inputStock').value) || 0;
   
@@ -171,6 +184,7 @@ async function guardarProducto() {
   try {
     await addDoc(collection(db, 'productos'), {
       nombre: nombre,
+      costo: costo, // 🔥 Guardamos el costo
       precio: precio,
       stock: stock,
       foto: fotoDataUrl || '',
@@ -223,8 +237,13 @@ function enviarInventarioWhatsApp() {
 
   productos.forEach(p => {
     const stock = Number(p.stock) || 0;
+    const costo = Number(p.costo) || 0;
+    const precio = Number(p.precio) || 0;
+    const ganancia = precio - costo;
+
     if (stock > 0) {
-      msg += `- ${p.nombre}: ${stock} uds. (${formatBs(p.precio)})\n`;
+      msg += `- ${p.nombre}: ${stock} uds. (${formatBs(precio)})\n`;
+      msg += `  _Costo: ${formatBs(costo)} | Ganancia: ${formatBs(ganancia)}_\n`; // 🔥 Agregamos costo y ganancia al WhatsApp
     }
   });
 
