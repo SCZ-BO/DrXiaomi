@@ -19,6 +19,7 @@
       --brand: #E65100; --brand-hover: #BF360C; --brand-light: rgba(230, 81, 0, 0.1); 
       --bg-main: #0E0E0E; --bg-card: #181818; --bg-elev: #242424; 
       --text-main: #F5F5F5; --text-mute: #888888; --border: #2A2A2A; 
+      --success: #10B981;
     }
     [data-theme="light"] {
       --bg-main: #F9F9F9; --bg-card: #FFFFFF; --bg-elev: #F0F0F0; 
@@ -66,8 +67,12 @@
     .producto-info { padding: 10px; flex: 1; display: flex; flex-direction: column; }
     .producto-nombre { font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; line-height: 1.2; }
     .producto-precio { font-size: 15px; font-weight: 800; color: var(--brand); }
-    .producto-stock { font-size: 11px; color: var(--text-mute); font-weight: 600; margin-top: 2px; }
     
+    /* 🔥 NUEVO: Fila de Costo y Ganancia */
+    .producto-costos { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 10px; color: var(--text-mute); font-weight: 600; }
+    .producto-ganancia { color: var(--success); font-weight: 800; }
+    
+    .producto-stock { font-size: 11px; color: var(--text-mute); font-weight: 600; margin-top: 6px; }
     .stock-bajo { color: #EF4444 !important; }
     .stock-cero { color: #666 !important; text-decoration: line-through; }
 
@@ -177,9 +182,16 @@
         <input type="text" id="inputNombre" class="form-input" placeholder="Ej. Cargador 20W">
       </div>
       
-      <div class="form-field">
-        <label class="form-label">Precio (Bs.) *</label>
-        <input type="number" id="inputPrecio" class="form-input" placeholder="0.00" inputmode="decimal">
+      <!-- 🔥 NUEVOS CAMPOS: COSTO Y PRECIO -->
+      <div style="display: flex; gap: 10px;">
+        <div class="form-field" style="flex: 1;">
+          <label class="form-label">Costo (Bs.) *</label>
+          <input type="number" id="inputCosto" class="form-input" placeholder="0.00" inputmode="decimal">
+        </div>
+        <div class="form-field" style="flex: 1;">
+          <label class="form-label">Precio Venta (Bs.) *</label>
+          <input type="number" id="inputPrecio" class="form-input" placeholder="0.00" inputmode="decimal">
+        </div>
       </div>
       
       <div class="form-field">
