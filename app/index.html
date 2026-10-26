@@ -664,7 +664,7 @@
     }
 
     function procesarVentas() {
-      const todas = [...ventasPanel, ...ventasCierres];
+      const todas = [...ventasPanel, ...ventasCierre];
       ventasHoy = todas.sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0));
       renderizarTodo();
     }
