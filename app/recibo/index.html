@@ -57,7 +57,8 @@
     .header h1 { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 2px; line-height: 1; }
     .header p { font-size: 12px; opacity: 0.9; font-weight: 600; background: rgba(0,0,0,0.2); display: inline-block; padding: 4px 10px; border-radius: 20px;}
 
-    .body { padding: 20px 20px 80px 20px; flex: 1; z-index: 2; }
+    /* 🔥 Aumentamos el padding-bottom para que el banner PWA no tape nada */
+    .body { padding: 20px 20px 120px 20px; flex: 1; z-index: 2; }
 
     /* BARRA DE ESTADO (TIMELINE) */
     .status-timeline { display: flex; justify-content: space-between; align-items: center; margin: 10px 0 24px; position: relative; padding: 0 10px;}
@@ -135,10 +136,16 @@
       color: var(--warning); padding: 12px; border-radius: 12px; font-size: 12px;
       text-align: center; font-weight: 600; margin-bottom: 16px; line-height: 1.4;
       display: flex; align-items: center; justify-content: center; gap: 6px;
+      box-shadow: 0 4px 15px rgba(251, 191, 36, 0.1);
     }
-    .warning-timer.expired {
+    
+    /* 🔥 Aviso Rojo (Peligro / Urgente) */
+    .warning-timer.danger {
       background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.4); color: var(--danger);
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15);
+      animation: pulseDanger 2s infinite;
     }
+    @keyframes pulseDanger { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
   </style>
 </head>
 <body>
@@ -279,7 +286,7 @@
     }
 
     function renderizarRecibo(r, id) {
-      // 🔥 CALCULAR DÍAS RESTANTES DESDE LA FECHA DE CREACIÓN
+      // 🔥 CALCULAR DÍAS RESTANTES
       let diasRestantes = 15;
       let avisoHtml = '';
       let botonDescargaHtml = `<button class="btn" id="btnDescargar"><i class="fas fa-file-pdf"></i> Descargar Recibo PDF</button>`;
@@ -290,12 +297,15 @@
         diasRestantes = 15 - diasTranscurridos;
 
         if (diasRestantes <= 0) {
-          avisoHtml = `<div class="warning-timer expired"><i class="fas fa-lock"></i> Este recibo ha expirado. Contacta al taller si necesitas una copia.</div>`;
+          avisoHtml = `<div class="warning-timer danger"><i class="fas fa-lock"></i> Este recibo ha expirado. Contacta al taller.</div>`;
           botonDescargaHtml = `<button class="btn btn-disabled" disabled><i class="fas fa-lock"></i> PDF Expirado</button>`;
-        } else if (diasRestantes <= 5) {
-          avisoHtml = `<div class="warning-timer"><i class="fas fa-exclamation-triangle"></i> ¡Atención! Este enlace se eliminará en <b>${diasRestantes} días</b>. Descarga tu PDF ahora.</div>`;
         } else {
-          avisoHtml = `<div class="warning-timer" style="background: rgba(255,255,255,0.05); border-color: var(--border); color: var(--text-mute);"><i class="fas fa-clock"></i> Tienes <b>${diasRestantes} días</b> para descargar este recibo.</div>`;
+          // 🔥 FORZAMOS EL AVISO ROJO DESDE EL PRIMER DÍA
+          avisoHtml = `
+            <div class="warning-timer danger">
+              <i class="fas fa-exclamation-triangle"></i> 
+              ¡Atención! Descarga tu recibo. Se eliminará en <b>${diasRestantes} días</b>.
+            </div>`;
         }
       }
 
