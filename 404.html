@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="3;url=https://xiaomi.scz.red/">
+  <title>Redirigiendo... - DR. XIAOMI</title>
+  
+  <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0A0A0A;
+      color: #FAFAFA;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 20px;
+      background-image: radial-gradient(circle at 50% 50%, rgba(255, 105, 0, 0.15), transparent 60%);
+    }
+    .card {
+      background: rgba(24, 24, 27, 0.8);
+      padding: 40px 30px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      max-width: 400px;
+      width: 100%;
+    }
+    .icon {
+      font-size: 60px;
+      color: #FF6900;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 14px;
+      color: #A1A1AA;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .btn {
+      display: inline-block;
+      background: #FF6900;
+      color: white;
+      padding: 14px 24px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      transition: transform 0.2s;
+    }
+    .btn:active { transform: scale(0.95); }
+    .loader {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,105,0,0.3);
+      border-top-color: #FF6900;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🔍</div>
+    <h1>Página no encontrada</h1>
+    <p>La página que buscas no existe o fue eliminada.<br><strong>Te redirigiremos al inicio en unos segundos...</strong></p>
+    <a href="https://xiaomi.scz.red/" class="btn">
+      Volver al inicio <span class="loader"></span>
+    </a>
+  </div>
+</body>
+</html>
