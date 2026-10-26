@@ -52,7 +52,7 @@
     .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); border: none; color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .icon-btn:active { transform: scale(0.92); }
     
-    /* 🔥 BOTONES HERO CON TUS IMÁGENES ORIGINALES Y FONDO CIRCULAR */
+    /* BOTONES HERO */
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
     .btn-hero { 
       display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; 
@@ -62,20 +62,17 @@
     }
     .btn-hero:active { transform: scale(0.96); }
     
-    /* Círculo blanco para que el logo resalte en el botón naranja */
-    .icon-circle-hero {
-      width: 40px; height: 40px; background: white; border-radius: 50%;
+    .icon-box {
+      width: 36px; height: 36px; background: white; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      margin-bottom: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      z-index: 2; padding: 6px;
+      margin-bottom: auto; padding: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      z-index: 2;
     }
-    .icon-circle-hero img { width: 100%; height: 100%; object-fit: contain; }
+    .icon-box img { width: 100%; height: 100%; object-fit: contain; }
 
-    /* Para el botón de venta rápida, también le ponemos fondo blanco al icono para que resalte el rayo verde */
-    .btn-hero-venta .icon-circle-hero { background: rgba(16, 185, 129, 0.15); padding: 8px; }
-    .btn-hero-venta .icon-circle-hero img { width: 100%; height: 100%; object-fit: contain; }
+    .icon-raw { width: 36px; height: 36px; object-fit: contain; margin-bottom: auto; z-index: 2; }
 
-    .btn-hero span { z-index: 2; line-height: 1.2; text-align: left; }
+    .btn-hero span { z-index: 2; line-height: 1.2; text-align: left; margin-top: 8px; }
     .btn-hero-nuevo { background: linear-gradient(135deg, var(--brand), #FF8C00); color: white; box-shadow: 0 6px 20px var(--brand-glow); }
     .btn-hero-venta { background: var(--bg-card); color: var(--success); border: 1px solid var(--border); }
     .btn-hero-nuevo::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); opacity: 0.8; pointer-events: none; }
@@ -117,7 +114,16 @@
     .monto.venta { color: var(--success); }
     .estado-chip { font-size: 9px; font-weight: 700; padding: 3px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; text-transform: uppercase; }
 
-    /* BARRA DE NAVEGACIÓN DE 5 ICONOS */
+    /* PAGINACIÓN */
+    .pagination-container { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; margin-bottom: 10px; }
+    .page-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; }
+    .page-btn.active { background: var(--brand); border-color: var(--brand); color: white; }
+    .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .page-btn:active:not(:disabled) { transform: scale(0.92); }
+    .page-nav { background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); padding: 0 12px; height: 36px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .page-nav:active:not(:disabled) { transform: scale(0.92); }
+
+    /* BARRA DE NAVEGACIÓN */
     .bottom-nav { 
       position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
       background: rgba(24, 24, 27, 0.85); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
@@ -136,7 +142,7 @@
     #btnPDFDia i { color: #FF6900; }
     #logoutBtn i { color: #EF4444; }
 
-    /* MODALES Y RESTO DEL CSS */
+    /* MODALES */
     .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 999999; opacity: 0; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; transition: 0.3s; }
     .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
     .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 24px; padding-bottom: max(24px, env(safe-area-inset-bottom)); width: 100%; max-width: 500px; transform: translateY(100%); transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); border-top: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
@@ -194,7 +200,6 @@
         </div>
       </div>
       
-      <!-- 🔥 BOTONES EXTRA DE ADMIN (Inventario y Cierre) -->
       <div class="header-actions">
         <button class="icon-btn" id="btnInventarioNav" title="Inventario" style="display: none; color: #F59E0B;">
           <i class="fas fa-boxes-stacked"></i>
@@ -211,19 +216,15 @@
     <main class="app-content">
       
       <div class="hero-actions">
-        <!-- 🔥 BOTÓN NUEVO EQUIPO (iconostelefoo.png en círculo blanco) -->
         <button class="btn-hero btn-hero-nuevo" id="nuevoReciboBtn">
-          <div class="icon-circle-hero">
+          <div class="icon-box">
             <img src="/app/imagenes/iconostelefoo.png" alt="Nuevo Equipo">
           </div>
           <span>Nuevo<br>Equipo</span>
         </button>
         
-        <!-- 🔥 BOTÓN VENTA RÁPIDA (ventarapida.png en círculo verde suave) -->
         <button class="btn-hero btn-hero-venta" id="ventaRapidaBtn">
-          <div class="icon-circle-hero">
-            <img src="/app/imagenes/ventarapida.png" alt="Venta Rápida">
-          </div>
+          <img src="/app/imagenes/ventarapida.png" alt="Venta Rápida" class="icon-raw">
           <span>Venta<br>Rápida</span>
         </button>
       </div>
@@ -243,7 +244,7 @@
         </div>
       </div>
 
-      <div class="section-title">Movimientos de Hoy</div>
+      <div class="section-title">Movimientos</div>
 
       <div class="search-bar">
         <i class="fas fa-search"></i>
@@ -261,12 +262,9 @@
 
       <div class="cards-list" id="listaOrdenes"></div>
 
-      <button id="btnCargarMas" style="display: none; width: 100%; padding: 16px; border-radius: var(--radius-pill); background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); font-weight: 700; cursor: pointer; margin-top: 10px;">
-        Cargar más
-      </button>
+      <div class="pagination-container" id="paginationContainer"></div>
     </main>
 
-    <!-- 🔥 BARRA DE NAVEGACIÓN INFERIOR CON TUS 5 ICONOS ORIGINALES -->
     <nav class="bottom-nav">
       <button class="nav-item" id="btnRefreshNav" title="Actualizar">
         <i class="fas fa-rotate" id="iconRefresh"></i>
@@ -399,11 +397,15 @@
     let ordenAEntregar = null;
     let metodoPagoSeleccionado = null;
 
+    let todosLosMovimientos = [];
+    let paginaActual = 1;
+    const ITEMS_POR_PAGINA = 12;
+
     const reciboSheet = document.getElementById('reciboSheet');
     const modalVenta = document.getElementById('modalVenta');
     const modalPago = document.getElementById('modalPago');
     const sheetContent = document.getElementById('sheetContent');
-    const btnCargarMas = document.getElementById('btnCargarMas');
+    const paginationContainer = document.getElementById('paginationContainer');
     const appLoader = document.getElementById('appLoader');
 
     requireAuth((s) => {
@@ -430,10 +432,8 @@
       const esAdmin = sesion.rol === 'admin';
 
       if (esAdmin) {
-        const btnInv = document.getElementById('btnInventarioNav');
-        const btnCierre = document.getElementById('btnCierreNav');
-        if (btnInv) btnInv.style.display = 'flex';
-        if (btnCierre) btnCierre.style.display = 'flex';
+        document.getElementById('btnInventarioNav').style.display = 'flex';
+        document.getElementById('btnCierreNav').style.display = 'flex';
 
         const selMetodo = document.getElementById('ventaMetodo');
         const optTransf = document.createElement('option');
@@ -447,8 +447,7 @@
         btnTransf.textContent = '🏦 Transferencia';
         gridPago.appendChild(btnTransf);
       } else {
-        const btnReportes = document.getElementById('reportesBtn');
-        if (btnReportes) btnReportes.style.display = 'none';
+        document.getElementById('reportesBtn').style.display = 'none';
       }
     }
 
@@ -561,18 +560,17 @@
         filtroActual = btn.dataset.filtro;
         
         busquedaActual = '';
-        const buscador = document.getElementById('buscador');
-        if (buscador) buscador.value = '';
+        document.getElementById('buscador').value = '';
+        paginaActual = 1;
         
         renderizarTodo();
       });
       
       document.getElementById('buscador').addEventListener('input', (e) => {
         busquedaActual = e.target.value.toLowerCase().trim();
+        paginaActual = 1;
         renderizarTodo();
       });
-
-      btnCargarMas?.addEventListener('click', cargarMasOrdenes);
     }
 
     let ventasPanel = [];
@@ -675,8 +673,8 @@
 
     function renderizarTodo() {
       actualizarStats();
-      const lista = document.getElementById('listaOrdenes');
-      let todosLosMovimientos = [];
+      
+      todosLosMovimientos = [];
 
       if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
         ordenes.forEach(o => {
@@ -719,14 +717,23 @@
       }
 
       todosLosMovimientos.sort((a, b) => b.fechaOrden - a.fechaOrden);
+      
+      const totalPaginas = Math.ceil(todosLosMovimientos.length / ITEMS_POR_PAGINA);
+      if (paginaActual > totalPaginas) paginaActual = totalPaginas || 1;
+      
+      const inicio = (paginaActual - 1) * ITEMS_POR_PAGINA;
+      const fin = inicio + ITEMS_POR_PAGINA;
+      const movimientosPagina = todosLosMovimientos.slice(inicio, fin);
+
+      const lista = document.getElementById('listaOrdenes');
 
       if (todosLosMovimientos.length === 0) {
         lista.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><h3>Sin movimientos</h3><p>No hay resultados para este filtro.</p></div>`;
-        btnCargarMas.style.display = 'none';
+        paginationContainer.innerHTML = '';
         return;
       }
 
-      lista.innerHTML = todosLosMovimientos.map(m => {
+      lista.innerHTML = movimientosPagina.map(m => {
         if (m.tipo === 'telefono') return renderCardTelefono(m.data);
         else return renderCardVenta(m.data, m.tipo);
       }).join('');
@@ -739,8 +746,37 @@
         });
       });
 
-      btnCargarMas.style.display = 'none';
+      renderizarPaginacion(totalPaginas);
     }
+
+    function renderizarPaginacion(totalPaginas) {
+      if (totalPaginas <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      html += `<button class="page-nav" ${paginaActual === 1 ? 'disabled' : ''} onclick="cambiarPagina(${paginaActual - 1})">Anterior</button>`;
+
+      for (let i = 1; i <= totalPaginas; i++) {
+        if (i === 1 || i === totalPaginas || (i >= paginaActual - 1 && i <= paginaActual + 1)) {
+          html += `<button class="page-btn ${i === paginaActual ? 'active' : ''}" onclick="cambiarPagina(${i})">${i}</button>`;
+        } else if (i === paginaActual - 2 || i === paginaActual + 2) {
+          html += `<span style="color: var(--text-mute);">...</span>`;
+        }
+      }
+
+      html += `<button class="page-nav" ${paginaActual === totalPaginas ? 'disabled' : ''} onclick="cambiarPagina(${paginaActual + 1})">Siguiente</button>`;
+
+      paginationContainer.innerHTML = html;
+    }
+
+    window.cambiarPagina = (pagina) => {
+      haptic(8);
+      paginaActual = pagina;
+      renderizarTodo();
+      document.querySelector('.app-content').scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     function renderCardTelefono(o) {
       const estadoActual = o.estadoOrden || 'recibido';
@@ -826,8 +862,6 @@
       document.getElementById('statHoy').textContent = formatBs(ingresosReparaciones + ingresosVentas);
     }
 
-    async function cargarMasOrdenes() { return; }
-
     function abrirSheetTelefono(id) {
       const orden = ordenes.find(o => o.id === id);
       if (!orden) return;
@@ -877,12 +911,19 @@
 
       document.getElementById('btnActualizarEstado')?.addEventListener('click', async () => {
         const nuevoEstado = document.getElementById('selectEstado').value;
-        if (nuevoEstado === 'entregado') { cerrarSheet(); abrirModalPago(orden); return; }
+        
+        // 🔥 SI ELIGE ENTREGADO, ABRE EL MODAL DE PAGO
+        if (nuevoEstado === 'entregado') { 
+          cerrarSheet(); 
+          abrirModalPago(orden); 
+          return; 
+        }
 
         try {
           await updateDoc(doc(db, 'recibos', id), { estadoOrden: nuevoEstado });
           toast('Estado actualizado', 'success');
           filtroActual = 'todos';
+          paginaActual = 1;
           document.querySelectorAll('#filtros .chip').forEach(b => b.classList.remove('active'));
           document.querySelector('#filtros .chip[data-filtro="todos"]')?.classList.add('active');
           cerrarSheet();
@@ -916,10 +957,21 @@
     }
 
     function abrirModalPago(orden) {
-      ordenAEntregar = orden; metodoPagoSeleccionado = null;
+      ordenAEntregar = orden; 
+      metodoPagoSeleccionado = null;
+      
+      // Sugerimos el saldo o el total
       document.getElementById('pagoMonto').value = orden.saldo > 0 ? orden.saldo : orden.total;
-      document.querySelectorAll('#metodosPagoGrid [data-metodo]').forEach(b => { b.style.borderColor = 'var(--border)'; b.style.color = 'var(--text-main)'; });
-      modalPago.classList.add('show'); haptic(15);
+      
+      // Reseteamos los botones de método de pago
+      document.querySelectorAll('#metodosPagoGrid [data-metodo]').forEach(b => { 
+        b.style.borderColor = 'var(--border)'; 
+        b.style.color = 'var(--text-main)'; 
+        b.style.background = 'var(--bg-elev)';
+      });
+      
+      modalPago.classList.add('show'); 
+      haptic(15);
     }
 
     async function confirmarEntregaConPago() {
@@ -935,6 +987,7 @@
         toast('Equipo entregado y pago registrado', 'success');
         modalPago.classList.remove('show');
         filtroActual = 'todos';
+        paginaActual = 1;
         document.querySelectorAll('#filtros .chip').forEach(b => b.classList.remove('active'));
         document.querySelector('#filtros .chip[data-filtro="todos"]')?.classList.add('active');
       } catch (err) { console.error(err); toast('Error al entregar', 'error'); }
