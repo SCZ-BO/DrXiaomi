@@ -26,7 +26,7 @@
       --bg-main: #09090B; --bg-card: #18181B; --bg-elev: #27272A; 
       --text-main: #FAFAFA; --text-mute: #A1A1AA; --border: rgba(255, 255, 255, 0.08); 
       --success: #10B981; --blue: #3B82F6; --yellow: #FBBF24; --red: #EF4444;
-      --whatsapp: #25D366; /* 🔥 COLOR OFICIAL DE WHATSAPP */
+      --whatsapp: #25D366;
     }
     [data-theme="light"] {
       --bg-main: #F4F4F5; --bg-card: #FFFFFF; --bg-elev: #F4F4F5; 
@@ -153,7 +153,7 @@
     .btn-sheet { width: 100%; padding: 16px; border-radius: var(--radius-md); font-size: 16px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; transition: 0.2s; }
     .btn-sheet:active { transform: scale(0.98); }
     .btn-sheet-primary { background: var(--text-main); color: var(--bg-main); }
-    .btn-sheet-whatsapp { background: var(--whatsapp); color: white; } /* 🔥 VERDE OFICIAL */
+    .btn-sheet-whatsapp { background: var(--whatsapp); color: white; }
     .btn-sheet-danger { background: rgba(239, 68, 68, 0.1); color: var(--red); }
     .btn-sheet-edit { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); }
     
@@ -435,18 +435,12 @@
       if (esAdmin) {
         document.getElementById('btnInventarioNav').style.display = 'flex';
         document.getElementById('btnCierreNav').style.display = 'flex';
-
+        
+        // Agregamos Transferencia a Ventas Rápidas solo para admin
         const selMetodo = document.getElementById('ventaMetodo');
         const optTransf = document.createElement('option');
         optTransf.value = 'Transferencia'; optTransf.textContent = '🏦 Transferencia';
         selMetodo.appendChild(optTransf);
-
-        const gridPago = document.getElementById('metodosPagoGrid');
-        const btnTransf = document.createElement('button');
-        btnTransf.className = 'btn-sheet'; btnTransf.dataset.metodo = 'Transferencia';
-        btnTransf.style = 'background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); margin-bottom:0; grid-column: span 2;';
-        btnTransf.textContent = '🏦 Transferencia';
-        gridPago.appendChild(btnTransf);
       } else {
         document.getElementById('reportesBtn').style.display = 'none';
       }
@@ -667,7 +661,7 @@
     }
 
     function procesarVentas() {
-      const todas = [...ventasPanel, ...ventasCierre];
+      const todas = [...ventasPanel, ...ventasCierres];
       ventasHoy = todas.sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0));
       renderizarTodo();
     }
@@ -869,21 +863,17 @@
 
       const esAdmin = sesion.rol === 'admin';
       
-      const opcionesEstado = esAdmin ? `
+      // 🔥 OPCIONES DE ESTADO PARA AMBOS ROLES (INCLUYE ENTREGADO)
+      const opcionesEstado = `
         <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
         <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
         <option value="espera-repuesto" ${orden.estadoOrden === 'espera-repuesto' ? 'selected' : ''}>⏳ Esperando repuesto</option>
         <option value="listo" ${orden.estadoOrden === 'listo' ? 'selected' : ''}>✅ Listo para entregar</option>
         <option value="entregado" ${orden.estadoOrden === 'entregado' ? 'selected' : ''}>🤝 Entregado</option>
         <option value="devuelto" ${orden.estadoOrden === 'devuelto' ? 'selected' : ''}>↩️ Devuelto</option>
-      ` : `
-        <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
-        <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
-        <option value="espera-repuesto" ${orden.estadoOrden === 'espera-repuesto' ? 'selected' : ''}>⏳ Esperando repuesto</option>
-        <option value="listo" ${orden.estadoOrden === 'listo' ? 'selected' : ''}>✅ Listo para entregar</option>
-        <option value="devuelto" ${orden.estadoOrden === 'devuelto' ? 'selected' : ''}>↩️ Devuelto</option>
       `;
 
+      // 🔥 BOTÓN ELIMINAR SOLO PARA ADMIN
       const btnEliminarHtml = esAdmin ? `<button class="btn-sheet btn-sheet-danger" id="btnEliminar"><i class="fas fa-trash"></i> Eliminar</button>` : '';
 
       sheetContent.innerHTML = `
@@ -1000,19 +990,23 @@
 
       const fechaD = parsearFecha(venta.fecha);
       const horaStr = fechaD ? `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}` : '';
+      const esAdmin = sesion.rol === 'admin';
+
+      // 🔥 BOTÓN ELIMINAR SOLO PARA ADMIN
+      const btnEliminarHtml = esAdmin ? `<button class="btn-sheet btn-sheet-danger" id="btnEliminarVenta"><i class="fas fa-trash"></i> Eliminar</button>` : '';
 
       sheetContent.innerHTML = `
         <div style="margin-bottom: 24px;">
           <h3 style="font-size: 24px; font-weight: 800; color: var(--success); margin: 0 0 4px 0; letter-spacing: -0.5px;">${escapeHtml(venta.concepto)}</h3>
           <p style="font-size: 15px; color: var(--text-mute); margin: 0;">${formatBs(venta.monto)} · ${horaStr} · ${escapeHtml(venta.metodoPago)}</p>
         </div>
-        ${origen === 'panel' ? `<button class="btn-sheet btn-sheet-edit" id="btnEditarVenta"><i class="fas fa-edit"></i> Editar Venta</button>` : ''}
-        <button class="btn-sheet btn-sheet-danger" id="btnEliminarVenta"><i class="fas fa-trash"></i> Eliminar</button>
+        ${origen === 'panel' && esAdmin ? `<button class="btn-sheet btn-sheet-edit" id="btnEditarVenta"><i class="fas fa-edit"></i> Editar Venta</button>` : ''}
+        ${btnEliminarHtml}
       `;
 
       reciboSheet.classList.add('show'); haptic(15);
 
-      if (origen === 'panel') {
+      if (origen === 'panel' && esAdmin) {
         document.getElementById('btnEditarVenta')?.addEventListener('click', () => { cerrarSheet(); abrirModalEditarVenta(venta); });
       }
 
