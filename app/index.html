@@ -52,17 +52,29 @@
     .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); border: none; color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .icon-btn:active { transform: scale(0.92); }
     
-    /* 🔥 BOTONES HERO CON SVG NATIVO (PARA QUE SE VEAN PERFECTOS) */
+    /* 🔥 BOTONES HERO CON TUS IMÁGENES ORIGINALES Y FONDO CIRCULAR */
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
     .btn-hero { 
       display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; 
       padding: 16px; border-radius: var(--radius-lg); font-weight: 700; font-size: 13px; 
-      border: none; cursor: pointer; transition: 0.2s; height: 90px; 
+      border: none; cursor: pointer; transition: 0.2s; height: 95px; 
       box-shadow: 0 6px 20px rgba(0,0,0,0.15); position: relative; overflow: hidden; 
     }
     .btn-hero:active { transform: scale(0.96); }
     
-    .btn-hero svg { width: 28px; height: 28px; margin-bottom: auto; }
+    /* Círculo blanco para que el logo resalte en el botón naranja */
+    .icon-circle-hero {
+      width: 40px; height: 40px; background: white; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 2; padding: 6px;
+    }
+    .icon-circle-hero img { width: 100%; height: 100%; object-fit: contain; }
+
+    /* Para el botón de venta rápida, también le ponemos fondo blanco al icono para que resalte el rayo verde */
+    .btn-hero-venta .icon-circle-hero { background: rgba(16, 185, 129, 0.15); padding: 8px; }
+    .btn-hero-venta .icon-circle-hero img { width: 100%; height: 100%; object-fit: contain; }
+
     .btn-hero span { z-index: 2; line-height: 1.2; text-align: left; }
     .btn-hero-nuevo { background: linear-gradient(135deg, var(--brand), #FF8C00); color: white; box-shadow: 0 6px 20px var(--brand-glow); }
     .btn-hero-venta { background: var(--bg-card); color: var(--success); border: 1px solid var(--border); }
@@ -105,27 +117,26 @@
     .monto.venta { color: var(--success); }
     .estado-chip { font-size: 9px; font-weight: 700; padding: 3px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; text-transform: uppercase; }
 
-    /* 🔥 NAV BAR CON MÁS ICONOS */
+    /* BARRA DE NAVEGACIÓN DE 5 ICONOS */
     .bottom-nav { 
       position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
       background: rgba(24, 24, 27, 0.85); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
       border: 1px solid rgba(255,255,255,0.08); border-radius: 40px; display: flex; justify-content: space-around; align-items: center; 
-      padding: 8px 10px; width: calc(100% - 40px); max-width: 420px; z-index: 100; box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+      padding: 8px 12px; width: calc(100% - 40px); max-width: 380px; z-index: 100; box-shadow: 0 10px 40px rgba(0,0,0,0.4);
     }
     [data-theme="light"] .bottom-nav { background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
     
-    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-mute); gap: 4px; cursor: pointer; transition: 0.2s; background: none; border: none; width: 48px; height: 48px; border-radius: 50%; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-mute); gap: 6px; cursor: pointer; transition: 0.2s; background: none; border: none; width: 44px; height: 44px; border-radius: 50%; }
     .nav-item i { font-size: 18px; transition: 0.2s; }
     .nav-item:active { opacity: 0.6; transform: scale(0.9); }
     
     #btnRefreshNav i { color: #3B82F6; }
-    #btnInventarioNav i { color: #F59E0B; } /* Icono de Caja / Inventario */
     #preciosBtn i { color: #FBBF24; }
     #reportesBtn i { color: #10B981; }
-    #btnCierreNav i { color: #8B5CF6; } /* Icono de Cierre de Caja */
+    #btnPDFDia i { color: #FF6900; }
     #logoutBtn i { color: #EF4444; }
 
-    /* RESTO DEL CSS (MODALES, ETC) SE MANTIENE IGUAL */
+    /* MODALES Y RESTO DEL CSS */
     .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 999999; opacity: 0; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; transition: 0.3s; }
     .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
     .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 24px; padding-bottom: max(24px, env(safe-area-inset-bottom)); width: 100%; max-width: 500px; transform: translateY(100%); transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); border-top: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
@@ -182,7 +193,15 @@
           <p id="userInfo">Cargando...</p>
         </div>
       </div>
+      
+      <!-- 🔥 BOTONES EXTRA DE ADMIN (Inventario y Cierre) -->
       <div class="header-actions">
+        <button class="icon-btn" id="btnInventarioNav" title="Inventario" style="display: none; color: #F59E0B;">
+          <i class="fas fa-boxes-stacked"></i>
+        </button>
+        <button class="icon-btn" id="btnCierreNav" title="Cierre de Caja" style="display: none; color: #8B5CF6;">
+          <i class="fas fa-cash-register"></i>
+        </button>
         <button class="icon-btn" id="themeToggle" title="Cambiar Tema">
           <i class="fas fa-moon" id="themeIcon"></i>
         </button>
@@ -192,23 +211,19 @@
     <main class="app-content">
       
       <div class="hero-actions">
-        <!-- 🔥 SVG NATIVO: Icono de Teléfono con línea de escaneo (Moderno) -->
+        <!-- 🔥 BOTÓN NUEVO EQUIPO (iconostelefoo.png en círculo blanco) -->
         <button class="btn-hero btn-hero-nuevo" id="nuevoReciboBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-            <line x1="12" y1="18" x2="12.01" y2="18"></line>
-            <path d="M8 6h8"></path>
-          </svg>
+          <div class="icon-circle-hero">
+            <img src="/app/imagenes/iconostelefoo.png" alt="Nuevo Equipo">
+          </div>
           <span>Nuevo<br>Equipo</span>
         </button>
         
-        <!-- 🔥 SVG NATIVO: Icono de Caja Registradora (Venta Rápida) -->
+        <!-- 🔥 BOTÓN VENTA RÁPIDA (ventarapida.png en círculo verde suave) -->
         <button class="btn-hero btn-hero-venta" id="ventaRapidaBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="10" width="20" height="12" rx="2"></rect>
-            <path d="M6 10V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4"></path>
-            <line x1="12" y1="14" x2="12" y2="18"></line>
-          </svg>
+          <div class="icon-circle-hero">
+            <img src="/app/imagenes/ventarapida.png" alt="Venta Rápida">
+          </div>
           <span>Venta<br>Rápida</span>
         </button>
       </div>
@@ -251,19 +266,19 @@
       </button>
     </main>
 
-    <!-- 🔥 NAVBAR CON ACCESO A INVENTARIO Y CIERRE -->
+    <!-- 🔥 BARRA DE NAVEGACIÓN INFERIOR CON TUS 5 ICONOS ORIGINALES -->
     <nav class="bottom-nav">
       <button class="nav-item" id="btnRefreshNav" title="Actualizar">
         <i class="fas fa-rotate" id="iconRefresh"></i>
       </button>
-      <button class="nav-item" id="btnInventarioNav" title="Inventario">
-        <i class="fas fa-boxes-stacked"></i>
+      <button class="nav-item" id="preciosBtn" title="Precios">
+        <i class="fas fa-tags"></i>
       </button>
       <button class="nav-item" id="reportesBtn" title="Reportes">
         <i class="fas fa-chart-pie"></i>
       </button>
-      <button class="nav-item" id="btnCierreNav" title="Cierre de Caja">
-        <i class="fas fa-cash-register"></i>
+      <button class="nav-item" id="btnPDFDia" title="PDF del Día">
+        <i class="fas fa-file-invoice"></i>
       </button>
       <button class="nav-item" id="logoutBtn" title="Cerrar sesión">
         <i class="fas fa-power-off"></i>
@@ -409,19 +424,17 @@
       const themeIcon = document.getElementById('themeIcon');
       if (document.documentElement.getAttribute('data-theme') === 'light') themeIcon.className = 'fas fa-sun';
       else themeIcon.className = 'fas fa-moon';
-
-      if (sesion.rol !== 'admin') {
-        const btnReportes = document.getElementById('reportesBtn');
-        if (btnReportes) btnReportes.style.display = 'none';
-        const btnInventario = document.getElementById('btnInventarioNav');
-        if (btnInventario) btnInventario.style.display = 'none'; // Si no es admin, ocultar inventario
-      }
     }
 
     function configurarPermisosPorRol() {
       const esAdmin = sesion.rol === 'admin';
 
       if (esAdmin) {
+        const btnInv = document.getElementById('btnInventarioNav');
+        const btnCierre = document.getElementById('btnCierreNav');
+        if (btnInv) btnInv.style.display = 'flex';
+        if (btnCierre) btnCierre.style.display = 'flex';
+
         const selMetodo = document.getElementById('ventaMetodo');
         const optTransf = document.createElement('option');
         optTransf.value = 'Transferencia'; optTransf.textContent = '🏦 Transferencia';
@@ -433,6 +446,9 @@
         btnTransf.style = 'background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); margin-bottom:0; grid-column: span 2;';
         btnTransf.textContent = '🏦 Transferencia';
         gridPago.appendChild(btnTransf);
+      } else {
+        const btnReportes = document.getElementById('reportesBtn');
+        if (btnReportes) btnReportes.style.display = 'none';
       }
     }
 
@@ -452,12 +468,12 @@
     }
 
     function configurarEventos() {
-      // 🔥 NAVEGACIÓN CON NUEVOS BOTONES
       document.getElementById('btnInventarioNav')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/inventario/'; });
       document.getElementById('btnCierreNav')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cierre/'; });
       document.getElementById('preciosBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/precio/'; });
       document.getElementById('reportesBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/reportes/'; });
       document.getElementById('logoutBtn')?.addEventListener('click', () => { haptic(20); logout(); });
+      document.getElementById('btnPDFDia')?.addEventListener('click', generarPDFDia);
       
       document.getElementById('btnRefreshNav')?.addEventListener('click', () => {
         haptic(15);
