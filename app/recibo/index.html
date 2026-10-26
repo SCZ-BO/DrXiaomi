@@ -6,11 +6,11 @@
   <meta name="theme-color" content="#FF6900">
   <title>Tu Recibo - DR. XIAOMI</title>
 
-  <!-- 🔥 FAVICONS -->
-  <link rel="icon" href="../imagenes/favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/svg+xml" href="../imagenes/favicon.svg">
-  <link rel="icon" type="image/png" sizes="96x96" href="../imagenes/favicon-96x96.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="../imagenes/apple-touch-icon.png">
+  <!-- 🔥 FAVICONS (Ruta a la raíz) -->
+  <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
+  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
+  <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
 
   <!-- 🔥 VISTA PREVIA WHATSAPP -->
   <meta property="og:title" content="Recibo de Reparación - DR. XIAOMI SCZ">
@@ -45,7 +45,6 @@
 
     .card { width: 100%; max-width: 440px; min-height: 100vh; display: flex; flex-direction: column; position: relative; overflow: hidden; }
 
-    /* HEADER */
     .header { background: linear-gradient(135deg, #FF6900, #E55A00); color: white; padding: 20px; position: relative; border-radius: 0 0 30px 30px; box-shadow: 0 10px 30px var(--brand-glow); z-index: 2; display: flex; align-items: center; gap: 15px; }
     .header::after { content: ''; position: absolute; inset: 0; background: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="p" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23p)"/></svg>'); border-radius: 0 0 30px 30px; pointer-events: none; }
     .header-logo-container { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; position: relative; z-index: 3; flex-shrink: 0; }
@@ -93,14 +92,8 @@
     .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: var(--text-mute); font-size: 14px; font-weight: 500; }
     .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
 
-    /* 🔥 BANNER FLOTANTE PWA (Incentivo para instalar) */
-    .pwa-banner {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
-      background: #18181B; border: 1px solid var(--border); border-radius: 16px; padding: 12px 16px;
-      display: flex; align-items: center; gap: 12px; width: 90%; max-width: 400px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9999; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      opacity: 0; pointer-events: none;
-    }
+    /* 🔥 BANNER FLOTANTE PWA */
+    .pwa-banner { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #18181B; border: 1px solid var(--border); border-radius: 16px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9999; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); opacity: 0; pointer-events: none; }
     .pwa-banner.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
     .pwa-banner-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--brand), #E55A00); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; flex-shrink: 0; }
     .pwa-banner-text { flex: 1; }
@@ -144,8 +137,8 @@
   </div>
 
   <script type="module">
-    import { db } from '../js/firebase.js';
-    // 🔥 Usamos onSnapshot para actualización en tiempo real
+    // 🔥 RUTA CORREGIDA: El archivo firebase.js está en la raíz
+    import { db } from '/js/firebase.js';
     import { collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const params = new URLSearchParams(window.location.search);
@@ -159,7 +152,6 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      // Mostrar banner después de 3 segundos
       setTimeout(() => {
         if (!localStorage.getItem('ocultar_pwa_banner')) {
           pwaBanner.classList.add('show');
@@ -186,7 +178,7 @@
       escucharRecibo(reciboId);
     }
 
-    // 🔥 ESCUCHAR EN TIEMPO REAL (Si el técnico cambia el estado, se actualiza aquí)
+    // 🔥 ESCUCHAR EN TIEMPO REAL
     function escucharRecibo(id) {
       const q = query(collection(db, 'recibos'), where('numeroRecibo', '==', id));
       
@@ -262,7 +254,8 @@
       // 4. Render HTML
       appCard.innerHTML = `
         <div class="header">
-          <div class="header-logo-container"><img src="../imagenes/web-app-manifest-192x192.png" alt="Logo" class="header-logo" onerror="this.style.display='none'"></div>
+          <!-- 🔥 RUTA CORREGIDA DEL LOGO -->
+          <div class="header-logo-container"><img src="/imagenes/web-app-manifest-192x192.png" alt="Logo" class="header-logo" onerror="this.style.display='none'"></div>
           <div class="header-text"><h1>DR. XIAOMI</h1><p>Recibo N°: ${r.numeroRecibo}</p></div>
         </div>
         
@@ -431,7 +424,7 @@
           try { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0); resolve(c.toDataURL('image/png')); } catch (e) { resolve(''); }
         };
         img.onerror = () => resolve('');
-        img.src = '../imagenes/web-app-manifest-192x192.png';
+        img.src = '/imagenes/web-app-manifest-192x192.png';
       });
     }
 
