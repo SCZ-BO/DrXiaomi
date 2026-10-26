@@ -6,13 +6,11 @@
   <meta name="theme-color" content="#FF6900">
   <title>Tu Recibo - DR. XIAOMI</title>
 
-  <!-- 🔥 FAVICONS (Ruta a la raíz) -->
   <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
   <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
   <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
 
-  <!-- 🔥 VISTA PREVIA WHATSAPP -->
   <meta property="og:title" content="Recibo de Reparación - DR. XIAOMI SCZ">
   <meta property="og:description" content="Haz clic aquí para ver el estado de tu equipo y descargar tu comprobante en PDF.">
   <meta property="og:image" content="https://xiaomi.scz.red/imagenes/web-app-manifest-192x192.png">
@@ -137,7 +135,6 @@
   </div>
 
   <script type="module">
-    // 🔥 RUTA CORREGIDA: El archivo firebase.js está en la raíz
     import { db } from '/js/firebase.js';
     import { collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -178,7 +175,6 @@
       escucharRecibo(reciboId);
     }
 
-    // 🔥 ESCUCHAR EN TIEMPO REAL
     function escucharRecibo(id) {
       const q = query(collection(db, 'recibos'), where('numeroRecibo', '==', id));
       
@@ -197,7 +193,6 @@
     }
 
     function renderizarRecibo(r, id) {
-      // 1. Lógica para el Timeline
       let stepActivo = 1;
       if (r.estadoOrden === 'reparacion' || r.estadoOrden === 'espera-repuesto') stepActivo = 2;
       else if (r.estadoOrden === 'listo') stepActivo = 3;
@@ -226,7 +221,6 @@
         </div>
       `;
 
-      // 2. Lógica de expiración (30 días)
       let avisoHtml = '';
       let botonDescargaHtml = `<button class="btn" id="btnDescargar"><i class="fas fa-file-pdf"></i> Descargar Recibo PDF</button>`;
       let diasRestantes = 30;
@@ -242,7 +236,6 @@
         }
       }
 
-      // 3. Fechas y Servicios
       let fechaIngreso = '-';
       if (r.fechaEditada || r.fecha) {
         let d = (r.fechaEditada || r.fecha).toDate ? (r.fechaEditada || r.fecha).toDate() : new Date(r.fechaEditada || r.fecha);
@@ -251,10 +244,8 @@
 
       const serviciosHtml = (r.servicios || []).map(s => `<div class="row"><span>${s.desc}</span><span>Bs. ${Number(s.costo).toFixed(2)}</span></div>`).join('');
 
-      // 4. Render HTML
       appCard.innerHTML = `
         <div class="header">
-          <!-- 🔥 RUTA CORREGIDA DEL LOGO -->
           <div class="header-logo-container"><img src="/imagenes/web-app-manifest-192x192.png" alt="Logo" class="header-logo" onerror="this.style.display='none'"></div>
           <div class="header-text"><h1>DR. XIAOMI</h1><p>Recibo N°: ${r.numeroRecibo}</p></div>
         </div>
@@ -293,7 +284,7 @@
     }
 
     // =====================================================================
-    // 🔥 MOTOR DE PDF FORMATO TICKET (CON LOADER DE ESTADO)
+    // 🔥 MOTOR DE PDF COMPLETO (DISEÑO PROFESIONAL TIPO HOJA A4)
     // =====================================================================
     async function generarPDFPremium(r) {
       const loader = document.getElementById('pdfLoader');
@@ -306,8 +297,8 @@
 
       try {
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ unit: 'mm', format: [80, 250] });
-        const W = 80, M = 5, CW = W - M * 2;
+        const pdf = new jsPDF({ unit: 'mm', format: 'a4' }); // Hoja A4 Oficio
+        const W = 210, M = 15, CW = W - M * 2;
         let y = 0;
 
         loaderText.textContent = 'Cargando logo...';
@@ -320,90 +311,191 @@
         loaderText.textContent = 'Construyendo PDF...';
         loaderSub.textContent = 'Dando formato a los datos...';
 
-        // 1. ENCABEZADO
-        pdf.setFillColor(255, 105, 0); pdf.rect(0, 0, W, 25, 'F');
+        // ==========================================
+        // 1. ENCABEZADO NARANJA (ESTILO PREMIUM)
+        // ==========================================
+        pdf.setFillColor(255, 105, 0); 
+        pdf.rect(0, 0, W, 35, 'F'); // Cabecera sólida
+        
         if (logoDataUrl) {
           try {
-            pdf.setFillColor(255, 255, 255); pdf.circle(W / 2, 8, 5, 'F');
-            pdf.addImage(logoDataUrl, 'PNG', W / 2 - 4, 4, 8, 8); 
+            pdf.setFillColor(255, 255, 255);
+            pdf.circle(M + 10, 17.5, 9, 'F'); // Círculo blanco detrás del logo
+            pdf.addImage(logoDataUrl, 'PNG', M + 2, 10, 15, 15); 
           } catch (e) {}
         }
-        pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(14);
-        pdf.text('DR. XIAOMI SCZ', W / 2, 19, { align: 'center' });
-        pdf.setFontSize(7); pdf.setFont('helvetica', 'normal');
-        pdf.text('Servicio Técnico Especializado', W / 2, 23, { align: 'center' });
 
-        y = 30;
+        pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(22);
+        pdf.text('DR. XIAOMI SCZ', M + 24, 16);
+        pdf.setFontSize(9); pdf.setFont('helvetica', 'normal');
+        pdf.text('Servicio Técnico Especializado', M + 24, 22);
+        pdf.text('Centro Comercial Cañoto #K1 · Tel: 75959450', M + 24, 27);
 
-        // 2. DATOS RECIBO
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10);
-        pdf.text(`RECIBO: ${r.numeroRecibo}`, W / 2, y, { align: 'center' });
-        y += 5;
-        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8);
-        pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, W / 2, y, { align: 'center' });
-        y += 6;
-        pdf.setDrawColor(200, 200, 200); pdf.setLineWidth(0.3);
-        pdf.line(M, y, W - M, y); y += 5;
-
-        // 3. CLIENTE
-        pdf.setFontSize(8); pdf.setTextColor(100, 100, 100); pdf.text('CLIENTE:', M, y); y += 4;
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text((r.cliente || '').slice(0, 25), M, y); y += 4;
-        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(100, 100, 100); pdf.text(`Tel: ${r.telefono || ''}`, M, y); y += 6;
-
-        // 4. EQUIPO
-        pdf.setTextColor(100, 100, 100); pdf.text('EQUIPO:', M, y); y += 4;
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text(`${r.marca || ''} ${r.modelo || ''}`.slice(0, 25), M, y); y += 4;
-        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(100, 100, 100); pdf.text(`Enciende: ${r.enciende || 'Sí'}`, M, y); y += 6;
-
-        // 5. FALLA
-        pdf.setTextColor(100, 100, 100); pdf.text('FALLA:', M, y); y += 4;
-        pdf.setTextColor(30, 30, 30); pdf.text(pdf.splitTextToSize(r.falla || 'No especificada', CW), M, y); y += 6;
-
-        // 6. CLAVE
-        pdf.setTextColor(100, 100, 100); pdf.text('CLAVE:', M, y); y += 4;
-        pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold');
-        let segInfo = r.tipoSeguridad === 'pin' ? `PIN: ${r.pin}` : (r.patron ? `Patrón: ${r.patron.split(',').join('-')}` : 'Sin clave');
-        pdf.text(segInfo, M, y); y += 6;
-
-        pdf.setDrawColor(200, 200, 200); pdf.line(M, y, W - M, y); y += 5;
-
-        // 7. SERVICIOS
+        // Recuadro del recibo
+        pdf.setFillColor(255, 255, 255); 
+        pdf.roundedRect(W - M - 60, 8, 60, 20, 2, 2, 'F');
         pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8);
-        pdf.text('SERVICIOS', M, y); pdf.text('COSTO', W - M, y, { align: 'right' }); y += 4;
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'normal');
-        (r.servicios || []).forEach(s => {
-          pdf.text(s.desc.slice(0, 30), M, y);
-          pdf.text(`Bs. ${Number(s.costo).toFixed(2)}`, W - M, y, { align: 'right' });
-          y += 5;
+        pdf.text('RECIBO N°', W - M - 4, 14, { align: 'right' });
+        pdf.setFontSize(11); pdf.text(r.numeroRecibo || '-', W - M - 4, 20, { align: 'right' });
+        
+        y = 45;
+
+        // ==========================================
+        // 2. DATOS DEL CLIENTE Y EQUIPO (TARJETAS)
+        // ==========================================
+        const colW = (CW - 6) / 2;
+
+        // Cliente
+        pdf.setFillColor(248, 248, 248); pdf.roundedRect(M, y, colW, 25, 2, 2, 'F');
+        pdf.setFillColor(255, 105, 0); pdf.rect(M, y, 2, 25, 'F'); // Línea naranja izquierda
+        pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8);
+        pdf.text('DATOS DEL CLIENTE', M + 5, y + 6);
+        pdf.setTextColor(30, 30, 30); pdf.setFontSize(11); pdf.text((r.cliente || '').slice(0, 25), M + 5, y + 14);
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(100, 100, 100);
+        pdf.text(`Tel: ${r.telefono || ''}`, M + 5, y + 21);
+
+        // Equipo
+        pdf.setFillColor(248, 248, 248); pdf.roundedRect(M + colW + 6, y, colW, 25, 2, 2, 'F');
+        pdf.setFillColor(255, 105, 0); pdf.rect(M + colW + 6, y, 2, 25, 'F');
+        pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8);
+        pdf.text('DATOS DEL EQUIPO', M + colW + 11, y + 6);
+        pdf.setTextColor(30, 30, 30); pdf.setFontSize(11); pdf.text(`${r.marca || ''} ${r.modelo || ''}`.slice(0, 25), M + colW + 11, y + 14);
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(100, 100, 100);
+        pdf.text(`Enciende: ${r.enciende || 'Sí'}`, M + colW + 11, y + 21);
+
+        y += 30;
+
+        // Falla y Seguridad
+        pdf.setFillColor(248, 248, 248); pdf.roundedRect(M, y, colW, 25, 2, 2, 'F');
+        pdf.setFillColor(255, 105, 0); pdf.rect(M, y, 2, 25, 'F');
+        pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8);
+        pdf.text('ESTADO / FALLA', M + 5, y + 6);
+        pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9);
+        pdf.text(pdf.splitTextToSize(r.falla || 'No especificada', colW - 10), M + 5, y + 13);
+
+        pdf.setFillColor(248, 248, 248); pdf.roundedRect(M + colW + 6, y, colW, 25, 2, 2, 'F');
+        pdf.setFillColor(255, 105, 0); pdf.rect(M + colW + 6, y, 2, 25, 'F');
+        pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8);
+        pdf.text('SEGURIDAD', M + colW + 11, y + 6);
+        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10);
+        let segInfo = r.tipoSeguridad === 'pin' ? `PIN: ${r.pin}` : (r.patron ? `Patrón: ${r.patron.split(',').join('-')}` : 'Sin clave');
+        pdf.text(segInfo.slice(0, 25), M + colW + 11, y + 15);
+
+        y += 30;
+
+        // ==========================================
+        // 3. TABLA DE SERVICIOS
+        // ==========================================
+        pdf.setFillColor(255, 105, 0); pdf.roundedRect(M, y, CW, 8, 2, 2, 'F');
+        pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9);
+        pdf.text('SERVICIOS Y COSTOS', M + 5, y + 5.5);
+        y += 12;
+
+        pdf.autoTable({
+          startY: y,
+          head: [['Descripción del Servicio', 'Costo']],
+          body: (r.servicios || []).map(s => [s.desc, `Bs. ${Number(s.costo).toFixed(2)}`]),
+          styles: { fontSize: 9, cellPadding: 4, lineColor: [230, 230, 230], lineWidth: 0.1 },
+          headStyles: { fillColor: [255, 105, 0], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+          alternateRowStyles: { fillColor: [255, 250, 245] },
+          columnStyles: { 0: { cellWidth: CW - 40 }, 1: { halign: 'right', cellWidth: 40, fontStyle: 'bold', textColor: [255, 105, 0] } },
+          margin: { left: M, right: M },
+          theme: 'grid'
         });
-        y += 2; pdf.setDrawColor(200, 200, 200); pdf.line(M, y, W - M, y); y += 5;
 
-        // 8. TOTALES
-        pdf.setFontSize(9); pdf.setTextColor(100, 100, 100); pdf.text('Total:', M, y);
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.text(`Bs. ${Number(r.total || 0).toFixed(2)}`, W - M, y, { align: 'right' }); y += 5;
+        y = pdf.lastAutoTable.finalY + 10;
 
-        if (r.adelanto > 0) {
-          pdf.setFont('helvetica', 'normal'); pdf.setTextColor(100, 100, 100); pdf.text('Adelanto:', M, y);
-          pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.text(`- Bs. ${Number(r.adelanto).toFixed(2)}`, W - M, y, { align: 'right' }); y += 5;
+        // ==========================================
+        // 4. TOTALES
+        // ==========================================
+        const boxW = 80; const boxX = M + CW - boxW;
+        pdf.setFillColor(248, 248, 248); pdf.roundedRect(boxX, y, boxW, 20, 2, 2, 'F');
+        pdf.setDrawColor(255, 105, 0); pdf.setLineWidth(0.4); pdf.roundedRect(boxX, y, boxW, 20, 2, 2, 'S');
+
+        pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9);
+        pdf.text('Total:', boxX + 5, y + 8);
+        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11);
+        pdf.text(`Bs. ${Number(r.total || 0).toFixed(2)}`, boxX + boxW - 5, y + 8, { align: 'right' });
+        
+        pdf.setTextColor(255, 105, 0); pdf.setFontSize(10);
+        pdf.text('SALDO:', boxX + 5, y + 16);
+        pdf.setFontSize(12); pdf.text(`Bs. ${Number(r.saldo || 0).toFixed(2)}`, boxX + boxW - 5, y + 16, { align: 'right' });
+
+        y += 28;
+
+        // ==========================================
+        // 5. FOTOS (Si existen)
+        // ==========================================
+        const fotosValidas = (r.fotos || []).filter(f => f && typeof f === 'string');
+        if (fotosValidas.length > 0) {
+          pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9);
+          pdf.text('IMÁGENES DEL EQUIPO', M, y); y += 6;
+
+          const fotoW = (CW - 6) / 2; // 2 fotos por fila
+          const fotoH = fotoW * 0.75; // Proporción 4:3
+          let x = M;
+
+          for (let i = 0; i < Math.min(fotosValidas.length, 2); i++) {
+            try {
+              pdf.setFillColor(255, 255, 255); pdf.roundedRect(x, y, fotoW, fotoH, 2, 2, 'F');
+              pdf.setDrawColor(220, 220, 220); pdf.roundedRect(x, y, fotoW, fotoH, 2, 2, 'S');
+              pdf.addImage(fotosValidas[i], 'JPEG', x + 1, y + 1, fotoW - 2, fotoH - 2, undefined, 'FAST');
+            } catch (e) {}
+            x += fotoW + 6;
+          }
+          y += fotoH + 10;
         }
 
-        pdf.setFillColor(255, 245, 235); pdf.roundedRect(M, y - 2, CW, 10, 2, 2, 'F');
-        pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11);
-        pdf.text('SALDO:', M + 2, y + 4); pdf.text(`Bs. ${Number(r.saldo || 0).toFixed(2)}`, W - M - 2, y + 4, { align: 'right' });
-        y += 14;
+        // ==========================================
+        // 6. CONDICIONES DEL SERVICIO
+        // ==========================================
+        if (y > 230) { pdf.addPage(); y = 20; } // Salto de página si no cabe
+        
+        pdf.setFillColor(248, 248, 248); pdf.roundedRect(M, y, CW, 35, 2, 2, 'F');
+        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9);
+        pdf.text('CONDICIONES DEL SERVICIO', M + 5, y + 6);
 
-        // 9. QR
+        pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8);
+        const garantia = [
+          '1. Conserve este recibo; solo con él puede retirar su equipo.',
+          '2. La fecha de entrega está sujeta a disponibilidad de repuestos.',
+          '3. El retiro debe hacerse Max dentro de los 10 días posteriores al aviso.',
+          '4. Pasados 20 días sin retiro, el equipo se considera abandonado.',
+          '5. Garantía: 30 días en repuesto / 60 días en mano de obra.'
+        ];
+        garantia.forEach((txt, i) => {
+          pdf.text(txt, M + 5, y + 12 + (i * 4));
+        });
+
+        y += 40;
+
+        // ==========================================
+        // 7. FIRMA Y QR
+        // ==========================================
+        if (y > 250) { pdf.addPage(); y = 20; }
+
+        // Firma Cliente (Izquierda)
+        pdf.setDrawColor(200, 200, 200); pdf.setLineWidth(0.3);
+        pdf.line(M, y + 15, M + 60, y + 15);
+        pdf.setTextColor(100, 100, 100); pdf.setFontSize(8);
+        pdf.text('Firma del Cliente', M + 15, y + 20);
+
+        // QR (Derecha)
         if (qrDataUrl) {
           try {
-            pdf.addImage(qrDataUrl, 'PNG', W / 2 - 10, y, 20, 20); y += 22;
-            pdf.setTextColor(100, 100, 100); pdf.setFontSize(7); pdf.text('Escanea para ver tu recibo', W / 2, y, { align: 'center' });
+            pdf.addImage(qrDataUrl, 'PNG', W - M - 25, y, 25, 25);
+            pdf.setFontSize(6); pdf.text('Ver estado online', W - M - 25, y + 28);
           } catch (e) {}
         }
 
-        // 10. PIE
-        pdf.setFillColor(255, 105, 0); pdf.rect(0, y + 5, W, 10, 'F');
-        pdf.setTextColor(255, 255, 255); pdf.setFontSize(7); pdf.setFont('helvetica', 'bold');
-        pdf.text('¡Gracias por confiar en DR. XIAOMI!', W / 2, y + 11, { align: 'center' });
+        // ==========================================
+        // PIE DE PÁGINA FINAL
+        // ==========================================
+        pdf.setFillColor(255, 105, 0); pdf.rect(0, 285, W, 12, 'F');
+        pdf.setTextColor(255, 255, 255); pdf.setFontSize(8); pdf.setFont('helvetica', 'bold');
+        pdf.text('¡Gracias por confiar en DR. XIAOMI SCZ!', W / 2, 290, { align: 'center' });
+        pdf.setFontSize(7); pdf.setFont('helvetica', 'normal');
+        pdf.text('Síguenos en xiaomi.scz.red', W / 2, 294, { align: 'center' });
 
         loaderText.textContent = '¡Listo!'; loaderSub.textContent = 'Descargando archivo...';
         await new Promise(res => setTimeout(res, 800));
