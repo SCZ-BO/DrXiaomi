@@ -6,20 +6,17 @@
   <meta name="theme-color" content="#FF6900">
   <title>Tu Recibo - DR. XIAOMI</title>
 
-  <!-- 🔥 FAVICONS -->
   <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
   <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
   <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
 
-  <!-- 🔥 MANIFEST (CLAVE PARA QUE CHROME PERMITA INSTALAR) -->
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="DR XIAOMI">
 
-  <!-- 🔥 VISTA PREVIA WHATSAPP -->
   <meta property="og:title" content="Recibo de Reparación - DR. XIAOMI SCZ">
   <meta property="og:description" content="Haz clic aquí para ver el estado de tu equipo y descargar tu comprobante en PDF.">
   <meta property="og:image" content="https://xiaomi.scz.red/imagenes/web-app-manifest-192x192.png">
@@ -105,25 +102,13 @@
     .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: var(--text-mute); font-size: 14px; font-weight: 500; }
     .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
 
-    /* 🔥 BANNER FLOTANTE PWA (IDÉNTICO AL DE TU PÁGINA PRINCIPAL) */
+    /* 🔥 BANNER FLOTANTE PWA */
     .install-banner {
-      position: fixed;
-      bottom: calc(20px + env(safe-area-inset-bottom));
-      left: 50%;
-      transform: translateX(-50%) translateY(300%);
-      width: calc(100% - 2rem);
-      max-width: 400px;
-      background: linear-gradient(135deg, #1A1E2C, #0E1118);
-      border: 1.5px solid var(--brand);
-      border-radius: 1.4rem;
-      padding: 1rem 1.2rem;
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      z-index: 1500;
-      box-shadow: 0 12px 40px -8px rgba(255,105,0,0.6);
-      transition: transform 0.4s cubic-bezier(.2,.9,.4,1.2);
-      box-sizing: border-box;
+      position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(300%);
+      width: calc(100% - 2rem); max-width: 400px; background: linear-gradient(135deg, #1A1E2C, #0E1118);
+      border: 1.5px solid var(--brand); border-radius: 1.4rem; padding: 1rem 1.2rem;
+      display: flex; align-items: center; gap: 0.8rem; z-index: 1500;
+      box-shadow: 0 12px 40px -8px rgba(255,105,0,0.6); transition: transform 0.4s cubic-bezier(.2,.9,.4,1.2); box-sizing: border-box;
     }
     .install-banner.show { transform: translateX(-50%) translateY(0); }
     .install-banner.ios { border-color: #007AFF; }
@@ -143,6 +128,17 @@
     @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
     .pdf-loader-text { font-size: 16px; font-weight: 700; color: white; margin-bottom: 8px; }
     .pdf-loader-sub { font-size: 13px; color: var(--text-mute); }
+
+    /* 🔥 ADVERTENCIA DE EXPIRACIÓN (TIMER) */
+    .warning-timer {
+      background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.4);
+      color: var(--warning); padding: 12px; border-radius: 12px; font-size: 12px;
+      text-align: center; font-weight: 600; margin-bottom: 16px; line-height: 1.4;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .warning-timer.expired {
+      background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.4); color: var(--danger);
+    }
   </style>
 </head>
 <body>
@@ -161,7 +157,7 @@
     <div class="pdf-loader-sub" id="pdfLoaderSub">Por favor espera un momento</div>
   </div>
 
-  <!-- 🔥 BANNER FLOTANTE PWA (IDÉNTICO AL DE TU PÁGINA PRINCIPAL) -->
+  <!-- BANNER FLOTANTE PWA -->
   <div class="install-banner" id="installBanner">
     <div class="install-banner-icon" id="installIcon">
       <img src="/imagenes/web-app-manifest-192x192.png" alt="DR XIAOMI" class="install-banner-logo">
@@ -178,7 +174,6 @@
     import { db } from '/js/firebase.js';
     import { collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // 🔥 REGISTRO DEL SERVICE WORKER (OBLIGATORIO PARA QUE CHROME DEJE INSTALAR)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(err => console.error('SW Error:', err));
     }
@@ -188,7 +183,7 @@
     const appCard = document.getElementById('appCard');
 
     // ==========================================
-    // 🔥 LÓGICA DEL BANNER PWA (IDÉNTICA A TU INDEX)
+    // 🔥 LÓGICA DEL BANNER PWA
     // ==========================================
     let deferredPrompt = null;
     const installBanner = document.getElementById('installBanner');
@@ -284,6 +279,26 @@
     }
 
     function renderizarRecibo(r, id) {
+      // 🔥 CALCULAR DÍAS RESTANTES DESDE LA FECHA DE CREACIÓN
+      let diasRestantes = 15;
+      let avisoHtml = '';
+      let botonDescargaHtml = `<button class="btn" id="btnDescargar"><i class="fas fa-file-pdf"></i> Descargar Recibo PDF</button>`;
+
+      if (r.fecha) {
+        let fechaCreacion = r.fecha.toDate ? r.fecha.toDate() : new Date(r.fecha);
+        let diasTranscurridos = Math.floor((new Date() - fechaCreacion) / (1000 * 60 * 60 * 24));
+        diasRestantes = 15 - diasTranscurridos;
+
+        if (diasRestantes <= 0) {
+          avisoHtml = `<div class="warning-timer expired"><i class="fas fa-lock"></i> Este recibo ha expirado. Contacta al taller si necesitas una copia.</div>`;
+          botonDescargaHtml = `<button class="btn btn-disabled" disabled><i class="fas fa-lock"></i> PDF Expirado</button>`;
+        } else if (diasRestantes <= 5) {
+          avisoHtml = `<div class="warning-timer"><i class="fas fa-exclamation-triangle"></i> ¡Atención! Este enlace se eliminará en <b>${diasRestantes} días</b>. Descarga tu PDF ahora.</div>`;
+        } else {
+          avisoHtml = `<div class="warning-timer" style="background: rgba(255,255,255,0.05); border-color: var(--border); color: var(--text-mute);"><i class="fas fa-clock"></i> Tienes <b>${diasRestantes} días</b> para descargar este recibo.</div>`;
+        }
+      }
+
       let stepActivo = 1;
       if (r.estadoOrden === 'reparacion' || r.estadoOrden === 'espera-repuesto') stepActivo = 2;
       else if (r.estadoOrden === 'listo') stepActivo = 3;
@@ -311,21 +326,6 @@
           </div>
         </div>
       `;
-
-      let avisoHtml = '';
-      let botonDescargaHtml = `<button class="btn" id="btnDescargar"><i class="fas fa-file-pdf"></i> Descargar Recibo PDF</button>`;
-      let diasRestantes = 30;
-      
-      if (r.estadoOrden === 'entregado' && r.fechaEntrega) {
-        let fecha = r.fechaEntrega.toDate ? r.fechaEntrega.toDate() : new Date(r.fechaEntrega);
-        diasRestantes = 30 - Math.floor((new Date() - fecha) / (1000 * 60 * 60 * 24));
-        if (diasRestantes <= 0) { 
-          avisoHtml = `<div class="aviso aviso-danger">⚠️ Este enlace de descarga ha expirado.</div>`; 
-          botonDescargaHtml = `<button class="btn btn-disabled" disabled><i class="fas fa-lock"></i> PDF Expirado</button>`; 
-        } else if (diasRestantes <= 15) { 
-          avisoHtml = `<div class="aviso aviso-warning">⏳ Te quedan <b>${diasRestantes} días</b> para descargar este PDF. ¡Guárdalo!</div>`; 
-        }
-      }
 
       let fechaIngreso = '-';
       if (r.fechaEditada || r.fecha) {
@@ -369,7 +369,7 @@
         </div>
       `;
 
-      if (diasRestantes > 0 || r.estadoOrden !== 'entregado') {
+      if (diasRestantes > 0) {
         document.getElementById('btnDescargar')?.addEventListener('click', () => generarPDFPremium(r));
       }
     }
