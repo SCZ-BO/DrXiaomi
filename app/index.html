@@ -435,12 +435,6 @@
       if (esAdmin) {
         document.getElementById('btnInventarioNav').style.display = 'flex';
         document.getElementById('btnCierreNav').style.display = 'flex';
-        
-        // Agregamos Transferencia a Ventas Rápidas solo para admin
-        const selMetodo = document.getElementById('ventaMetodo');
-        const optTransf = document.createElement('option');
-        optTransf.value = 'Transferencia'; optTransf.textContent = '🏦 Transferencia';
-        selMetodo.appendChild(optTransf);
       } else {
         document.getElementById('reportesBtn').style.display = 'none';
       }
@@ -452,6 +446,15 @@
       if (fechaObj.seconds !== undefined) return new Date(fechaObj.seconds * 1000);
       const d = new Date(fechaObj);
       return isNaN(d.getTime()) ? null : d;
+    }
+
+    // 🔥 FUNCIÓN PARA LIMPIAR LOS DECIMALES
+    function formatBsLimpio(num) {
+      const valor = Number(num) || 0;
+      if (valor === Math.floor(valor)) {
+        return `Bs. ${valor}`;
+      }
+      return `Bs. ${valor.toFixed(2)}`;
     }
 
     function formatFechaCompleta(fecha) {
@@ -798,7 +801,7 @@
             <span class="estado-chip" style="background: ${estadoInfo.color}15; color: ${estadoInfo.color};">${estadoInfo.texto}</span>
           </div>
           <div class="monto-col">
-            <div class="monto telefono">${formatBs(total)}</div>
+            <div class="monto telefono">${formatBsLimpio(total)}</div>
           </div>
         </div>
       `;
@@ -824,7 +827,7 @@
             <div class="info-sub">${horaStr} · ${escapeHtml(v.metodoPago)}</div>
           </div>
           <div class="monto-col">
-            <div class="monto venta">${formatBs(v.monto)}</div>
+            <div class="monto venta">${formatBsLimpio(v.monto)}</div>
           </div>
         </div>
       `;
@@ -854,7 +857,7 @@
         return f && f >= hoy;
       }).reduce((sum, v) => sum + (Number(v.monto) || 0), 0);
 
-      document.getElementById('statHoy').textContent = formatBs(ingresosReparaciones + ingresosVentas);
+      document.getElementById('statHoy').textContent = formatBsLimpio(ingresosReparaciones + ingresosVentas);
     }
 
     function abrirSheetTelefono(id) {
@@ -863,7 +866,6 @@
 
       const esAdmin = sesion.rol === 'admin';
       
-      // 🔥 OPCIONES DE ESTADO PARA AMBOS ROLES (INCLUYE ENTREGADO)
       const opcionesEstado = `
         <option value="recibido" ${orden.estadoOrden === 'recibido' ? 'selected' : ''}>📦 Recibido</option>
         <option value="reparacion" ${orden.estadoOrden === 'reparacion' ? 'selected' : ''}>🔧 En reparación</option>
@@ -873,7 +875,6 @@
         <option value="devuelto" ${orden.estadoOrden === 'devuelto' ? 'selected' : ''}>↩️ Devuelto</option>
       `;
 
-      // 🔥 BOTÓN ELIMINAR SOLO PARA ADMIN
       const btnEliminarHtml = esAdmin ? `<button class="btn-sheet btn-sheet-danger" id="btnEliminar"><i class="fas fa-trash"></i> Eliminar</button>` : '';
 
       sheetContent.innerHTML = `
@@ -903,7 +904,6 @@
       document.getElementById('btnActualizarEstado')?.addEventListener('click', async () => {
         const nuevoEstado = document.getElementById('selectEstado').value;
         
-        // 🔥 SI ELIGE ENTREGADO, ABRE EL MODAL DE PAGO
         if (nuevoEstado === 'entregado') { 
           cerrarSheet(); 
           abrirModalPago(orden); 
@@ -951,10 +951,8 @@
       ordenAEntregar = orden; 
       metodoPagoSeleccionado = null;
       
-      // Sugerimos el saldo o el total
       document.getElementById('pagoMonto').value = orden.saldo > 0 ? orden.saldo : orden.total;
       
-      // Reseteamos los botones de método de pago
       document.querySelectorAll('#metodosPagoGrid [data-metodo]').forEach(b => { 
         b.style.borderColor = 'var(--border)'; 
         b.style.color = 'var(--text-main)'; 
@@ -992,13 +990,12 @@
       const horaStr = fechaD ? `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}` : '';
       const esAdmin = sesion.rol === 'admin';
 
-      // 🔥 BOTÓN ELIMINAR SOLO PARA ADMIN
       const btnEliminarHtml = esAdmin ? `<button class="btn-sheet btn-sheet-danger" id="btnEliminarVenta"><i class="fas fa-trash"></i> Eliminar</button>` : '';
 
       sheetContent.innerHTML = `
         <div style="margin-bottom: 24px;">
           <h3 style="font-size: 24px; font-weight: 800; color: var(--success); margin: 0 0 4px 0; letter-spacing: -0.5px;">${escapeHtml(venta.concepto)}</h3>
-          <p style="font-size: 15px; color: var(--text-mute); margin: 0;">${formatBs(venta.monto)} · ${horaStr} · ${escapeHtml(venta.metodoPago)}</p>
+          <p style="font-size: 15px; color: var(--text-mute); margin: 0;">${formatBsLimpio(venta.monto)} · ${horaStr} · ${escapeHtml(venta.metodoPago)}</p>
         </div>
         ${origen === 'panel' && esAdmin ? `<button class="btn-sheet btn-sheet-edit" id="btnEditarVenta"><i class="fas fa-edit"></i> Editar Venta</button>` : ''}
         ${btnEliminarHtml}
