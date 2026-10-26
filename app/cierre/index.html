@@ -9,95 +9,143 @@
   <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="manifest" href="/manifest.json">
 
-  <!-- 🔥 LIBRERÍAS PDF (NECESARIAS PARA EL CIERRE) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
   <style>
     :root { 
-      --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; 
-      --brand: #E65100; --brand-hover: #BF360C; --brand-light: rgba(230, 81, 0, 0.1); 
-      --bg-main: #0E0E0E; --bg-card: #181818; --bg-elev: #242424; 
-      --text-main: #F5F5F5; --text-mute: #888888; --border: #2A2A2A; 
+      --radius-sm: 6px; --radius-md: 12px; --radius-lg: 20px; 
+      --brand: #FF6900; --brand-glow: rgba(255, 105, 0, 0.3);
+      --bg-main: #09090B; --bg-card: rgba(24, 24, 27, 0.7); --bg-elev: #27272A; 
+      --text-main: #FAFAFA; --text-mute: #A1A1AA; --border: rgba(255,255,255,0.08); 
+      --success: #10B981; --blue: #3B82F6; --purple: #8B5CF6; --danger: #EF4444;
     }
     [data-theme="light"] {
-      --bg-main: #F9F9F9; --bg-card: #FFFFFF; --bg-elev: #F0F0F0; 
-      --text-main: #111111; --text-mute: #666666; --border: #E0E0E0; 
+      --bg-main: #F4F4F5; --bg-card: rgba(255, 255, 255, 0.8); --bg-elev: #FFFFFF; 
+      --text-main: #18181B; --text-mute: #71717A; --border: rgba(0, 0, 0, 0.06); 
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; overflow: hidden; }
-    body { background-color: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
+    body { 
+      background-color: var(--bg-main); color: var(--text-main); font-family: 'Inter', sans-serif; 
+      -webkit-font-smoothing: antialiased; display: flex; flex-direction: column;
+      background-image: radial-gradient(circle at 50% 0%, rgba(255, 105, 0, 0.08), transparent 50%);
+      background-attachment: fixed;
+    }
     
     .app-container { display: flex; flex-direction: column; height: 100%; }
-    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-main); border-bottom: 1px solid var(--border); z-index: 100; }
-    .app-content { flex: 1; overflow-y: auto; padding: 12px 12px 100px 12px; -webkit-overflow-scrolling: touch; }
+    .app-header { 
+      display: flex; align-items: center; justify-content: space-between; 
+      padding: 12px 16px; background: var(--bg-main); border-bottom: 1px solid var(--border); 
+      z-index: 100; backdrop-filter: blur(10px); 
+    }
+    .app-content { flex: 1; overflow-y: auto; padding: 16px 16px 100px 16px; -webkit-overflow-scrolling: touch; }
     
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-logo { width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-logo { width: 40px; height: 40px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
-    .brand-text h1 { font-size: 15px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
-    .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
+    .brand-text h1 { font-size: 16px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+    .brand-text p { font-size: 12px; color: var(--text-mute); margin: 0; }
     
-    .icon-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-    .icon-btn:active { transform: scale(0.95); }
+    .icon-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--bg-card); border: none; color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .icon-btn:active { transform: scale(0.92); }
 
-    /* SECCIONES */
-    .section-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 12px; }
-    .section-block h3 { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    /* 🔥 TARJETAS GLASSMORPHISM */
+    .section-block { 
+      background: var(--bg-card); 
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border); border-radius: var(--radius-lg); 
+      padding: 20px; margin-bottom: 16px; 
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    }
+    .section-block:nth-child(1) { animation-delay: 0.05s; }
+    .section-block:nth-child(2) { animation-delay: 0.1s; }
+    .section-block:nth-child(3) { animation-delay: 0.15s; }
+    
+    @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+    .section-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .section-title i { font-size: 18px; }
 
     /* FILAS DE INFO */
-    .fila-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 12px; font-size: 13px; }
+    .fila-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 12px; font-size: 14px; }
     .fila-info:last-child { margin-bottom: 0; }
-    .fila-info .label { color: var(--text-mute); font-weight: 500; flex-shrink: 0; }
-    .fila-info .valor { color: var(--text-main); font-weight: 600; text-align: right; word-break: break-word; }
+    .fila-info .label { color: var(--text-mute); font-weight: 500; flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
+    .fila-info .valor { color: var(--text-main); font-weight: 700; text-align: right; word-break: break-word; }
 
-    .total-destacado { background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; text-align: center; margin-top: 12px; }
-    .total-destacado .valor { font-size: 32px; font-weight: 800; color: var(--brand); line-height: 1; }
-    .total-destacado .label { font-size: 10px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-top: 4px; }
+    /* TOTALES DESTACADOS */
+    .total-destacado { background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; text-align: center; margin-top: 16px; }
+    .total-destacado .valor { font-size: 36px; font-weight: 900; color: var(--brand); line-height: 1; letter-spacing: -1px; }
+    .total-destacado .label { font-size: 11px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-top: 6px; }
+    
+    .ganancia-destacada { 
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05)); 
+      border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); 
+      padding: 24px; text-align: center; margin-bottom: 24px; 
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+    }
+    .ganancia-destacada .valor { font-size: 32px; font-weight: 900; color: var(--success); line-height: 1; letter-spacing: -1px; }
+    .ganancia-destacada .label { font-size: 11px; color: var(--success); text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-top: 6px; opacity: 0.9; }
 
     /* VENTAS EXTRAS MANUALES */
-    .item-extra { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
-    .item-extra input { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-family: inherit; }
-    .item-extra input.costo { width: 80px; text-align: right; }
-    .btn-remove { width: 38px; height: 38px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.2); cursor: pointer; }
+    .item-extra { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+    .item-extra input { padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-family: inherit; font-size: 14px; outline: none; transition: 0.2s; }
+    .item-extra input:focus { border-color: var(--purple); }
+    .item-extra input.desc { flex: 2; min-width: 120px; }
+    .item-extra input.monto { flex: 1; min-width: 80px; text-align: right; color: var(--blue); font-weight: 700; }
+    .item-extra input.costo { flex: 1; min-width: 80px; text-align: right; color: var(--danger); font-weight: 700; }
+    
+    .btn-remove { width: 42px; height: 42px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .btn-remove:active { transform: scale(0.9); background: rgba(239, 68, 68, 0.2); }
     
     /* BOTONES */
-    .btn-action { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; border: none; margin-top: 10px; transition: 0.2s; font-family: inherit; }
-    .btn-action:active { transform: scale(0.98); }
-    .btn-primary { background: var(--brand); color: white; }
+    .btn-action { 
+      display: flex; align-items: center; justify-content: center; gap: 10px; 
+      width: 100%; padding: 16px; border-radius: var(--radius-md); 
+      font-size: 15px; font-weight: 700; cursor: pointer; border: none; 
+      margin-top: 12px; transition: 0.2s; font-family: inherit; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .btn-action:active { transform: scale(0.97); }
+    
+    .btn-primary { background: linear-gradient(135deg, var(--brand), #E55A00); color: white; box-shadow: 0 8px 20px rgba(255, 105, 0, 0.3); }
     .btn-secondary { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); }
-    .btn-whatsapp { background: #25D366; color: white; }
+    .btn-whatsapp { background: linear-gradient(135deg, #25D366, #1DA851); color: white; box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3); }
 
     /* PRODUCTOS DEL INVENTARIO */
     .producto-btn {
       background: var(--bg-elev);
       border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 8px 4px;
+      border-radius: var(--radius-md);
+      padding: 10px 6px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
       cursor: pointer;
       transition: 0.2s;
+      position: relative;
+      overflow: hidden;
     }
-    .producto-btn:active { transform: scale(0.95); }
-    .producto-btn img { width: 40px; height: 40px; object-fit: cover; border-radius: var(--radius-sm); }
-    .producto-btn span.nombre { font-size: 10px; font-weight: 700; text-align: center; line-height: 1.1; color: var(--text-main); }
-    .producto-btn span.precio { font-size: 11px; font-weight: 800; color: var(--brand); }
+    .producto-btn:active { transform: scale(0.95); border-color: var(--blue); }
+    .producto-btn img { width: 48px; height: 48px; object-fit: cover; border-radius: var(--radius-sm); }
+    .producto-btn span.nombre { font-size: 10px; font-weight: 700; text-align: center; line-height: 1.2; color: var(--text-main); }
+    .producto-btn span.precio { font-size: 12px; font-weight: 800; color: var(--brand); }
+    .producto-btn span.ganancia { font-size: 9px; font-weight: 700; color: var(--success); }
 
     /* LOADER PRO */
-    .loader-overlay { position: fixed; inset: 0; background: rgba(14, 14, 14, 0.95); backdrop-filter: blur(8px); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
+    .loader-overlay { position: fixed; inset: 0; background: var(--bg-main); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
     .loader-overlay.hidden { opacity: 0; pointer-events: none; }
     .loader-logo-container { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
     .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); animation: spin 1.2s linear infinite; }
-    .loader-logo-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; background: var(--bg-elev); border: 2px solid var(--border); box-shadow: 0 0 20px rgba(230, 81, 0, 0.2); }
-    .loader-text { font-size: 13px; font-weight: 600; color: var(--text-mute); letter-spacing: 0.5px; animation: pulse 1.5s infinite; }
+    .loader-logo-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; background: var(--bg-elev); border: 2px solid var(--border); box-shadow: 0 0 20px var(--brand-glow); }
+    .loader-text { font-size: 14px; font-weight: 600; color: var(--text-mute); letter-spacing: 0.5px; animation: pulse 1.5s infinite; }
     
     @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -130,43 +178,51 @@
 
     <main class="app-content">
       <!-- Sección 1: Reparaciones automáticas del día -->
-      <div class="section-block">
-        <h3><i class="fas fa-wrench"></i> Reparaciones (Hoy)</h3>
+      <div class="section-block" style="border-top: 3px solid var(--brand);">
+        <div class="section-title" style="color: var(--brand);">
+          <i class="fas fa-wrench"></i> Reparaciones (Hoy)
+        </div>
         <div class="fila-info">
-          <span class="label">Cantidad entregada:</span>
+          <span class="label"><i class="fas fa-check-circle" style="color:var(--brand);"></i> Cantidad entregada:</span>
           <span class="valor" id="cantReparaciones">0</span>
         </div>
         <div class="fila-info">
-          <span class="label">Total Cobrado:</span>
-          <span class="valor" id="totalReparaciones" style="color:#22C55E; font-weight:800;">Bs. 0.00</span>
+          <span class="label"><i class="fas fa-money-bill-wave" style="color:var(--success);"></i> Total Cobrado:</span>
+          <span class="valor" id="totalReparaciones" style="color:var(--success); font-weight:800; font-size:16px;">Bs. 0.00</span>
         </div>
-        <div class="fila-info" style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px;">
-          <span class="label">💵 Efectivo:</span>
-          <span class="valor" id="totalEfectivo">Bs. 0</span>
-        </div>
-        <div class="fila-info">
-          <span class="label">📱 QR:</span>
-          <span class="valor" id="totalQR">Bs. 0</span>
-        </div>
-        <div class="fila-info">
-          <span class="label">🏦 Transferencia:</span>
-          <span class="valor" id="totalTransf">Bs. 0</span>
+        <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:16px;">
+          <div class="fila-info">
+            <span class="label"><i class="fas fa-money-bill" style="color:#10B981;"></i> Efectivo:</span>
+            <span class="valor" id="totalEfectivo">Bs. 0</span>
+          </div>
+          <div class="fila-info">
+            <span class="label"><i class="fas fa-qrcode" style="color:#3B82F6;"></i> QR:</span>
+            <span class="valor" id="totalQR">Bs. 0</span>
+          </div>
+          <div class="fila-info">
+            <span class="label"><i class="fas fa-building-columns" style="color:#8B5CF6;"></i> Transferencia:</span>
+            <span class="valor" id="totalTransf">Bs. 0</span>
+          </div>
         </div>
       </div>
 
       <!-- Sección 2: Ventas de Accesorios (Desde Inventario) -->
-      <div class="section-block">
-        <h3><i class="fas fa-box"></i> Ventas de Accesorios</h3>
-        <div id="listaInventario" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+      <div class="section-block" style="border-top: 3px solid var(--blue);">
+        <div class="section-title" style="color: var(--blue);">
+          <i class="fas fa-box-open"></i> Ventas de Accesorios
+        </div>
+        <div id="listaInventario" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
           <!-- Se inyecta por JS -->
         </div>
       </div>
 
       <!-- Sección 3: Ventas Extras (Manual) -->
-      <div class="section-block">
-        <h3><i class="fas fa-cart-plus"></i> Ventas Extras (Manual)</h3>
+      <div class="section-block" style="border-top: 3px solid var(--purple);">
+        <div class="section-title" style="color: var(--purple);">
+          <i class="fas fa-cart-plus"></i> Ventas Extras (Manual)
+        </div>
         <div id="listaExtras"></div>
-        <button class="btn-action btn-secondary" id="btnAddExtra" style="font-size:12px; padding:10px;">
+        <button class="btn-action btn-secondary" id="btnAddExtra" style="font-size:13px; padding:12px; border: 1px dashed var(--purple); color: var(--purple); background: transparent;">
           <i class="fas fa-plus"></i> Añadir Venta Manual
         </button>
       </div>
@@ -177,11 +233,17 @@
         <div class="label">Total Ingresos del Día</div>
       </div>
 
-      <!-- Sección 5: Botones de Acción -->
+      <!-- 🔥 Sección 5: GANANCIA REAL -->
+      <div class="ganancia-destacada">
+        <div class="valor" id="gananciaGlobal">Bs. 0.00</div>
+        <div class="label">Ganancia Real del Día</div>
+      </div>
+
+      <!-- Sección 6: Botones de Acción -->
       <button class="btn-action btn-whatsapp" id="btnEnviarWhatsApp">
         <i class="fab fa-whatsapp"></i> Enviar Cierre al Admin
       </button>
-      <button class="btn-action btn-primary" id="btnGuardarCierre" style="margin-bottom:24px;">
+      <button class="btn-action btn-primary" id="btnGuardarCierre" style="margin-bottom:32px;">
         <i class="fas fa-save"></i> Guardar en Historial
       </button>
 
