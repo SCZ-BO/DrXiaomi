@@ -52,39 +52,17 @@
     .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); border: none; color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .icon-btn:active { transform: scale(0.92); }
     
-    /* 🔥 FIX: Corrección del layout de los botones Hero */
+    /* 🔥 BOTONES HERO CON SVG NATIVO (PARA QUE SE VEAN PERFECTOS) */
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
     .btn-hero { 
-      display: flex; 
-      flex-direction: column; 
-      align-items: flex-start; 
-      justify-content: space-between; 
-      padding: 14px; 
-      border-radius: var(--radius-lg); 
-      font-weight: 700; 
-      font-size: 13px; 
-      border: none; 
-      cursor: pointer; 
-      transition: 0.2s; 
-      height: 83px; 
-      box-shadow: 0 6px 20px rgba(0,0,0,0.15); 
-      position: relative; 
-      overflow: hidden; 
+      display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; 
+      padding: 16px; border-radius: var(--radius-lg); font-weight: 700; font-size: 13px; 
+      border: none; cursor: pointer; transition: 0.2s; height: 90px; 
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15); position: relative; overflow: hidden; 
     }
     .btn-hero:active { transform: scale(0.96); }
     
-    /* Estilo base para iconos (FontAwesome) */
-    .btn-hero i { font-size: 22px; margin-bottom: auto; }
-    
-    /* 🔥 FIX: Estilos exclusivos para las imágenes */
-    .btn-hero img { 
-      width: 26px; 
-      height: 26px; 
-      object-fit: contain; 
-      margin-bottom: auto; /* Empuja la imagen hacia arriba */
-      flex-shrink: 0;
-    }
-
+    .btn-hero svg { width: 28px; height: 28px; margin-bottom: auto; }
     .btn-hero span { z-index: 2; line-height: 1.2; text-align: left; }
     .btn-hero-nuevo { background: linear-gradient(135deg, var(--brand), #FF8C00); color: white; box-shadow: 0 6px 20px var(--brand-glow); }
     .btn-hero-venta { background: var(--bg-card); color: var(--success); border: 1px solid var(--border); }
@@ -127,24 +105,27 @@
     .monto.venta { color: var(--success); }
     .estado-chip { font-size: 9px; font-weight: 700; padding: 3px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; text-transform: uppercase; }
 
+    /* 🔥 NAV BAR CON MÁS ICONOS */
     .bottom-nav { 
       position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
       background: rgba(24, 24, 27, 0.85); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
       border: 1px solid rgba(255,255,255,0.08); border-radius: 40px; display: flex; justify-content: space-around; align-items: center; 
-      padding: 8px 12px; width: calc(100% - 40px); max-width: 380px; z-index: 100; box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+      padding: 8px 10px; width: calc(100% - 40px); max-width: 420px; z-index: 100; box-shadow: 0 10px 40px rgba(0,0,0,0.4);
     }
     [data-theme="light"] .bottom-nav { background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
     
-    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-mute); gap: 6px; cursor: pointer; transition: 0.2s; background: none; border: none; width: 44px; height: 44px; border-radius: 50%; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-mute); gap: 4px; cursor: pointer; transition: 0.2s; background: none; border: none; width: 48px; height: 48px; border-radius: 50%; }
     .nav-item i { font-size: 18px; transition: 0.2s; }
     .nav-item:active { opacity: 0.6; transform: scale(0.9); }
     
     #btnRefreshNav i { color: #3B82F6; }
+    #btnInventarioNav i { color: #F59E0B; } /* Icono de Caja / Inventario */
     #preciosBtn i { color: #FBBF24; }
     #reportesBtn i { color: #10B981; }
-    #btnPDFDia i { color: #FF6900; }
+    #btnCierreNav i { color: #8B5CF6; } /* Icono de Cierre de Caja */
     #logoutBtn i { color: #EF4444; }
 
+    /* RESTO DEL CSS (MODALES, ETC) SE MANTIENE IGUAL */
     .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 999999; opacity: 0; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; transition: 0.3s; }
     .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
     .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 24px; padding-bottom: max(24px, env(safe-area-inset-bottom)); width: 100%; max-width: 500px; transform: translateY(100%); transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); border-top: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
@@ -211,14 +192,23 @@
     <main class="app-content">
       
       <div class="hero-actions">
-        <!-- 🔥 FIX: Iconos ajustados -->
+        <!-- 🔥 SVG NATIVO: Icono de Teléfono con línea de escaneo (Moderno) -->
         <button class="btn-hero btn-hero-nuevo" id="nuevoReciboBtn">
-          <img src="/app/imagenes/iconostelefoo.png" alt="Nuevo Equipo" style="filter: brightness(0) invert(1);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            <path d="M8 6h8"></path>
+          </svg>
           <span>Nuevo<br>Equipo</span>
         </button>
         
+        <!-- 🔥 SVG NATIVO: Icono de Caja Registradora (Venta Rápida) -->
         <button class="btn-hero btn-hero-venta" id="ventaRapidaBtn">
-          <img src="/app/imagenes/ventarapida.png" alt="Venta Rápida">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="10" width="20" height="12" rx="2"></rect>
+            <path d="M6 10V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4"></path>
+            <line x1="12" y1="14" x2="12" y2="18"></line>
+          </svg>
           <span>Venta<br>Rápida</span>
         </button>
       </div>
@@ -261,18 +251,19 @@
       </button>
     </main>
 
+    <!-- 🔥 NAVBAR CON ACCESO A INVENTARIO Y CIERRE -->
     <nav class="bottom-nav">
       <button class="nav-item" id="btnRefreshNav" title="Actualizar">
         <i class="fas fa-rotate" id="iconRefresh"></i>
       </button>
-      <button class="nav-item" id="preciosBtn" title="Precios">
-        <i class="fas fa-tags"></i>
+      <button class="nav-item" id="btnInventarioNav" title="Inventario">
+        <i class="fas fa-boxes-stacked"></i>
       </button>
       <button class="nav-item" id="reportesBtn" title="Reportes">
         <i class="fas fa-chart-pie"></i>
       </button>
-      <button class="nav-item" id="btnPDFDia" title="PDF del Día">
-        <i class="fas fa-file-invoice"></i>
+      <button class="nav-item" id="btnCierreNav" title="Cierre de Caja">
+        <i class="fas fa-cash-register"></i>
       </button>
       <button class="nav-item" id="logoutBtn" title="Cerrar sesión">
         <i class="fas fa-power-off"></i>
@@ -374,11 +365,8 @@
 
     function actualizarBadge() {
       if ('setAppBadge' in navigator) {
-        if (contadorNotificaciones > 0) {
-          navigator.setAppBadge(contadorNotificaciones).catch(console.error);
-        } else {
-          navigator.clearAppBadge().catch(console.error);
-        }
+        if (contadorNotificaciones > 0) navigator.setAppBadge(contadorNotificaciones).catch(console.error);
+        else navigator.clearAppBadge().catch(console.error);
       }
       localStorage.setItem('drx_notif_count', contadorNotificaciones);
     }
@@ -393,10 +381,6 @@
     let unsubscribeVentas = null;
     let unsubscribeCierres = null; 
     
-    const LIMITE_POR_PAGINA = 15;
-    let ultimoDocumento = null;
-    let hayMasRecibos = true;
-
     let ordenAEntregar = null;
     let metodoPagoSeleccionado = null;
 
@@ -415,10 +399,7 @@
     function iniciarApp() {
       document.getElementById('userInfo').textContent = `${sesion.icono || ''} ${sesion.nombre}`;
       
-      if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
-      }
-      
+      if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
       setTimeout(() => { contadorNotificaciones = 0; actualizarBadge(); }, 3000);
 
       configurarPermisosPorRol();
@@ -426,15 +407,14 @@
       cargarDatos();
       
       const themeIcon = document.getElementById('themeIcon');
-      if (document.documentElement.getAttribute('data-theme') === 'light') {
-        themeIcon.className = 'fas fa-sun';
-      } else {
-        themeIcon.className = 'fas fa-moon';
-      }
+      if (document.documentElement.getAttribute('data-theme') === 'light') themeIcon.className = 'fas fa-sun';
+      else themeIcon.className = 'fas fa-moon';
 
       if (sesion.rol !== 'admin') {
         const btnReportes = document.getElementById('reportesBtn');
         if (btnReportes) btnReportes.style.display = 'none';
+        const btnInventario = document.getElementById('btnInventarioNav');
+        if (btnInventario) btnInventario.style.display = 'none'; // Si no es admin, ocultar inventario
       }
     }
 
@@ -444,14 +424,12 @@
       if (esAdmin) {
         const selMetodo = document.getElementById('ventaMetodo');
         const optTransf = document.createElement('option');
-        optTransf.value = 'Transferencia';
-        optTransf.textContent = '🏦 Transferencia';
+        optTransf.value = 'Transferencia'; optTransf.textContent = '🏦 Transferencia';
         selMetodo.appendChild(optTransf);
 
         const gridPago = document.getElementById('metodosPagoGrid');
         const btnTransf = document.createElement('button');
-        btnTransf.className = 'btn-sheet';
-        btnTransf.dataset.metodo = 'Transferencia';
+        btnTransf.className = 'btn-sheet'; btnTransf.dataset.metodo = 'Transferencia';
         btnTransf.style = 'background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); margin-bottom:0; grid-column: span 2;';
         btnTransf.textContent = '🏦 Transferencia';
         gridPago.appendChild(btnTransf);
@@ -474,10 +452,12 @@
     }
 
     function configurarEventos() {
+      // 🔥 NAVEGACIÓN CON NUEVOS BOTONES
+      document.getElementById('btnInventarioNav')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/inventario/'; });
+      document.getElementById('btnCierreNav')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cierre/'; });
       document.getElementById('preciosBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/precio/'; });
       document.getElementById('reportesBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/reportes/'; });
       document.getElementById('logoutBtn')?.addEventListener('click', () => { haptic(20); logout(); });
-      document.getElementById('btnPDFDia')?.addEventListener('click', generarPDFDia);
       
       document.getElementById('btnRefreshNav')?.addEventListener('click', () => {
         haptic(15);
@@ -507,13 +487,8 @@
       
       document.getElementById('ventaConcepto')?.addEventListener('change', (e) => {
         const inputOtro = document.getElementById('ventaConceptoOtro');
-        if (e.target.value === 'Otro') {
-          inputOtro.style.display = 'block';
-          inputOtro.focus();
-        } else {
-          inputOtro.style.display = 'none';
-          inputOtro.value = '';
-        }
+        if (e.target.value === 'Otro') { inputOtro.style.display = 'block'; inputOtro.focus(); }
+        else { inputOtro.style.display = 'none'; inputOtro.value = ''; }
       });
 
       document.getElementById('btnCloseSheet')?.addEventListener('click', cerrarSheet);
@@ -526,13 +501,8 @@
         const btn = e.target.closest('[data-metodo]');
         if (!btn) return;
         haptic(10);
-        
-        document.querySelectorAll('#metodosPagoGrid [data-metodo]').forEach(b => {
-          b.style.borderColor = 'var(--border)';
-          b.style.color = 'var(--text-main)';
-        });
-        btn.style.borderColor = 'var(--brand)';
-        btn.style.color = 'var(--brand)';
+        document.querySelectorAll('#metodosPagoGrid [data-metodo]').forEach(b => { b.style.borderColor = 'var(--border)'; b.style.color = 'var(--text-main)'; });
+        btn.style.borderColor = 'var(--brand)'; btn.style.color = 'var(--brand)';
         metodoPagoSeleccionado = btn.dataset.metodo;
       });
 
@@ -554,9 +524,8 @@
         haptic(20);
         try {
           await addDoc(collection(db, 'ventas'), {
-            concepto, monto, metodoPago: metodo,
-            fecha: serverTimestamp(),
-            creadoPor: sesion.nombre
+            concepto, monto, costo: 0, metodoPago: metodo,
+            fecha: serverTimestamp(), creadoPor: sesion.nombre
           });
           toast('Venta registrada', 'success');
           modalVenta.classList.remove('show');
@@ -564,9 +533,7 @@
           document.getElementById('ventaConceptoOtro').value = '';
           document.getElementById('ventaConceptoOtro').style.display = 'none';
           document.getElementById('ventaConcepto').value = 'Botón';
-        } catch (err) {
-          toast('Error al guardar', 'error');
-        }
+        } catch (err) { toast('Error al guardar', 'error'); }
       });
 
       document.getElementById('filtros').addEventListener('click', (e) => {
@@ -577,7 +544,6 @@
         btn.classList.add('active');
         filtroActual = btn.dataset.filtro;
         
-        // 🔥 FIX: Limpiar el buscador al cambiar de filtro para que no haya conflicto
         busquedaActual = '';
         const buscador = document.getElementById('buscador');
         if (buscador) buscador.value = '';
@@ -600,11 +566,7 @@
       if (unsubscribe) unsubscribe();
       if (appLoader) appLoader.classList.remove('hidden');
       
-      // 🔥 FIX: Quitamos el limit(15) para traer TODOS los recibos y que el filtro funcione bien.
-      const qRecibos = query(
-        collection(db, 'recibos'), 
-        orderBy('fecha', 'desc')
-      );
+      const qRecibos = query(collection(db, 'recibos'), orderBy('fecha', 'desc'));
 
       unsubscribe = onSnapshot(qRecibos, { includeMetadataChanges: true }, 
         (snapshot) => {
@@ -628,18 +590,8 @@
             });
           }
 
-          ordenes = snapshot.docs.map(d => {
-            const data = d.data();
-            delete data.fotos; // 🔥 Quitamos las fotos para que el panel vuele
-            return { id: d.id, ...data };
-          });
-
-          ordenes.sort((a, b) => {
-            const fa = a.fechaEditada || a.fecha;
-            const fb = b.fechaEditada || b.fecha;
-            return (parsearFecha(fb) || 0) - (parsearFecha(fa) || 0);
-          });
-          hayMasRecibos = false; // 🔥 FIX: Ya no hay paginación
+          ordenes = snapshot.docs.map(d => { const data = d.data(); delete data.fotos; return { id: d.id, ...data }; });
+          ordenes.sort((a, b) => { const fa = a.fechaEditada || a.fecha; const fb = b.fechaEditada || b.fecha; return (parsearFecha(fb) || 0) - (parsearFecha(fa) || 0); });
           renderizarTodo();
           if (appLoader) appLoader.classList.add('hidden');
         }, 
@@ -710,12 +662,9 @@
       const lista = document.getElementById('listaOrdenes');
       let todosLosMovimientos = [];
 
-      // 🔥 FIX: Filtro de recibos (incluye todos los estados)
       if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
         ordenes.forEach(o => {
           const estado = o.estadoOrden || 'recibido';
-          
-          // 🔥 FIX: Si filtro es 'reparacion', incluir 'reparacion' y 'espera-repuesto'
           if (filtroActual === 'reparacion') {
             if (estado !== 'reparacion' && estado !== 'espera-repuesto' && estado !== 'recibido') return;
           } else if (filtroActual !== 'todos' && filtroActual !== estado) {
@@ -727,17 +676,13 @@
           const montoTotal = Number(o.total) || 0;
           
           todosLosMovimientos.push({ 
-            tipo: 'telefono', 
-            data: o, 
-            fechaOrden: estaEntregado 
-              ? (parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha))
-              : (parsearFecha(o.fechaEditada) || parsearFecha(o.fecha)), 
+            tipo: 'telefono', data: o, 
+            fechaOrden: estaEntregado ? (parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha)) : (parsearFecha(o.fechaEditada) || parsearFecha(o.fecha)), 
             monto: estaEntregado ? (montoCobrado > 0 ? montoCobrado : montoTotal) : montoTotal 
           });
         });
       }
 
-      // 🔥 FIX: Filtro de ventas
       if (filtroActual === 'todos' || filtroActual === 'venta') {
         ventasHoy.forEach(v => {
           todosLosMovimientos.push({ tipo: v.origen === 'panel' ? 'venta' : 'cierre', data: v, fechaOrden: parsearFecha(v.fecha), monto: v.monto });
@@ -778,7 +723,6 @@
         });
       });
 
-      // 🔥 FIX: Ya no hay paginación
       btnCargarMas.style.display = 'none';
     }
 
@@ -802,9 +746,7 @@
             <div class="info-title">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
             <div class="info-sub">${escapeHtml(o.cliente || 'Cliente')}</div>
             <div class="info-sub" style="font-size: 10px; margin-top: 2px;">
-              ${estadoActual === 'entregado' 
-                ? `Entregado: ${formatFechaCompleta(o.fechaEntrega)}` 
-                : `Ingreso: ${tiempoRelativo(o.fechaEditada || o.fecha)}`}
+              ${estadoActual === 'entregado' ? `Entregado: ${formatFechaCompleta(o.fechaEntrega)}` : `Ingreso: ${tiempoRelativo(o.fechaEditada || o.fecha)}`}
             </div>
             <span class="estado-chip" style="background: ${estadoInfo.color}15; color: ${estadoInfo.color};">${estadoInfo.texto}</span>
           </div>
@@ -868,10 +810,7 @@
       document.getElementById('statHoy').textContent = formatBs(ingresosReparaciones + ingresosVentas);
     }
 
-    async function cargarMasOrdenes() {
-      // 🔥 FIX: Función deshabilitada porque ahora traemos todos los recibos
-      return;
-    }
+    async function cargarMasOrdenes() { return; }
 
     function abrirSheetTelefono(id) {
       const orden = ordenes.find(o => o.id === id);
@@ -894,9 +833,7 @@
         <option value="devuelto" ${orden.estadoOrden === 'devuelto' ? 'selected' : ''}>↩️ Devuelto</option>
       `;
 
-      const btnEliminarHtml = esAdmin ? `
-        <button class="btn-sheet btn-sheet-danger" id="btnEliminar"><i class="fas fa-trash"></i> Eliminar</button>
-      ` : '';
+      const btnEliminarHtml = esAdmin ? `<button class="btn-sheet btn-sheet-danger" id="btnEliminar"><i class="fas fa-trash"></i> Eliminar</button>` : '';
 
       sheetContent.innerHTML = `
         <div style="margin-bottom: 24px;">
@@ -920,27 +857,18 @@
       reciboSheet.classList.add('show');
       haptic(15);
 
-      document.getElementById('btnEditarOrden')?.addEventListener('click', () => {
-        window.location.href = `/app/orden.html?id=${id}`;
-      });
+      document.getElementById('btnEditarOrden')?.addEventListener('click', () => { window.location.href = `/app/orden.html?id=${id}`; });
 
       document.getElementById('btnActualizarEstado')?.addEventListener('click', async () => {
         const nuevoEstado = document.getElementById('selectEstado').value;
-        
-        if (nuevoEstado === 'entregado') {
-          cerrarSheet();
-          abrirModalPago(orden);
-          return;
-        }
+        if (nuevoEstado === 'entregado') { cerrarSheet(); abrirModalPago(orden); return; }
 
         try {
           await updateDoc(doc(db, 'recibos', id), { estadoOrden: nuevoEstado });
           toast('Estado actualizado', 'success');
-          
           filtroActual = 'todos';
           document.querySelectorAll('#filtros .chip').forEach(b => b.classList.remove('active'));
           document.querySelector('#filtros .chip[data-filtro="todos"]')?.classList.add('active');
-          
           cerrarSheet();
 
           if (nuevoEstado === 'listo' && orden.telefono) {
@@ -952,7 +880,6 @@
               }
             }, 500);
           }
-
         } catch (err) { toast('Error al actualizar', 'error'); }
       });
 
@@ -966,62 +893,35 @@
 
       document.getElementById('btnEliminar')?.addEventListener('click', async () => {
         if (confirm('¿Eliminar este recibo permanentemente?')) {
-          try {
-            await deleteDoc(doc(db, 'recibos', id));
-            toast('Recibo eliminado', 'success');
-            cerrarSheet();
-          } catch (err) { toast('Error al eliminar', 'error'); }
+          try { await deleteDoc(doc(db, 'recibos', id)); toast('Recibo eliminado', 'success'); cerrarSheet(); }
+          catch (err) { toast('Error al eliminar', 'error'); }
         }
       });
     }
 
     function abrirModalPago(orden) {
-      ordenAEntregar = orden;
-      metodoPagoSeleccionado = null;
-      
+      ordenAEntregar = orden; metodoPagoSeleccionado = null;
       document.getElementById('pagoMonto').value = orden.saldo > 0 ? orden.saldo : orden.total;
-      
-      document.querySelectorAll('#metodosPagoGrid [data-metodo]').forEach(b => {
-        b.style.borderColor = 'var(--border)';
-        b.style.color = 'var(--text-main)';
-      });
-
-      modalPago.classList.add('show');
-      haptic(15);
+      document.querySelectorAll('#metodosPagoGrid [data-metodo]').forEach(b => { b.style.borderColor = 'var(--border)'; b.style.color = 'var(--text-main)'; });
+      modalPago.classList.add('show'); haptic(15);
     }
 
     async function confirmarEntregaConPago() {
       const monto = parseFloat(document.getElementById('pagoMonto').value);
-      
-      if (!metodoPagoSeleccionado) {
-        toast('Selecciona un método de pago', 'error');
-        return;
-      }
-      if (!monto || monto <= 0) {
-        toast('Ingresa un monto válido', 'error');
-        return;
-      }
+      if (!metodoPagoSeleccionado) { toast('Selecciona un método de pago', 'error'); return; }
+      if (!monto || monto <= 0) { toast('Ingresa un monto válido', 'error'); return; }
 
       haptic(20);
       try {
         await updateDoc(doc(db, 'recibos', ordenAEntregar.id), {
-          estadoOrden: 'entregado',
-          fechaEntrega: serverTimestamp(),
-          montoCobrado: monto,
-          metodoPago: metodoPagoSeleccionado
+          estadoOrden: 'entregado', fechaEntrega: serverTimestamp(), montoCobrado: monto, metodoPago: metodoPagoSeleccionado
         });
-        
         toast('Equipo entregado y pago registrado', 'success');
         modalPago.classList.remove('show');
-        
         filtroActual = 'todos';
         document.querySelectorAll('#filtros .chip').forEach(b => b.classList.remove('active'));
         document.querySelector('#filtros .chip[data-filtro="todos"]')?.classList.add('active');
-        
-      } catch (err) {
-        console.error(err);
-        toast('Error al entregar', 'error');
-      }
+      } catch (err) { console.error(err); toast('Error al entregar', 'error'); }
     }
 
     function abrirSheetVenta(id, origen, extra) {
@@ -1040,14 +940,10 @@
         <button class="btn-sheet btn-sheet-danger" id="btnEliminarVenta"><i class="fas fa-trash"></i> Eliminar</button>
       `;
 
-      reciboSheet.classList.add('show');
-      haptic(15);
+      reciboSheet.classList.add('show'); haptic(15);
 
       if (origen === 'panel') {
-        document.getElementById('btnEditarVenta')?.addEventListener('click', () => {
-          cerrarSheet();
-          abrirModalEditarVenta(venta);
-        });
+        document.getElementById('btnEditarVenta')?.addEventListener('click', () => { cerrarSheet(); abrirModalEditarVenta(venta); });
       }
 
       document.getElementById('btnEliminarVenta')?.addEventListener('click', async () => {
@@ -1056,25 +952,17 @@
         try {
           if (origen === 'panel') await deleteDoc(doc(db, 'ventas', id));
           else await deleteDoc(doc(db, 'cierres', id));
-          toast('Eliminado', 'success');
-          cerrarSheet();
+          toast('Eliminado', 'success'); cerrarSheet();
         } catch (err) { toast('Error al eliminar', 'error'); }
       });
     }
 
     function abrirModalEditarVenta(venta) {
       const modal = document.createElement('div');
-      modal.className = 'sheet-backdrop';
-      modal.id = 'modalEditarVenta';
-      modal.style.display = 'flex';
+      modal.className = 'sheet-backdrop'; modal.id = 'modalEditarVenta'; modal.style.display = 'flex';
 
       const esAdmin = sesion.rol === 'admin';
-      const campoCosto = esAdmin ? `
-        <div class="input-group">
-          <label>Costo del Producto (Bs.)</label>
-          <input type="number" id="editCostoV" class="form-control" value="${venta.costo || 0}" placeholder="0.00">
-        </div>
-      ` : '';
+      const campoCosto = esAdmin ? `<div class="input-group"><label>Costo del Producto (Bs.)</label><input type="number" id="editCostoV" class="form-control" value="${venta.costo || 0}" placeholder="0.00"></div>` : '';
 
       modal.innerHTML = `
         <div class="sheet">
@@ -1083,14 +971,8 @@
             <h3 style="font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Editar Venta</h3>
             <button class="icon-btn" id="btnCloseEditV" style="background: var(--bg-elev); box-shadow: none;"><i class="fas fa-times"></i></button>
           </div>
-          <div class="input-group">
-            <label>Concepto</label>
-            <input type="text" id="editConceptoV" class="form-control" value="${escapeHtml(venta.concepto)}">
-          </div>
-          <div class="input-group">
-            <label>Monto Cobrado (Bs.)</label>
-            <input type="number" id="editMontoV" class="form-control" value="${venta.monto}">
-          </div>
+          <div class="input-group"><label>Concepto</label><input type="text" id="editConceptoV" class="form-control" value="${escapeHtml(venta.concepto)}"></div>
+          <div class="input-group"><label>Monto Cobrado (Bs.)</label><input type="number" id="editMontoV" class="form-control" value="${venta.monto}"></div>
           ${campoCosto}
           <div class="input-group">
             <label>Método de Pago</label>
@@ -1104,14 +986,9 @@
         </div>
       `;
 
-      document.body.appendChild(modal);
-      setTimeout(() => modal.classList.add('show'), 10);
+      document.body.appendChild(modal); setTimeout(() => modal.classList.add('show'), 10);
 
-      const cerrar = () => {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-      };
-
+      const cerrar = () => { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); };
       document.getElementById('btnCloseEditV').addEventListener('click', cerrar);
       modal.addEventListener('click', (e) => { if (e.target === modal) cerrar(); });
 
@@ -1123,44 +1000,23 @@
 
         haptic(20);
         try {
-          await updateDoc(doc(db, 'ventas', venta.id), {
-            concepto: nuevoConcepto,
-            monto: nuevoMonto,
-            costo: nuevoCosto,
-            metodoPago: nuevoMetodo
-          });
-          toast('Venta actualizada', 'success');
-          cerrar();
-        } catch (err) {
-          toast('Error al actualizar', 'error');
-        }
+          await updateDoc(doc(db, 'ventas', venta.id), { concepto: nuevoConcepto, monto: nuevoMonto, costo: nuevoCosto, metodoPago: nuevoMetodo });
+          toast('Venta actualizada', 'success'); cerrar();
+        } catch (err) { toast('Error al actualizar', 'error'); }
       });
     }
 
-    function cerrarSheet() {
-      if (reciboSheet) reciboSheet.classList.remove('show');
-    }
+    function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
 
     function generarPDFDia() {
-      haptic(20);
-      toast('Generando PDF...', 'info');
-      
+      haptic(20); toast('Generando PDF...', 'info');
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF();
-      
-      pdf.setFontSize(18);
-      pdf.text("Reporte del Día - DR. XIAOMI", 14, 20);
-      pdf.setFontSize(10);
-      pdf.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 28);
-      
-      let y = 40;
-      let totalDia = 0;
+      pdf.setFontSize(18); pdf.text("Reporte del Día - DR. XIAOMI", 14, 20);
+      pdf.setFontSize(10); pdf.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 28);
+      let y = 40; let totalDia = 0;
 
-      pdf.setFontSize(12);
-      pdf.text("Reparaciones Entregadas Hoy", 14, y);
-      y += 8;
-      pdf.setFontSize(10);
-      
+      pdf.setFontSize(12); pdf.text("Reparaciones Entregadas Hoy", 14, y); y += 8; pdf.setFontSize(10);
       const hoy = new Date(); hoy.setHours(0,0,0,0);
       ordenes.forEach(o => {
         if (o.estadoOrden === 'entregado') {
@@ -1168,32 +1024,18 @@
           if (fEntrega && fEntrega >= hoy) {
             const monto = Number(o.montoCobrado) || 0;
             pdf.text(`- ${o.numeroRecibo || 'Sin N°'} | ${o.cliente} | ${o.marca} ${o.modelo} | Bs. ${monto.toFixed(2)}`, 14, y);
-            totalDia += monto;
-            y += 6;
+            totalDia += monto; y += 6;
           }
         }
       });
-
-      y += 4;
-      
-      pdf.setFontSize(12);
-      pdf.text("Ventas Rápidas y Extras (Mostrador)", 14, y);
-      y += 8;
-      pdf.setFontSize(10);
-
+      y += 4; pdf.setFontSize(12); pdf.text("Ventas Rápidas y Extras (Mostrador)", 14, y); y += 8; pdf.setFontSize(10);
       ventasHoy.forEach(v => {
         const monto = Number(v.monto) || 0;
         pdf.text(`- ${v.concepto} | ${v.metodoPago} | Bs. ${monto.toFixed(2)}`, 14, y);
-        totalDia += monto;
-        y += 6;
+        totalDia += monto; y += 6;
       });
-
-      y += 10;
-      pdf.setFontSize(14);
-      pdf.text(`TOTAL DEL DÍA: Bs. ${totalDia.toFixed(2)}`, 14, y);
-
-      pdf.save(`Reporte_${new Date().toISOString().slice(0,10)}.pdf`);
-      toast('PDF generado', 'success');
+      y += 10; pdf.setFontSize(14); pdf.text(`TOTAL DEL DÍA: Bs. ${totalDia.toFixed(2)}`, 14, y);
+      pdf.save(`Reporte_${new Date().toISOString().slice(0,10)}.pdf`); toast('PDF generado', 'success');
     }
   </script>
 
