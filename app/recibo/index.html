@@ -2,15 +2,24 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, maximum-scale=1">
   <meta name="theme-color" content="#FF6900">
   <title>Tu Recibo - DR. XIAOMI</title>
 
+  <!-- 🔥 FAVICONS -->
   <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
   <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
   <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
 
+  <!-- 🔥 MANIFEST (CLAVE PARA QUE CHROME PERMITA INSTALAR) -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DR XIAOMI">
+
+  <!-- 🔥 VISTA PREVIA WHATSAPP -->
   <meta property="og:title" content="Recibo de Reparación - DR. XIAOMI SCZ">
   <meta property="og:description" content="Haz clic aquí para ver el estado de tu equipo y descargar tu comprobante en PDF.">
   <meta property="og:image" content="https://xiaomi.scz.red/imagenes/web-app-manifest-192x192.png">
@@ -51,9 +60,9 @@
     .header h1 { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 2px; line-height: 1; }
     .header p { font-size: 12px; opacity: 0.9; font-weight: 600; background: rgba(0,0,0,0.2); display: inline-block; padding: 4px 10px; border-radius: 20px;}
 
-    .body { padding: 20px; flex: 1; z-index: 2; }
+    .body { padding: 20px 20px 80px 20px; flex: 1; z-index: 2; }
 
-    /* 🔥 BARRA DE ESTADO (TIMELINE) */
+    /* BARRA DE ESTADO (TIMELINE) */
     .status-timeline { display: flex; justify-content: space-between; align-items: center; margin: 10px 0 24px; position: relative; padding: 0 10px;}
     .status-timeline::before { content: ''; position: absolute; top: 15px; left: 30px; right: 30px; height: 3px; background: var(--bg-elev); z-index: 1; border-radius: 5px; }
     .status-timeline::after { content: ''; position: absolute; top: 15px; left: 30px; height: 3px; background: var(--brand); z-index: 2; border-radius: 5px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); width: var(--progress-width, 0%); }
@@ -78,7 +87,13 @@
     
     .total-box { background: rgba(0,0,0,0.2); border-radius: 16px; padding: 16px; margin-top: 20px; border: 1px solid var(--border); }
     .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: var(--text-mute); font-weight: 500;}
-    .total-row:last-child { margin-bottom: 0; font-size: 22px; font-weight: 900; color: var(--text-main); margin-top: 12px; padding-top: 16px; border-top: 1px dashed var(--border); letter-spacing: -0.5px;}
+    
+    .total-row:last-child { 
+      margin-bottom: 0; font-size: 20px; font-weight: 900; color: var(--text-main); 
+      margin-top: 12px; padding-top: 16px; border-top: 1px dashed var(--border); 
+      letter-spacing: -0.5px; display: flex; align-items: center; white-space: nowrap; 
+    }
+    
     .text-success { color: var(--success) !important; }
     .text-danger { color: var(--danger) !important; }
 
@@ -90,14 +105,36 @@
     .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: var(--text-mute); font-size: 14px; font-weight: 500; }
     .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
 
-    /* 🔥 BANNER FLOTANTE PWA */
-    .pwa-banner { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #18181B; border: 1px solid var(--border); border-radius: 16px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9999; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); opacity: 0; pointer-events: none; }
-    .pwa-banner.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
-    .pwa-banner-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--brand), #E55A00); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; flex-shrink: 0; }
-    .pwa-banner-text { flex: 1; }
-    .pwa-banner-text h4 { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
-    .pwa-banner-text p { font-size: 11px; color: var(--text-mute); }
-    .pwa-banner-btn { background: var(--text-main); color: var(--bg-main); padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; }
+    /* 🔥 BANNER FLOTANTE PWA (IDÉNTICO AL DE TU PÁGINA PRINCIPAL) */
+    .install-banner {
+      position: fixed;
+      bottom: calc(20px + env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%) translateY(300%);
+      width: calc(100% - 2rem);
+      max-width: 400px;
+      background: linear-gradient(135deg, #1A1E2C, #0E1118);
+      border: 1.5px solid var(--brand);
+      border-radius: 1.4rem;
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      z-index: 1500;
+      box-shadow: 0 12px 40px -8px rgba(255,105,0,0.6);
+      transition: transform 0.4s cubic-bezier(.2,.9,.4,1.2);
+      box-sizing: border-box;
+    }
+    .install-banner.show { transform: translateX(-50%) translateY(0); }
+    .install-banner.ios { border-color: #007AFF; }
+    .install-banner-icon { width: 46px; height: 46px; background: transparent; padding: 0; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 12px -2px rgba(255, 105, 0, 0.5); flex-shrink: 0; display: block; }
+    .install-banner-logo { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: block; }
+    .install-banner-text { flex: 1; min-width: 0; }
+    .install-banner-text strong { display: block; font-size: 0.85rem; color: white; font-weight: 700; }
+    .install-banner-text span { display: block; font-size: 0.68rem; color: var(--text-mute); margin-top: 3px; line-height: 1.3; }
+    .install-banner-btn { background: linear-gradient(95deg, var(--brand), #E55A00); border: none; color: white; padding: 0.6rem 1.1rem; border-radius: 2rem; font-weight: 700; font-size: 0.72rem; cursor: pointer; font-family: inherit; flex-shrink: 0; transition: transform 0.12s; white-space: nowrap; }
+    .install-banner-btn:active { transform: scale(0.92); }
+    .install-banner-close { background: transparent; border: none; color: var(--text-mute); font-size: 1.2rem; cursor: pointer; padding: 4px; opacity: 0.7; flex-shrink: 0; line-height: 1; }
     
     /* 🔥 LOADER DEL PDF */
     .pdf-loader { position: fixed; inset: 0; background: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px); z-index: 100000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
@@ -124,51 +161,105 @@
     <div class="pdf-loader-sub" id="pdfLoaderSub">Por favor espera un momento</div>
   </div>
 
-  <!-- BANNER FLOTANTE PWA -->
-  <div class="pwa-banner" id="pwaBanner">
-    <div class="pwa-banner-icon"><i class="fas fa-mobile-screen-button"></i></div>
-    <div class="pwa-banner-text">
-      <h4>Instala nuestra App</h4>
-      <p>Sigue el estado de tu equipo en tiempo real</p>
+  <!-- 🔥 BANNER FLOTANTE PWA (IDÉNTICO AL DE TU PÁGINA PRINCIPAL) -->
+  <div class="install-banner" id="installBanner">
+    <div class="install-banner-icon" id="installIcon">
+      <img src="/imagenes/web-app-manifest-192x192.png" alt="DR XIAOMI" class="install-banner-logo">
     </div>
-    <button class="pwa-banner-btn" id="btnPwaInstall">Instalar</button>
+    <div class="install-banner-text">
+      <strong id="installTitle">Instalar DR XIAOMI</strong>
+      <span id="installSubtitle">Acceso rápido desde tu inicio</span>
+    </div>
+    <button class="install-banner-btn" id="installBtn">INSTALAR</button>
+    <button class="install-banner-close" id="installClose" aria-label="Cerrar">✕</button>
   </div>
 
   <script type="module">
     import { db } from '/js/firebase.js';
     import { collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+    // 🔥 REGISTRO DEL SERVICE WORKER (OBLIGATORIO PARA QUE CHROME DEJE INSTALAR)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.error('SW Error:', err));
+    }
+
     const params = new URLSearchParams(window.location.search);
     const reciboId = params.get('id');
     const appCard = document.getElementById('appCard');
 
-    let deferredPrompt;
-    const pwaBanner = document.getElementById('pwaBanner');
-    const btnPwaInstall = document.getElementById('btnPwaInstall');
+    // ==========================================
+    // 🔥 LÓGICA DEL BANNER PWA (IDÉNTICA A TU INDEX)
+    // ==========================================
+    let deferredPrompt = null;
+    const installBanner = document.getElementById('installBanner');
+    const installTitle = document.getElementById('installTitle');
+    const installSubtitle = document.getElementById('installSubtitle');
+    const installBtn = document.getElementById('installBtn');
+    const installClose = document.getElementById('installClose');
+
+    function detectPlatform() {
+      const ua = navigator.userAgent || '';
+      const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+      const isAndroid = /Android/i.test(ua);
+      const isDesktop = !isIOS && !isAndroid;
+      return { isIOS, isAndroid, isDesktop };
+    }
+    const PLATFORM = detectPlatform();
+
+    function setupInstallBanner() {
+      if (PLATFORM.isIOS) {
+        installBanner.classList.add('ios');
+        installTitle.textContent = 'Instalar en iPhone';
+        installSubtitle.textContent = 'Toca Compartir ⬆️ y "Añadir a pantalla de inicio"';
+        installBtn.innerHTML = 'VER CÓMO';
+      } else {
+        installTitle.textContent = 'Instalar DR XIAOMI';
+        installSubtitle.textContent = 'Acceso rápido desde tu inicio';
+        installBtn.innerHTML = 'INSTALAR';
+      }
+    }
+    setupInstallBanner();
+
+    const installClosed = localStorage.getItem('drxiaomi_install_closed');
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      setTimeout(() => {
-        if (!localStorage.getItem('ocultar_pwa_banner')) {
-          pwaBanner.classList.add('show');
-        }
-      }, 3000);
+      if (!installClosed && !isStandalone) {
+        setTimeout(() => installBanner.classList.add('show'), 3000);
+      }
     });
 
-    btnPwaInstall?.addEventListener('click', async () => {
-      if (!deferredPrompt) {
-        alert('Para instalar la app, abre el menú de tu navegador y selecciona "Añadir a pantalla de inicio".');
+    if ((PLATFORM.isIOS || PLATFORM.isDesktop) && !installClosed && !isStandalone) {
+      setTimeout(() => installBanner.classList.add('show'), 3000);
+    }
+
+    installBtn.addEventListener('click', async () => {
+      if (PLATFORM.isIOS) {
+        alert('Para instalar la app:\n\n1. Abre el menú de tu navegador (los 3 puntos o el botón de compartir).\n2. Busca la opción "Agregar a la pantalla principal".\n3. Confirma la instalación.');
         return;
       }
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        pwaBanner.classList.remove('show');
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installBanner.classList.remove('show');
+        }
+        deferredPrompt = null;
+      } else {
+        alert('Para instalar la app:\n\n1. Abre el menú de tu navegador (los 3 puntos).\n2. Busca la opción "Instalar app" o "Agregar a la pantalla principal".\n3. Confirma la instalación.');
       }
-      deferredPrompt = null;
     });
 
+    installClose.addEventListener('click', () => {
+      installBanner.classList.remove('show');
+      localStorage.setItem('drxiaomi_install_closed', '1');
+    });
+
+    // ==========================================
+    // 🔥 CARGAR DATOS DEL RECIBO
+    // ==========================================
     if (!reciboId) {
       appCard.innerHTML = '<div class="loading" style="color:var(--danger)"><i class="fas fa-times-circle" style="font-size:40px; margin-bottom:15px;"></i>No se especificó un recibo.</div>';
     } else {
@@ -297,7 +388,7 @@
 
       try {
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ unit: 'mm', format: 'a4' }); // Hoja A4 Oficio
+        const pdf = new jsPDF({ unit: 'mm', format: 'a4' }); 
         const W = 210, M = 15, CW = W - M * 2;
         let y = 0;
 
@@ -311,50 +402,36 @@
         loaderText.textContent = 'Construyendo PDF...';
         loaderSub.textContent = 'Dando formato a los datos...';
 
-        // ==========================================
-        // 1. ENCABEZADO NARANJA (ESTILO PREMIUM)
-        // ==========================================
-        pdf.setFillColor(255, 105, 0); 
-        pdf.rect(0, 0, W, 35, 'F'); // Cabecera sólida
-        
+        // 1. ENCABEZADO NARANJA
+        pdf.setFillColor(255, 105, 0); pdf.rect(0, 0, W, 35, 'F');
         if (logoDataUrl) {
           try {
-            pdf.setFillColor(255, 255, 255);
-            pdf.circle(M + 10, 17.5, 9, 'F'); // Círculo blanco detrás del logo
+            pdf.setFillColor(255, 255, 255); pdf.circle(M + 10, 17.5, 9, 'F');
             pdf.addImage(logoDataUrl, 'PNG', M + 2, 10, 15, 15); 
           } catch (e) {}
         }
-
         pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(22);
         pdf.text('DR. XIAOMI SCZ', M + 24, 16);
         pdf.setFontSize(9); pdf.setFont('helvetica', 'normal');
         pdf.text('Servicio Técnico Especializado', M + 24, 22);
         pdf.text('Centro Comercial Cañoto #K1 · Tel: 75959450', M + 24, 27);
 
-        // Recuadro del recibo
-        pdf.setFillColor(255, 255, 255); 
-        pdf.roundedRect(W - M - 60, 8, 60, 20, 2, 2, 'F');
+        pdf.setFillColor(255, 255, 255); pdf.roundedRect(W - M - 60, 8, 60, 20, 2, 2, 'F');
         pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8);
         pdf.text('RECIBO N°', W - M - 4, 14, { align: 'right' });
         pdf.setFontSize(11); pdf.text(r.numeroRecibo || '-', W - M - 4, 20, { align: 'right' });
-        
         y = 45;
 
-        // ==========================================
-        // 2. DATOS DEL CLIENTE Y EQUIPO (TARJETAS)
-        // ==========================================
+        // 2. TARJETAS DE DATOS
         const colW = (CW - 6) / 2;
-
-        // Cliente
         pdf.setFillColor(248, 248, 248); pdf.roundedRect(M, y, colW, 25, 2, 2, 'F');
-        pdf.setFillColor(255, 105, 0); pdf.rect(M, y, 2, 25, 'F'); // Línea naranja izquierda
+        pdf.setFillColor(255, 105, 0); pdf.rect(M, y, 2, 25, 'F');
         pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8);
         pdf.text('DATOS DEL CLIENTE', M + 5, y + 6);
         pdf.setTextColor(30, 30, 30); pdf.setFontSize(11); pdf.text((r.cliente || '').slice(0, 25), M + 5, y + 14);
         pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(100, 100, 100);
         pdf.text(`Tel: ${r.telefono || ''}`, M + 5, y + 21);
 
-        // Equipo
         pdf.setFillColor(248, 248, 248); pdf.roundedRect(M + colW + 6, y, colW, 25, 2, 2, 'F');
         pdf.setFillColor(255, 105, 0); pdf.rect(M + colW + 6, y, 2, 25, 'F');
         pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8);
@@ -362,10 +439,8 @@
         pdf.setTextColor(30, 30, 30); pdf.setFontSize(11); pdf.text(`${r.marca || ''} ${r.modelo || ''}`.slice(0, 25), M + colW + 11, y + 14);
         pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(100, 100, 100);
         pdf.text(`Enciende: ${r.enciende || 'Sí'}`, M + colW + 11, y + 21);
-
         y += 30;
 
-        // Falla y Seguridad
         pdf.setFillColor(248, 248, 248); pdf.roundedRect(M, y, colW, 25, 2, 2, 'F');
         pdf.setFillColor(255, 105, 0); pdf.rect(M, y, 2, 25, 'F');
         pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8);
@@ -380,12 +455,9 @@
         pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10);
         let segInfo = r.tipoSeguridad === 'pin' ? `PIN: ${r.pin}` : (r.patron ? `Patrón: ${r.patron.split(',').join('-')}` : 'Sin clave');
         pdf.text(segInfo.slice(0, 25), M + colW + 11, y + 15);
-
         y += 30;
 
-        // ==========================================
         // 3. TABLA DE SERVICIOS
-        // ==========================================
         pdf.setFillColor(255, 105, 0); pdf.roundedRect(M, y, CW, 8, 2, 2, 'F');
         pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9);
         pdf.text('SERVICIOS Y COSTOS', M + 5, y + 5.5);
@@ -405,9 +477,7 @@
 
         y = pdf.lastAutoTable.finalY + 10;
 
-        // ==========================================
         // 4. TOTALES
-        // ==========================================
         const boxW = 80; const boxX = M + CW - boxW;
         pdf.setFillColor(248, 248, 248); pdf.roundedRect(boxX, y, boxW, 20, 2, 2, 'F');
         pdf.setDrawColor(255, 105, 0); pdf.setLineWidth(0.4); pdf.roundedRect(boxX, y, boxW, 20, 2, 2, 'S');
@@ -423,16 +493,14 @@
 
         y += 28;
 
-        // ==========================================
         // 5. FOTOS (Si existen)
-        // ==========================================
         const fotosValidas = (r.fotos || []).filter(f => f && typeof f === 'string');
         if (fotosValidas.length > 0) {
           pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9);
           pdf.text('IMÁGENES DEL EQUIPO', M, y); y += 6;
 
-          const fotoW = (CW - 6) / 2; // 2 fotos por fila
-          const fotoH = fotoW * 0.75; // Proporción 4:3
+          const fotoW = (CW - 6) / 2;
+          const fotoH = fotoW * 0.75;
           let x = M;
 
           for (let i = 0; i < Math.min(fotosValidas.length, 2); i++) {
@@ -446,10 +514,8 @@
           y += fotoH + 10;
         }
 
-        // ==========================================
         // 6. CONDICIONES DEL SERVICIO
-        // ==========================================
-        if (y > 230) { pdf.addPage(); y = 20; } // Salto de página si no cabe
+        if (y > 230) { pdf.addPage(); y = 20; }
         
         pdf.setFillColor(248, 248, 248); pdf.roundedRect(M, y, CW, 35, 2, 2, 'F');
         pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9);
@@ -469,18 +535,14 @@
 
         y += 40;
 
-        // ==========================================
         // 7. FIRMA Y QR
-        // ==========================================
         if (y > 250) { pdf.addPage(); y = 20; }
 
-        // Firma Cliente (Izquierda)
         pdf.setDrawColor(200, 200, 200); pdf.setLineWidth(0.3);
         pdf.line(M, y + 15, M + 60, y + 15);
         pdf.setTextColor(100, 100, 100); pdf.setFontSize(8);
         pdf.text('Firma del Cliente', M + 15, y + 20);
 
-        // QR (Derecha)
         if (qrDataUrl) {
           try {
             pdf.addImage(qrDataUrl, 'PNG', W - M - 25, y, 25, 25);
@@ -488,9 +550,7 @@
           } catch (e) {}
         }
 
-        // ==========================================
-        // PIE DE PÁGINA FINAL
-        // ==========================================
+        // 8. PIE DE PÁGINA
         pdf.setFillColor(255, 105, 0); pdf.rect(0, 285, W, 12, 'F');
         pdf.setTextColor(255, 255, 255); pdf.setFontSize(8); pdf.setFont('helvetica', 'bold');
         pdf.text('¡Gracias por confiar en DR. XIAOMI SCZ!', W / 2, 290, { align: 'center' });
