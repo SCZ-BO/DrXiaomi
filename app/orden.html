@@ -1,581 +1,438 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#FF6900">
-  <title>Tu Recibo - DR. XIAOMI</title>
-
-  <!-- 🔥 FAVICONS -->
-  <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
-  <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
-
-  <!-- 🔥 MANIFEST Y PWA -->
-  <link rel="manifest" href="/manifest.json">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0A" id="metaThemeColor">
+  <meta name="description" content="DR. Xiaomi SCZ · Gestión de órdenes de reparación">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="DR XIAOMI">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>DR. Xiaomi · Orden</title>
 
-  <!-- 🔥 VISTA PREVIA WHATSAPP -->
-  <meta property="og:title" content="Recibo de Reparación - DR. XIAOMI SCZ">
-  <meta property="og:description" content="Haz clic aquí para ver el estado de tu equipo y descargar tu comprobante en PDF.">
-  <meta property="og:image" content="https://xiaomi.scz.red/imagenes/web-app-manifest-192x192.png">
-  <meta property="og:url" content="https://xiaomi.scz.red/app/recibo/">
-  <meta property="og:type" content="website">
-  
+  <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
+
+  <!-- Librerías PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  
+
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
+
   <style>
     :root {
-      --bg-main: #09090B; --bg-card: rgba(24, 24, 27, 0.7); --bg-elev: #27272A;
-      --text-main: #FAFAFA; --text-mute: #A1A1AA; --border: rgba(255,255,255,0.08);
-      --brand: #FF6900; --brand-glow: rgba(255, 105, 0, 0.3); 
-      --success: #10B981; --danger: #EF4444; --warning: #FBBF24; --blue: #3B82F6; --purple: #8B5CF6;
+      --brand: #FF6900; --brand-hover: #E55A00; --brand-light: rgba(255, 105, 0, 0.15);
+      --bg-main: #0A0A0A; --bg-card: rgba(22, 22, 22, 0.7); --bg-elev: #242424;
+      --text-main: #F5F5F5; --text-mute: #888888; --border: rgba(255,255,255,0.08);
+      --radius: 16px;
+
+      /* 🔥 Paleta de colores por acción (estilo iOS) */
+      --c-verde: #34C759; --c-verde-2: #28A745;
+      --c-ambar: #FFB800; --c-ambar-2: #FF9500;
+      --c-rojo: #FF3B30; --c-rojo-2: #D70015;
+      --c-azul: #0A84FF; --c-azul-2: #0066CC;
+      --c-morado: #BF5AF2; --c-morado-2: #9B30CC;
+      --c-whatsapp: #25D366;
+    }
+    [data-theme="light"] {
+      --bg-main: #F5F5F7; --bg-card: rgba(255, 255, 255, 0.8); --bg-elev: #F0F0F2;
+      --text-main: #1D1D1F; --text-mute: #6E6E73; --border: rgba(0,0,0,0.06);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    
-    body { 
-      font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main); 
-      display: flex; justify-content: center; min-height: 100vh;
-      /* 🔥 Fondo inmersivo con auroras de color */
-      background-image: 
-        radial-gradient(circle at 10% 10%, rgba(255, 105, 0, 0.15), transparent 40%),
-        radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.12), transparent 40%),
-        radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.08), transparent 50%);
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; }
+
+    /* Fondo inmersivo con gradientes radiales */
+    body {
+      background-color: var(--bg-main);
+      background-image:
+        radial-gradient(circle at 20% 0%, rgba(255, 105, 0, 0.15), transparent 50%),
+        radial-gradient(circle at 80% 100%, rgba(10, 132, 255, 0.12), transparent 50%);
       background-attachment: fixed;
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      display: flex; flex-direction: column;
     }
 
-    .card { width: 100%; max-width: 440px; min-height: 100vh; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+    .app-container { display: flex; flex-direction: column; height: 100%; }
 
-    /* HEADER CON LOGO Y ANIMACIÓN */
-    .header { 
-      background: linear-gradient(135deg, #FF6900, #E55A00); color: white; 
-      padding: 24px 20px; position: relative; 
-      border-radius: 0 0 32px 32px; box-shadow: 0 10px 40px var(--brand-glow); 
-      z-index: 2; display: flex; align-items: center; gap: 16px; 
+    /* HEADER */
+    .app-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+      padding-top: calc(12px + env(safe-area-inset-top));
+      background: var(--bg-main);
+      border-bottom: 1px solid var(--border); z-index: 100;
+      position: sticky; top: 0;
+      backdrop-filter: blur(10px);
     }
-    .header::after { 
-      content: ''; position: absolute; inset: 0; 
-      background: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="p" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23p)"/></svg>'); 
-      border-radius: 0 0 32px 32px; pointer-events: none; 
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .icon-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--bg-elev); border: none; color: var(--text-main);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.2s;
     }
-    
-    .header-logo-container { 
-      width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.15); 
-      border: 2px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; 
-      position: relative; z-index: 3; animation: breathe 3s ease-in-out infinite; flex-shrink: 0; 
+    .icon-btn:active { transform: scale(0.9); }
+    .brand-text h1 { font-size: 16px; font-weight: 800; margin: 0; letter-spacing: -0.3px; }
+    .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; font-weight: 500;}
+
+    /* CONTENIDO SCROLL */
+    .app-content {
+      flex: 1; overflow-y: auto;
+      padding: 16px 16px calc(100px + env(safe-area-inset-bottom)) 16px;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
     }
-    .header-logo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-    @keyframes breathe { 
-      0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); } 
-      50% { box-shadow: 0 0 20px 8px rgba(255,255,255,0.15); } 
-      100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); } 
+
+    /* TARJETAS */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-radius: var(--radius);
+      padding: 20px; margin-bottom: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border);
+      animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
     }
-    
-    .header-text { position: relative; z-index: 3; }
-    .header h1 { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 4px; line-height: 1; }
-    .header p { font-size: 13px; opacity: 0.95; font-weight: 600; background: rgba(0,0,0,0.2); display: inline-block; padding: 4px 12px; border-radius: 20px;}
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.10s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+    .card:nth-child(4) { animation-delay: 0.20s; }
+    .card:nth-child(5) { animation-delay: 0.25s; }
+    .card:nth-child(6) { animation-delay: 0.30s; }
 
-    .body { padding: 20px 20px 100px 20px; flex: 1; z-index: 2; }
-
-    /* TIMELINE DE ESTADO CON ICONOS COLORIDOS */
-    .status-timeline { display: flex; justify-content: space-between; align-items: flex-start; margin: 8px 0 24px; position: relative; padding: 0 10px;}
-    .status-timeline::before { content: ''; position: absolute; top: 18px; left: 35px; right: 35px; height: 4px; background: var(--bg-elev); z-index: 1; border-radius: 5px; }
-    .status-timeline::after { content: ''; position: absolute; top: 18px; left: 35px; height: 4px; background: linear-gradient(90deg, var(--brand), var(--success)); z-index: 2; border-radius: 5px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); width: var(--progress-width, 0%); }
-    
-    .step { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; z-index: 3; width: 64px; }
-    .step-icon { 
-      width: 40px; height: 40px; border-radius: 50%; 
-      background: var(--bg-elev); border: 2px solid var(--border); 
-      display: flex; align-items: center; justify-content: center; 
-      color: var(--text-mute); font-size: 16px; transition: 0.3s; 
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    .step-label { font-size: 10px; font-weight: 700; color: var(--text-mute); text-transform: uppercase; text-align: center; transition: 0.3s; line-height: 1.2;}
-    
-    .step.active .step-icon { background: var(--brand); border-color: var(--brand); color: white; box-shadow: 0 0 20px var(--brand-glow); transform: scale(1.1); }
-    .step.active .step-label { color: var(--brand); }
-    .step.done .step-icon { background: rgba(16, 185, 129, 0.15); border-color: var(--success); color: var(--success); }
-    .step.done .step-label { color: var(--text-main); }
 
-    /* 🔥 TARJETAS GLASSMORPHISM CON BORDE LUMINOSO */
-    .glass-card { 
-      background: var(--bg-card); 
-      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); 
-      border: 1px solid var(--border); border-radius: 24px; 
-      padding: 20px; margin-bottom: 16px; 
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); 
-      animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards; 
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .card-title {
+      font-size: 13px; font-weight: 800; color: var(--brand);
+      text-transform: uppercase; letter-spacing: 1px;
+      display: flex; align-items: center; gap: 8px;
     }
-    .glass-card:nth-child(1) { animation-delay: 0.1s; }
-    .glass-card:nth-child(2) { animation-delay: 0.2s; }
-    .glass-card:nth-child(3) { animation-delay: 0.3s; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 14px; }
-    .row span:first-child { color: var(--text-mute); font-weight: 500; display: flex; align-items: center; gap: 8px; }
-    .row span:last-child { font-weight: 700; text-align: right; max-width: 60%; color: var(--text-main); }
 
-    .servicios-title { font-size: 12px; text-transform: uppercase; font-weight: 800; color: var(--text-mute); margin-bottom: 16px; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;}
-    
-    .total-box { background: rgba(0,0,0,0.2); border-radius: 16px; padding: 16px; margin-top: 20px; border: 1px solid var(--border); }
-    .total-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--text-mute); font-weight: 500;}
-    .total-row:last-child { 
-      margin-bottom: 0; font-size: 22px; font-weight: 900; color: var(--text-main); 
-      margin-top: 12px; padding-top: 16px; border-top: 1px dashed var(--border); 
-      letter-spacing: -0.5px; display: flex; align-items: center; white-space: nowrap; 
+    /* RECIBO FILAS */
+    .recibo-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; }
+    .recibo-row span:first-child { color: var(--text-mute); font-weight: 500; display: flex; align-items: center; gap: 6px;}
+    .recibo-row span:last-child { font-weight: 700; color: var(--text-main); text-align: right; }
+
+    /* TABLA SERVICIOS */
+    .tabla-servicios { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .tabla-servicios th { text-align: left; font-size: 10px; color: var(--text-mute); text-transform: uppercase; padding-bottom: 8px; border-bottom: 1px solid var(--border); letter-spacing: 0.5px;}
+    .tabla-servicios td { padding: 12px 0; font-size: 13px; color: var(--text-main); border-bottom: 1px solid var(--border); }
+    .tabla-servicios td:last-child { text-align: right; font-weight: 800; color: var(--brand); }
+
+    .total-box {
+      background: rgba(0,0,0,0.2); border-radius: 12px; padding: 16px; margin-top: 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      border: 1px solid var(--border);
     }
-    .text-success { color: var(--success) !important; }
-    .text-danger { color: var(--danger) !important; }
+    .total-box strong { font-size: 20px; font-weight: 900; color: var(--brand); letter-spacing: -0.5px;}
 
-    /* BOTONES CON GRADIENTES Y SOMBRAS */
-    .btn { 
-      display: flex; align-items: center; justify-content: center; gap: 10px; 
-      width: 100%; padding: 18px; background: var(--brand); color: white; 
-      text-align: center; text-decoration: none; border-radius: 16px; 
-      font-weight: 700; font-size: 16px; border: none; cursor: pointer; 
-      margin-bottom: 12px; transition: 0.2s; position: relative; overflow: hidden; 
-      box-shadow: 0 8px 20px rgba(255, 105, 0, 0.3); 
+    /* BOTONES DE ESTADO */
+    .estados-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .estado-btn {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      padding: 14px 8px;
+      background: linear-gradient(145deg, #242424, #1A1A1A);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px; color: var(--text-main);
+      font-size: 12px; font-weight: 700;
+      cursor: pointer; text-align: center;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .btn:active { transform: scale(0.96); }
-    .btn-wsp { background: #25D366; box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3); }
-    .btn-disabled { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-mute); cursor: not-allowed; box-shadow: none; }
-
-    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: var(--text-mute); font-size: 14px; font-weight: 500; }
-    .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-
-    /* ICONOS DE COLORES */
-    .icon-grad { background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
-    .ic-blue { background-image: linear-gradient(135deg, #3B82F6, #2563EB); }
-    .ic-green { background-image: linear-gradient(135deg, #10B981, #059669); }
-    .ic-orange { background-image: linear-gradient(135deg, #F59E0B, #D97706); }
-    .ic-purple { background-image: linear-gradient(135deg, #8B5CF6, #6D28D9); }
-    .ic-red { background-image: linear-gradient(135deg, #EF4444, #DC2626); }
-
-    /* ADVERTENCIA DE EXPIRACIÓN (TIMER) */
-    .warning-timer {
-      background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.4);
-      color: var(--danger); padding: 14px; border-radius: 16px; font-size: 13px;
-      text-align: center; font-weight: 700; margin-bottom: 20px; line-height: 1.4;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
-      animation: pulseDanger 2s infinite;
+    [data-theme="light"] .estado-btn {
+      background: linear-gradient(145deg, #F0F0F2, #E5E5EA);
+      border: 1px solid rgba(0, 0, 0, 0.05);
     }
-    @keyframes pulseDanger { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
-
-    /* LOADER DEL PDF */
-    .pdf-loader { position: fixed; inset: 0; background: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px); z-index: 100000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
-    .pdf-loader.show { opacity: 1; pointer-events: auto; }
-    .pdf-loader-icon { font-size: 56px; color: var(--brand); margin-bottom: 20px; animation: bounce 1s infinite alternate; }
-    @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
-    .pdf-loader-text { font-size: 18px; font-weight: 800; color: white; margin-bottom: 8px; }
-    .pdf-loader-sub { font-size: 14px; color: var(--text-mute); }
-
-    /* BANNER FLOTANTE PWA */
-    .install-banner {
-      position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(300%);
-      width: calc(100% - 2rem); max-width: 400px; background: linear-gradient(135deg, #1A1E2C, #0E1118);
-      border: 1.5px solid var(--brand); border-radius: 20px; padding: 16px;
-      display: flex; align-items: center; gap: 12px; z-index: 1500;
-      box-shadow: 0 12px 40px -8px rgba(255,105,0,0.6); transition: transform 0.4s cubic-bezier(.2,.9,.4,1.2); box-sizing: border-box;
+    .estado-btn i { font-size: 20px; margin-bottom: 2px; transition: filter 0.25s; }
+    .estado-btn:active {
+      transform: scale(0.95);
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
     }
-    .install-banner.show { transform: translateX(-50%) translateY(0); }
-    .install-banner-icon { width: 48px; height: 48px; background: transparent; padding: 0; overflow: hidden; border-radius: 14px; box-shadow: 0 4px 12px -2px rgba(255, 105, 0, 0.5); flex-shrink: 0; display: block; }
-    .install-banner-logo { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; display: block; }
-    .install-banner-text { flex: 1; min-width: 0; }
-    .install-banner-text strong { display: block; font-size: 15px; color: white; font-weight: 800; }
-    .install-banner-text span { display: block; font-size: 12px; color: var(--text-mute); margin-top: 4px; line-height: 1.3; }
-    .install-banner-btn { background: linear-gradient(95deg, var(--brand), #E55A00); border: none; color: white; padding: 10px 16px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; flex-shrink: 0; transition: transform 0.12s; white-space: nowrap; }
-    .install-banner-close { background: transparent; border: none; color: var(--text-mute); font-size: 18px; cursor: pointer; padding: 4px; opacity: 0.7; flex-shrink: 0; line-height: 1; }
+    .estado-btn.activo {
+      background: linear-gradient(145deg, #FF6900, #E55A00);
+      border-color: var(--brand);
+      color: #FFFFFF;
+      box-shadow: 0 6px 20px rgba(255, 105, 0, 0.4);
+    }
+    .estado-btn.activo i { filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9)); }
+
+    /* BITÁCORA */
+    .bitacora-item { display: flex; gap: 12px; margin-bottom: 16px; }
+    .bitacora-icono {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--bg-elev);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 14px;
+    }
+    .bitacora-content { flex: 1; }
+    .bitacora-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .bitacora-autor { font-size: 12px; font-weight: 800; color: var(--text-main); }
+    .bitacora-fecha { font-size: 10px; color: var(--text-mute); font-weight: 600;}
+    .bitacora-texto {
+      font-size: 13px; color: var(--text-main); line-height: 1.5;
+      background: rgba(255,255,255,0.03); padding: 12px;
+      border-radius: 0 12px 12px 12px;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    .bitacora-fotos { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .bitacora-fotos img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; cursor: zoom-in; border: 1px solid var(--border); }
+
+    /* LOADER */
+    .loader-overlay {
+      position: fixed; inset: 0;
+      background: rgba(10, 10, 10, 0.95);
+      backdrop-filter: blur(10px); z-index: 999999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.4s ease;
+    }
+    .loader-overlay.hidden { opacity: 0; pointer-events: none; }
+    .loader-ring {
+      width: 60px; height: 60px; border-radius: 50%;
+      border: 3px solid transparent;
+      border-top-color: var(--brand); border-bottom-color: var(--brand);
+      animation: spin 1.2s linear infinite;
+    }
+    .loader-logo-img { position: absolute; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+    .loader-text { font-size: 13px; font-weight: 600; color: var(--text-mute); margin-top: 16px; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* BOTONES GRANDES */
+    .btn-grande {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 16px; border-radius: 14px;
+      font-size: 15px; font-weight: 800;
+      cursor: pointer; width: 100%; border: none; margin-top: 12px;
+      transition: 0.2s;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+    .btn-grande:active { transform: scale(0.97); }
+    .btn-grande:hover { filter: brightness(1.1); }
+    .btn-whatsapp { background: var(--c-whatsapp); color: white; box-shadow: 0 6px 20px rgba(37, 211, 102, 0.3); }
+    .btn-pdf { background: var(--brand); color: white; box-shadow: 0 6px 20px rgba(255, 105, 0, 0.3); }
+
+    /* VISOR DE IMÁGENES */
+    .img-viewer {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+      z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .img-viewer.show { display: flex; }
+    .img-viewer img { max-width: 100%; max-height: 90vh; object-fit: contain; border-radius: 8px; }
+    .img-viewer .cerrar {
+      position: absolute; top: 20px; right: 20px;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,0.15); color: white;
+      border: none; font-size: 20px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* MODALES */
+    .modal-backdrop {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
+      z-index: 9999999; display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .modal-backdrop.show { opacity: 1; visibility: visible; }
+    .modal-backdrop .modal {
+      background: var(--bg-card); border-radius: 20px; padding: 24px;
+      width: 90%; max-width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      transform: scale(0.95); transition: transform 0.3s ease;
+      border: 1px solid var(--border); position: relative; z-index: 10000000;
+    }
+    .modal-backdrop.show .modal { transform: scale(1); }
+
+    .modal input, .modal select, .modal textarea {
+      width: 100%; padding: 14px 16px; margin-top: 10px;
+      background: var(--bg-elev); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text-main);
+      font-size: 15px; font-family: inherit;
+      outline: none; transition: border-color 0.2s;
+    }
+    .modal input:focus, .modal select:focus, .modal textarea:focus {
+      border-color: var(--brand);
+    }
+    .modal label {
+      font-size: 11px; font-weight: 800; color: var(--text-mute);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      display: block; margin-top: 16px;
+    }
+
+    /* ICONOS CON GRADIENTE */
+    .icon-gradiente-verde { background: linear-gradient(135deg, #34C759, #28A745); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 4px rgba(52, 199, 89, 0.4)); }
+    .icon-gradiente-ambar { background: linear-gradient(135deg, #FFB800, #FF9500); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 4px rgba(255, 184, 0, 0.4)); }
+    .icon-gradiente-rojo { background: linear-gradient(135deg, #FF3B30, #D70015); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 4px rgba(255, 59, 48, 0.4)); }
+    .icon-gradiente-azul { background: linear-gradient(135deg, #0A84FF, #0066CC); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 4px rgba(10, 132, 255, 0.4)); }
+    .icon-gradiente-morado { background: linear-gradient(135deg, #BF5AF2, #9B30CC); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 4px rgba(191, 90, 242, 0.4)); }
+
+    .btn-servicio-mini {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: none; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 13px; margin-left: 6px;
+      transition: transform 0.15s, filter 0.15s;
+    }
+    .btn-servicio-mini:active { transform: scale(0.9); }
+    .btn-servicio-mini.editar { background: rgba(255, 184, 0, 0.15); color: var(--c-ambar); }
+    .btn-servicio-mini.eliminar { background: rgba(255, 59, 48, 0.15); color: var(--c-rojo); }
+    .btn-servicio-mini:hover { filter: brightness(1.2); }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(30, 30, 30, 0.95);
+      backdrop-filter: blur(20px);
+      color: #fff; padding: 14px 20px;
+      border-radius: 16px; font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 10000001; opacity: 0;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none; max-width: 90vw;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast i { font-size: 20px; }
   </style>
 </head>
 <body>
 
-  <div class="card" id="appCard">
-    <div class="loading">
-      <div class="spinner"></div>
-      Cargando tu recibo...
+  <div class="loader-overlay" id="appLoader" aria-label="Cargando aplicación">
+    <div class="loader-ring"></div>
+    <img src="/imagenes/web-app-manifest-192x192.png" class="loader-logo-img" alt="Logo DR Xiaomi">
+    <div class="loader-text">Cargando...</div>
+  </div>
+
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand">
+        <button class="icon-btn" id="backBtn" aria-label="Volver">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="brand-text">
+          <h1 id="headerTitle">ORDEN</h1>
+          <p id="headerSubtitle">Cargando...</p>
+        </div>
+      </div>
+      <button class="icon-btn" id="themeToggle" aria-label="Cambiar tema">
+        <i class="fas fa-moon"></i>
+      </button>
+    </header>
+
+    <main class="app-content" id="contenido">
+      <!-- Aquí se inyecta todo desde orden.js -->
+    </main>
+  </div>
+
+  <!-- VISOR DE IMÁGENES -->
+  <div class="img-viewer" id="imgViewer" role="dialog" aria-label="Visor de imágenes">
+    <button class="cerrar" id="imgViewerCerrar" aria-label="Cerrar visor">
+      <i class="fas fa-times"></i>
+    </button>
+    <img src="" alt="Vista previa" id="imgViewerImg">
+  </div>
+
+  <!-- MODAL DE SERVICIO (agregar/editar) -->
+  <div class="modal-backdrop" id="modalServicioBackdrop">
+    <div class="modal" role="dialog" aria-labelledby="modalServicioTitulo">
+      <h3 id="modalServicioTitulo" style="font-size:18px; font-weight:800; margin-bottom:8px;">
+        Agregar servicio
+      </h3>
+      <p style="font-size:13px; color:var(--text-mute); margin-bottom:16px;">
+        Describe el servicio y su costo.
+      </p>
+
+      <label for="servicioDescripcion">Descripción</label>
+      <input type="text" id="servicioDescripcion" placeholder="Ej: Cambio de pantalla OLED" autocomplete="off">
+
+      <label for="servicioCosto">Costo (Bs)</label>
+      <input type="number" id="servicioCosto" placeholder="0.00" min="0" step="0.01" inputmode="decimal">
+
+      <div style="display:flex; gap:10px; margin-top:24px;">
+        <button class="btn-grande" id="modalServicioCancelar" style="background:var(--bg-elev); color:var(--text-main); margin-top:0;">
+          Cancelar
+        </button>
+        <button class="btn-grande" id="modalServicioGuardar" style="background:var(--brand); color:#fff; margin-top:0;">
+          Guardar
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- LOADER DEL PDF -->
-  <div class="pdf-loader" id="pdfLoader">
-    <i class="fas fa-file-pdf pdf-loader-icon"></i>
-    <div class="pdf-loader-text" id="pdfLoaderText">Preparando tu recibo...</div>
-    <div class="pdf-loader-sub" id="pdfLoaderSub">Por favor espera un momento</div>
+  <!-- TOAST -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle" id="toastIcon"></i>
+    <span id="toastText">Listo</span>
   </div>
 
-  <!-- BANNER FLOTANTE PWA -->
-  <div class="install-banner" id="installBanner">
-    <div class="install-banner-icon">
-      <img src="/imagenes/web-app-manifest-192x192.png" alt="DR XIAOMI" class="install-banner-logo">
-    </div>
-    <div class="install-banner-text">
-      <strong id="installTitle">Instalar DR XIAOMI</strong>
-      <span id="installSubtitle">Sigue el estado de tu reparación en tiempo real</span>
-    </div>
-    <button class="install-banner-btn" id="installBtn">INSTALAR</button>
-    <button class="install-banner-close" id="installClose" aria-label="Cerrar">✕</button>
-  </div>
+  <script type="module" src="./orden.js"></script>
 
-  <script type="module">
-    import { db } from '/js/firebase.js';
-    import { collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    // 🔥 REGISTRO DEL SERVICE WORKER
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(err => console.error('SW Error:', err));
-    }
-
-    const params = new URLSearchParams(window.location.search);
-    const reciboId = params.get('id');
-    const appCard = document.getElementById('appCard');
-
-    // ==========================================
-    // 🔥 LÓGICA DEL BANNER PWA
-    // ==========================================
-    let deferredPrompt = null;
-    const installBanner = document.getElementById('installBanner');
-    const installTitle = document.getElementById('installTitle');
-    const installSubtitle = document.getElementById('installSubtitle');
-    const installBtn = document.getElementById('installBtn');
-    const installClose = document.getElementById('installClose');
-
-    function detectPlatform() {
-      const ua = navigator.userAgent || '';
-      const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-      const isAndroid = /Android/i.test(ua);
-      return { isIOS, isAndroid };
-    }
-    const PLATFORM = detectPlatform();
-
-    function setupInstallBanner() {
-      if (PLATFORM.isIOS) {
-        installTitle.textContent = 'Instalar en iPhone';
-        installSubtitle.textContent = 'Toca Compartir ⬆️ y "Añadir a pantalla de inicio"';
-        installBtn.innerHTML = 'VER CÓMO';
-      } else {
-        installTitle.textContent = 'Instalar DR XIAOMI';
-        installSubtitle.textContent = 'Sigue el estado de tu reparación en tiempo real';
-        installBtn.innerHTML = 'INSTALAR';
-      }
-    }
-    setupInstallBanner();
-
-    const installClosed = localStorage.getItem('drxiaomi_install_closed');
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      if (!installClosed && !isStandalone) {
-        setTimeout(() => installBanner.classList.add('show'), 3000);
-      }
-    });
-
-    if ((PLATFORM.isIOS || !PLATFORM.isAndroid) && !installClosed && !isStandalone) {
-      setTimeout(() => installBanner.classList.add('show'), 3000);
-    }
-
-    installBtn.addEventListener('click', async () => {
-      if (PLATFORM.isIOS) {
-        alert('Para instalar la app:\n\n1. Abre el menú de tu navegador.\n2. Busca la opción "Agregar a la pantalla principal".\n3. Confirma la instalación.');
-        return;
-      }
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') installBanner.classList.remove('show');
-        deferredPrompt = null;
-      } else {
-        alert('Para instalar la app:\n\n1. Abre el menú de tu navegador.\n2. Busca la opción "Instalar app" o "Agregar a la pantalla principal".\n3. Confirma la instalación.');
-      }
-    });
-
-    installClose.addEventListener('click', () => {
-      installBanner.classList.remove('show');
-      localStorage.setItem('drxiaomi_install_closed', '1');
-    });
-
-    // ==========================================
-    // 🔥 CARGAR DATOS DEL RECIBO
-    // ==========================================
-    if (!reciboId) {
-      appCard.innerHTML = '<div class="loading" style="color:var(--danger)"><i class="fas fa-times-circle" style="font-size:40px; margin-bottom:15px;"></i>No se especificó un recibo.</div>';
-    } else {
-      escucharRecibo(reciboId);
-    }
-
-    function escucharRecibo(id) {
-      const q = query(collection(db, 'recibos'), where('numeroRecibo', '==', id));
-      
-      onSnapshot(q, (snap) => {
-        if (snap.empty) {
-          appCard.innerHTML = '<div class="loading" style="color:var(--danger)"><i class="fas fa-search-minus" style="font-size:40px; margin-bottom:15px;"></i>Recibo no encontrado o eliminado.</div>';
-          return;
+  <!-- SCRIPT DE SEGURIDAD PARA CERRAR EL LOADER -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        const loader = document.getElementById('appLoader');
+        if (loader && !loader.classList.contains('hidden')) {
+          loader.classList.add('hidden');
+          console.warn('Loader apagado por seguridad.');
         }
-        
-        const recibo = snap.docs[0].data();
-        renderizarRecibo(recibo, id);
-      }, (error) => {
-        console.error(error);
-        appCard.innerHTML = '<div class="loading" style="color:var(--danger)"><i class="fas fa-wifi" style="font-size:40px; margin-bottom:15px;"></i>Error de conexión.</div>';
-      });
-    }
+      }, 3000);
+    });
+  </script>
 
-    function renderizarRecibo(r, id) {
-      let stepActivo = 1;
-      if (r.estadoOrden === 'reparacion' || r.estadoOrden === 'espera-repuesto') stepActivo = 2;
-      else if (r.estadoOrden === 'listo') stepActivo = 3;
-      else if (r.estadoOrden === 'entregado') stepActivo = 4;
+  <!-- SCRIPT DE TEMA (theme-color dinámico + prefers-color-scheme) -->
+  <script>
+    (function () {
+      const metaColor = document.getElementById('metaThemeColor');
+      const themeToggle = document.getElementById('themeToggle');
+      const iconoToggle = themeToggle ? themeToggle.querySelector('i') : null;
 
-      const progressWidth = ((stepActivo - 1) / 3) * 100 + '%';
-      
-      const stepsHtml = `
-        <div class="status-timeline" style="--progress-width: ${progressWidth};">
-          <div class="step ${stepActivo >= 1 ? (stepActivo === 1 ? 'active' : 'done') : ''}">
-            <div class="step-icon"><i class="fas fa-box"></i></div>
-            <div class="step-label">Recibido</div>
-          </div>
-          <div class="step ${stepActivo >= 2 ? (stepActivo === 2 ? 'active' : 'done') : ''}">
-            <div class="step-icon"><i class="fas fa-screwdriver-wrench"></i></div>
-            <div class="step-label">Reparación</div>
-          </div>
-          <div class="step ${stepActivo >= 3 ? (stepActivo === 3 ? 'active' : 'done') : ''}">
-            <div class="step-icon"><i class="fas fa-check-circle"></i></div>
-            <div class="step-label">Listo</div>
-          </div>
-          <div class="step ${stepActivo >= 4 ? (stepActivo === 4 ? 'active' : 'done') : ''}">
-            <div class="step-icon"><i class="fas fa-handshake"></i></div>
-            <div class="step-label">Entregado</div>
-          </div>
-        </div>
-      `;
+      // Detección automática del tema del sistema al cargar
+      const temaGuardado = localStorage.getItem('dr-xiaomi-theme');
+      const temaSistema = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      const temaInicial = temaGuardado || temaSistema;
 
-      let diasRestantes = 15;
-      let avisoHtml = '';
-      let botonDescargaHtml = `<button class="btn" id="btnDescargar"><i class="fas fa-file-pdf"></i> Descargar Recibo PDF</button>`;
-
-      if (r.fecha) {
-        let fechaCreacion = r.fecha.toDate ? r.fecha.toDate() : new Date(r.fecha);
-        let diasTranscurridos = Math.floor((new Date() - fechaCreacion) / (1000 * 60 * 60 * 24));
-        diasRestantes = 15 - diasTranscurridos;
-
-        if (diasRestantes <= 0) {
-          avisoHtml = `<div class="warning-timer"><i class="fas fa-lock"></i> Este enlace ha expirado.</div>`;
-          botonDescargaHtml = `<button class="btn btn-disabled" disabled><i class="fas fa-lock"></i> PDF Expirado</button>`;
-        } else {
-          avisoHtml = `<div class="warning-timer"><i class="fas fa-exclamation-triangle"></i> ¡Atención! Descarga tu recibo. Se eliminará en <b>${diasRestantes} días</b>.</div>`;
+      function aplicarTema(tema) {
+        document.documentElement.setAttribute('data-theme', tema);
+        localStorage.setItem('dr-xiaomi-theme', tema);
+        if (metaColor) {
+          metaColor.setAttribute('content', tema === 'light' ? '#F5F5F7' : '#0A0A0A');
+        }
+        if (iconoToggle) {
+          iconoToggle.className = tema === 'light' ? 'fas fa-sun' : 'fas fa-moon';
         }
       }
 
-      let fechaIngreso = '-';
-      if (r.fechaEditada || r.fecha) {
-        let d = (r.fechaEditada || r.fecha).toDate ? (r.fechaEditada || r.fecha).toDate() : new Date(r.fechaEditada || r.fecha);
-        fechaIngreso = d.toLocaleDateString('es-BO', { day: '2-digit', month: 'short', year: 'numeric' });
-      }
+      aplicarTema(temaInicial);
 
-      const serviciosHtml = (r.servicios || []).map(s => `<div class="row"><span>${s.desc}</span><span>Bs. ${Number(s.costo).toFixed(2)}</span></div>`).join('');
-
-      appCard.innerHTML = `
-        <div class="header">
-          <div class="header-logo-container"><img src="/imagenes/web-app-manifest-192x192.png" alt="Logo" class="header-logo" onerror="this.style.display='none'"></div>
-          <div class="header-text"><h1>DR. XIAOMI</h1><p>Recibo N°: ${r.numeroRecibo}</p></div>
-        </div>
-        
-        <div class="body">
-          ${stepsHtml}
-          ${avisoHtml}
-          
-          <div class="glass-card">
-            <div class="row"><span><i class="fas fa-user ic-blue icon-grad"></i> Cliente</span> <span>${r.cliente}</span></div>
-            <div class="row"><span><i class="fas fa-mobile-alt ic-purple icon-grad"></i> Equipo</span> <span>${r.marca} ${r.modelo}</span></div>
-            <div class="row"><span><i class="fas fa-tools ic-orange icon-grad"></i> Falla</span> <span>${r.falla || 'No especificada'}</span></div>
-            <div class="row"><span><i class="fas fa-calendar-alt ic-green icon-grad"></i> Ingreso</span> <span>${fechaIngreso}</span></div>
-          </div>
-          
-          <div class="glass-card">
-            <div class="servicios-title"><i class="fas fa-list-check ic-green icon-grad"></i> Servicios Realizados</div>
-            ${serviciosHtml || '<div class="row"><span>Sin servicios</span><span>-</span></div>'}
-            <div class="total-box">
-              <div class="total-row"><span>Total</span> <span>Bs. ${Number(r.total || 0).toFixed(2)}</span></div>
-              ${r.adelanto > 0 ? `<div class="total-row"><span>Adelanto</span> <span>Bs. ${Number(r.adelanto).toFixed(2)}</span></div>` : ''}
-              <div class="total-row"><span>${r.saldo > 0 ? 'Saldo Pendiente' : 'Estado'}</span> <span class="${r.saldo > 0 ? 'text-danger' : 'text-success'}">${r.saldo > 0 ? `Bs. ${Number(r.saldo).toFixed(2)}` : '✅ Pagado'}</span></div>
-            </div>
-          </div>
-
-          <div style="margin-top: 10px;">
-            ${botonDescargaHtml}
-            <a class="btn btn-wsp" href="https://wa.me/59175959450?text=Hola,%20consulto%20por%20mi%20recibo%20${r.numeroRecibo}"><i class="fab fa-whatsapp"></i> Contactar al Taller</a>
-          </div>
-        </div>
-      `;
-
-      if (diasRestantes > 0) {
-        document.getElementById('btnDescargar')?.addEventListener('click', () => generarPDFPremium(r));
-      }
-    }
-
-    // ==========================================
-    // 🔥 GENERAR PDF FORMATO TICKET
-    // ==========================================
-    async function generarPDFPremium(r) {
-      const loader = document.getElementById('pdfLoader');
-      const loaderText = document.getElementById('pdfLoaderText');
-      const loaderSub = document.getElementById('pdfLoaderSub');
-      
-      loader.classList.add('show');
-      loaderText.textContent = 'Preparando tu recibo...';
-      loaderSub.textContent = 'Cargando datos...';
-
-      try {
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ unit: 'mm', format: [80, 250] });
-        const W = 80, M = 5, CW = W - M * 2;
-        let y = 0;
-
-        loaderText.textContent = 'Cargando logo...';
-        const logoDataUrl = await getLogoDataUrl();
-
-        loaderText.textContent = 'Generando código QR...';
-        loaderSub.textContent = 'Enlazando a la web...';
-        const qrDataUrl = await getQRDataUrl(`https://xiaomi.scz.red/recibo/?id=${r.numeroRecibo}`);
-
-        loaderText.textContent = 'Construyendo PDF...';
-        loaderSub.textContent = 'Dando formato a los datos...';
-
-        // 1. ENCABEZADO
-        pdf.setFillColor(255, 105, 0); pdf.rect(0, 0, W, 25, 'F');
-        if (logoDataUrl) {
-          try {
-            pdf.setFillColor(255, 255, 255); pdf.circle(W / 2, 8, 5, 'F');
-            pdf.addImage(logoDataUrl, 'PNG', W / 2 - 4, 4, 8, 8); 
-          } catch (e) {}
-        }
-        pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(14);
-        pdf.text('DR. XIAOMI SCZ', W / 2, 19, { align: 'center' });
-        pdf.setFontSize(7); pdf.setFont('helvetica', 'normal');
-        pdf.text('Servicio Técnico Especializado', W / 2, 23, { align: 'center' });
-
-        y = 30;
-
-        // 2. DATOS RECIBO
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10);
-        pdf.text(`RECIBO: ${r.numeroRecibo}`, W / 2, y, { align: 'center' });
-        y += 5;
-        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8);
-        pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, W / 2, y, { align: 'center' });
-        y += 6;
-        pdf.setDrawColor(200, 200, 200); pdf.setLineWidth(0.3);
-        pdf.line(M, y, W - M, y); y += 5;
-
-        // 3. CLIENTE
-        pdf.setFontSize(8); pdf.setTextColor(100, 100, 100); pdf.text('CLIENTE:', M, y); y += 4;
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text((r.cliente || '').slice(0, 25), M, y); y += 4;
-        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(100, 100, 100); pdf.text(`Tel: ${r.telefono || ''}`, M, y); y += 6;
-
-        // 4. EQUIPO
-        pdf.setTextColor(100, 100, 100); pdf.text('EQUIPO:', M, y); y += 4;
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text(`${r.marca || ''} ${r.modelo || ''}`.slice(0, 25), M, y); y += 4;
-        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(100, 100, 100); pdf.text(`Enciende: ${r.enciende || 'Sí'}`, M, y); y += 6;
-
-        // 5. FALLA
-        pdf.setTextColor(100, 100, 100); pdf.text('FALLA:', M, y); y += 4;
-        pdf.setTextColor(30, 30, 30); pdf.text(pdf.splitTextToSize(r.falla || 'No especificada', CW), M, y); y += 6;
-
-        // 6. CLAVE
-        pdf.setTextColor(100, 100, 100); pdf.text('CLAVE:', M, y); y += 4;
-        pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold');
-        let segInfo = r.tipoSeguridad === 'pin' ? `PIN: ${r.pin}` : (r.patron ? `Patrón: ${r.patron.split(',').join('-')}` : 'Sin clave');
-        pdf.text(segInfo, M, y); y += 6;
-
-        pdf.setDrawColor(200, 200, 200); pdf.line(M, y, W - M, y); y += 5;
-
-        // 7. SERVICIOS
-        pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8);
-        pdf.text('SERVICIOS', M, y); pdf.text('COSTO', W - M, y, { align: 'right' }); y += 4;
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'normal');
-        (r.servicios || []).forEach(s => {
-          pdf.text(s.desc.slice(0, 30), M, y);
-          pdf.text(`Bs. ${Number(s.costo).toFixed(2)}`, W - M, y, { align: 'right' });
-          y += 5;
+      if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+          const actual = document.documentElement.getAttribute('data-theme');
+          aplicarTema(actual === 'dark' ? 'light' : 'dark');
         });
-        y += 2; pdf.setDrawColor(200, 200, 200); pdf.line(M, y, W - M, y); y += 5;
-
-        // 8. TOTALES
-        pdf.setFontSize(9); pdf.setTextColor(100, 100, 100); pdf.text('Total:', M, y);
-        pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.text(`Bs. ${Number(r.total || 0).toFixed(2)}`, W - M, y, { align: 'right' }); y += 5;
-
-        if (r.adelanto > 0) {
-          pdf.setFont('helvetica', 'normal'); pdf.setTextColor(100, 100, 100); pdf.text('Adelanto:', M, y);
-          pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.text(`- Bs. ${Number(r.adelanto).toFixed(2)}`, W - M, y, { align: 'right' }); y += 5;
-        }
-
-        pdf.setFillColor(255, 245, 235); pdf.roundedRect(M, y - 2, CW, 10, 2, 2, 'F');
-        pdf.setTextColor(255, 105, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11);
-        pdf.text('SALDO:', M + 2, y + 4); pdf.text(`Bs. ${Number(r.saldo || 0).toFixed(2)}`, W - M - 2, y + 4, { align: 'right' });
-        y += 14;
-
-        // 9. QR
-        if (qrDataUrl) {
-          try {
-            pdf.addImage(qrDataUrl, 'PNG', W / 2 - 10, y, 20, 20); y += 22;
-            pdf.setTextColor(100, 100, 100); pdf.setFontSize(7); pdf.text('Escanea para ver tu recibo', W / 2, y, { align: 'center' });
-          } catch (e) {}
-        }
-
-        // 10. PIE
-        pdf.setFillColor(255, 105, 0); pdf.rect(0, y + 5, W, 10, 'F');
-        pdf.setTextColor(255, 255, 255); pdf.setFontSize(7); pdf.setFont('helvetica', 'bold');
-        pdf.text('¡Gracias por confiar en DR. XIAOMI!', W / 2, y + 11, { align: 'center' });
-
-        loaderText.textContent = '¡Listo!'; loaderSub.textContent = 'Descargando archivo...';
-        await new Promise(res => setTimeout(res, 800));
-        pdf.save(`Recibo_${r.numeroRecibo}.pdf`);
-
-      } catch (err) {
-        console.error("Error generando PDF:", err);
-        alert("Hubo un error al generar el PDF.");
-      } finally {
-        loader.classList.remove('show');
       }
-    }
 
-    async function getLogoDataUrl() {
-      return new Promise((resolve) => {
-        const img = new Image(); img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          try { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0); resolve(c.toDataURL('image/png')); } catch (e) { resolve(''); }
-        };
-        img.onerror = () => resolve('');
-        img.src = '/imagenes/web-app-manifest-192x192.png';
+      // Escuchar cambios del sistema si no hay preferencia guardada
+      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+        if (!localStorage.getItem('dr-xiaomi-theme')) {
+          aplicarTema(e.matches ? 'light' : 'dark');
+        }
       });
-    }
-
-    async function getQRDataUrl(texto) {
-      return new Promise((resolve) => {
-        if (typeof QRCode === 'undefined') { resolve(''); return; }
-        const div = document.createElement('div'); div.style.cssText = 'position:absolute;left:-9999px;'; document.body.appendChild(div);
-        try {
-          new QRCode(div, { text: texto, width: 256, height: 256, correctLevel: QRCode.CorrectLevel.M });
-          setTimeout(() => {
-            const canvas = div.querySelector('canvas'), img = div.querySelector('img');
-            let dataUrl = canvas ? canvas.toDataURL('image/png') : (img && img.src ? img.src : '');
-            div.remove(); resolve(dataUrl);
-          }, 200);
-        } catch (e) { div.remove(); resolve(''); }
-      });
-    }
+    })();
   </script>
 </body>
 </html>
