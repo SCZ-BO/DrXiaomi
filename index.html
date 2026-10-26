@@ -17,6 +17,17 @@
   <link rel="canonical" href="https://xiaomi.scz.red/">
   <title>DR XIAOMI · ORANGE LAB · Robotic Repair Center</title>
 
+  <!-- 🔥 REDIRECCIÓN PARA RECIBOS (NUEVO) -->
+  <script>
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const reciboId = params.get('recibo') || params.get('id');
+      if (reciboId) {
+        window.location.replace('/app/recibo/?id=' + encodeURIComponent(reciboId));
+      }
+    })();
+  </script>
+
   <!-- ===== FAVICONS ===== -->
   <link rel="icon" type="image/png" sizes="96x96" href="imagenes/favicon-96x96.png">
   <link rel="icon" type="image/svg+xml" href="imagenes/favicon.svg">
