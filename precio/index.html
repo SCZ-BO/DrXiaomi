@@ -177,9 +177,9 @@
 
     /* ============ MAIN ============ */
     .main-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; position: relative; }
-    .cards-view { display: flex; flex-direction: column; gap: 12px; padding: 16px; padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 20px); width: 100%; box-sizing: border-box; }
+    .cards-view { display: flex; flex-direction: column; gap: 16px; padding: 16px; padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 20px); width: 100%; box-sizing: border-box; }
 
-    /* ============ PRODUCT CARD ============ */
+    /* ============ PRODUCT CARD (NORMAL) ============ */
     .product-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -243,53 +243,49 @@
     .whatsapp-btn { background: #25D366; color: white; }
     .edit-btn { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.3); }
 
-    /* ============ 🔥 DISEÑO DE LISTA PRO ============ */
+    /* ============ 🔥 NUEVO DISEÑO DE LISTA COMPATIBLES ============ */
+    .compat-card-title {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-left: 8px;
+    }
+    .compat-card-title img {
+      width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(0 0 4px rgba(255,255,255,0.1));
+    }
+    .compat-card-brand {
+      font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;
+    }
+    .compat-card-model {
+      font-size: 20px; font-weight: 800; color: var(--text-main); text-transform: uppercase; line-height: 1.1; letter-spacing: -0.5px;
+    }
+
+    .compat-image-box {
+      width: 100%; height: 180px; background: #000; border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px; display: flex; justify-content: center; border: 1px solid var(--border);
+    }
+    .compat-image-box img { object-fit: contain; height: 100%; }
+
     .compat-list-container {
-      background: var(--bg-list);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      max-height: 280px;
-      overflow-y: auto;
-      margin-top: 10px;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
+      background: var(--bg-list); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); max-height: 280px; overflow-y: auto;
+      margin-top: 10px; scrollbar-width: none; -ms-overflow-style: none;
     }
     .compat-list-container::-webkit-scrollbar { display: none; }
 
     .compat-row {
-      display: flex;
-      align-items: center;
-      padding: 12px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      transition: background 0.15s;
+      display: flex; align-items: center; padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.15s;
     }
     .compat-row:last-child { border-bottom: none; }
     .compat-row:active { background: var(--bg-elev); }
 
     .compat-brand-badge {
-      font-size: 9px;
-      font-weight: 800;
-      color: var(--brand);
-      background: rgba(255, 105, 0, 0.1);
-      padding: 5px 8px;
-      border-radius: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      min-width: 90px;
-      text-align: center;
-      flex-shrink: 0;
+      font-size: 9px; font-weight: 800; padding: 5px 8px; border-radius: 6px;
+      text-transform: uppercase; letter-spacing: 0.5px; min-width: 90px;
+      text-align: center; flex-shrink: 0;
     }
     
     .compat-model-text {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-main);
-      text-align: right;
-      flex: 1;
-      padding-left: 12px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 14px; font-weight: 600; color: var(--text-main);
+      text-align: right; flex: 1; padding-left: 12px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
     /* ============ BOTTOM NAV ============ */
@@ -356,7 +352,7 @@
       background: var(--bg-card); border: 1px solid var(--border);
       padding: 12px 20px; border-radius: var(--radius-pill);
       color: var(--text-main); font-size: 13px; font-weight: 600;
-      z-index: 150; animation: toastIn 0.25s var(--ease); 
+      z-index: 150; animation: toastIn 0.25s ease; 
       box-shadow: var(--shadow-lg); max-width: 90%; text-align: center;
     }
     @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
@@ -623,7 +619,7 @@
     return resultados;
   }
 
-  // 🔥 DIBUJAR LAS TARJETAS DE GRUPOS DE COMPATIBILIDAD
+  // 🔥 DIBUJAR LAS TARJETAS DE GRUPOS DE COMPATIBILIDAD (CON LOGOS Y COLORES)
   function renderGruposCompatibles(grupos, term) {
     container.innerHTML = '';
     resultsCount.innerHTML = `<span>${grupos.length} grupo(s) encontrado(s)</span><span class="offline-tag" style="color:#3B82F6; border-color:#3B82F6;"><i class="fas fa-images"></i> Modo Catálogo</span>`;
@@ -639,20 +635,41 @@
       return;
     }
 
+    // 🎨 Colores por marca
+    const COLORES_MARCA = {
+      "APPLE": "#A2AAAD", "IPHONE": "#A2AAAD",
+      "SAMSUNG": "#1428A0",
+      "XIAOMI": "#FF6900", "REDMI": "#FF6900", "POCO": "#FFD700",
+      "TECNO": "#0055A4", "INFINIX": "#00A859", "ITEL": "#E31E24",
+      "MOTOROLA": "#0091EA", "OPPO": "#00B14F", "REALME": "#FFD200",
+      "VIVO": "#415FFF", "HONOR": "#00A3E0", "HUAWEI": "#E60012", "ZTE": "#005596"
+    };
+
     const view = document.createElement('div');
     view.className = 'cards-view';
 
     grupos.forEach(g => {
+      // Detectar marca base para el logo
+      let marcaBase = g.marca ? g.marca.split(" ")[0].toUpperCase() : "GENERAL";
+      if (marcaBase.includes("APPLE") || marcaBase.includes("IPHONE")) marcaBase = "APPLE";
+      if (marcaBase.includes("XIAOMI") || marcaBase.includes("REDMI") || marcaBase.includes("POCO")) marcaBase = "XIAOMI"; 
       
-      // 🔥 CORTAMOS EL TEXTO EXACTAMENTE COMO VIENE EN EL DICCIONARIO
+      const colorMarca = COLORES_MARCA[marcaBase] || "#3B82F6";
+      
+      // Ruta de los logos en tu GitHub
+      const logoRuta = `https://raw.githubusercontent.com/SCZ-BO/DR-Xiaomi/main/precio/logos/${marcaBase.toLowerCase()}.png`;
+
+      // Limpiamos el nombre para que no se repita (ej: "XIAOMI XIAOMI 12")
+      const tituloLimpio = g.grupoNombre.replace(marcaBase, "").trim();
+
       const listaHtml = g.modelos.map(m => {
         const partes = m.trim().split(" ");
-        const marca = partes[0]; // Primera palabra (MARCA)
-        const modelo = partes.slice(1).join(" "); // El resto (MODELO)
+        const marca = partes[0];
+        const modelo = partes.slice(1).join(" ");
         
         return `
           <div class="compat-row">
-            <span class="compat-brand-badge">${escapeHtml(marca)}</span>
+            <span class="compat-brand-badge" style="color: ${colorMarca}; background: ${colorMarca}15; border: 1px solid ${colorMarca}30;">${escapeHtml(marca)}</span>
             <span class="compat-model-text">${escapeHtml(modelo)}</span>
           </div>
         `;
@@ -660,15 +677,20 @@
       
       const card = document.createElement('div');
       card.className = 'product-card is-compat'; 
+      
+      // 🔥 TÍTULO GRANDE + LOGO + COLOR DE MARCA
       card.innerHTML = `
-        <div class="card-header" style="flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 12px;">
-          <div class="card-brand" style="color: #3B82F6; font-size: 11px;"><i class="fas fa-layer-group"></i> GRUPO DE COMPATIBILIDAD</div>
-          <div class="card-model" style="font-size: 20px;">${escapeHtml(g.marca)} ${escapeHtml(g.grupoNombre)}</div>
+        <div class="compat-card-title">
+          <img src="${logoRuta}" onerror="this.src='/imagenes/favicon-96x96.png'" alt="${marcaBase}">
+          <div>
+            <div class="compat-card-brand" style="color: ${colorMarca};">${escapeHtml(g.marca)}</div>
+            <div class="compat-card-model">${escapeHtml(tituloLimpio)}</div>
+          </div>
         </div>
         
         <!-- Imagen de la pantalla -->
-        <div style="width: 100%; height: 200px; background: #000; border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px; display: flex; justify-content: center; border: 1px solid var(--border);">
-          <img src="${g.imagen}" alt="Pantalla ${g.grupoNombre}" style="object-fit: contain; height: 100%;" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666; font-size:12px;\\'><i class=\\'fas fa-image\\' style=\\'font-size:30px; margin-bottom:10px;\\'></i><br>Foto no subida aún</div>'">
+        <div class="compat-image-box">
+          <img src="${g.imagen}" alt="Pantalla ${g.grupoNombre}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666; font-size:12px;\\'><i class=\\'fas fa-image\\' style=\\'font-size:30px; margin-bottom:10px;\\'></i><br>Foto no subida aún</div>'">
         </div>
 
         <div style="padding-left: 4px;">
