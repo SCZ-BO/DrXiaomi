@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#000000">
+  <title>DR. XIAOMI | MÓDULO DE COMPATIBILIDAD</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-color: #050505;
+      --grid-color: #111;
+      --text-main: #E0E0E0;
+      --text-mute: #555;
+      --neon-green: #00FF41;
+      --neon-orange: #FF6900;
+      --neon-blue: #00D4FF;
+      --border-color: #222;
+      --font-code: 'Fira Code', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: var(--font-code);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      /* Rejilla sutil de fondo estilo hacker */
+      background-image: 
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+
+    /* ============ HEADER ============ */
+    .header {
+      padding: 20px 16px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(5, 5, 5, 0.9);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(5px);
+    }
+
+    .terminal-title {
+      font-size: 14px;
+      color: var(--text-mute);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .terminal-title span { color: var(--neon-green); }
+
+    .main-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--neon-green);
+      letter-spacing: -1px;
+      text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .main-title::after {
+      content: '_';
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .subtitle {
+      font-size: 11px;
+      color: var(--neon-orange);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    /* ============ SEARCH BOX ============ */
+    .search-container {
+      margin-top: 20px;
+      position: relative;
+    }
+
+    .search-prefix {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--neon-green);
+      font-size: 14px;
+      pointer-events: none;
+      font-weight: 700;
+    }
+
+    .search-input {
+      width: 100%;
+      background: #000;
+      border: 1px solid var(--border-color);
+      border-left: 3px solid var(--neon-green);
+      padding: 14px 14px 14px 38px;
+      color: var(--neon-green);
+      font-family: var(--font-code);
+      font-size: 14px;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    .search-input::placeholder {
+      color: #333;
+    }
+
+    .search-input:focus {
+      border-color: var(--neon-green);
+      box-shadow: 0 0 15px rgba(0, 255, 65, 0.15);
+    }
+
+    /* ============ MAIN CONTENT ============ */
+    .main-content {
+      flex: 1;
+      padding: 20px 16px;
+      padding-bottom: 60px;
+    }
+
+    .system-message {
+      font-size: 12px;
+      color: var(--text-mute);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .system-message span { color: var(--neon-orange); }
+
+    /* ============ CARDS DE COMPATIBILIDAD ============ */
+    .compat-card {
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid var(--border-color);
+      margin-bottom: 20px;
+      position: relative;
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .compat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 3px; height: 100%;
+      background: var(--neon-orange);
+    }
+
+    .card-header {
+      padding: 12px 16px;
+      border-bottom: 1px dashed var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #080808;
+    }
+
+    .card-brand-tag {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--neon-orange);
+      background: rgba(255, 105, 0, 0.1);
+      padding: 4px 8px;
+      border: 1px solid rgba(255, 105, 0, 0.3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card-id {
+      font-size: 10px;
+      color: var(--text-mute);
+    }
+
+    .card-title {
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title i { color: var(--neon-blue); font-size: 16px; }
+
+    /* Imagen */
+    .card-image-wrapper {
+      width: 100%;
+      height: 180px;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      overflow: hidden;
+    }
+
+    .card-image-wrapper img {
+      max-height: 100%;
+      max-width: 100%;
+      object-fit: contain;
+    }
+
+    .no-image {
+      font-size: 11px;
+      color: var(--text-mute);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .no-image i { font-size: 30px; color: #222; }
+
+    /* Lista de modelos */
+    .models-list {
+      padding: 10px 16px 16px;
+    }
+
+    .models-count {
+      font-size: 11px;
+      color: var(--text-mute);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .models-count span { color: var(--neon-green); }
+
+    .model-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dotted #111;
+      font-size: 13px;
+    }
+
+    .model-item:last-child { border-bottom: none; }
+
+    .model-prefix {
+      color: var(--neon-green);
+      margin-right: 10px;
+      font-weight: 700;
+    }
+
+    .model-brand {
+      color: var(--neon-orange);
+      font-weight: 700;
+      font-size: 10px;
+      min-width: 80px;
+      text-transform: uppercase;
+    }
+
+    .model-name {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-mute);
+    }
+
+    .empty-state i {
+      font-size: 40px;
+      color: #222;
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .empty-state p { font-size: 13px; line-height: 1.6; }
+    .empty-state span { color: var(--neon-green); }
+
+    /* ============ FOOTER ============ */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 10px;
+      color: #333;
+      border-top: 1px solid var(--border-color);
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="terminal-title">
+      <span>root@drxiaomi:~$</span> ./compatibilidad
+    </div>
+    <div class="main-title">MATRIX_DB</div>
+    <div class="subtitle">Sistema de Consulta Técnica</div>
+
+    <div class="search-container">
+      <div class="search-prefix">></div>
+      <input 
+        type="text" 
+        id="searchInput" 
+        class="search-input" 
+        placeholder="grep 'modelo'..." 
+        autocomplete="off"
+        autofocus
+      >
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="system-message" id="systemMessage">
+      [SYS] Iniciando base de datos... <br>
+      [SYS] Escribe un modelo para buscar compatibilidad.
+    </div>
+
+    <div id="resultsContainer"></div>
+  </main>
+
+  <footer class="footer">
+    DR. XIAOMI &copy; 2026 | Terminal de Compatibilidad v1.0
+  </footer>
+
+  <script type="module">
+    // 🔥 IMPORTAMOS EL DICCIONARIO EXTERNO
+    import { COMPATIBILIDADES } from './compatibles.js';
+
+    const searchInput = document.getElementById("searchInput");
+    const resultsContainer = document.getElementById("resultsContainer");
+    const systemMessage = document.getElementById("systemMessage");
+
+    // Función para formatear el modelo (separa la marca de la primera palabra)
+    function separarMarcaModelo(texto) {
+      const partes = texto.trim().split(" ");
+      if (partes.length < 2) return { marca: "OTROS", modelo: texto.toUpperCase() };
+      
+      const marca = partes[0].toUpperCase();
+      const modelo = partes.slice(1).join(" ").toUpperCase();
+      return { marca, modelo };
+    }
+
+    // Función principal de búsqueda
+    function buscar(term) {
+      term = term.toLowerCase().trim();
+      resultsContainer.innerHTML = '';
+
+      if (!term) {
+        systemMessage.style.display = 'block';
+        systemMessage.innerHTML = `[SYS] Escribe un modelo para buscar compatibilidad.<br>[SYS] Base de datos cargada: <span>${Object.keys(COMPATIBILIDADES).length} grupos</span> disponibles.`;
+        return;
+      }
+
+      systemMessage.style.display = 'none';
+      let gruposEncontrados = [];
+      const palabrasBusqueda = term.split(" ").filter(p => p.length > 1);
+
+      // Buscar en el diccionario
+      for (const [clave, grupo] of Object.entries(COMPATIBILIDADES)) {
+        const modelos = grupo.modelos || [];
+        const coincideClave = clave.includes(term) || term.includes(clave);
+        const coincideModelo = modelos.some(m => m.toLowerCase().includes(term));
+        let coincideParcial = false;
+        if (palabrasBusqueda.length > 0) {
+          coincideParcial = modelos.some(m => palabrasBusqueda.every(p => m.toLowerCase().includes(p)));
+        }
+
+        if (coincideClave || coincideModelo || coincideParcial) {
+          gruposEncontrados.push({
+            grupoNombre: clave.toUpperCase(),
+            marca: grupo.marca || "GENERAL",
+            imagen: grupo.imagen || "",
+            modelos: modelos
+          });
+        }
+      }
+
+      if (gruposEncontrados.length === 0) {
+        resultsContainer.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-terminal"></i>
+            <p>[ERROR 404] Modelo no encontrado.</p>
+            <p>No hay registros para "<span>${term}</span>".</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Dibujar resultados
+      gruposEncontrados.forEach(g => {
+        
+        // Generar filas de modelos
+        const modelosHtml = g.modelos.map(m => {
+          const info = separarMarcaModelo(m);
+          return `
+            <div class="model-item">
+              <span class="model-prefix">>_</span>
+              <span class="model-brand">${info.marca}</span>
+              <span class="model-name">${info.modelo}</span>
+            </div>
+          `;
+        }).join('');
+
+        // Imagen o mensaje de error
+        const imagenHtml = g.imagen ? `
+          <img src="${g.imagen}" alt="${g.grupoNombre}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-file-image\\'></i><span>[IMG_ERR] Foto no subida a GitHub</span></div>'">
+        ` : `
+          <div class="no-image">
+            <i class="fas fa-file-image"></i>
+            <span>[NO_IMG] Sin ruta asignada</span>
+          </div>
+        `;
+
+        const card = document.createElement('div');
+        card.className = 'compat-card';
+        card.innerHTML = `
+          <div class="card-header">
+            <span class="card-brand-tag">${g.marca}</span>
+            <span class="card-id">ID: #${g.grupoNombre.substring(0, 3)}-${g.modelos.length}</span>
+          </div>
+          <div class="card-title">
+            <i class="fas fa-microchip"></i> ${g.grupoNombre}
+          </div>
+          <div class="card-image-wrapper">
+            ${imagenHtml}
+          </div>
+          <div class="models-list">
+            <div class="models-count">
+              <span>[+] MODELOS DETECTADOS</span>
+              <span>${g.modelos.length} REGISTROS</span>
+            </div>
+            ${modelosHtml}
+          </div>
+        `;
+        resultsContainer.appendChild(card);
+      });
+    }
+
+    // Escuchar la escritura
+    let debounce;
+    searchInput.addEventListener("input", (e) => {
+      clearTimeout(debounce);
+      debounce = setTimeout(() => {
+        buscar(e.target.value);
+      }, 300);
+    });
+
+    // Inicializar
+    buscar("");
+
+  </script>
+</body>
+</html>
