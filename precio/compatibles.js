@@ -1,7 +1,10 @@
+// 🔥 DICCIONARIO MAESTRO DE COMPATIBILIDADES V12.0
+// Estructura completa con rutas de imágenes configuradas
+
 export const COMPATIBILIDADES = {
   // ================= SÚPER COMBOS =================
   "vivo y21s": {
-    marca: "VIVO",
+    marca: "VIVO / IQOO",
     imagen: "/precio/compatibles/vivo-y21s.png",
     modelos: ["VIVO Y21S", "VIVO Y21A", "VIVO Y21E", "VIVO Y21T", "VIVO Y21G", "VIVO Y02S", "VIVO Y16", "VIVO Y30 5G", "VIVO Y15A", "VIVO Y15C", "VIVO Y32", "VIVO Y33 5G", "VIVO Y20", "VIVO Y20G", "VIVO Y12G", "VIVO Y01", "VIVO Y22", "VIVO Y17S", "VIVO Y22S", "VIVO Y28 5G", "VIVO Y33T", "VIVO Y36I", "VIVO Y36", "VIVO T1X", "VIVO Y33S", "VIVO Y51 2020", "VIVO Y31 2020", "VIVO Y73", "VIVO Y72S", "VIVO Y53S", "VIVO Y31", "VIVO T2X", "VIVO Y72 5G", "VIVO Y55S 5G", "VIVO Y76 5G", "VIVO Y76S 5G", "VIVO Y75 5G", "VIVO Y77 5G", "VIVO Y56 5G", "VIVO Y20A", "VIVO Y20T", "VIVO Y20S", "VIVO Y20I", "VIVO Y20SG", "VIVO Y12S", "VIVO Y12A", "VIVO Y20E", "VIVO Y30G", "VIVO Y31S 5G", "VIVO Y11S", "VIVO Y12D", "VIVO Y15S", "IQOO Z3", "IQOO U3", "IQOO U3X", "IQOO U1X", "IQOO U5X", "VIVO Y35 4G"]
   },
@@ -46,7 +49,24 @@ export const COMPATIBILIDADES = {
     modelos: ["MOTOROLA E20", "MOTOROLA E22", "MOTOROLA E22I", "MOTOROLA E22S", "MOTOROLA E30", "MOTOROLA E40"]
   },
 
-  // ================= NUEVOS GRUPOS XIAOMI / REDMI / POCO =================
+  // ================= NUEVOS GRUPOS INFINIX / TECNO =================
+  "infinix note 10": {
+    marca: "INFINIX / TECNO",
+    imagen: "/precio/compatibles/infinix-note-10.png",
+    modelos: ["INFINIX NOTE 10", "INFINIX NOTE 11S", "INFINIX NOTE 11 PRO", "TECNO POVA 2", "TECNO POVA 3"]
+  },
+  "infinix hot 10": {
+    marca: "INFINIX / TECNO",
+    imagen: "/precio/compatibles/infinix-hot-10.png",
+    modelos: ["INFINIX HOT 10", "INFINIX HOT 10I", "INFINIX NOTE 8I", "TECNO CAMON 16", "TECNO CAMON 16SE", "TECNO POVA", "TECNO SPARK 6"]
+  },
+  "infinix hot 11s": {
+    marca: "INFINIX / TECNO",
+    imagen: "/precio/compatibles/infinix-hot-11s.png",
+    modelos: ["INFINIX HOT 11S", "INFINIX ZERO 5G", "INFINIX HOT 20S", "TECNO CAMON 17P"]
+  },
+
+  // ================= XIAOMI / REDMI / POCO =================
   "poco f4 gt": {
     marca: "XIAOMI",
     imagen: "/precio/compatibles/poco-f4-gt.png",
