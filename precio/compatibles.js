@@ -1,8 +1,8 @@
-// 🔥 DICCIONARIO MAESTRO DE COMPATIBILIDADES V9.0
-// Todas las rutas de imágenes configuradas para subir de a poco
+// 🔥 DICCIONARIO MAESTRO DE COMPATIBILIDADES V10.0
+// Estructura completa con rutas de imágenes configuradas
 
 export const COMPATIBILIDADES = {
-  // ================= SÚPER COMBOS =================
+  // ================= SÚPER COMBOS (CON IMAGEN) =================
   "vivo y21s": {
     imagen: "/precio/compatibles/vivo-y21s.png",
     modelos: ["vivo y21s", "vivo y21a", "vivo y21e", "vivo y21t", "vivo y21g", "vivo y02s", "vivo y16", "vivo y30 5g", "vivo y15a", "vivo y15c", "vivo y32", "vivo y33 5g", "vivo y20", "vivo y20g", "vivo y12g", "vivo y01", "vivo y22", "vivo y17s", "vivo y22s", "vivo y22 new", "vivo y28 5g", "vivo y33t", "vivo y36i", "vivo y36", "vivo y12 new", "vivo t1x", "vivo y33s", "vivo y51 2020", "vivo y31 2020", "vivo y73", "vivo y72s", "vivo y53s", "vivo y31", "vivo t2x", "vivo y72 5g", "vivo y55s 5g", "vivo y76 5g", "vivo y76s 5g", "vivo y75 5g", "vivo y77 5g", "vivo y56 5g", "vivo y20a", "vivo y20t", "vivo y20s", "vivo y20i", "vivo y20sg", "vivo y12s", "vivo y12a", "vivo y20e", "vivo y30g", "vivo y31s 5g", "vivo y11s", "vivo y12d", "vivo y15s", "iqoo z3", "iqoo u3", "iqoo u3x", "iqoo u1x", "iqoo u5x", "vivo y35 4g"]
@@ -94,7 +94,7 @@ export const COMPATIBILIDADES = {
     modelos: ["a12", "a02", "m02", "m12", "f12", "a32 5g", "m32 5g"]
   },
   "samsung a03": {
-    imagen: "/precio/compatibles/samsung-a03s.png", // En tu GitHub está como a03s
+    imagen: "/precio/compatibles/samsung-a03s.png",
     modelos: ["a02s", "a03", "a03s", "a04e", "m02s"]
   },
   "samsung a5 2020": {
