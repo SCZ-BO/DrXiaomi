@@ -34,14 +34,12 @@
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
-      /* Rejilla sutil de fondo estilo hacker */
       background-image: 
         linear-gradient(var(--grid-color) 1px, transparent 1px),
         linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
       background-size: 30px 30px;
     }
 
-    /* ============ HEADER ============ */
     .header {
       padding: 20px 16px;
       border-bottom: 1px solid var(--border-color);
@@ -89,7 +87,6 @@
       letter-spacing: 2px;
     }
 
-    /* ============ SEARCH BOX ============ */
     .search-container {
       margin-top: 20px;
       position: relative;
@@ -119,16 +116,13 @@
       transition: 0.2s;
     }
 
-    .search-input::placeholder {
-      color: #333;
-    }
+    .search-input::placeholder { color: #333; }
 
     .search-input:focus {
       border-color: var(--neon-green);
       box-shadow: 0 0 15px rgba(0, 255, 65, 0.15);
     }
 
-    /* ============ MAIN CONTENT ============ */
     .main-content {
       flex: 1;
       padding: 20px 16px;
@@ -144,7 +138,6 @@
 
     .system-message span { color: var(--neon-orange); }
 
-    /* ============ CARDS DE COMPATIBILIDAD ============ */
     .compat-card {
       background: rgba(0, 0, 0, 0.8);
       border: 1px solid var(--border-color);
@@ -204,7 +197,6 @@
 
     .card-title i { color: var(--neon-blue); font-size: 16px; }
 
-    /* Imagen */
     .card-image-wrapper {
       width: 100%;
       height: 180px;
@@ -234,7 +226,6 @@
 
     .no-image i { font-size: 30px; color: #222; }
 
-    /* Lista de modelos */
     .models-list {
       padding: 10px 16px 16px;
     }
@@ -280,7 +271,6 @@
       font-weight: 500;
     }
 
-    /* Empty State */
     .empty-state {
       text-align: center;
       padding: 60px 20px;
@@ -297,7 +287,6 @@
     .empty-state p { font-size: 13px; line-height: 1.6; }
     .empty-state span { color: var(--neon-green); }
 
-    /* ============ FOOTER ============ */
     .footer {
       text-align: center;
       padding: 20px;
@@ -351,19 +340,17 @@
     const resultsContainer = document.getElementById("resultsContainer");
     const systemMessage = document.getElementById("systemMessage");
 
-    // Función para formatear el modelo (separa la marca de la primera palabra)
+    // Función para separar la marca del modelo
     function separarMarcaModelo(texto) {
       const partes = texto.trim().split(" ");
       if (partes.length < 2) return { marca: "OTROS", modelo: texto.toUpperCase() };
-      
-      const marca = partes[0].toUpperCase();
-      const modelo = partes.slice(1).join(" ").toUpperCase();
-      return { marca, modelo };
+      return { marca: partes[0].toUpperCase(), modelo: partes.slice(1).join(" ").toUpperCase() };
     }
 
-    // Función principal de búsqueda
+    // 🔥 BÚSQUEDA MEJORADA: Por palabras sueltas
     function buscar(term) {
-      term = term.toLowerCase().trim();
+      // Limpiamos el término (quitamos tildes, pasamos a minúsculas)
+      term = term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
       resultsContainer.innerHTML = '';
 
       if (!term) {
@@ -373,20 +360,33 @@
       }
 
       systemMessage.style.display = 'none';
-      let gruposEncontrados = [];
-      const palabrasBusqueda = term.split(" ").filter(p => p.length > 1);
+      
+      // Separamos lo que escribe el usuario en palabras (ej: ["note", "11"])
+      const palabrasBusqueda = term.split(" ").filter(p => p.length > 0);
 
-      // Buscar en el diccionario
+      let gruposEncontrados = [];
+
+      // Recorremos el diccionario
       for (const [clave, grupo] of Object.entries(COMPATIBILIDADES)) {
         const modelos = grupo.modelos || [];
-        const coincideClave = clave.includes(term) || term.includes(clave);
-        const coincideModelo = modelos.some(m => m.toLowerCase().includes(term));
-        let coincideParcial = false;
-        if (palabrasBusqueda.length > 0) {
-          coincideParcial = modelos.some(m => palabrasBusqueda.every(p => m.toLowerCase().includes(p)));
+        let esCandidato = false;
+
+        // 1. Revisamos si alguna palabra está en la CLAVE del grupo
+        const claveLimpia = clave.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (palabrasBusqueda.some(p => claveLimpia.includes(p))) {
+          esCandidato = true;
         }
 
-        if (coincideClave || coincideModelo || coincideParcial) {
+        // 2. Revisamos si TODAS las palabras están en ALGÚN MODELO del grupo
+        if (!esCandidato) {
+          esCandidato = modelos.some(m => {
+            const mLimpio = m.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            // Aquí está el truco: el modelo debe incluir TODAS las palabras que escribió el usuario
+            return palabrasBusqueda.every(p => mLimpio.includes(p));
+          });
+        }
+
+        if (esCandidato) {
           gruposEncontrados.push({
             grupoNombre: clave.toUpperCase(),
             marca: grupo.marca || "GENERAL",
@@ -410,7 +410,6 @@
       // Dibujar resultados
       gruposEncontrados.forEach(g => {
         
-        // Generar filas de modelos
         const modelosHtml = g.modelos.map(m => {
           const info = separarMarcaModelo(m);
           return `
@@ -422,7 +421,6 @@
           `;
         }).join('');
 
-        // Imagen o mensaje de error
         const imagenHtml = g.imagen ? `
           <img src="${g.imagen}" alt="${g.grupoNombre}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-file-image\\'></i><span>[IMG_ERR] Foto no subida a GitHub</span></div>'">
         ` : `
