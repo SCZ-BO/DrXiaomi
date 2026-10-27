@@ -42,6 +42,7 @@
       --bg-main: #0A0A0A;
       --bg-card: #161616;
       --bg-elev: #242424;
+      --bg-list: #121212; /* Fondo más oscuro para las listas */
       
       --text-main: #F5F5F5;
       --text-mute: #888888;
@@ -242,36 +243,51 @@
     .whatsapp-btn { background: #25D366; color: white; }
     .edit-btn { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.3); }
 
-    /* ============ CSS PARA LOS GRUPOS DE COMPATIBILIDAD ============ */
-    .modelos-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      max-height: 180px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-    .chip-model {
-      background: var(--bg-elev);
-      color: var(--text-main);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
+    /* ============ 🔥 NUEVO DISEÑO DE LISTA DE COMPATIBILIDAD ============ */
+    .compat-list-container {
+      background: var(--bg-list);
       border: 1px solid var(--border);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      border-radius: var(--radius-sm);
+      max-height: 250px;
+      overflow-y: auto;
+      margin-top: 10px;
+      /* Ocultar barra de scroll en móviles para que se vea limpio */
+      scrollbar-width: none; 
+      -ms-overflow-style: none;
     }
-    .chip-brand {
+    .compat-list-container::-webkit-scrollbar { display: none; }
+
+    .compat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .compat-row:last-child { border-bottom: none; }
+    .compat-row:active { background: var(--bg-elev); }
+
+    .compat-brand-badge {
       font-size: 9px;
       font-weight: 800;
       color: var(--brand);
+      background: rgba(255, 105, 0, 0.1);
+      padding: 4px 8px;
+      border-radius: 4px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      background: rgba(255, 105, 0, 0.1);
-      padding: 2px 6px;
-      border-radius: 4px;
+      min-width: 85px;
+      text-align: center;
+    }
+    
+    .compat-model-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      text-align: right;
+      flex: 1;
+      padding-left: 10px;
     }
 
     /* ============ BOTTOM NAV ============ */
@@ -375,9 +391,6 @@
     }
     .scroll-top-btn.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
     .scroll-top-btn:active { transform: scale(0.9); }
-
-    #modalSpecs .modal-content { max-height: 85vh; overflow-y: auto; }
-    .spec-loading { text-align: center; padding: 30px; color: var(--text-mute); font-size: 13px; }
 
     @media (min-width: 640px) {
       .app { max-width: 500px; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
@@ -575,20 +588,27 @@
     return results.map(r => r.item);
   }
 
-  // 🔥 BÚSQUEDA EN EL DICCIONARIO DE COMPATIBILIDAD (Solo para el filtro COMPAT)
+  // 🔥 BÚSQUEDA EN EL DICCIONARIO DE COMPATIBILIDAD
   function buscarEnDiccionario(term) {
     term = term.toLowerCase().trim();
     if (!term) return [];
 
     let resultados = [];
+    const palabrasBusqueda = term.split(" ").filter(p => p.length > 1);
+
     for (const [clave, grupo] of Object.entries(COMPATIBILIDADES)) {
       const modelos = grupo.modelos || [];
       const imagen = grupo.imagen || '';
       
       const coincideClave = clave.includes(term) || term.includes(clave);
       const coincideModelo = modelos.some(m => m.includes(term) || term.includes(m));
+      
+      let coincideParcial = false;
+      if (palabrasBusqueda.length > 0) {
+        coincideParcial = modelos.some(m => palabrasBusqueda.every(p => m.includes(p)));
+      }
 
-      if (coincideClave || coincideModelo) {
+      if (coincideClave || coincideModelo || coincideParcial) {
         resultados.push({
           grupoNombre: clave.toUpperCase(), 
           imagen: imagen,
@@ -599,7 +619,45 @@
     return resultados;
   }
 
-  // 🔥 DIBUJAR LAS TARJETAS DE GRUPOS DE COMPATIBILIDAD
+  // 🔥 FUNCIÓN PARA DETECTAR LA MARCA Y EL MODELO SEPARADOS
+  function extraerMarcaYModelo(modeloCompleto) {
+    let m = modeloCompleto.toLowerCase().trim();
+
+    if (m.startsWith("poco")) return { marca: "XIAOMI POCO", modelo: m.replace("poco ", "").toUpperCase() };
+    if (m.startsWith("redmi")) return { marca: "XIAOMI REDMI", modelo: m.replace("redmi ", "").toUpperCase() };
+    if (m.startsWith("mi ")) return { marca: "XIAOMI", modelo: m.replace("mi ", "MI ").toUpperCase() };
+    if (m.startsWith("note") && !m.includes("inf")) return { marca: "XIAOMI", modelo: "NOTE " + m.replace("note ", "").toUpperCase() };
+    if (m.startsWith("xiaomi")) return { marca: "XIAOMI", modelo: m.replace("xiaomi ", "").toUpperCase() };
+    
+    if (m.startsWith("spark") || m.startsWith("pova") || m.startsWith("camon") || m.startsWith("pop") || m.startsWith("tecno")) 
+      return { marca: "TECNO", modelo: m.replace("tecno ", "").toUpperCase() };
+      
+    if (m.startsWith("infinix") || m.startsWith("x6") || m.startsWith("x7"))
+      return { marca: "INFINIX", modelo: m.replace("infinix ", "").toUpperCase() };
+      
+    if (m.startsWith("itel")) return { marca: "ITEL", modelo: m.replace("itel ", "").toUpperCase() };
+    
+    if (m.startsWith("note")) return { marca: "INFINIX", modelo: m.toUpperCase() };
+
+    if (m.startsWith("moto")) return { marca: "MOTOROLA", modelo: m.replace("moto ", "").toUpperCase() };
+    
+    if (m.startsWith("oppo")) return { marca: "OPPO", modelo: m.replace("oppo ", "").toUpperCase() };
+    if (m.startsWith("realme")) return { marca: "REALME", modelo: m.replace("realme ", "").toUpperCase() };
+    if (m.startsWith("narzo")) return { marca: "REALME", modelo: m.toUpperCase() };
+    if (m.startsWith("vivo")) return { marca: "VIVO", modelo: m.replace("vivo ", "").toUpperCase() };
+    if (m.startsWith("iqoo")) return { marca: "iQOO", modelo: m.replace("iqoo ", "").toUpperCase() };
+    if (m.startsWith("oneplus")) return { marca: "ONEPLUS", modelo: m.replace("oneplus ", "").toUpperCase() };
+    
+    if (m.startsWith("zte")) return { marca: "ZTE", modelo: m.replace("zte ", "").toUpperCase() };
+    
+    if (m.startsWith("honor")) return { marca: "HONOR", modelo: m.replace("honor ", "").toUpperCase() };
+    if (m.startsWith("huawei")) return { marca: "HUAWEI", modelo: m.replace("huawei ", "").toUpperCase() };
+    if (m.startsWith("nova") || m.startsWith("y6") || m.startsWith("y9")) return { marca: "HUAWEI", modelo: m.toUpperCase() };
+
+    return { marca: "SAMSUNG", modelo: m.toUpperCase() };
+  }
+
+  // 🔥 DIBUJAR LAS TARJETAS DE GRUPOS DE COMPATIBILIDAD (DISEÑO LISTA)
   function renderGruposCompatibles(grupos, term) {
     container.innerHTML = '';
     resultsCount.innerHTML = `<span>${grupos.length} grupo(s) encontrado(s)</span><span class="offline-tag" style="color:#3B82F6; border-color:#3B82F6;"><i class="fas fa-images"></i> Modo Catálogo</span>`;
@@ -619,25 +677,15 @@
     view.className = 'cards-view';
 
     grupos.forEach(g => {
-      // 🔥 AQUÍ CREAMOS LAS ETIQUETAS CON LA MARCA Y EL MODELO
+      
+      // 🔥 AQUÍ CREAMOS LAS FILAS DE LA LISTA
       const listaHtml = g.modelos.map(m => {
-        const partes = m.split(' ');
-        const marca = partes[0]; 
-        const restoModelo = partes.slice(1).join(' ');
-        
-        let marcaFinal = marca;
-        let modeloFinal = restoModelo;
-        // Si el modelo empieza con números o es muy corto, asumimos que es Samsung
-        if (!isNaN(marca) || marca.length <= 2) {
-           marcaFinal = "Samsung";
-           modeloFinal = m;
-        }
-
+        const info = extraerMarcaYModelo(m);
         return `
-          <span class="chip-model">
-            <span class="chip-brand">${escapeHtml(marcaFinal)}</span>
-            ${escapeHtml(modeloFinal)}
-          </span>
+          <div class="compat-row">
+            <span class="compat-brand-badge">${escapeHtml(info.marca)}</span>
+            <span class="compat-model-text">${escapeHtml(info.modelo)}</span>
+          </div>
         `;
       }).join('');
       
@@ -650,15 +698,18 @@
         </div>
         
         <!-- Imagen de la pantalla -->
-        <div style="width: 100%; height: 220px; background: #000; border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px; display: flex; justify-content: center; border: 1px solid var(--border);">
+        <div style="width: 100%; height: 200px; background: #000; border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px; display: flex; justify-content: center; border: 1px solid var(--border);">
           <img src="${g.imagen}" alt="Pantalla ${g.grupoNombre}" style="object-fit: contain; height: 100%;" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666; font-size:12px;\\'><i class=\\'fas fa-image\\' style=\\'font-size:30px; margin-bottom:10px;\\'></i><br>Foto no subida aún</div>'">
         </div>
 
-        <div style="padding-left: 8px;">
+        <div style="padding-left: 4px;">
           <div style="font-size: 11px; font-weight: 700; color: var(--text-mute); margin-bottom: 8px; text-transform: uppercase;">Modelos Compatibles (${g.modelos.length}):</div>
-          <div class="modelos-container">
+          
+          <!-- 🔥 CONTENEDOR DE LA LISTA PRO -->
+          <div class="compat-list-container">
             ${listaHtml}
           </div>
+
         </div>
       `;
       view.appendChild(card);
