@@ -256,9 +256,22 @@
       color: var(--text-main);
       font-size: 11px;
       font-weight: 600;
-      padding: 4px 10px;
-      border-radius: var(--radius-pill);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
       border: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chip-brand {
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--brand);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(255, 105, 0, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
     }
 
     /* ============ BOTTOM NAV ============ */
@@ -459,7 +472,6 @@
   import { collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   
   // 🔥 IMPORTAMOS EL DICCIONARIO EXTERNO 
-  // CORREGIDO: Como la app corre en /precio/, el archivo está en la misma carpeta.
   import { COMPATIBILIDADES } from './compatibles.js';
 
   let sesion = null;
@@ -570,9 +582,8 @@
 
     let resultados = [];
     for (const [clave, grupo] of Object.entries(COMPATIBILIDADES)) {
-      // Validación de seguridad por si el grupo no tiene la estructura correcta
       const modelos = grupo.modelos || [];
-      const imagen = grupo.imagen || 'https://via.placeholder.com/300x200?text=Sin+Imagen';
+      const imagen = grupo.imagen || '';
       
       const coincideClave = clave.includes(term) || term.includes(clave);
       const coincideModelo = modelos.some(m => m.includes(term) || term.includes(m));
@@ -608,7 +619,27 @@
     view.className = 'cards-view';
 
     grupos.forEach(g => {
-      const listaHtml = g.modelos.map(m => `<span class="chip-model">${escapeHtml(m)}</span>`).join('');
+      // 🔥 AQUÍ CREAMOS LAS ETIQUETAS CON LA MARCA Y EL MODELO
+      const listaHtml = g.modelos.map(m => {
+        const partes = m.split(' ');
+        const marca = partes[0]; 
+        const restoModelo = partes.slice(1).join(' ');
+        
+        let marcaFinal = marca;
+        let modeloFinal = restoModelo;
+        // Si el modelo empieza con números o es muy corto, asumimos que es Samsung
+        if (!isNaN(marca) || marca.length <= 2) {
+           marcaFinal = "Samsung";
+           modeloFinal = m;
+        }
+
+        return `
+          <span class="chip-model">
+            <span class="chip-brand">${escapeHtml(marcaFinal)}</span>
+            ${escapeHtml(modeloFinal)}
+          </span>
+        `;
+      }).join('');
       
       const card = document.createElement('div');
       card.className = 'product-card is-compat'; 
@@ -620,7 +651,7 @@
         
         <!-- Imagen de la pantalla -->
         <div style="width: 100%; height: 220px; background: #000; border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px; display: flex; justify-content: center; border: 1px solid var(--border);">
-          <img src="${g.imagen}" alt="Pantalla ${g.grupoNombre}" style="object-fit: contain; height: 100%;" onerror="this.src='https://via.placeholder.com/300x200?text=Imagen+No+Disponible'">
+          <img src="${g.imagen}" alt="Pantalla ${g.grupoNombre}" style="object-fit: contain; height: 100%;" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666; font-size:12px;\\'><i class=\\'fas fa-image\\' style=\\'font-size:30px; margin-bottom:10px;\\'></i><br>Foto no subida aún</div>'">
         </div>
 
         <div style="padding-left: 8px;">
@@ -718,7 +749,6 @@
     const run = () => {
       const term = searchInput.value.trim();
       
-      // 1. SI ESTAMOS EN EL FILTRO DE COMPATIBLES
       if (currentFilter === "COMPAT") {
         clearSearchBtn.style.display = term ? 'block' : 'none';
         
@@ -733,7 +763,6 @@
         return;
       }
 
-      // 2. SI ESTAMOS EN LOS FILTROS NORMALES
       let data = [...allData];
       if (currentFilter === "FAV") data = data.filter(i => favorites.has(i.id));
       else if (currentFilter !== "all") data = data.filter(i => i.tipo === currentFilter);
