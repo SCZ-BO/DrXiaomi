@@ -1,5 +1,5 @@
-// 🔥 DICCIONARIO MAESTRO DE COMPATIBILIDADES V6.0
-// Archivo independiente con todos los grupos y soporte para imágenes
+// 🔥 DICCIONARIO MAESTRO DE COMPATIBILIDADES V7.0
+// Archivo independiente con todos los grupos, imágenes y validación técnica
 
 export const COMPATIBILIDADES = {
   // ================= SÚPER COMBOS (CON IMAGEN) =================
@@ -33,14 +33,28 @@ export const COMPATIBILIDADES = {
   },
   "poco f3": {
     imagen: "/precio/compatibles/poco-f3.png",
-    modelos: ["poco f3", "poco f3 pro", "poco f4", "poco f4 5g", "redmi k40", "redmi k40 pro", "redmi k40 pro plus", "redmi k40s", "mi 11i", "mi 11i 5g", "mi 11x", "mi 11x pro", "black shark 4", "black shark 4 pro", "black shark 4s", "black shark 4s pro", "black shark 5", "black shark 5 rs"]
+    modelos: [
+      "poco f3", "poco f3 pro", "poco f4", "poco f4 5g", 
+      "redmi k40", "redmi k40 pro", "redmi k40 pro plus", "redmi k40s", 
+      "mi 11i", "mi 11i 5g", "mi 11x", "mi 11x pro", 
+      "black shark 4", "black shark 4 pro", "black shark 4s", "black shark 4s pro", 
+      "black shark 5", "black shark 5 rs", "black shark 5 pro"
+    ]
   },
   "moto e20": {
     imagen: "/precio/compatibles/moto-e20.png",
     modelos: ["moto e20", "moto e22", "moto e22i", "moto e22s", "moto e30", "moto e40"]
   },
 
-  // ================= XIAOMI / REDMI / POCO (ACTUALIZACIONES NUEVAS) =================
+  // ================= XIAOMI 12 (CORREGIDOS) =================
+  "xiaomi 12 pro": {
+    imagen: "", modelos: ["xiaomi 12 pro", "xiaomi 12s pro", "xiaomi 12s ultra", "xiaomi 12 ultra"]
+  },
+  "xiaomi 12": {
+    imagen: "", modelos: ["xiaomi 12", "xiaomi 12x", "xiaomi 12s"]
+  },
+
+  // ================= XIAOMI / REDMI / POCO (NUEVOS) =================
   "poco f4 gt": {
     imagen: "", modelos: ["poco f4 gt", "redmi k50 gaming", "redmi k50 gaming 5g"]
   },
@@ -61,9 +75,9 @@ export const COMPATIBILIDADES = {
   "redmi 10c": { imagen: "", modelos: ["redmi 10c", "poco c40"] },
   "note 10 pro": { imagen: "", modelos: ["note 10 pro", "note 10 pro max"] },
 
-  // ================= SAMSUNG =================
-  "samsung a02": { imagen: "", modelos: ["a02", "a12", "a32 5g", "m02"] },
-  "samsung a02s": { imagen: "", modelos: ["a02s", "a03", "a03s", "m02s"] },
+  // ================= SAMSUNG (CORREGIDOS) =================
+  "samsung a12": { imagen: "", modelos: ["a12", "a02", "m02", "m12", "f12", "a32 5g", "m32 5g"] },
+  "samsung a02s": { imagen: "", modelos: ["a02s", "a03", "a03s", "a04e"] },
   "samsung a5 2020": { imagen: "", modelos: ["a5 2020", "a7 2019"] },
   "samsung a10e": { imagen: "", modelos: ["a10e", "a20e"] },
   "samsung a10": { imagen: "", modelos: ["a10", "m10"] },
@@ -102,7 +116,7 @@ export const COMPATIBILIDADES = {
   "huawei y9": { imagen: "", modelos: ["huawei y9 prime 2019", "huawei y9s", "honor 9x", "honor 9x pro"] },
 
   // ================= TECNO / INFINIX / ITEL =================
-  "camon 20": { imagen: "", modelos: ["camon 20", "camon 20 pro", "camon 20 pro 5g", "camon 20 premier", "note 30 vip", "note 30 pro", "ck6", "ck7n", "ck8n", "ck9n"] },
+  "camon 20": { imagen: "", modelos: ["camon 20", "camon 20 pro", "camon 20 pro 5g", "camon 20 premier", "note 30 vip", "note 30 pro", "ck6", "ck7n", "ck8n", "ck9n", "infinix gt 10 pro", "infinix note 30 vip"] },
   "smart 9": { imagen: "", modelos: ["smart 9", "hot 50 5g", "hot 50i", "itel a80", "spark 30c", "pop 9", "pop 9 5g", "x6532"] },
   "itel a80": { imagen: "", modelos: ["itel a80", "tecno pop 9", "tecno spark go 1s", "tecno spark go 1", "tecno spark 30c", "itel p65", "tecno pova 6 neo 5g", "tecno spark 30 5g", "infinix hot 50 5g", "infinix hot 50i", "infinix smart 9", "infinix smart 9 hd", "zte blade v70 vita", "zte blade v70 design", "zte axon 70 lite", "zte nubia music 2"] },
   "spark 10c": { imagen: "", modelos: ["spark 10c", "spark 10", "spark 10 5g", "spark go 2023", "pop 7", "pop 7 pro", "pop 8", "zte a34", "zte a54", "itel a60", "itel a60s", "itel a70", "itel s23"] },
