@@ -625,31 +625,31 @@
     });
   }
 
-  // 🔥 BÚSQUEDA NORMAL
+  // 🔥 BÚSQUEDA NORMAL (ESTRICTA)
   function performPreciseSearch(data, term) {
     if (!term.trim()) return data;
     const tokens = getTokens(term);
     if (!tokens.length) return data;
+    
     const results = [];
+    const joinedTerm = tokens.join(" ");
+
     for (const item of data) {
       const mn = normalizeText(item.modelo), mk = normalizeText(item.marca);
       const combined = mn + " " + mk;
-      if (!tokens.every(t => combined.includes(t))) continue;
-      let score = 0;
-      const joined = tokens.join(" ");
-      if (mn === joined) score = 100;
-      else if (mn.startsWith(joined)) score = 90;
-      else {
-        let pos = 0, ord = true;
-        for (const t of tokens) {
-          const idx = mn.indexOf(t, pos);
-          if (idx === -1) { ord = false; break; }
-          pos = idx + t.length;
+      
+      if (combined.includes(joinedTerm)) {
+        let score = 0;
+        if (mn === joinedTerm) score = 100;
+        else if (mn.startsWith(joinedTerm)) score = 90;
+        else score = 80;
+        results.push({ item, score });
+      } else {
+        const coincideTodasPalabras = tokens.every(t => combined.includes(t));
+        if (coincideTodasPalabras) {
+          results.push({ item, score: 50 });
         }
-        score = ord ? 80 : 50;
       }
-      score += tokens.length * 5;
-      results.push({ item, score });
     }
     results.sort((a, b) => b.score - a.score);
     return results.map(r => r.item);
@@ -698,7 +698,7 @@
     haptic(20);
   };
 
-  // 🔥 DIBUJAR GRUPOS COMPATIBLES CON CUADRÍCULA Y BOTÓN DE GOOGLE
+  // 🔥 DIBUJAR GRUPOS COMPATIBLES
   function renderGruposCompatibles(grupos, term) {
     container.innerHTML = '';
     resultsCount.innerHTML = `<span>${grupos.length} grupo(s) encontrado(s)</span><span class="offline-tag" style="color:#3B82F6; border-color:#3B82F6;"><i class="fas fa-images"></i> Modo Catálogo</span>`;
@@ -755,7 +755,6 @@
           </div>
         </div>
         
-        <!-- 🔥 NUEVA CAJA DE IMAGEN CON ZOOM -->
         <div class="compat-image-box" ${tieneImagen ? `onclick="window.openLightbox('${g.imagen}')"` : ''}>
           ${tieneImagen ? `
             <img src="${g.imagen}" alt="Pantalla ${g.grupoNombre}" onerror="
@@ -771,7 +770,6 @@
           `}
         </div>
 
-        <!-- 🔥 BOTÓN PARA IR A GOOGLE IMÁGENES -->
         <div style="display: flex; justify-content: flex-end; margin-top: 4px; margin-bottom: 12px; padding: 0 8px;">
           <a href="${googleSearchUrl}" target="_blank" style="background: var(--bg-elev); color: var(--brand); border: 1px solid var(--border); padding: 6px 12px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: 0.15s;">
             <i class="fab fa-google"></i> Buscar foto en Google
@@ -939,19 +937,26 @@
     }
     const sug = generateSuggestions(term);
     if (!sug.length) { suggestionsPanel.classList.remove('active'); return; }
+    
+    // 🔥 CONSTRUCCIÓN CORREGIDA DEL HTML DE SUGERENCIAS
     suggestionsPanel.innerHTML = `
       <div class="suggestion-header">COINCIDENCIAS (${sug.length})</div>
-      ${sug.map(s => `
-        <div class="suggestion-item" data-modelo="${escapeHtml(s.modelo)}">
+      ${sug.map(s => {
+        const modeloEscapado = escapeHtml(s.modelo);
+        const highlightedModel = highlight(s.modelo, term);
+        
+        return `
+        <div class="suggestion-item" data-modelo="${modeloEscapado}">
           <i class="fas fa-mobile-alt"></i>
           <div style="flex:1;min-width:0;">
-            <div>${highlight(s.modelo, term)}</div>
+            <div>${highlightedModel}</div>
             <div style="font-size:11px;color:var(--text-mute);">${escapeHtml(s.marca)} · ${s.venta.toLocaleString()} Bs</div>
           </div>
           <span class="suggestion-price-tag">${s.tipo}</span>
         </div>
-      `).join('')}
+      `}).join('')}
     `;
+    
     suggestionsPanel.querySelectorAll('.suggestion-item').forEach(el => {
       el.addEventListener('click', () => {
         searchInput.value = el.dataset.modelo;
@@ -970,7 +975,7 @@
     resultsCount.innerHTML = `<span>${n} producto${n !== 1 ? 's' : ''}</span><span class="offline-tag"><span class="dot"></span>En vivo</span>`;
   }
 
-  // 🔥 RENDER NORMAL (TODOS, ORIG, OLED, LCD, FAVORITOS) CON LOGO Y TÍTULO GRANDE
+  // 🔥 RENDER NORMAL
   function render(reset = true) {
     if (!container) return;
 
@@ -1052,11 +1057,19 @@
   function showSearchLoader() { if (searchLoaderIndicator) searchLoaderIndicator.style.display = "inline-flex"; }
   function hideSearchLoader() { if (searchLoaderIndicator) searchLoaderIndicator.style.display = "none"; }
 
+  // 🔥 COPIAR PRECIO CON EMOJIS
   window.copyPrice = function(id) {
     const p = filteredData.find(x => x.id === id) || allData.find(x => x.id === id);
     if (!p) return showToast("No encontrado");
-    const msg = `${p.marca} ${p.modelo}\nPrecio Pantalla: ${p.venta.toLocaleString()} Bs\nINCLUYE INSTALACIÓN`;
-    navigator.clipboard.writeText(msg).then(() => { showToast("Precio copiado"); haptic(30); }).catch(() => showToast("Error al copiar"));
+    
+    const msg = `📱 ${p.marca} ${p.modelo}\n💰 Precio Pantalla: ${p.venta.toLocaleString()} Bs\n👨🏻‍🔧 INCLUYE INSTALACIÓN`;
+    
+    navigator.clipboard.writeText(msg)
+      .then(() => { 
+        showToast("Precio copiado con formato"); 
+        haptic(30); 
+      })
+      .catch(() => showToast("Error al copiar"));
   };
 
   window.shareWA = function(id) {
