@@ -1,5 +1,5 @@
-// 🔥 DICCIONARIO MAESTRO DE COMPATIBILIDADES V8.0
-// Todas las rutas de imágenes configuradas.
+// 🔥 DICCIONARIO MAESTRO DE COMPATIBILIDADES V9.0
+// Todas las rutas de imágenes configuradas para subir de a poco
 
 export const COMPATIBILIDADES = {
   // ================= SÚPER COMBOS =================
@@ -93,8 +93,8 @@ export const COMPATIBILIDADES = {
     imagen: "/precio/compatibles/samsung-a12.png",
     modelos: ["a12", "a02", "m02", "m12", "f12", "a32 5g", "m32 5g"]
   },
-  "samsung a03": { // En tu captura vi que subiste samsung-a03s.png
-    imagen: "/precio/compatibles/samsung-a03s.png",
+  "samsung a03": {
+    imagen: "/precio/compatibles/samsung-a03s.png", // En tu GitHub está como a03s
     modelos: ["a02s", "a03", "a03s", "a04e", "m02s"]
   },
   "samsung a5 2020": {
