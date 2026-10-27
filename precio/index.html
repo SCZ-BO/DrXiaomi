@@ -243,7 +243,7 @@
     .whatsapp-btn { background: #25D366; color: white; }
     .edit-btn { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.3); }
 
-    /* ============ 🔥 DISEÑO DE TÍTULO CON LOGO (PARA TODOS Y COMPATIBLES) ============ */
+    /* ============ 🔥 DISEÑO DE TÍTULO CON LOGO ============ */
     .compat-card-title {
       display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-left: 8px;
     }
@@ -263,30 +263,46 @@
     }
     .compat-image-box img { object-fit: contain; height: 100%; }
 
-    .compat-list-container {
-      background: var(--bg-list); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); max-height: 280px; overflow-y: auto;
-      margin-top: 10px; scrollbar-width: none; -ms-overflow-style: none;
+    /* 🔥 NUEVA CUADRÍCULA MINIMALISTA PARA COMPATIBLES */
+    .compat-grid-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 4px;
     }
-    .compat-list-container::-webkit-scrollbar { display: none; }
+    .compat-grid-container::-webkit-scrollbar { width: 4px; }
+    .compat-grid-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-    .compat-row {
-      display: flex; align-items: center; padding: 12px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.15s;
+    .compat-grid-item {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      transition: 0.15s;
     }
-    .compat-row:last-child { border-bottom: none; }
-    .compat-row:active { background: var(--bg-elev); }
-
-    .compat-brand-badge {
-      font-size: 9px; font-weight: 800; padding: 5px 8px; border-radius: 6px;
-      text-transform: uppercase; letter-spacing: 0.5px; min-width: 90px;
-      text-align: center; flex-shrink: 0;
-    }
+    .compat-grid-item:active { background: var(--bg-card); border-color: var(--brand); }
     
-    .compat-model-text {
-      font-size: 14px; font-weight: 600; color: var(--text-main);
-      text-align: right; flex: 1; padding-left: 12px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    .compat-grid-brand {
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--brand);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .compat-grid-model {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* ============ BOTTOM NAV ============ */
@@ -609,28 +625,36 @@
     return results.map(r => r.item);
   }
 
-  // 🔥 BÚSQUEDA EN EL DICCIONARIO
+  // 🔥 BÚSQUEDA ESTRICTA EN EL DICCIONARIO (Frase completa o coincidencia exacta)
   function buscarEnDiccionario(term) {
     term = term.toLowerCase().trim();
     if (!term) return [];
 
     let resultados = [];
-    const palabrasBusqueda = term.split(" ").filter(p => p.length > 1);
+    const palabrasBusqueda = term.split(" ").filter(p => p.length > 0);
 
     for (const [clave, grupo] of Object.entries(COMPATIBILIDADES)) {
       const modelos = grupo.modelos || [];
       const imagen = grupo.imagen || '';
       const marca = grupo.marca || 'SIN MARCA';
       
-      const coincideClave = clave.includes(term) || term.includes(clave);
-      const coincideModelo = modelos.some(m => m.toLowerCase().includes(term) || term.includes(m.toLowerCase()));
+      const claveLimpia = clave.toLowerCase();
       
-      let coincideParcial = false;
-      if (palabrasBusqueda.length > 0) {
-        coincideParcial = modelos.some(m => palabrasBusqueda.every(p => m.toLowerCase().includes(p)));
-      }
+      // 1. Coincidencia exacta con el nombre del grupo
+      const coincideClaveExacta = claveLimpia === term || claveLimpia.includes(term);
+      
+      // 2. Coincidencia ESTRICTA con los modelos: 
+      // Obliga a que TODAS las palabras buscadas estén en el modelo Y en el mismo orden.
+      const coincideModeloEstricto = modelos.some(m => {
+        const mLimpio = m.toLowerCase();
+        // Si la frase exacta está en el modelo (ej: "note 11")
+        if (mLimpio.includes(term)) return true;
+        
+        // Si buscan palabras separadas, deben estar todas en el modelo
+        return palabrasBusqueda.every(p => mLimpio.includes(p));
+      });
 
-      if (coincideClave || coincideModelo || coincideParcial) {
+      if (coincideClaveExacta || coincideModeloEstricto) {
         resultados.push({
           grupoNombre: clave.toUpperCase(), 
           marca: marca,
@@ -642,7 +666,7 @@
     return resultados;
   }
 
-  // 🔥 DIBUJAR GRUPOS COMPATIBLES
+  // 🔥 DIBUJAR GRUPOS COMPATIBLES CON CUADRÍCULA
   function renderGruposCompatibles(grupos, term) {
     container.innerHTML = '';
     resultsCount.innerHTML = `<span>${grupos.length} grupo(s) encontrado(s)</span><span class="offline-tag" style="color:#3B82F6; border-color:#3B82F6;"><i class="fas fa-images"></i> Modo Catálogo</span>`;
@@ -665,15 +689,16 @@
       const infoMarca = getLogoUrl(g.marca);
       const tituloLimpio = g.grupoNombre.replace(infoMarca.marcaBase, "").trim();
 
+      // 🔥 GENERAMOS LOS ITEMS EN CUADRÍCULA
       const listaHtml = g.modelos.map(m => {
         const partes = m.trim().split(" ");
         const marca = partes[0];
         const modelo = partes.slice(1).join(" ");
         
         return `
-          <div class="compat-row">
-            <span class="compat-brand-badge" style="color: ${infoMarca.color}; background: ${infoMarca.color}15; border: 1px solid ${infoMarca.color}30;">${escapeHtml(marca)}</span>
-            <span class="compat-model-text">${escapeHtml(modelo)}</span>
+          <div class="compat-grid-item">
+            <span class="compat-grid-brand" style="color: ${infoMarca.color};">${escapeHtml(marca)}</span>
+            <span class="compat-grid-model">${escapeHtml(modelo)}</span>
           </div>
         `;
       }).join('');
@@ -700,9 +725,12 @@
         </div>
 
         <div style="padding-left: 4px;">
-          <div style="font-size: 11px; font-weight: 700; color: var(--text-mute); margin-bottom: 8px; text-transform: uppercase;">Modelos Compatibles (${g.modelos.length}):</div>
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-mute); margin-bottom: 8px; text-transform: uppercase;">
+            Modelos Compatibles (${g.modelos.length}):
+          </div>
           
-          <div class="compat-list-container">
+          <!-- 🔥 NUEVA CUADRÍCULA -->
+          <div class="compat-grid-container">
             ${listaHtml}
           </div>
         </div>
