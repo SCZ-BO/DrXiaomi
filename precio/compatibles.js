@@ -1,4 +1,4 @@
-// 🔥 DICCIONARIO MAESTRO DE COMPATIBILIDADES V14.0 (Auditado)
+// 🔥 DICCIONARIO MAESTRO DE COMPATIBILIDADES V15.0 (Auditado y Unificado)
 // Estructura completa con rutas de imágenes configuradas
 
 export const COMPATIBILIDADES = {
@@ -8,15 +8,44 @@ export const COMPATIBILIDADES = {
     imagen: "/precio/compatibles/vivo-y21s.png",
     modelos: ["VIVO Y21S", "VIVO Y21A", "VIVO Y21E", "VIVO Y21T", "VIVO Y21G", "VIVO Y02S", "VIVO Y16", "VIVO Y30 5G", "VIVO Y15A", "VIVO Y15C", "VIVO Y32", "VIVO Y33 5G", "VIVO Y20", "VIVO Y20G", "VIVO Y12G", "VIVO Y01", "VIVO Y22", "VIVO Y17S", "VIVO Y22S", "VIVO Y28 5G", "VIVO Y33T", "VIVO Y36I", "VIVO Y36", "VIVO T1X", "VIVO Y33S", "VIVO Y51 2020", "VIVO Y31 2020", "VIVO Y73", "VIVO Y72S", "VIVO Y53S", "VIVO Y31", "VIVO T2X", "VIVO Y72 5G", "VIVO Y55S 5G", "VIVO Y76 5G", "VIVO Y76S 5G", "VIVO Y75 5G", "VIVO Y77 5G", "VIVO Y56 5G", "VIVO Y20A", "VIVO Y20T", "VIVO Y20S", "VIVO Y20I", "VIVO Y20SG", "VIVO Y12S", "VIVO Y12A", "VIVO Y20E", "VIVO Y30G", "VIVO Y31S 5G", "VIVO Y11S", "VIVO Y12D", "VIVO Y15S", "IQOO Z3", "IQOO U3", "IQOO U3X", "IQOO U1X", "IQOO U5X", "VIVO Y35 4G"]
   },
+  "tecno spark 10 pro universal": {
+    marca: "TECNO / INFINIX",
+    imagen: "/precio/compatibles/tecno-x6831.png",
+    modelos: [
+      "TECNO SPARK 10 PRO (KI7)",
+      "TECNO SPARK 20 PRO (KJ6)",
+      "TECNO SPARK 20 PRO 5G (KJ8)",
+      "TECNO POVA 5 (LH7n)",
+      "TECNO POVA 5 PRO 5G (LH8n)",
+      "TECNO POVA 6 NEO",
+      "TECNO POVA 7 4G (LJ6)",
+      "INFINIX HOT 30 (X6831)",
+      "INFINIX HOT 30 5G (X6832)",
+      "INFINIX NOTE 30 (X6833B)",
+      "INFINIX NOTE 30 5G (X6711)",
+      "INFINIX HOT 40 (X6836)",
+      "INFINIX HOT 40 PRO (X6837)",
+      "INFINIX NOTE 40X 5G (X6838)"
+    ]
+  },
+  "tecno camon 20 infinix": {
+    marca: "TECNO / INFINIX",
+    imagen: "/precio/compatibles/tecno-camon-20.png",
+    modelos: [
+      "TECNO CAMON 20", 
+      "TECNO CAMON 20 PRO", 
+      "TECNO CAMON 20 PRO 5G", 
+      "TECNO CAMON 20 PREMIER",
+      "INFINIX NOTE 30 PRO (X678B)",
+      "INFINIX NOTE 30 VIP (X6710)",
+      "INFINIX GT 10 PRO (X6739)",
+      "INFINIX GT 10 PRO+ (X6739)"
+    ]
+  },
   "infinix smart 8": {
     marca: "INFINIX / TECNO / ITEL",
     imagen: "/precio/compatibles/infinix-smart-8.png",
     modelos: ["INFINIX X6525", "INFINIX X6526", "INFINIX X6528", "INFINIX SMART 8", "INFINIX SMART 8 HD", "INFINIX HOT 40I", "TECNO SPARK GO 2024", "TECNO SPARK 20", "TECNO SPARK 20C", "TECNO POP 8", "ITEL P55", "ITEL P55+", "ITEL P55T", "ITEL A666L", "ITEL P55 PLUS", "ITEL S23 PLUS", "ITEL S23+", "ITEL S18 PRO", "ITEL S24", "ITEL RS4"]
-  },
-  "tecno spark 10 pro": {
-    marca: "TECNO / INFINIX",
-    imagen: "/precio/compatibles/tecno-x6831.png",
-    modelos: ["TECNO SPARK 10 PRO", "TECNO SPARK 20", "TECNO SPARK 20 PRO", "TECNO POVA 5", "TECNO POVA 6", "TECNO POVA 6 NEO 5G", "TECNO CAMON 20 PRO", "TECNO NOTE 30", "TECNO NOTE 40", "TECNO HOT 30", "TECNO HOT 40", "TECNO HOT 40 PRO", "TECNO KI7", "TECNO KI7S", "INFINIX X6831", "INFINIX X6832", "INFINIX X6833", "INFINIX X6836", "INFINIX X6837", "INFINIX X6838", "INFINIX X6711"]
   },
   "realme c11": {
     marca: "REALME / OPPO",
@@ -63,7 +92,7 @@ export const COMPATIBILIDADES = {
   "infinix hot 11s": {
     marca: "INFINIX / TECNO",
     imagen: "/precio/compatibles/infinix-hot-11s.png",
-    modelos: ["INFINIX HOT 11S", "INFINIX ZERO 5G", "INFINIX HOT 20S", "TECNO CAMON 17P"]
+    modelos: ["INFINIX HOT 11S", "INFINIX HOT 20S"]
   },
 
   // ================= XIAOMI / REDMI / POCO =================
@@ -102,10 +131,10 @@ export const COMPATIBILIDADES = {
     imagen: "/precio/compatibles/mi-11.png",
     modelos: ["XIAOMI MI 11", "XIAOMI MI 11 PRO", "XIAOMI MI 11 ULTRA"]
   },
-  "poco f3": {
+  "poco f3 f4": {
     marca: "XIAOMI",
     imagen: "/precio/compatibles/poco-f3.png",
-    modelos: ["XIAOMI POCO F3", "XIAOMI REDMI K40", "XIAOMI REDMI K40 PRO", "XIAOMI REDMI K40 PRO PLUS", "XIAOMI MI 11I", "XIAOMI MI 11X", "XIAOMI MI 11X PRO"]
+    modelos: ["XIAOMI POCO F3", "XIAOMI POCO F4", "XIAOMI POCO F4 5G", "XIAOMI REDMI K40", "XIAOMI REDMI K40 PRO", "XIAOMI REDMI K40 PRO PLUS", "XIAOMI REDMI K40S", "XIAOMI MI 11I", "XIAOMI MI 11X", "XIAOMI MI 11X PRO", "BLACK SHARK 4", "BLACK SHARK 4 PRO", "BLACK SHARK 4S", "BLACK SHARK 4S PRO", "BLACK SHARK 5", "BLACK SHARK 5 RS", "BLACK SHARK 5 PRO"]
   },
   "poco f3 gt": {
     marca: "XIAOMI",
@@ -413,11 +442,6 @@ export const COMPATIBILIDADES = {
   },
 
   // ================= TECNO / INFINIX / ITEL =================
-  "camon 20": {
-    marca: "TECNO / INFINIX",
-    imagen: "/precio/compatibles/tecno-camon-20.png",
-    modelos: ["TECNO CAMON 20", "TECNO CAMON 20 PRO", "TECNO CAMON 20 PRO 5G", "TECNO CAMON 20 PREMIER", "TECNO NOTE 30 VIP", "TECNO NOTE 30 PRO", "INFINIX GT 10 PRO", "INFINIX NOTE 30 VIP"]
-  },
   "smart 9": {
     marca: "INFINIX / TECNO / ITEL",
     imagen: "/precio/compatibles/infinix-smart-9.png",
