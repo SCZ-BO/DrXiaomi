@@ -1,6 +1,3 @@
-// 🔥 DICCIONARIO MAESTRO DE COMPATIBILIDADES V7.0
-// Archivo independiente con todos los grupos, imágenes y validación técnica
-
 export const COMPATIBILIDADES = {
   // ================= SÚPER COMBOS (CON IMAGEN) =================
   "vivo y21s": {
@@ -46,38 +43,41 @@ export const COMPATIBILIDADES = {
     modelos: ["moto e20", "moto e22", "moto e22i", "moto e22s", "moto e30", "moto e40"]
   },
 
-  // ================= XIAOMI 12 (CORREGIDOS) =================
-  "xiaomi 12 pro": {
-    imagen: "", modelos: ["xiaomi 12 pro", "xiaomi 12s pro", "xiaomi 12s ultra", "xiaomi 12 ultra"]
-  },
-  "xiaomi 12": {
-    imagen: "", modelos: ["xiaomi 12", "xiaomi 12x", "xiaomi 12s"]
-  },
-
-  // ================= XIAOMI / REDMI / POCO (NUEVOS) =================
+  // ================= NUEVOS GRUPOS CON TUS IMÁGENES SUBIDAS =================
   "poco f4 gt": {
-    imagen: "", modelos: ["poco f4 gt", "redmi k50 gaming", "redmi k50 gaming 5g"]
-  },
-  "redmi 9t": {
-    imagen: "", modelos: ["redmi 9t", "redmi 9 power", "poco m3", "redmi note 9 4g"]
+    imagen: "/precio/compatibles/poco-f4-gt.png", // <-- Imagen detectada
+    modelos: ["poco f4 gt", "redmi k50 gaming", "redmi k50 gaming 5g"]
   },
   "poco m4 pro 5g": {
-    imagen: "", modelos: ["poco m4 pro 5g", "redmi note 11 5g", "redmi note 11t 5g", "redmi note 11s 5g"]
+    imagen: "/precio/compatibles/poco-m4-pro-5g.png", // <-- Imagen detectada
+    modelos: ["poco m4 pro 5g", "redmi note 11 5g", "redmi note 11t 5g", "redmi note 11s 5g"]
+  },
+  "poco x3": {
+    imagen: "/precio/compatibles/poco-x3.png", // <-- Imagen detectada
+    modelos: ["poco x3", "poco x3 pro", "poco x3 nfc", "mi 10t lite"]
   },
   "poco x4 pro": {
-    imagen: "", modelos: ["poco x4 pro 5g", "redmi note 11 pro", "redmi note 11 pro 4g", "redmi note 11 pro 5g", "redmi note 11 pro+ 5g", "redmi note 10 pro", "redmi note 10 pro max", "redmi note 11e pro"]
+    imagen: "/precio/compatibles/poco-x4-pro.png", // <-- Imagen detectada
+    modelos: ["poco x4 pro 5g", "redmi note 11 pro", "redmi note 11 pro 4g", "redmi note 11 pro 5g", "redmi note 11 pro+ 5g", "redmi note 10 pro", "redmi note 10 pro max", "redmi note 11e pro"]
   },
-  "poco f5 pro": {
-    imagen: "", modelos: ["poco f5 pro", "redmi k60", "redmi k60 5g", "redmi k60 pro", "redmi k60 pro 5g"]
+  "samsung a03": { // En tu captura vi que subiste samsung-a03s.png
+    imagen: "/precio/compatibles/samsung-a03s.png", // <-- Imagen detectada
+    modelos: ["a02s", "a03", "a03s", "a04e", "m02s"]
   },
+
+  // ================= OTROS GRUPOS (SIN IMAGEN FÍSICA AÚN) =================
+  "redmi 9t": { imagen: "", modelos: ["redmi 9t", "redmi 9 power", "poco m3", "redmi note 9 4g"] },
+  "poco f5 pro": { imagen: "", modelos: ["poco f5 pro", "redmi k60", "redmi k60 5g", "redmi k60 pro", "redmi k60 pro 5g"] },
   "redmi 14c": { imagen: "", modelos: ["redmi 14c", "redmi 14c 5g", "redmi 14r", "redmi a3 pro", "poco c75", "poco m7", "redmi a4 5g"] },
-  "poco x3": { imagen: "", modelos: ["poco x3", "poco x3 pro", "poco x3 nfc", "mi 10t lite"] },
   "redmi 10c": { imagen: "", modelos: ["redmi 10c", "poco c40"] },
   "note 10 pro": { imagen: "", modelos: ["note 10 pro", "note 10 pro max"] },
 
-  // ================= SAMSUNG (CORREGIDOS) =================
+  // ================= XIAOMI 12 =================
+  "xiaomi 12 pro": { imagen: "", modelos: ["xiaomi 12 pro", "xiaomi 12s pro", "xiaomi 12s ultra", "xiaomi 12 ultra"] },
+  "xiaomi 12": { imagen: "", modelos: ["xiaomi 12", "xiaomi 12x", "xiaomi 12s"] },
+
+  // ================= SAMSUNG (RESTO) =================
   "samsung a12": { imagen: "", modelos: ["a12", "a02", "m02", "m12", "f12", "a32 5g", "m32 5g"] },
-  "samsung a02s": { imagen: "", modelos: ["a02s", "a03", "a03s", "a04e"] },
   "samsung a5 2020": { imagen: "", modelos: ["a5 2020", "a7 2019"] },
   "samsung a10e": { imagen: "", modelos: ["a10e", "a20e"] },
   "samsung a10": { imagen: "", modelos: ["a10", "m10"] },
