@@ -259,11 +259,11 @@
     }
 
     .compat-image-box {
-      width: 100%; height: 180px; background: #000; border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px; display: flex; justify-content: center; border: 1px solid var(--border);
+      width: 100%; height: 180px; background: #000; border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid var(--border);
     }
     .compat-image-box img { object-fit: contain; height: 100%; }
 
-    /* 🔥 NUEVA CUADRÍCULA MINIMALISTA PARA COMPATIBLES */
+    /* 🔥 CUADRÍCULA MINIMALISTA PARA COMPATIBLES */
     .compat-grid-container {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -666,7 +666,7 @@
     return resultados;
   }
 
-  // 🔥 DIBUJAR GRUPOS COMPATIBLES CON CUADRÍCULA
+  // 🔥 DIBUJAR GRUPOS COMPATIBLES CON CUADRÍCULA Y BOTÓN DE GOOGLE
   function renderGruposCompatibles(grupos, term) {
     container.innerHTML = '';
     resultsCount.innerHTML = `<span>${grupos.length} grupo(s) encontrado(s)</span><span class="offline-tag" style="color:#3B82F6; border-color:#3B82F6;"><i class="fas fa-images"></i> Modo Catálogo</span>`;
@@ -706,6 +706,10 @@
       const card = document.createElement('div');
       card.className = 'product-card is-compat'; 
       
+      // Enlace dinámico a Google Imágenes
+      const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(`LCD ${g.grupoNombre} ${g.marca} pantalla`)}&tbm=isch`;
+      const tieneImagen = g.imagen && g.imagen.trim() !== "";
+
       card.innerHTML = `
         <div class="compat-card-title">
           <img 
@@ -720,8 +724,26 @@
           </div>
         </div>
         
+        <!-- 🔥 NUEVO BLOQUE DE IMAGEN CON BOTÓN A GOOGLE -->
         <div class="compat-image-box">
-          <img src="${g.imagen}" alt="Pantalla ${g.grupoNombre}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666; font-size:12px;\\'><i class=\\'fas fa-image\\' style=\\'font-size:30px; margin-bottom:10px;\\'></i><br>Foto no subida aún</div>'">
+          ${tieneImagen ? `
+            <img src="${g.imagen}" alt="Pantalla ${g.grupoNombre}" onerror="
+              this.style.display='none'; 
+              this.parentElement.innerHTML='<div style=\\'display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666; font-size:12px;\\'><i class=\\'fas fa-image\\' style=\\'font-size:30px; margin-bottom:10px;\\'></i><span>Foto no subida aún</span></div>';
+            ">
+          ` : `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666; font-size:12px; width: 100%;">
+              <i class="fas fa-image" style="font-size:30px; margin-bottom:10px;"></i>
+              <span>Foto no disponible</span>
+            </div>
+          `}
+        </div>
+
+        <!-- 🔥 BOTÓN PARA IR A GOOGLE IMÁGENES -->
+        <div style="display: flex; justify-content: flex-end; margin-top: 4px; margin-bottom: 12px; padding: 0 8px;">
+          <a href="${googleSearchUrl}" target="_blank" style="background: var(--bg-elev); color: var(--brand); border: 1px solid var(--border); padding: 6px 12px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: 0.15s;">
+            <i class="fab fa-google"></i> Buscar foto en Google
+          </a>
         </div>
 
         <div style="padding-left: 4px;">
@@ -729,7 +751,7 @@
             Modelos Compatibles (${g.modelos.length}):
           </div>
           
-          <!-- 🔥 NUEVA CUADRÍCULA -->
+          <!-- 🔥 CUADRÍCULA MINIMALISTA -->
           <div class="compat-grid-container">
             ${listaHtml}
           </div>
