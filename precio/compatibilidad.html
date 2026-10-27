@@ -333,24 +333,27 @@
   </footer>
 
   <script type="module">
-    // 🔥 IMPORTAMOS EL DICCIONARIO EXTERNO
     import { COMPATIBILIDADES } from './compatibles.js';
 
     const searchInput = document.getElementById("searchInput");
     const resultsContainer = document.getElementById("resultsContainer");
     const systemMessage = document.getElementById("systemMessage");
 
-    // Función para separar la marca del modelo
+    // Función para limpiar texto (quitar tildes, mayúsculas, etc)
+    function limpiarTexto(txt) {
+      return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    }
+
+    // Separar marca de modelo
     function separarMarcaModelo(texto) {
       const partes = texto.trim().split(" ");
       if (partes.length < 2) return { marca: "OTROS", modelo: texto.toUpperCase() };
       return { marca: partes[0].toUpperCase(), modelo: partes.slice(1).join(" ").toUpperCase() };
     }
 
-    // 🔥 BÚSQUEDA MEJORADA: Por palabras sueltas
+    // 🔥 BÚSQUEDA INTELIGENTE CON PUNTUACIÓN (SCORING)
     function buscar(term) {
-      // Limpiamos el término (quitamos tildes, pasamos a minúsculas)
-      term = term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      term = limpiarTexto(term);
       resultsContainer.innerHTML = '';
 
       if (!term) {
@@ -361,33 +364,50 @@
 
       systemMessage.style.display = 'none';
       
-      // Separamos lo que escribe el usuario en palabras (ej: ["note", "11"])
       const palabrasBusqueda = term.split(" ").filter(p => p.length > 0);
-
-      let gruposEncontrados = [];
+      let resultadosConPuntaje = [];
 
       // Recorremos el diccionario
       for (const [clave, grupo] of Object.entries(COMPATIBILIDADES)) {
+        const claveLimpia = limpiarTexto(clave);
         const modelos = grupo.modelos || [];
-        let esCandidato = false;
+        
+        let puntajeMaximo = 0;
 
-        // 1. Revisamos si alguna palabra está en la CLAVE del grupo
-        const claveLimpia = clave.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        if (palabrasBusqueda.some(p => claveLimpia.includes(p))) {
-          esCandidato = true;
-        }
+        // 1. Evaluamos la CLAVE del grupo
+        if (claveLimpia === term) puntajeMaximo = Math.max(puntajeMaximo, 100); // Exacto
+        else if (claveLimpia.startsWith(term)) puntajeMaximo = Math.max(puntajeMaximo, 80); // Empieza con
+        else if (claveLimpia.includes(term)) puntajeMaximo = Math.max(puntajeMaximo, 60); // Contiene la frase
 
-        // 2. Revisamos si TODAS las palabras están en ALGÚN MODELO del grupo
-        if (!esCandidato) {
-          esCandidato = modelos.some(m => {
-            const mLimpio = m.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            // Aquí está el truco: el modelo debe incluir TODAS las palabras que escribió el usuario
-            return palabrasBusqueda.every(p => mLimpio.includes(p));
+        // 2. Evaluamos los MODELOS dentro del grupo
+        // Si todas las palabras del usuario están en al menos un modelo, es un buen match
+        const modeloCoincidente = modelos.some(m => {
+          const mLimpio = limpiarTexto(m);
+          return palabrasBusqueda.every(p => mLimpio.includes(p));
+        });
+
+        if (modeloCoincidente) {
+          // Si coincide con un modelo, le damos un puntaje alto
+          puntajeMaximo = Math.max(puntajeMaximo, 90); 
+        } else {
+          // Si no coincide el modelo completo, vemos si coincide alguna palabra suelta (ej: "11")
+          // Esto es lo que hacía que salga el Realme C11 al buscar "note 11"
+          const coincidePalabraSuelta = modelos.some(m => {
+            const mLimpio = limpiarTexto(m);
+            return palabrasBusqueda.some(p => p.length > 2 && mLimpio.includes(p));
           });
+          
+          // Si coincide alguna palabra suelta, le damos un puntaje bajo (30), 
+          // a menos que la clave ya tenga un puntaje mayor.
+          if (coincidePalabraSuelta) {
+            puntajeMaximo = Math.max(puntajeMaximo, 30);
+          }
         }
 
-        if (esCandidato) {
-          gruposEncontrados.push({
+        // Si tiene puntaje, lo agregamos a la lista
+        if (puntajeMaximo > 0) {
+          resultadosConPuntaje.push({
+            puntaje: puntajeMaximo,
             grupoNombre: clave.toUpperCase(),
             marca: grupo.marca || "GENERAL",
             imagen: grupo.imagen || "",
@@ -396,7 +416,10 @@
         }
       }
 
-      if (gruposEncontrados.length === 0) {
+      // 🔥 ORDENAMOS LOS RESULTADOS POR PUNTAJE (De mayor a menor)
+      resultadosConPuntaje.sort((a, b) => b.puntaje - a.puntaje);
+
+      if (resultadosConPuntaje.length === 0) {
         resultsContainer.innerHTML = `
           <div class="empty-state">
             <i class="fas fa-terminal"></i>
@@ -407,8 +430,8 @@
         return;
       }
 
-      // Dibujar resultados
-      gruposEncontrados.forEach(g => {
+      // Dibujar resultados ordenados
+      resultadosConPuntaje.forEach(g => {
         
         const modelosHtml = g.modelos.map(m => {
           const info = separarMarcaModelo(m);
@@ -455,7 +478,6 @@
       });
     }
 
-    // Escuchar la escritura
     let debounce;
     searchInput.addEventListener("input", (e) => {
       clearTimeout(debounce);
@@ -464,7 +486,6 @@
       }, 300);
     });
 
-    // Inicializar
     buscar("");
 
   </script>
