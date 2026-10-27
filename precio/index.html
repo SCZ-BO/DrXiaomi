@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0E0E0E" id="metaThemeColor">
-  <meta name="description" content="Catálogo de pantallas y repuestos">
+  <meta name="description" content="Catálogo de pantallas y repuestos con buscador de compatibilidad">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>DR. XIAOMI | Catálogo</title>
@@ -172,6 +172,7 @@
     .filter-chip:active { transform: scale(0.96); }
     .filter-chip.active { background: var(--brand); color: white; border-color: var(--brand); box-shadow: 0 4px 14px var(--brand-glow); }
     .filter-chip[data-filter="ORIG"].active { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: #4A2800; border-color: var(--gold-2); box-shadow: 0 4px 14px var(--gold-glow); }
+    .filter-chip[data-filter="COMPAT"].active { background: #3B82F6; color: white; border-color: #3B82F6; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4); }
 
     /* ============ MAIN ============ */
     .main-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; position: relative; }
@@ -196,10 +197,12 @@
     }
     .product-card.is-orig::before { background: linear-gradient(180deg, var(--gold-1), var(--gold-2)); }
     .product-card:active { transform: scale(0.98); background: var(--bg-elev); }
+    .product-card.is-compat::before { background: #3B82F6; }
 
     .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; padding-left: 8px; gap: 10px; }
     .card-brand { font-size: 10px; font-weight: 800; color: var(--brand); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
     .product-card.is-orig .card-brand { color: #B8860B; }
+    .product-card.is-compat .card-brand { color: #3B82F6; }
     [data-theme="dark"] .product-card.is-orig .card-brand { color: var(--gold-1); }
     .card-model { font-size: 16px; font-weight: 700; color: var(--text-main); letter-spacing: -0.2px; word-break: break-word; line-height: 1.3; }
 
@@ -207,11 +210,20 @@
     .fav-btn.active { color: #FFB800; opacity: 1; }
     .fav-btn:active { transform: scale(0.85); }
 
-    .card-specs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding-left: 8px; }
+    .card-specs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding-left: 8px; align-items: center; }
     .card-type { padding: 4px 10px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 700; background: var(--bg-elev); color: var(--text-mute); }
     .card-type.oled { background: rgba(255,105,0,0.1); color: var(--brand); }
     .card-type.orig { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: #4A2800; font-weight: 800; }
     .card-type.orig::before { content: '👑 '; font-size: 9px; }
+    
+    /* 🔥 ETIQUETA DE COMPATIBILIDAD EN LA TARJETA */
+    .card-type.compat { 
+      background: rgba(59, 130, 246, 0.15); 
+      color: #3B82F6; 
+      border: 1px solid rgba(59, 130, 246, 0.3); 
+      display: flex; align-items: center; gap: 4px;
+    }
+    .card-type.compat::before { content: '🤝'; font-size: 11px; }
 
     .supplier-badge { padding: 4px 10px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 700; background: rgba(255,105,0,0.08); color: var(--brand); }
     .price-badge { padding: 4px 10px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 700; background: rgba(16,185,129,0.08); color: #10B981; }
@@ -401,6 +413,8 @@
     <button class="filter-chip" data-filter="OLED">OLED</button>
     <button class="filter-chip" data-filter="LCD">LCD</button>
     <button class="filter-chip" data-filter="FAV">⭐ Favoritos</button>
+    <!-- 🔥 NUEVO FILTRO DE COMPATIBILIDAD -->
+    <button class="filter-chip" data-filter="COMPAT">🔄 Compatibles</button>
   </div>
 
   <div class="main-content" id="mainScrollContainer">
@@ -428,6 +442,9 @@
   // 🔥 IMPORTAMOS FIREBASE
   import { db } from '/js/firebase.js';
   import { collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  
+  // 🔥 IMPORTAMOS EL DICCIONARIO EXTERNO (Asegúrate de que la ruta sea correcta)
+  import { COMPATIBILIDADES } from './precio/compatibles.js';
 
   let sesion = null;
   try { sesion = JSON.parse(localStorage.getItem('drx_sesion') || 'null'); } catch(e) {}
@@ -479,12 +496,11 @@
 
   // ============ FIREBASE CONNECTION ============
   function initFirebase() {
-    // 🔥 ESCUCHAMOS EN TIEMPO REAL LA COLECCIÓN 'precios'
     unsubscribe = onSnapshot(collection(db, "precios"), (snapshot) => {
       allData = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        if (data.activo !== false) { // Solo mostramos los activos
+        if (data.activo !== false) {
           allData.push({ id: doc.id, ...data });
         }
       });
@@ -501,33 +517,56 @@
     });
   }
 
+  // 🔥 BÚSQUEDA CON COMPATIBILIDADES Y FILTRO ESPECIAL
   function performPreciseSearch(data, term) {
     if (!term.trim()) return data;
+    
     const tokens = getTokens(term);
-    if (!tokens.length) return data;
+    const searchTerms = [term.toLowerCase()];
+    
+    // Si estamos en el filtro de COMPATIBLES, armamos una lista con el modelo y sus hermanos
+    if (currentFilter === "COMPAT") {
+      for (const [key, compatibles] of Object.entries(COMPATIBILIDADES)) {
+        if (term.toLowerCase().includes(key) || key.includes(term.toLowerCase())) {
+          searchTerms.push(...compatibles);
+        }
+      }
+    }
+    
     const results = [];
     for (const item of data) {
       const mn = normalizeText(item.modelo), mk = normalizeText(item.marca);
       const combined = mn + " " + mk;
-      if (!tokens.every(t => combined.includes(t))) continue;
+      
+      let matches = false;
       let score = 0;
-      const joined = tokens.join(" ");
-      if (mn === joined) score = 100;
-      else if (mn.startsWith(joined)) score = 90;
-      else {
-        let pos = 0, ord = true;
-        for (const t of tokens) {
-          const idx = mn.indexOf(t, pos);
-          if (idx === -1) { ord = false; break; }
-          pos = idx + t.length;
+      let esCompatible = false;
+      
+      for (const searchT of searchTerms) {
+        const searchTokens = getTokens(searchT);
+        if (searchTokens.length === 0) continue;
+        
+        if (searchTokens.every(t => combined.includes(t))) {
+          matches = true;
+          const joined = searchTokens.join(" ");
+          if (mn === joined) score += 100;
+          else if (mn.startsWith(joined)) score += 90;
+          else score += 50;
+          
+          if (searchT !== term.toLowerCase() && mn.includes(searchT)) {
+            esCompatible = true;
+          }
         }
-        score = ord ? 80 : 50;
       }
-      score += tokens.length * 5;
-      results.push({ item, score });
+      
+      if (matches) {
+        if (mn.includes(term.toLowerCase())) score += 50; 
+        results.push({ item, score, esCompatible });
+      }
     }
+    
     results.sort((a, b) => b.score - a.score);
-    return results.map(r => r.item);
+    return results.map(r => ({ ...r.item, esCompatible: r.esCompatible }));
   }
   
   function generateSuggestions(term) {
@@ -609,7 +648,17 @@
     const run = () => {
       let data = [...allData];
       if (currentFilter === "FAV") data = data.filter(i => favorites.has(i.id));
+      else if (currentFilter === "COMPAT") {
+        // Si el filtro es COMPAT, no mostramos nada hasta que el usuario busque
+        if (!searchInput.value.trim()) {
+            filteredData = [];
+            updateResultsCount();
+            render(true);
+            return;
+        }
+      }
       else if (currentFilter !== "all") data = data.filter(i => i.tipo === currentFilter);
+      
       const term = searchInput.value.trim();
       if (term) {
         data = performPreciseSearch(data, term);
@@ -617,6 +666,7 @@
       } else {
         clearSearchBtn.style.display = 'none';
       }
+      
       data.sort((a, b) => {
         const pa = TIPO_PESO[a.tipo] ?? 3;
         const pb = TIPO_PESO[b.tipo] ?? 3;
@@ -683,7 +733,11 @@
   function updateResultsCount() {
     if (!resultsCount) return;
     const n = filteredData.length;
-    resultsCount.innerHTML = `<span>${n} producto${n !== 1 ? 's' : ''}</span><span class="offline-tag"><span class="dot"></span>En vivo</span>`;
+    if (currentFilter === "COMPAT") {
+        resultsCount.innerHTML = `<span>${n} compatible${n !== 1 ? 's' : ''}</span><span class="offline-tag" style="color:#3B82F6; border-color:#3B82F6;"><i class="fas fa-search"></i> Buscando...</span>`;
+    } else {
+        resultsCount.innerHTML = `<span>${n} producto${n !== 1 ? 's' : ''}</span><span class="offline-tag"><span class="dot"></span>En vivo</span>`;
+    }
   }
 
   function render(reset = true) {
@@ -693,11 +747,19 @@
       renderedCount = 0;
       if (!filteredData.length) {
         const term = searchInput.value.trim();
+        let emptyMsg = `No se encontró "${escapeHtml(term)}"`;
+        
+        if (currentFilter === "COMPAT" && !term) {
+            emptyMsg = `Escribe un modelo para buscar sus compatibles.`;
+        } else if (currentFilter === "COMPAT" && term) {
+            emptyMsg = `Ese modelo no tiene compatibles registrados.`;
+        }
+
         container.innerHTML = `
           <div class="empty-state">
             <i class="fas fa-search"></i>
             <p style="font-weight:600;margin-bottom:6px;">Sin resultados</p>
-            ${term ? `<p style="font-size:12px;">No se encontró "${escapeHtml(term)}"</p>` : ''}
+            <p style="font-size:12px;">${emptyMsg}</p>
           </div>
         `;
         return;
@@ -713,11 +775,12 @@
       const i = renderedCount + idx;
       const isOrig = item.tipo === 'ORIG';
       const isOled = item.tipo === 'OLED';
+      const isCompat = item.esCompatible;
       const typeClass = isOrig ? 'orig' : isOled ? 'oled' : '';
       const animStyle = i < 20 ? `animation-delay:${i * 12}ms` : `animation:none;opacity:1;transform:none`;
       
       return `
-      <div class="product-card ${isOrig ? 'is-orig' : ''}" style="${animStyle}">
+      <div class="product-card ${isOrig ? 'is-orig' : ''} ${isCompat ? 'is-compat' : ''}" style="${animStyle}">
         <div class="card-header">
           <div style="min-width:0;flex:1;">
             <div class="card-brand">${escapeHtml(item.marca)}</div>
@@ -729,6 +792,7 @@
         </div>
         <div class="card-specs">
           <span class="card-type ${typeClass}">${item.tipo}</span>
+          ${isCompat ? `<span class="card-type compat">Compatible</span>` : ''}
           ${techMode || isAdmin ? `<span class="supplier-badge">${escapeHtml(item.proveedor)}</span><span class="price-badge">Compra: ${item.compra}</span>` : ''}
         </div>
         <div class="card-price-row">
@@ -870,7 +934,6 @@
   };
 
   function setupEventListeners() {
-    // 🔥 MOSTRAR EL BOTÓN DE ADMIN SI LO ES
     if (isAdmin) {
       const btnAdmin = $("adminEditBtn");
       if (btnAdmin) {
@@ -911,6 +974,16 @@
     document.querySelectorAll(".filter-chip").forEach(c => c.addEventListener("click", () => {
       document.querySelectorAll(".filter-chip").forEach(x => x.classList.remove("active"));
       c.classList.add("active"); currentFilter = c.dataset.filter;
+      
+      // Si eligen compatibles, limpiamos la barra y enfocamos para que escriban
+      if (currentFilter === "COMPAT") {
+        searchInput.value = "";
+        searchInput.placeholder = "Escribe un modelo (Ej: Poco F3)...";
+        searchInput.focus();
+      } else {
+        searchInput.placeholder = "Buscar modelo... Ej: Redmi Note 10";
+      }
+      
       applyFiltersAndSearch(); haptic(15);
     }));
 
@@ -944,7 +1017,7 @@
     loadFavorites();
     loadRecent();
     setupEventListeners();
-    initFirebase(); // 🔥 Inicia la conexión con Firestore
+    initFirebase();
   }
 
   init();
