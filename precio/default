@@ -258,10 +258,32 @@
       font-size: 20px; font-weight: 800; color: var(--text-main); text-transform: uppercase; line-height: 1.1; letter-spacing: -0.5px;
     }
 
+    /* 🔥 NUEVO DISEÑO DE CAJA DE IMAGEN MÁS PEQUEÑA Y CLICABLE */
     .compat-image-box {
-      width: 100%; height: 180px; background: #000; border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid var(--border);
+      width: 100%; height: 140px; background: #0f0f0f; border-radius: var(--radius-md); overflow: hidden; margin-bottom: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid var(--border);
+      position: relative; cursor: pointer; transition: 0.2s;
     }
-    .compat-image-box img { object-fit: contain; height: 100%; }
+    .compat-image-box:hover { border-color: var(--brand); }
+    .compat-image-box img { object-fit: contain; height: 100%; width: 100%; padding: 10px; transition: transform 0.3s ease; }
+    .compat-image-box:hover img { transform: scale(1.05); }
+    
+    /* Ícono de lupa sobre la imagen */
+    .zoom-hint {
+      position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 1px solid rgba(255,255,255,0.2); pointer-events: none;
+    }
+
+    /* 🔥 ESTILOS DEL POP-UP (LIGHTBOX) */
+    .lightbox {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); padding: 20px;
+    }
+    .lightbox.active { display: flex; animation: fade 0.2s ease; }
+    .lightbox img {
+      max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: var(--radius-md); box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    }
+    .lightbox-close {
+      position: absolute; top: calc(20px + var(--safe-top)); right: 20px; background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.15s;
+    }
+    .lightbox-close:active { transform: scale(0.9); background: var(--brand); border-color: var(--brand); }
 
     /* 🔥 CUADRÍCULA MINIMALISTA PARA COMPATIBLES */
     .compat-grid-container {
@@ -426,6 +448,12 @@
   <div class="loader-text">Conectando a base de datos...</div>
 </div>
 
+<!-- 🔥 LIGHTBOX (POP-UP PARA IMÁGENES) -->
+<div class="lightbox" id="imageLightbox" onclick="this.classList.remove('active')">
+  <button class="lightbox-close" onclick="document.getElementById('imageLightbox').classList.remove('active')"><i class="fas fa-times"></i></button>
+  <img id="lightboxImg" src="" alt="Pantalla Full">
+</div>
+
 <div class="app" id="appRoot" style="opacity:0;">
   <header class="header">
     <div class="header-top">
@@ -527,6 +555,8 @@
   const splash = $("splash");
   const techModeBtn = $("techModeBtn");
   const scrollTopBtn = $("scrollTopBtn");
+  const lightbox = $("imageLightbox");
+  const lightboxImg = $("lightboxImg");
 
   // 🎨 COLORES Y LOGOS POR MARCA
   const COLORES_MARCA = {
@@ -625,7 +655,7 @@
     return results.map(r => r.item);
   }
 
-  // 🔥 BÚSQUEDA ESTRICTA EN EL DICCIONARIO (Frase completa o coincidencia exacta)
+  // 🔥 BÚSQUEDA ESTRICTA EN EL DICCIONARIO
   function buscarEnDiccionario(term) {
     term = term.toLowerCase().trim();
     if (!term) return [];
@@ -640,17 +670,11 @@
       
       const claveLimpia = clave.toLowerCase();
       
-      // 1. Coincidencia exacta con el nombre del grupo
       const coincideClaveExacta = claveLimpia === term || claveLimpia.includes(term);
       
-      // 2. Coincidencia ESTRICTA con los modelos: 
-      // Obliga a que TODAS las palabras buscadas estén en el modelo Y en el mismo orden.
       const coincideModeloEstricto = modelos.some(m => {
         const mLimpio = m.toLowerCase();
-        // Si la frase exacta está en el modelo (ej: "note 11")
         if (mLimpio.includes(term)) return true;
-        
-        // Si buscan palabras separadas, deben estar todas en el modelo
         return palabrasBusqueda.every(p => mLimpio.includes(p));
       });
 
@@ -665,6 +689,14 @@
     }
     return resultados;
   }
+
+  // 🔥 FUNCIÓN PARA ABRIR EL POPUP DE IMAGEN
+  window.openLightbox = function(src) {
+    if (!src || src.trim() === "") return;
+    lightboxImg.src = src;
+    lightbox.classList.add('active');
+    haptic(20);
+  };
 
   // 🔥 DIBUJAR GRUPOS COMPATIBLES CON CUADRÍCULA Y BOTÓN DE GOOGLE
   function renderGruposCompatibles(grupos, term) {
@@ -689,7 +721,6 @@
       const infoMarca = getLogoUrl(g.marca);
       const tituloLimpio = g.grupoNombre.replace(infoMarca.marcaBase, "").trim();
 
-      // 🔥 GENERAMOS LOS ITEMS EN CUADRÍCULA
       const listaHtml = g.modelos.map(m => {
         const partes = m.trim().split(" ");
         const marca = partes[0];
@@ -706,7 +737,6 @@
       const card = document.createElement('div');
       card.className = 'product-card is-compat'; 
       
-      // Enlace dinámico a Google Imágenes
       const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(`LCD ${g.grupoNombre} ${g.marca} pantalla`)}&tbm=isch`;
       const tieneImagen = g.imagen && g.imagen.trim() !== "";
 
@@ -716,7 +746,8 @@
             src="${infoMarca.ruta}" 
             alt="${infoMarca.marcaBase}" 
             referrerpolicy="no-referrer"
-            onerror="this.onerror=null; this.src='https://xiaomi.scz.red/precio/logos/default.png';"
+            style="width: 38px; height: 38px; object-fit: contain;"
+            onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width: 38px; height: 38px; border-radius: 50%; background: ' + infoMarca.color + '30; display: flex; align-items: center; justify-content: center; color: ' + infoMarca.color + '; font-weight: 900; font-size: 18px; border: 1px solid ' + infoMarca.color + '50;\\'>' + infoMarca.marcaBase.substring(0,1) + '</div>';"
           >
           <div>
             <div class="compat-card-brand" style="color: ${infoMarca.color};">${escapeHtml(g.marca)}</div>
@@ -724,13 +755,14 @@
           </div>
         </div>
         
-        <!-- 🔥 NUEVO BLOQUE DE IMAGEN CON BOTÓN A GOOGLE -->
-        <div class="compat-image-box">
+        <!-- 🔥 NUEVA CAJA DE IMAGEN CON ZOOM -->
+        <div class="compat-image-box" ${tieneImagen ? `onclick="window.openLightbox('${g.imagen}')"` : ''}>
           ${tieneImagen ? `
             <img src="${g.imagen}" alt="Pantalla ${g.grupoNombre}" onerror="
               this.style.display='none'; 
               this.parentElement.innerHTML='<div style=\\'display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666; font-size:12px;\\'><i class=\\'fas fa-image\\' style=\\'font-size:30px; margin-bottom:10px;\\'></i><span>Foto no subida aún</span></div>';
             ">
+            <div class="zoom-hint"><i class="fas fa-search-plus"></i></div>
           ` : `
             <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666; font-size:12px; width: 100%;">
               <i class="fas fa-image" style="font-size:30px; margin-bottom:10px;"></i>
@@ -751,7 +783,6 @@
             Modelos Compatibles (${g.modelos.length}):
           </div>
           
-          <!-- 🔥 CUADRÍCULA MINIMALISTA -->
           <div class="compat-grid-container">
             ${listaHtml}
           </div>
@@ -970,20 +1001,19 @@
       const typeClass = isOrig ? 'orig' : isOled ? 'oled' : '';
       const animStyle = i < 20 ? `animation-delay:${i * 12}ms` : `animation:none;opacity:1;transform:none`;
       
-      // Obtenemos el logo y color según la marca del producto
       const infoMarca = getLogoUrl(item.marca);
       
       return `
       <div class="product-card ${isOrig ? 'is-orig' : ''}" style="${animStyle}">
         
-        <!-- 🔥 NUEVO ENCABEZADO CON LOGO Y TÍTULO GRANDE -->
         <div class="card-header" style="align-items: center;">
           <div class="compat-card-title" style="margin-bottom: 0; padding-left: 0; gap: 10px;">
             <img 
               src="${infoMarca.ruta}" 
               alt="${infoMarca.marcaBase}" 
               referrerpolicy="no-referrer"
-              onerror="this.onerror=null; this.src='https://xiaomi.scz.red/precio/logos/default.png';"
+              style="width: 38px; height: 38px; object-fit: contain;"
+              onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width: 38px; height: 38px; border-radius: 50%; background: ' + infoMarca.color + '30; display: flex; align-items: center; justify-content: center; color: ' + infoMarca.color + '; font-weight: 900; font-size: 18px; border: 1px solid ' + infoMarca.color + '50;\\'>' + infoMarca.marcaBase.substring(0,1) + '</div>';"
             >
             <div>
               <div class="compat-card-brand" style="color: ${infoMarca.color};">${escapeHtml(item.marca)}</div>
