@@ -1,3 +1,6 @@
+// 🔥 DICCIONARIO MAESTRO DE COMPATIBILIDADES V6.0
+// Archivo independiente con todos los grupos y soporte para imágenes
+
 export const COMPATIBILIDADES = {
   // ================= SÚPER COMBOS (CON IMAGEN) =================
   "vivo y21s": {
@@ -37,19 +40,66 @@ export const COMPATIBILIDADES = {
     modelos: ["moto e20", "moto e22", "moto e22i", "moto e22s", "moto e30", "moto e40"]
   },
 
-  // ================= SAMSUNG =================
-  "samsung a12": { imagen: "", modelos: ["a12", "a02", "m12", "f12", "m02"] },
-  "samsung a03": { imagen: "", modelos: ["a02s", "a03", "a03s", "a04e"] },
-  "samsung a10": { imagen: "", modelos: ["a10", "m10", "a10s", "m10s"] },
-  "samsung a30": { imagen: "", modelos: ["a30", "a50", "a50s"] },
-  "samsung a15": { imagen: "", modelos: ["a15", "m15", "m15 4g"] },
-  "samsung a22": { imagen: "", modelos: ["a22", "a22 4g", "m22", "f22"] },
-
-  // ================= XIAOMI / REDMI / POCO =================
+  // ================= XIAOMI / REDMI / POCO (ACTUALIZACIONES NUEVAS) =================
+  "poco f4 gt": {
+    imagen: "", modelos: ["poco f4 gt", "redmi k50 gaming", "redmi k50 gaming 5g"]
+  },
+  "redmi 9t": {
+    imagen: "", modelos: ["redmi 9t", "redmi 9 power", "poco m3", "redmi note 9 4g"]
+  },
+  "poco m4 pro 5g": {
+    imagen: "", modelos: ["poco m4 pro 5g", "redmi note 11 5g", "redmi note 11t 5g", "redmi note 11s 5g"]
+  },
+  "poco x4 pro": {
+    imagen: "", modelos: ["poco x4 pro 5g", "redmi note 11 pro", "redmi note 11 pro 4g", "redmi note 11 pro 5g", "redmi note 11 pro+ 5g", "redmi note 10 pro", "redmi note 10 pro max", "redmi note 11e pro"]
+  },
+  "poco f5 pro": {
+    imagen: "", modelos: ["poco f5 pro", "redmi k60", "redmi k60 5g", "redmi k60 pro", "redmi k60 pro 5g"]
+  },
   "redmi 14c": { imagen: "", modelos: ["redmi 14c", "redmi 14c 5g", "redmi 14r", "redmi a3 pro", "poco c75", "poco m7", "redmi a4 5g"] },
   "poco x3": { imagen: "", modelos: ["poco x3", "poco x3 pro", "poco x3 nfc", "mi 10t lite"] },
   "redmi 10c": { imagen: "", modelos: ["redmi 10c", "poco c40"] },
   "note 10 pro": { imagen: "", modelos: ["note 10 pro", "note 10 pro max"] },
+
+  // ================= SAMSUNG =================
+  "samsung a02": { imagen: "", modelos: ["a02", "a12", "a32 5g", "m02"] },
+  "samsung a02s": { imagen: "", modelos: ["a02s", "a03", "a03s", "m02s"] },
+  "samsung a5 2020": { imagen: "", modelos: ["a5 2020", "a7 2019"] },
+  "samsung a10e": { imagen: "", modelos: ["a10e", "a20e"] },
+  "samsung a10": { imagen: "", modelos: ["a10", "m10"] },
+  "samsung a11": { imagen: "", modelos: ["a11", "m11"] },
+  "samsung a13": { imagen: "", modelos: ["a13", "a23 4g"] },
+  "samsung a30": { imagen: "", modelos: ["a30", "a50", "a50s"] },
+  "samsung a51": { imagen: "", modelos: ["a51", "m31s"] },
+  "samsung g530": { imagen: "", modelos: ["g530", "g531", "g532"] },
+  "samsung j105": { imagen: "", modelos: ["j105", "j106"] },
+  "samsung j110": { imagen: "", modelos: ["j110", "j111"] },
+  "samsung j3": { imagen: "", modelos: ["j3", "j5"] },
+  "samsung j4 plus": { imagen: "", modelos: ["j4 plus", "j6 plus", "j4 core"] },
+  "samsung j8": { imagen: "", modelos: ["j8", "a6 plus"] },
+  "samsung j7": { imagen: "", modelos: ["j7", "j7 neo"] },
+  "samsung m30": { imagen: "", modelos: ["m30", "m30s", "m21", "m21s", "m31", "f41"] },
+  "samsung a15": { imagen: "", modelos: ["a15", "m15", "m15 4g"] },
+  "samsung a22": { imagen: "", modelos: ["a22", "a22 4g", "m22", "f22"] },
+
+  // ================= HONOR / HUAWEI =================
+  "honor 50 lite": { imagen: "", modelos: ["honor 50 lite", "nova 8i"] },
+  "honor 7a": { imagen: "", modelos: ["honor 7a", "y6 2018", "y5 2018", "y5 prime"] },
+  "honor 7s": { imagen: "", modelos: ["honor 7s", "y5 2018"] },
+  "honor 8a": { imagen: "", modelos: ["honor 8a", "y6 2019", "y6 prime 2019", "y6s 2019"] },
+  "honor 8s": { imagen: "", modelos: ["honor 8s", "y5 2019"] },
+  "honor 8x": { imagen: "", modelos: ["honor 8x", "y9 2019", "y8s", "enjoy 9 plus"] },
+  "honor 9a": { imagen: "", modelos: ["honor 9a", "y6p"] },
+  "honor 9s": { imagen: "", modelos: ["honor 9s", "y5p"] },
+  "honor 9x": { imagen: "", modelos: ["honor 9x", "y9s", "p smart pro 2019"] },
+  "honor 10 lite": { imagen: "", modelos: ["honor 10 lite", "p smart 2019"] },
+  "honor 20": { imagen: "", modelos: ["honor 20", "nova 5t"] },
+  "honor view 20": { imagen: "", modelos: ["honor view 20", "nova 4"] },
+  "honor 200 lite": { imagen: "", modelos: ["honor 200 lite", "honor x8b", "honor x8c"] },
+  "honor x7b": { imagen: "", modelos: ["honor x7b", "honor x7b 5g", "honor 90 smart", "honor 200 smart"] },
+  "honor x6a": { imagen: "", modelos: ["honor x6a", "honor x5 plus", "honor x6 a plus", "honor x5b", "honor x5b plus"] },
+  "huawei y7": { imagen: "", modelos: ["huawei y7 2018", "honor 7c pro", "honor play 7c", "y7 prime 2018", "y7 lite 2018", "y7 pro 2018"] },
+  "huawei y9": { imagen: "", modelos: ["huawei y9 prime 2019", "huawei y9s", "honor 9x", "honor 9x pro"] },
 
   // ================= TECNO / INFINIX / ITEL =================
   "camon 20": { imagen: "", modelos: ["camon 20", "camon 20 pro", "camon 20 pro 5g", "camon 20 premier", "note 30 vip", "note 30 pro", "ck6", "ck7n", "ck8n", "ck9n"] },
@@ -64,13 +114,6 @@ export const COMPATIBILIDADES = {
   "realme 7 pro": { imagen: "", modelos: ["realme 7 pro", "oppo f19", "oppo f19 pro", "oppo a74 4g", "oppo a94", "oppo a95", "oppo reno 5 lite", "oppo reno 6 lite", "realme 8 pro", "realme 8", "realme x7"] },
   "vivo y20": { imagen: "", modelos: ["vivo y20", "vivo y21s", "vivo y21a", "vivo y21e", "vivo y21t", "vivo y21g", "vivo y02s", "vivo y16", "vivo y30 5g", "vivo y15a", "vivo y15c", "vivo y32", "vivo y33 5g", "vivo y20g", "vivo y12g", "vivo y01", "vivo y22", "vivo y17s", "vivo y22s", "vivo y28 5g", "vivo y33t", "vivo y36i", "vivo y36", "vivo y12", "vivo t1x", "vivo y33s", "vivo y51 2020", "vivo y31 2020", "vivo y73", "vivo y72s", "vivo y53s", "vivo y31", "vivo t2x", "vivo y55s 5g", "vivo y76 5g", "vivo y75 5g", "vivo y77 5g", "vivo y56 5g", "vivo y20a", "vivo y20t", "vivo y20s", "vivo y20i", "vivo y20sg", "vivo y12s", "vivo y12a", "vivo y20e", "vivo y30g", "vivo y31s 5g", "vivo y11s", "vivo y12d", "vivo y15s", "iqoo z3", "iqoo u3", "iqoo u3x", "iqoo u1x", "iqoo u5x", "vivo y35 4g"] },
   "reno 8t 5g": { imagen: "", modelos: ["reno 8t 5g", "reno 9 5g", "reno 9 pro", "reno 10", "reno 10 5g", "reno 11 5g", "reno 11 pro 5g", "a1 pro 5g", "a3 pro 5g", "realme 10 pro+", "realme 10 pro+ 5g", "realme 11 pro 5g", "realme 11 pro", "realme 11 pro+ 5g", "realme 11 pro+", "realme 12 pro 5g", "realme 12 pro", "realme 12 pro+ 5g", "realme p1 pro 5g", "realme narzo 60 pro"] },
-
-  // ================= HONOR / HUAWEI =================
-  "honor 200 lite": { imagen: "", modelos: ["honor 200 lite", "honor x8b", "honor x8c"] },
-  "honor x7b": { imagen: "", modelos: ["honor x7b", "honor x7b 5g", "honor 90 smart", "honor 200 smart"] },
-  "honor x6a": { imagen: "", modelos: ["honor x6a", "honor x5 plus", "honor x6 a plus", "honor x5b", "honor x5b plus"] },
-  "huawei y7": { imagen: "", modelos: ["huawei y7 2018", "honor 7c pro", "honor play 7c", "y7 prime 2018", "y7 lite 2018", "y7 pro 2018"] },
-  "huawei y9": { imagen: "", modelos: ["huawei y9 prime 2019", "huawei y9s", "honor 9x", "honor 9x pro"] },
 
   // ================= ZTE =================
   "zte a31": { imagen: "", modelos: ["zte a31", "zte a31 plus", "zte a31 lite", "zte a33s", "zte a35", "zte a35 5g", "zte a71", "zte a72", "zte a72 5g", "zte a73", "zte a75", "zte a75 5g"] },
