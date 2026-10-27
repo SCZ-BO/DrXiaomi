@@ -42,7 +42,7 @@
       --bg-main: #0A0A0A;
       --bg-card: #161616;
       --bg-elev: #242424;
-      --bg-list: #121212; /* Fondo más oscuro para las listas */
+      --bg-list: #121212;
       
       --text-main: #F5F5F5;
       --text-mute: #888888;
@@ -243,16 +243,15 @@
     .whatsapp-btn { background: #25D366; color: white; }
     .edit-btn { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.3); }
 
-    /* ============ 🔥 NUEVO DISEÑO DE LISTA DE COMPATIBILIDAD ============ */
+    /* ============ 🔥 DISEÑO DE LISTA PRO ============ */
     .compat-list-container {
       background: var(--bg-list);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      max-height: 250px;
+      max-height: 280px;
       overflow-y: auto;
       margin-top: 10px;
-      /* Ocultar barra de scroll en móviles para que se vea limpio */
-      scrollbar-width: none; 
+      scrollbar-width: none;
       -ms-overflow-style: none;
     }
     .compat-list-container::-webkit-scrollbar { display: none; }
@@ -260,9 +259,8 @@
     .compat-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
       transition: background 0.15s;
     }
     .compat-row:last-child { border-bottom: none; }
@@ -273,21 +271,25 @@
       font-weight: 800;
       color: var(--brand);
       background: rgba(255, 105, 0, 0.1);
-      padding: 4px 8px;
-      border-radius: 4px;
+      padding: 5px 8px;
+      border-radius: 6px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      min-width: 85px;
+      min-width: 90px;
       text-align: center;
+      flex-shrink: 0;
     }
     
     .compat-model-text {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--text-main);
       text-align: right;
       flex: 1;
-      padding-left: 10px;
+      padding-left: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* ============ BOTTOM NAV ============ */
@@ -599,6 +601,7 @@
     for (const [clave, grupo] of Object.entries(COMPATIBILIDADES)) {
       const modelos = grupo.modelos || [];
       const imagen = grupo.imagen || '';
+      const marca = grupo.marca || 'SIN MARCA';
       
       const coincideClave = clave.includes(term) || term.includes(clave);
       const coincideModelo = modelos.some(m => m.includes(term) || term.includes(m));
@@ -611,6 +614,7 @@
       if (coincideClave || coincideModelo || coincideParcial) {
         resultados.push({
           grupoNombre: clave.toUpperCase(), 
+          marca: marca,
           imagen: imagen,
           modelos: modelos
         });
@@ -619,45 +623,38 @@
     return resultados;
   }
 
-  // 🔥 FUNCIÓN PARA DETECTAR LA MARCA Y EL MODELO SEPARADOS
-  function extraerMarcaYModelo(modeloCompleto) {
-    let m = modeloCompleto.toLowerCase().trim();
+  // 🔥 FUNCIÓN SIMPLE: SOLO SEPARA EL MODELO DEL RESTO PARA LA ETIQUETA
+  function obtenerMarcaYModelo(m) {
+    // Como ahora en el diccionario los modelos ya vienen con su marca incluida
+    // solo necesitamos separar la primera palabra (la marca) del resto.
+    const palabras = m.split(' ');
+    if (palabras.length < 2) return { marca: "SAMSUNG", modelo: m.toUpperCase() }; // Fallback para los "a12", "j7"
 
-    if (m.startsWith("poco")) return { marca: "XIAOMI POCO", modelo: m.replace("poco ", "").toUpperCase() };
-    if (m.startsWith("redmi")) return { marca: "XIAOMI REDMI", modelo: m.replace("redmi ", "").toUpperCase() };
-    if (m.startsWith("mi ")) return { marca: "XIAOMI", modelo: m.replace("mi ", "MI ").toUpperCase() };
-    if (m.startsWith("note") && !m.includes("inf")) return { marca: "XIAOMI", modelo: "NOTE " + m.replace("note ", "").toUpperCase() };
-    if (m.startsWith("xiaomi")) return { marca: "XIAOMI", modelo: m.replace("xiaomi ", "").toUpperCase() };
+    const primera = palabras[0].toLowerCase();
     
-    if (m.startsWith("spark") || m.startsWith("pova") || m.startsWith("camon") || m.startsWith("pop") || m.startsWith("tecno")) 
-      return { marca: "TECNO", modelo: m.replace("tecno ", "").toUpperCase() };
-      
-    if (m.startsWith("infinix") || m.startsWith("x6") || m.startsWith("x7"))
-      return { marca: "INFINIX", modelo: m.replace("infinix ", "").toUpperCase() };
-      
-    if (m.startsWith("itel")) return { marca: "ITEL", modelo: m.replace("itel ", "").toUpperCase() };
+    // Diccionario de marcas conocidas
+    if (["vivo", "iqoo", "infinix", "tecno", "itel", "realme", "oppo", "oneplus"].includes(primera)) {
+      return { marca: primera.toUpperCase(), modelo: palabras.slice(1).join(' ').toUpperCase() };
+    }
+    if (primera === "xiaomi") {
+      // Si dice "xiaomi redmi", mostramos "XIAOMI REDMI"
+      if (palabras[1] && palabras[1].toLowerCase() === "redmi") return { marca: "XIAOMI REDMI", modelo: palabras.slice(2).join(' ').toUpperCase() };
+      if (palabras[1] && palabras[1].toLowerCase() === "poco") return { marca: "XIAOMI POCO", modelo: palabras.slice(2).join(' ').toUpperCase() };
+      return { marca: "XIAOMI", modelo: palabras.slice(1).join(' ').toUpperCase() };
+    }
+    if (primera === "redmi") return { marca: "XIAOMI REDMI", modelo: palabras.slice(1).join(' ').toUpperCase() };
+    if (primera === "poco") return { marca: "XIAOMI POCO", modelo: palabras.slice(1).join(' ').toUpperCase() };
+    if (primera === "mi" || primera === "black") return { marca: "XIAOMI", modelo: m.toUpperCase() };
+    if (primera === "moto") return { marca: "MOTOROLA", modelo: palabras.slice(1).join(' ').toUpperCase() };
+    if (primera === "zte") return { marca: "ZTE", modelo: palabras.slice(1).join(' ').toUpperCase() };
+    if (primera === "honor") return { marca: "HONOR", modelo: palabras.slice(1).join(' ').toUpperCase() };
+    if (primera === "huawei" || primera === "nova") return { marca: "HUAWEI", modelo: palabras.slice(1).join(' ').toUpperCase() };
     
-    if (m.startsWith("note")) return { marca: "INFINIX", modelo: m.toUpperCase() };
-
-    if (m.startsWith("moto")) return { marca: "MOTOROLA", modelo: m.replace("moto ", "").toUpperCase() };
-    
-    if (m.startsWith("oppo")) return { marca: "OPPO", modelo: m.replace("oppo ", "").toUpperCase() };
-    if (m.startsWith("realme")) return { marca: "REALME", modelo: m.replace("realme ", "").toUpperCase() };
-    if (m.startsWith("narzo")) return { marca: "REALME", modelo: m.toUpperCase() };
-    if (m.startsWith("vivo")) return { marca: "VIVO", modelo: m.replace("vivo ", "").toUpperCase() };
-    if (m.startsWith("iqoo")) return { marca: "iQOO", modelo: m.replace("iqoo ", "").toUpperCase() };
-    if (m.startsWith("oneplus")) return { marca: "ONEPLUS", modelo: m.replace("oneplus ", "").toUpperCase() };
-    
-    if (m.startsWith("zte")) return { marca: "ZTE", modelo: m.replace("zte ", "").toUpperCase() };
-    
-    if (m.startsWith("honor")) return { marca: "HONOR", modelo: m.replace("honor ", "").toUpperCase() };
-    if (m.startsWith("huawei")) return { marca: "HUAWEI", modelo: m.replace("huawei ", "").toUpperCase() };
-    if (m.startsWith("nova") || m.startsWith("y6") || m.startsWith("y9")) return { marca: "HUAWEI", modelo: m.toUpperCase() };
-
+    // Si no coincide con ninguna marca conocida, es porque es un modelo Samsung (a12, j7, etc)
     return { marca: "SAMSUNG", modelo: m.toUpperCase() };
   }
 
-  // 🔥 DIBUJAR LAS TARJETAS DE GRUPOS DE COMPATIBILIDAD (DISEÑO LISTA)
+  // 🔥 DIBUJAR LAS TARJETAS DE GRUPOS DE COMPATIBILIDAD
   function renderGruposCompatibles(grupos, term) {
     container.innerHTML = '';
     resultsCount.innerHTML = `<span>${grupos.length} grupo(s) encontrado(s)</span><span class="offline-tag" style="color:#3B82F6; border-color:#3B82F6;"><i class="fas fa-images"></i> Modo Catálogo</span>`;
@@ -678,9 +675,9 @@
 
     grupos.forEach(g => {
       
-      // 🔥 AQUÍ CREAMOS LAS FILAS DE LA LISTA
+      // Generamos las filas de la lista
       const listaHtml = g.modelos.map(m => {
-        const info = extraerMarcaYModelo(m);
+        const info = obtenerMarcaYModelo(m);
         return `
           <div class="compat-row">
             <span class="compat-brand-badge">${escapeHtml(info.marca)}</span>
@@ -694,7 +691,7 @@
       card.innerHTML = `
         <div class="card-header" style="flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 12px;">
           <div class="card-brand" style="color: #3B82F6; font-size: 11px;"><i class="fas fa-layer-group"></i> GRUPO DE COMPATIBILIDAD</div>
-          <div class="card-model" style="font-size: 20px;">${escapeHtml(g.grupoNombre)}</div>
+          <div class="card-model" style="font-size: 20px;">${escapeHtml(g.marca)} ${escapeHtml(g.grupoNombre)}</div>
         </div>
         
         <!-- Imagen de la pantalla -->
@@ -705,7 +702,6 @@
         <div style="padding-left: 4px;">
           <div style="font-size: 11px; font-weight: 700; color: var(--text-mute); margin-bottom: 8px; text-transform: uppercase;">Modelos Compatibles (${g.modelos.length}):</div>
           
-          <!-- 🔥 CONTENEDOR DE LA LISTA PRO -->
           <div class="compat-list-container">
             ${listaHtml}
           </div>
