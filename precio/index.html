@@ -216,7 +216,6 @@
     .card-type.orig { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: #4A2800; font-weight: 800; }
     .card-type.orig::before { content: '👑 '; font-size: 9px; }
     
-    /* 🔥 ETIQUETA DE COMPATIBILIDAD EN LA TARJETA */
     .card-type.compat { 
       background: rgba(59, 130, 246, 0.15); 
       color: #3B82F6; 
@@ -242,6 +241,25 @@
     .image-btn { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); }
     .whatsapp-btn { background: #25D366; color: white; }
     .edit-btn { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+    /* ============ CSS PARA LOS GRUPOS DE COMPATIBILIDAD ============ */
+    .modelos-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .chip-model {
+      background: var(--bg-elev);
+      color: var(--text-main);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border);
+    }
 
     /* ============ BOTTOM NAV ============ */
     .bottom-nav-wrapper {
@@ -378,11 +396,9 @@
         <h1>DR XIAOMI <span>Catálogo</span></h1>
       </div>
       <div class="header-actions">
-        <!-- 🔥 BOTÓN EXCLUSIVO PARA ADMIN -->
         <button class="icon-btn" id="adminEditBtn" title="Gestionar Listas y Proveedores" style="display: none; color: #3B82F6; border-color: rgba(59, 130, 246, 0.3);">
           <i class="fas fa-list-ul"></i>
         </button>
-
         <button class="icon-btn" id="techModeBtn" title="Modo Técnico" aria-label="Modo técnico">
           <i class="fas fa-microchip"></i>
         </button>
@@ -413,7 +429,6 @@
     <button class="filter-chip" data-filter="OLED">OLED</button>
     <button class="filter-chip" data-filter="LCD">LCD</button>
     <button class="filter-chip" data-filter="FAV">⭐ Favoritos</button>
-    <!-- 🔥 NUEVO FILTRO DE COMPATIBILIDAD -->
     <button class="filter-chip" data-filter="COMPAT">🔄 Compatibles</button>
   </div>
 
@@ -443,8 +458,9 @@
   import { db } from '/js/firebase.js';
   import { collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   
-  // 🔥 IMPORTAMOS EL DICCIONARIO EXTERNO (Asegúrate de que la ruta sea correcta)
-  import { COMPATIBILIDADES } from './precio/compatibles.js';
+  // 🔥 IMPORTAMOS EL DICCIONARIO EXTERNO 
+  // CORREGIDO: Como la app corre en /precio/, el archivo está en la misma carpeta.
+  import { COMPATIBILIDADES } from './compatibles.js';
 
   let sesion = null;
   try { sesion = JSON.parse(localStorage.getItem('drx_sesion') || 'null'); } catch(e) {}
@@ -517,58 +533,110 @@
     });
   }
 
-  // 🔥 BÚSQUEDA CON COMPATIBILIDADES Y FILTRO ESPECIAL
+  // 🔥 BÚSQUEDA NORMAL (Para filtros de productos)
   function performPreciseSearch(data, term) {
     if (!term.trim()) return data;
-    
     const tokens = getTokens(term);
-    const searchTerms = [term.toLowerCase()];
-    
-    // Si estamos en el filtro de COMPATIBLES, armamos una lista con el modelo y sus hermanos
-    if (currentFilter === "COMPAT") {
-      for (const [key, compatibles] of Object.entries(COMPATIBILIDADES)) {
-        if (term.toLowerCase().includes(key) || key.includes(term.toLowerCase())) {
-          searchTerms.push(...compatibles);
-        }
-      }
-    }
-    
+    if (!tokens.length) return data;
     const results = [];
     for (const item of data) {
       const mn = normalizeText(item.modelo), mk = normalizeText(item.marca);
       const combined = mn + " " + mk;
-      
-      let matches = false;
+      if (!tokens.every(t => combined.includes(t))) continue;
       let score = 0;
-      let esCompatible = false;
-      
-      for (const searchT of searchTerms) {
-        const searchTokens = getTokens(searchT);
-        if (searchTokens.length === 0) continue;
-        
-        if (searchTokens.every(t => combined.includes(t))) {
-          matches = true;
-          const joined = searchTokens.join(" ");
-          if (mn === joined) score += 100;
-          else if (mn.startsWith(joined)) score += 90;
-          else score += 50;
-          
-          if (searchT !== term.toLowerCase() && mn.includes(searchT)) {
-            esCompatible = true;
-          }
+      const joined = tokens.join(" ");
+      if (mn === joined) score = 100;
+      else if (mn.startsWith(joined)) score = 90;
+      else {
+        let pos = 0, ord = true;
+        for (const t of tokens) {
+          const idx = mn.indexOf(t, pos);
+          if (idx === -1) { ord = false; break; }
+          pos = idx + t.length;
         }
+        score = ord ? 80 : 50;
       }
+      score += tokens.length * 5;
+      results.push({ item, score });
+    }
+    results.sort((a, b) => b.score - a.score);
+    return results.map(r => r.item);
+  }
+
+  // 🔥 BÚSQUEDA EN EL DICCIONARIO DE COMPATIBILIDAD (Solo para el filtro COMPAT)
+  function buscarEnDiccionario(term) {
+    term = term.toLowerCase().trim();
+    if (!term) return [];
+
+    let resultados = [];
+    for (const [clave, grupo] of Object.entries(COMPATIBILIDADES)) {
+      // Validación de seguridad por si el grupo no tiene la estructura correcta
+      const modelos = grupo.modelos || [];
+      const imagen = grupo.imagen || 'https://via.placeholder.com/300x200?text=Sin+Imagen';
       
-      if (matches) {
-        if (mn.includes(term.toLowerCase())) score += 50; 
-        results.push({ item, score, esCompatible });
+      const coincideClave = clave.includes(term) || term.includes(clave);
+      const coincideModelo = modelos.some(m => m.includes(term) || term.includes(m));
+
+      if (coincideClave || coincideModelo) {
+        resultados.push({
+          grupoNombre: clave.toUpperCase(), 
+          imagen: imagen,
+          modelos: modelos
+        });
       }
     }
-    
-    results.sort((a, b) => b.score - a.score);
-    return results.map(r => ({ ...r.item, esCompatible: r.esCompatible }));
+    return resultados;
   }
-  
+
+  // 🔥 DIBUJAR LAS TARJETAS DE GRUPOS DE COMPATIBILIDAD
+  function renderGruposCompatibles(grupos, term) {
+    container.innerHTML = '';
+    resultsCount.innerHTML = `<span>${grupos.length} grupo(s) encontrado(s)</span><span class="offline-tag" style="color:#3B82F6; border-color:#3B82F6;"><i class="fas fa-images"></i> Modo Catálogo</span>`;
+
+    if (grupos.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-search"></i>
+          <p style="font-weight:600;margin-bottom:6px;">Sin resultados</p>
+          <p style="font-size:12px;">No hay compatibles registrados para "${escapeHtml(term)}"</p>
+        </div>
+      `;
+      return;
+    }
+
+    const view = document.createElement('div');
+    view.className = 'cards-view';
+
+    grupos.forEach(g => {
+      const listaHtml = g.modelos.map(m => `<span class="chip-model">${escapeHtml(m)}</span>`).join('');
+      
+      const card = document.createElement('div');
+      card.className = 'product-card is-compat'; 
+      card.innerHTML = `
+        <div class="card-header" style="flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 12px;">
+          <div class="card-brand" style="color: #3B82F6; font-size: 11px;"><i class="fas fa-layer-group"></i> GRUPO DE COMPATIBILIDAD</div>
+          <div class="card-model" style="font-size: 20px;">${escapeHtml(g.grupoNombre)}</div>
+        </div>
+        
+        <!-- Imagen de la pantalla -->
+        <div style="width: 100%; height: 220px; background: #000; border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px; display: flex; justify-content: center; border: 1px solid var(--border);">
+          <img src="${g.imagen}" alt="Pantalla ${g.grupoNombre}" style="object-fit: contain; height: 100%;" onerror="this.src='https://via.placeholder.com/300x200?text=Imagen+No+Disponible'">
+        </div>
+
+        <div style="padding-left: 8px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-mute); margin-bottom: 8px; text-transform: uppercase;">Modelos Compatibles (${g.modelos.length}):</div>
+          <div class="modelos-container">
+            ${listaHtml}
+          </div>
+        </div>
+      `;
+      view.appendChild(card);
+    });
+
+    container.appendChild(view);
+    renderedCount = 1; 
+  }
+
   function generateSuggestions(term) {
     if (!term.trim() || term.trim().length < 2) return [];
     const tokens = getTokens(term);
@@ -643,23 +711,33 @@
   const PAGE_SIZE = 30;
   let renderedCount = 0;
 
+  // 🔥 APLICAR FILTROS Y BÚSQUEDA
   function applyFiltersAndSearch(immediate = false) {
     if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    
     const run = () => {
+      const term = searchInput.value.trim();
+      
+      // 1. SI ESTAMOS EN EL FILTRO DE COMPATIBLES
+      if (currentFilter === "COMPAT") {
+        clearSearchBtn.style.display = term ? 'block' : 'none';
+        
+        if (!term) {
+          container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><p style="font-weight:600;margin-bottom:6px;">Buscador de Compatibilidad</p><p>Escribe un modelo (Ej: Vivo Y21S) para ver sus compatibles.</p></div>`;
+          resultsCount.innerHTML = `<span>Modo Compatibilidad</span>`;
+          return;
+        }
+
+        const gruposEncontrados = buscarEnDiccionario(term);
+        renderGruposCompatibles(gruposEncontrados, term);
+        return;
+      }
+
+      // 2. SI ESTAMOS EN LOS FILTROS NORMALES
       let data = [...allData];
       if (currentFilter === "FAV") data = data.filter(i => favorites.has(i.id));
-      else if (currentFilter === "COMPAT") {
-        // Si el filtro es COMPAT, no mostramos nada hasta que el usuario busque
-        if (!searchInput.value.trim()) {
-            filteredData = [];
-            updateResultsCount();
-            render(true);
-            return;
-        }
-      }
       else if (currentFilter !== "all") data = data.filter(i => i.tipo === currentFilter);
       
-      const term = searchInput.value.trim();
       if (term) {
         data = performPreciseSearch(data, term);
         clearSearchBtn.style.display = 'block';
@@ -677,6 +755,7 @@
       updateResultsCount();
       render(true);
     };
+    
     if (immediate) run();
     else {
       showSearchLoader();
@@ -733,11 +812,7 @@
   function updateResultsCount() {
     if (!resultsCount) return;
     const n = filteredData.length;
-    if (currentFilter === "COMPAT") {
-        resultsCount.innerHTML = `<span>${n} compatible${n !== 1 ? 's' : ''}</span><span class="offline-tag" style="color:#3B82F6; border-color:#3B82F6;"><i class="fas fa-search"></i> Buscando...</span>`;
-    } else {
-        resultsCount.innerHTML = `<span>${n} producto${n !== 1 ? 's' : ''}</span><span class="offline-tag"><span class="dot"></span>En vivo</span>`;
-    }
+    resultsCount.innerHTML = `<span>${n} producto${n !== 1 ? 's' : ''}</span><span class="offline-tag"><span class="dot"></span>En vivo</span>`;
   }
 
   function render(reset = true) {
@@ -747,19 +822,11 @@
       renderedCount = 0;
       if (!filteredData.length) {
         const term = searchInput.value.trim();
-        let emptyMsg = `No se encontró "${escapeHtml(term)}"`;
-        
-        if (currentFilter === "COMPAT" && !term) {
-            emptyMsg = `Escribe un modelo para buscar sus compatibles.`;
-        } else if (currentFilter === "COMPAT" && term) {
-            emptyMsg = `Ese modelo no tiene compatibles registrados.`;
-        }
-
         container.innerHTML = `
           <div class="empty-state">
             <i class="fas fa-search"></i>
             <p style="font-weight:600;margin-bottom:6px;">Sin resultados</p>
-            <p style="font-size:12px;">${emptyMsg}</p>
+            ${term ? `<p style="font-size:12px;">No se encontró "${escapeHtml(term)}"</p>` : ''}
           </div>
         `;
         return;
@@ -775,12 +842,11 @@
       const i = renderedCount + idx;
       const isOrig = item.tipo === 'ORIG';
       const isOled = item.tipo === 'OLED';
-      const isCompat = item.esCompatible;
       const typeClass = isOrig ? 'orig' : isOled ? 'oled' : '';
       const animStyle = i < 20 ? `animation-delay:${i * 12}ms` : `animation:none;opacity:1;transform:none`;
       
       return `
-      <div class="product-card ${isOrig ? 'is-orig' : ''} ${isCompat ? 'is-compat' : ''}" style="${animStyle}">
+      <div class="product-card ${isOrig ? 'is-orig' : ''}" style="${animStyle}">
         <div class="card-header">
           <div style="min-width:0;flex:1;">
             <div class="card-brand">${escapeHtml(item.marca)}</div>
@@ -792,7 +858,6 @@
         </div>
         <div class="card-specs">
           <span class="card-type ${typeClass}">${item.tipo}</span>
-          ${isCompat ? `<span class="card-type compat">Compatible</span>` : ''}
           ${techMode || isAdmin ? `<span class="supplier-badge">${escapeHtml(item.proveedor)}</span><span class="price-badge">Compra: ${item.compra}</span>` : ''}
         </div>
         <div class="card-price-row">
@@ -884,7 +949,6 @@
       await updateDoc(docRef, { compra, venta });
       showToast("Precio actualizado");
       document.getElementById('modalEdit').remove();
-      // La UI se actualizará sola gracias al onSnapshot
     } catch (e) {
       console.error(e);
       showToast("Error al guardar");
@@ -975,10 +1039,9 @@
       document.querySelectorAll(".filter-chip").forEach(x => x.classList.remove("active"));
       c.classList.add("active"); currentFilter = c.dataset.filter;
       
-      // Si eligen compatibles, limpiamos la barra y enfocamos para que escriban
       if (currentFilter === "COMPAT") {
         searchInput.value = "";
-        searchInput.placeholder = "Escribe un modelo (Ej: Poco F3)...";
+        searchInput.placeholder = "Escribe un modelo (Ej: Vivo Y21S)...";
         searchInput.focus();
       } else {
         searchInput.placeholder = "Buscar modelo... Ej: Redmi Note 10";
