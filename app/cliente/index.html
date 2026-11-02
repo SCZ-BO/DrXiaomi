@@ -2,354 +2,290 @@
 <html lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <meta name="theme-color" content="#0E0E0E">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0B" id="metaThemeColor">
   <title>DR. Xiaomi · Nuevo Recibo</title>
 
-  <!-- FAVICON Y MANIFEST -->
   <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
-  <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
-  <link rel="manifest" href="/manifest.json">
-
-  <!-- FUENTES E ICONOS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-  <!-- LIBRERÍAS PDF (Mantenemos jsPDF por si acaso, pero ya no se usa aquí) -->
+  
+  <!-- Librerías PDF por si acaso -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+  <!-- NUESTROS CSS GLOBALES -->
+  <link rel="stylesheet" href="/app/css/app-theme.css">
+  <link rel="stylesheet" href="/app/css/app-layouts.css">
+  <link rel="stylesheet" href="/app/css/app-components.css">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- ESTILOS ESPECÍFICOS DEL WIZARD -->
   <style>
-    :root { --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --brand: #E65100; --brand-hover: #BF360C; --brand-light: rgba(230, 81, 0, 0.1); }
-    [data-theme="dark"] { --bg-main: #0E0E0E; --bg-card: #181818; --bg-elev: #242424; --text-main: #F5F5F5; --text-mute: #888888; --border: #2A2A2A; }
-    [data-theme="light"] { --bg-main: #F9F9F9; --bg-card: #FFFFFF; --bg-elev: #F0F0F0; --text-main: #111111; --text-mute: #666666; --border: #E0E0E0; }
+    .wizard-progress { padding: 10px 0 20px 0; display: flex; justify-content: center; gap: 8px; }
+    .wizard-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg-elev-2); transition: 0.3s; }
+    .wizard-dot.active { background: var(--brand-500); transform: scale(1.3); }
+    .wizard-dot.done { background: var(--brand-500); opacity: 0.5; }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    .wizard-panel { display: none; animation: fadeUp 0.3s ease; }
+    .wizard-panel.active { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .step-indicator { font-size: 12px; font-weight: 800; color: var(--brand-500); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+    .field-title { font-size: 11px; font-weight: 700; margin-bottom: 8px; display: block; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Grids de selección */
+    .marcas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+    .marca-btn { padding: 12px 6px; border-radius: 10px; border: 1px solid var(--border-1); background: var(--bg-elev-1); color: var(--text-1); font-weight: 600; font-size: 12px; cursor: pointer; transition: 0.2s; }
+    .marca-btn.active { background: var(--brand-100); border-color: var(--brand-500); color: var(--brand-500); font-weight: 800; }
     
-    html, body { height: 100%; overflow: hidden; }
-    body { background-color: var(--bg-main); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
-    
-    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-main); border-bottom: 1px solid var(--border); z-index: 100; }
-    .app-body { flex: 1; overflow-y: auto; padding: 12px 12px 12px 12px; -webkit-overflow-scrolling: touch; }
-    
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-logo { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
-    .brand-text h1 { font-size: 14px; font-weight: 700; margin: 0; }
-    .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
-    
-    .header-actions { display: flex; gap: 6px; }
-    .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-    .icon-btn:active { transform: scale(0.95); }
+    .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .radio-option { padding: 12px 6px; border-radius: 10px; border: 1px solid var(--border-1); background: var(--bg-elev-1); color: var(--text-1); font-weight: 600; font-size: 13px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; }
+    .radio-option.active { background: var(--brand-100); border-color: var(--brand-500); color: var(--brand-500); font-weight: 800; }
 
-    .wizard-progress { padding: 4px 0 16px 0; display: flex; justify-content: center; gap: 8px; }
-    .wizard-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg-elev); transition: 0.3s; }
-    .wizard-dot.active { background: var(--brand); transform: scale(1.2); }
-    .wizard-dot.done { background: var(--brand); opacity: 0.5; }
+    .chips-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .chip-btn { padding: 10px 14px; border-radius: 20px; background: var(--bg-elev-1); border: 1px solid var(--border-1); color: var(--text-1); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+    .chip-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: white; }
 
-    .step-indicator { font-size: 11px; font-weight: 600; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; }
-    
-    .field { position: relative; margin-bottom: 10px; }
-    .field input, .field textarea { width: 100%; padding: 12px 12px; background: var(--bg-elev); border: 1px solid transparent; border-radius: var(--radius-sm); color: var(--text-main); font-size: 14px; font-family: inherit; transition: 0.2s; outline: none; }
-    .field input:focus, .field textarea:focus { border-color: var(--brand); background: var(--bg-card); }
-    .field label { position: absolute; left: 12px; top: 12px; font-size: 13px; color: var(--text-mute); transition: 0.2s; pointer-events: none; }
-    .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label, .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label { top: 4px; font-size: 9px; font-weight: 700; color: var(--brand); }
+    /* Checklist */
+    .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
+    .check-item { padding: 10px 4px; background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: 8px; color: var(--text-1); font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; text-align: center; }
+    .check-item.ok { background: rgba(16, 185, 129, 0.1); border-color: var(--success-500); color: var(--success-500); }
+    .check-item.falla { background: rgba(239, 68, 68, 0.1); border-color: var(--danger-500); color: var(--danger-500); }
 
-    .field-title { font-size: 11px; font-weight: 700; margin-bottom: 8px; display: block; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
-    .marcas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
-    .marca-btn { padding: 10px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; font-size: 11px; cursor: pointer; transition: 0.2s; }
-    .marca-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
-    
-    .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .radio-option { padding: 12px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: 0.2s; }
-    .radio-option.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
-    .radio-option i { font-size: 14px; }
-
-    .chips-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-    .chip-btn { padding: 10px 14px; border-radius: var(--radius-sm); background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-    .chip-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
-
-    .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
-    .check-item { padding: 10px 4px; background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); font-size: 10px; font-weight: 500; cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; text-align: center; white-space: nowrap; }
-    .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 11px; }
-    .check-item.ok { background: rgba(34, 197, 94, 0.1); border-color: #22C55E; color: #22C55E; }
-    .check-item.ok::before { content: '✓'; color: #22C55E; }
-    .check-item.falla { background: rgba(239, 68, 68, 0.1); border-color: #EF4444; color: #EF4444; }
-    .check-item.falla::before { content: '✕'; color: #EF4444; }
-
-    .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .foto-slot { aspect-ratio: 4/3; border-radius: var(--radius-sm); border: 1px dashed var(--border); background: var(--bg-elev); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-mute); font-size: 11px; cursor: pointer; position: relative; overflow: hidden; }
+    /* Fotos */
+    .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .foto-slot { aspect-ratio: 4/3; border-radius: 12px; border: 1px dashed var(--border-2); background: var(--bg-elev-1); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-3); font-size: 12px; cursor: pointer; position: relative; overflow: hidden; }
     .foto-slot img { width: 100%; height: 100%; object-fit: cover; }
-    .foto-remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: var(--radius-sm); background: rgba(0,0,0,0.7); color: white; border: none; display: flex; align-items: center; justify-content: center; }
+    .foto-remove { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.7); color: white; border: none; display: flex; align-items: center; justify-content: center; }
 
-    .servicio-item { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
-    .servicio-item input.servicio-desc { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); }
-    .servicio-item input.servicio-costo { width: 80px; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--brand); font-weight: 700; text-align: right; }
-    .removeServicio { width: 38px; height: 38px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.2); cursor: pointer; }
+    /* Servicios */
+    .servicio-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+    .servicio-item input.servicio-desc { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--border-1); background: var(--bg-elev-1); color: var(--text-1); }
+    .servicio-item input.servicio-costo { width: 90px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-1); background: var(--bg-elev-1); color: var(--brand-500); font-weight: 800; text-align: right; }
+    .removeServicio { width: 42px; height: 42px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); color: var(--danger-500); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    .resumen-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 500; margin-bottom: 10px; }
-    .resumen-saldo { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; color: var(--brand); font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
-
-    .wizard-footer { 
-      padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); 
-      background: var(--bg-main); border-top: 1px solid var(--border); 
-      display: flex; gap: 8px; z-index: 100; 
-    }
-    .btn { padding: 14px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
-    .btn-primary { background: var(--brand); color: white; }
-    .btn-primary:active { background: var(--brand-hover); transform: scale(0.98); }
-    .btn-secondary { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); }
-    #btnPrev { flex: 0 0 50px; padding: 14px 0; }
-    #btnNext, #btnGenerate { flex: 1; }
-
-    .sheet-backdrop, .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 9999; }
-    .sheet-backdrop { align-items: flex-end; }
-    .sheet-backdrop.show, .modal-backdrop.show { opacity: 1; pointer-events: auto; }
-    .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 20px; width: 100%; max-width: 550px; border-top: 1px solid var(--border); }
-    .modal { background: var(--bg-card); padding: 20px; border-radius: var(--radius-md); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
-    .hidden { display: none !important; }
-
-    .preview-recibo { background: white; color: #1a1a1a; border-radius: var(--radius-sm); padding: 16px; font-size: 12px; }
-    .preview-header { border-bottom: 2px solid var(--brand); margin: -16px -16px 12px; padding: 12px 16px; display: flex; align-items: center; gap: 8px; background: #f9fafb;}
-    .preview-header img { width: 32px; height: 32px; object-fit: contain; }
-    .preview-section { background: #f9fafb; border-radius: var(--radius-sm); padding: 10px; margin-bottom: 10px; border: 1px solid #eee; }
-    .preview-totales { border-top: 1px solid #ddd; margin-top: 6px; padding-top: 6px; }
-
-    .hidden-file-input { position: absolute; width: 1px; height: 1px; opacity: 0; z-index: -1; }
+    /* Preview */
+    .preview-recibo { background: white; color: #1a1a1a; border-radius: 12px; padding: 16px; font-size: 12px; }
+    .preview-header { border-bottom: 2px solid var(--brand-500); margin: -16px -16px 12px; padding: 12px 16px; display: flex; align-items: center; gap: 8px; background: #f9fafb;}
   </style>
 </head>
 <body>
 
-  <header class="app-header">
-    <div class="brand">
-      <button class="icon-btn" id="backToPanelBtn"><i class="fas fa-arrow-left"></i></button>
-      <div class="brand-logo"><img src="/imagenes/web-app-manifest-192x192.png" onerror="this.style.display='none'"></div>
-      <div class="brand-text"><h1>NUEVO RECIBO</h1><p id="userInfo">Cargando...</p></div>
-    </div>
-    
-    <div class="header-actions">
-      <button class="icon-btn" id="homeBtn" title="Ir al Panel Principal"><i class="fas fa-home"></i></button>
-      <button class="icon-btn" id="themeToggleBtn" title="Cambiar Tema"><i class="fas fa-sun"></i></button>
-      <button class="icon-btn" id="clearDraftBtn" title="Limpiar Borrador"><i class="fas fa-trash-alt"></i></button>
-      <button class="icon-btn" id="preciosBtn" title="Buscar precio">
-        <img src="/imagenes/icon-precio.png" alt="Precio" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
-      </button>
-      <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;">
-        <img src="/imagenes/icon-reportes.png" alt="Reportes" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
-      </button>
-      <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
-        <img src="/imagenes/icon-salir.png" alt="Salir" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
-      </button>
-    </div>
-  </header>
+  <main class="app-container">
+    <!-- HEADER CON ICONOS PNG -->
+    <header class="app-header">
+      <div class="brand">
+        <button class="icon-btn" id="backToPanelBtn">
+          <img src="/app/icons/volver.png" width="20" height="20" alt="Volver">
+        </button>
+        <div class="brand-text">
+          <h1>Nuevo Recibo</h1>
+          <p id="userInfo">Cargando...</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="clearDraftBtn" title="Limpiar Borrador">
+          <img src="/app/icons/eliminar.png" width="18" height="18" alt="Limpiar">
+        </button>
+        <button class="icon-btn" id="themeToggleBtn" title="Cambiar Tema">
+          <img src="/app/icons/tema.png" width="18" height="18" alt="Tema">
+        </button>
+      </div>
+    </header>
 
-  <div class="app-body" id="appBody">
-    <div class="wizard-progress" id="wizardProgress">
-      <div class="wizard-dot active"></div><div class="wizard-dot"></div><div class="wizard-dot"></div>
-      <div class="wizard-dot"></div><div class="wizard-dot"></div><div class="wizard-dot"></div><div class="wizard-dot"></div>
-    </div>
+    <div class="app-content" id="appBody">
+      <div class="wizard-progress" id="wizardProgress">
+        <div class="wizard-dot active"></div><div class="wizard-dot"></div><div class="wizard-dot"></div>
+        <div class="wizard-dot"></div><div class="wizard-dot"></div><div class="wizard-dot"></div><div class="wizard-dot"></div>
+      </div>
 
-    <main id="wizardContent">
-      <!-- PASO 1 -->
-      <section class="wizard-panel" data-panel="1" aria-hidden="false">
-        <div class="step-indicator">Paso 1 · Cliente</div>
-        <div class="card">
-          <div class="field"><input type="text" id="nombre" placeholder=" " required autocomplete="name"><label for="nombre">Nombre completo *</label></div>
-          <div class="field"><input type="tel" id="telefono" placeholder=" " required inputmode="numeric" maxlength="8"><label for="telefono">Teléfono / WhatsApp *</label></div>
-        </div>
-      </section>
+      <main id="wizardContent">
+        <!-- PASO 1: CLIENTE -->
+        <section class="wizard-panel active" data-panel="1">
+          <div class="step-indicator">Paso 1 · Cliente</div>
+          <div class="card">
+            <div class="field"><input type="text" id="nombre" placeholder=" " autocomplete="name"><label for="nombre">Nombre completo *</label></div>
+            <div class="field" style="margin-bottom: 0;"><input type="tel" id="telefono" placeholder=" " inputmode="numeric" maxlength="8"><label for="telefono">Teléfono / WhatsApp *</label></div>
+          </div>
+        </section>
 
-      <!-- PASO 2 -->
-      <section class="wizard-panel hidden" data-panel="2" aria-hidden="true">
-        <div class="step-indicator">Paso 2 · Equipo</div>
-        <div class="card">
-          <label class="field-title">Marca *</label>
-          <div class="marcas-grid" id="marcasGrid">
-            <button type="button" class="marca-btn" data-marca="Xiaomi">Xiaomi</button>
-            <button type="button" class="marca-btn" data-marca="Samsung">Samsung</button>
-            <button type="button" class="marca-btn" data-marca="Huawei">Huawei</button>
-            <button type="button" class="marca-btn" data-marca="Tecno">Tecno</button>
-            <button type="button" class="marca-btn" data-marca="Honor">Honor</button>
-            <button type="button" class="marca-btn" data-marca="Infinix">Infinix</button>
-            <button type="button" class="marca-btn" data-marca="iPhone">iPhone</button>
-            <button type="button" class="marca-btn" data-marca="Otro">Otro</button>
-          </div>
-          <input type="hidden" id="marca" required>
-        </div>
-        <div class="card">
-          <div class="field" style="margin-bottom: 10px;"><input type="text" id="modelo" placeholder=" " required><label for="modelo">Modelo del equipo *</label></div>
-          <div class="field" style="margin-bottom: 0;"><input type="text" id="color" placeholder=" "><label for="color">Color (opcional)</label></div>
-        </div>
-        <div class="card">
-          <label class="field-title">¿El equipo enciende? *</label>
-          <div class="radio-group" id="enciendeGroup">
-            <button type="button" class="radio-option" data-value="Sí"><i class="fas fa-power-off"></i><span>Sí</span></button>
-            <button type="button" class="radio-option" data-value="No"><i class="fas fa-ban"></i><span>No</span></button>
-            <button type="button" class="radio-option" data-value="A veces"><i class="fas fa-circle-half-stroke"></i><span>A veces</span></button>
-          </div>
-          <input type="hidden" id="enciende" required>
-        </div>
-      </section>
-
-      <!-- PASO 3 -->
-      <section class="wizard-panel hidden" data-panel="3" aria-hidden="true">
-        <div class="step-indicator">Paso 3 · Recepción</div>
-        <div class="card hidden" id="cardReparaciones">
-          <label class="field-title">1. Motivo de Reparación</label>
-          <div class="chips-group" id="motivoIngresoGroup">
-            <button type="button" class="chip-btn" data-value="Cambio de pantalla">📱 Cambio pantalla</button>
-            <button type="button" class="chip-btn" data-value="Cambio de batería">🔋 Cambio batería</button>
-            <button type="button" class="chip-btn" data-value="Módulo de carga">🔌 Módulo carga</button>
-            <button type="button" class="chip-btn" data-value="Cambio de tapa">🪵 Cambio tapa</button>
-            <button type="button" class="chip-btn" data-value="Cambio de visor cámara">📸 Visor cámara</button>
-            <button type="button" class="chip-btn" data-value="Problema de placa">🔬 Placa</button>
-            <button type="button" class="chip-btn" data-value="Otro">🛠️ Otro</button>
-          </div>
-          <input type="hidden" id="motivoIngreso" value="">
-        </div>
-        <div class="card hidden" id="cardAuditoriaGeneral">
-          <label class="field-title">2. Auditoría General</label>
-          <div class="checklist-grid" id="checklistGeneralGroup">
-            <button type="button" class="check-item" data-item="Cámaras"><span>Cámaras</span></button>
-            <button type="button" class="check-item" data-item="Audio / mic"><span>Audio / mic</span></button>
-            <button type="button" class="check-item" data-item="Wi-Fi / señal"><span>Wi-Fi / señal</span></button>
-            <button type="button" class="check-item" data-item="Táctil"><span>Táctil</span></button>
-            <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
-            <button type="button" class="check-item" data-item="Batería"><span>Batería</span></button>
-          </div>
-        </div>
-        <div class="card hidden" id="cardAuditoriaFisica">
-          <label class="field-title">Auditoría Física</label>
-          <div class="checklist-grid" id="checklistFisicoGroup">
-            <button type="button" class="check-item" data-item="Pantalla"><span>Pantalla sana</span></button>
-            <button type="button" class="check-item" data-item="Tapa trasera"><span>Tapa trasera</span></button>
-            <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
-          </div>
-        </div>
-        <input type="hidden" id="checklistResultados" value="">
-        <div class="card">
-          <label class="field-title">Detalles extra (opcional)</label>
-          <div class="field" style="margin-bottom:0;"><textarea id="fallaDetalle" placeholder=" " rows="2"></textarea><label for="fallaDetalle">Escribe algo más...</label></div>
-        </div>
-      </section>
-
-      <!-- PASO 4 -->
-      <section class="wizard-panel hidden" data-panel="4" aria-hidden="true">
-        <div class="step-indicator">Paso 4 · Seguridad</div>
-        <div class="card">
-          <div class="radio-group" id="tipoSeguridadGroup" style="margin-bottom:12px;">
-            <button type="button" class="radio-option active" data-value="patron"><i class="fas fa-braille"></i><span>Patrón</span></button>
-            <button type="button" class="radio-option" data-value="pin"><i class="fas fa-hashtag"></i><span>PIN</span></button>
-            <button type="button" class="radio-option" data-value="ninguno"><i class="fas fa-lock-open"></i><span>Ninguno</span></button>
-          </div>
-          <input type="hidden" id="tipoSeguridad" value="patron">
-          
-          <div id="pinContainer" class="hidden">
-            <div class="field"><input type="text" id="pinInput" placeholder=" " maxlength="12" inputmode="numeric"><label for="pinInput">PIN de acceso</label></div>
-          </div>
-
-          <div id="patronContainer">
-            <div style="position: relative; width: 100%; max-width: 260px; margin: 0 auto; aspect-ratio: 1 / 1;">
-              <canvas id="bgCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
-              <canvas id="lineCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%; touch-action: none;"></canvas>
+        <!-- PASO 2: EQUIPO -->
+        <section class="wizard-panel" data-panel="2">
+          <div class="step-indicator">Paso 2 · Equipo</div>
+          <div class="card">
+            <label class="field-title">Marca *</label>
+            <div class="marcas-grid" id="marcasGrid">
+              <button type="button" class="marca-btn" data-marca="Xiaomi">Xiaomi</button>
+              <button type="button" class="marca-btn" data-marca="Samsung">Samsung</button>
+              <button type="button" class="marca-btn" data-marca="Huawei">Huawei</button>
+              <button type="button" class="marca-btn" data-marca="Tecno">Tecno</button>
+              <button type="button" class="marca-btn" data-marca="Honor">Honor</button>
+              <button type="button" class="marca-btn" data-marca="Infinix">Infinix</button>
+              <button type="button" class="marca-btn" data-marca="iPhone">iPhone</button>
+              <button type="button" class="marca-btn" data-marca="Otro">Otro</button>
             </div>
-            <div style="text-align:center;margin:8px 0;">
-              <span id="pattern-sequence" style="font-size: 12px; font-weight: 700; color: var(--brand);">Sin patrón</span>
+            <input type="hidden" id="marca">
+          </div>
+          <div class="card">
+            <div class="field"><input type="text" id="modelo" placeholder=" "><label for="modelo">Modelo del equipo *</label></div>
+            <div class="field" style="margin-bottom: 0;"><input type="text" id="color" placeholder=" "><label for="color">Color (opcional)</label></div>
+          </div>
+          <div class="card">
+            <label class="field-title">¿El equipo enciende? *</label>
+            <div class="radio-group" id="enciendeGroup">
+              <button type="button" class="radio-option" data-value="Sí"><i class="fas fa-power-off"></i><span>Sí</span></button>
+              <button type="button" class="radio-option" data-value="No"><i class="fas fa-ban"></i><span>No</span></button>
+              <button type="button" class="radio-option" data-value="A veces"><i class="fas fa-circle-half-stroke"></i><span>A veces</span></button>
             </div>
-            <button type="button" id="clearPattern" class="btn btn-secondary" style="width: 100%; padding:8px; font-size:12px;"><i class="fas fa-eraser"></i> Limpiar</button>
+            <input type="hidden" id="enciende">
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- PASO 5 -->
-      <section class="wizard-panel hidden" data-panel="5" aria-hidden="true">
-        <div class="step-indicator">Paso 5 · Fotos</div>
-        <div class="card">
-          <div class="fotos-grid" id="fotosGrid">
-            <button type="button" class="foto-slot" data-slot="0"><i class="fas fa-camera"></i><span>Añadir</span></button>
-            <button type="button" class="foto-slot" data-slot="1"><i class="fas fa-camera"></i><span>Añadir</span></button>
-            <button type="button" class="foto-slot" data-slot="2"><i class="fas fa-camera"></i><span>Añadir</span></button>
-            <button type="button" class="foto-slot" data-slot="3"><i class="fas fa-camera"></i><span>Añadir</span></button>
+        <!-- PASO 3: RECEPCIÓN -->
+        <section class="wizard-panel" data-panel="3">
+          <div class="step-indicator">Paso 3 · Recepción</div>
+          <div class="card" id="cardReparaciones" style="display: none;">
+            <label class="field-title">1. Motivo de Reparación</label>
+            <div class="chips-group" id="motivoIngresoGroup">
+              <button type="button" class="chip-btn" data-value="Cambio de pantalla">📱 Cambio pantalla</button>
+              <button type="button" class="chip-btn" data-value="Cambio de batería">🔋 Cambio batería</button>
+              <button type="button" class="chip-btn" data-value="Módulo de carga">🔌 Módulo carga</button>
+              <button type="button" class="chip-btn" data-value="Cambio de tapa">🪵 Cambio tapa</button>
+              <button type="button" class="chip-btn" data-value="Problema de placa">🔬 Placa</button>
+              <button type="button" class="chip-btn" data-value="Otro">🛠️ Otro</button>
+            </div>
+            <input type="hidden" id="motivoIngreso" value="">
           </div>
-        </div>
-      </section>
-
-      <!-- PASO 6 -->
-      <section class="wizard-panel hidden" data-panel="6" aria-hidden="true">
-        <div class="step-indicator">Paso 6 · Costos</div>
-        <div class="card">
-          <div class="servicios-container" id="serviciosList"></div>
-          <button type="button" id="addServicio" class="btn btn-secondary" style="width: 100%; margin-top: 6px; font-size: 12px; padding:10px;"><i class="fas fa-plus"></i> Añadir otro servicio</button>
-          <div style="margin-top: 12px;">
-            <label class="field-title" style="font-size: 10px;">Precios rápidos</label>
-            <div class="chips-group" id="preciosRapidosGroup" style="margin-bottom:0;">
-              <button type="button" class="chip-btn" data-precio="50">Bs. 50</button>
-              <button type="button" class="chip-btn" data-precio="100">Bs. 100</button>
-              <button type="button" class="chip-btn" data-precio="200">Bs. 200</button>
-              <button type="button" class="chip-btn" data-precio="350">Bs. 350</button>
-              <button type="button" class="chip-btn" data-precio="500">Bs. 500</button>
+          <div class="card" id="cardAuditoriaGeneral">
+            <label class="field-title">2. Auditoría General</label>
+            <div class="checklist-grid" id="checklistGeneralGroup">
+              <button type="button" class="check-item" data-item="Cámaras"><span>Cámaras</span></button>
+              <button type="button" class="check-item" data-item="Audio"><span>Audio</span></button>
+              <button type="button" class="check-item" data-item="Wi-Fi"><span>Wi-Fi</span></button>
+              <button type="button" class="check-item" data-item="Táctil"><span>Táctil</span></button>
+              <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
+              <button type="button" class="check-item" data-item="Batería"><span>Batería</span></button>
             </div>
           </div>
-        </div>
-        <div class="card">
-          <div class="resumen-row"><span>Total</span><strong id="costoTotalDisplay">Bs. 0.00</strong></div>
-          <div class="field" style="margin-bottom:0;"><input type="number" id="adelanto" placeholder=" " value="0"><label for="adelanto">Adelanto</label></div>
-          <div class="resumen-row resumen-saldo"><span>Saldo pendiente</span><strong id="saldoDisplay">Bs. 0.00</strong></div>
-        </div>
-        <input type="hidden" id="costoTotal" value="0">
-      </section>
+          <input type="hidden" id="checklistResultados" value="">
+          <div class="card">
+            <label class="field-title">Detalles extra</label>
+            <div class="field" style="margin-bottom:0;"><textarea id="fallaDetalle" placeholder=" " rows="2"></textarea><label for="fallaDetalle">Escribe algo más...</label></div>
+          </div>
+        </section>
 
-      <!-- PASO 7 -->
-      <section class="wizard-panel hidden" data-panel="7" aria-hidden="true">
-        <div class="step-indicator">Paso 7 · Listo</div>
-        <div id="previewContainer"></div>
-      </section>
-    </main>
-  </div>
+        <!-- PASO 4: SEGURIDAD -->
+        <section class="wizard-panel" data-panel="4">
+          <div class="step-indicator">Paso 4 · Seguridad</div>
+          <div class="card">
+            <div class="radio-group" id="tipoSeguridadGroup" style="margin-bottom:16px;">
+              <button type="button" class="radio-option active" data-value="patron"><i class="fas fa-braille"></i><span>Patrón</span></button>
+              <button type="button" class="radio-option" data-value="pin"><i class="fas fa-hashtag"></i><span>PIN</span></button>
+              <button type="button" class="radio-option" data-value="ninguno"><i class="fas fa-lock-open"></i><span>Ninguno</span></button>
+            </div>
+            <input type="hidden" id="tipoSeguridad" value="patron">
+            
+            <div id="pinContainer" style="display: none;">
+              <div class="field"><input type="text" id="pinInput" placeholder=" " maxlength="12" inputmode="numeric"><label for="pinInput">PIN de acceso</label></div>
+            </div>
 
-  <footer class="wizard-footer" id="wizardFooter">
-    <button type="button" class="btn btn-secondary" id="btnPrev" style="display: none;"><i class="fas fa-arrow-left"></i></button>
-    <button type="button" class="btn btn-primary" id="btnNext">Siguiente <i class="fas fa-arrow-right"></i></button>
-    <button type="button" class="btn btn-primary" id="btnGenerate" style="display: none;"><i class="fas fa-paper-plane"></i> Generar y Enviar</button>
-  </footer>
+            <div id="patronContainer">
+              <div style="position: relative; width: 100%; max-width: 260px; margin: 0 auto; aspect-ratio: 1 / 1;">
+                <canvas id="bgCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+                <canvas id="lineCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%; touch-action: none;"></canvas>
+              </div>
+              <div style="text-align:center;margin:12px 0;">
+                <span id="pattern-sequence" style="font-size: 13px; font-weight: 700; color: var(--brand-500);">Sin patrón</span>
+              </div>
+              <button type="button" id="clearPattern" class="btn btn-secondary" style="width: 100%;"><i class="fas fa-eraser"></i> Borrar patrón</button>
+            </div>
+          </div>
+        </section>
 
-  <!-- MODAL DE ÉXITO (Actualizado para enviar Link) -->
-  <div class="modal-backdrop" id="successModal">
-    <div class="modal">
-      <div style="font-size: 48px; color: #22C55E; margin-bottom: 16px;"><i class="fas fa-check-circle"></i></div>
-      <h3 style="font-size: 20px; margin-bottom: 8px;">¡Recibo guardado!</h3>
-      <p style="font-size: 14px; color: var(--text-mute); margin-bottom: 24px;" id="successNumero">REC-XXX</p>
+        <!-- PASO 5: FOTOS -->
+        <section class="wizard-panel" data-panel="5">
+          <div class="step-indicator">Paso 5 · Fotos</div>
+          <div class="card">
+            <div class="fotos-grid" id="fotosGrid">
+              <button type="button" class="foto-slot" data-slot="0"><i class="fas fa-camera"></i><span>Añadir</span></button>
+              <button type="button" class="foto-slot" data-slot="1"><i class="fas fa-camera"></i><span>Añadir</span></button>
+              <button type="button" class="foto-slot" data-slot="2"><i class="fas fa-camera"></i><span>Añadir</span></button>
+              <button type="button" class="foto-slot" data-slot="3"><i class="fas fa-camera"></i><span>Añadir</span></button>
+            </div>
+          </div>
+        </section>
+
+        <!-- PASO 6: COSTOS -->
+        <section class="wizard-panel" data-panel="6">
+          <div class="step-indicator">Paso 6 · Costos</div>
+          <div class="card">
+            <div class="servicios-container" id="serviciosList"></div>
+            <button type="button" id="addServicio" class="btn btn-secondary" style="width: 100%; margin-top: 8px;"><i class="fas fa-plus"></i> Añadir otro servicio</button>
+            <div style="margin-top: 16px;">
+              <label class="field-title">Precios rápidos</label>
+              <div class="chips-group" id="preciosRapidosGroup">
+                <button type="button" class="chip-btn" data-precio="50">Bs. 50</button>
+                <button type="button" class="chip-btn" data-precio="100">Bs. 100</button>
+                <button type="button" class="chip-btn" data-precio="200">Bs. 200</button>
+                <button type="button" class="chip-btn" data-precio="350">Bs. 350</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 12px;"><span>Total</span><strong id="costoTotalDisplay" style="color: var(--brand-500); font-size: 18px;">Bs. 0.00</strong></div>
+            <div class="field"><input type="number" id="adelanto" placeholder=" " value="0"><label for="adelanto">Adelanto</label></div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-1); padding-top: 12px; margin-top: 12px; color: var(--brand-500); font-weight: 800; font-size: 16px;"><span>Saldo a Pagar</span><strong id="saldoDisplay">Bs. 0.00</strong></div>
+          </div>
+          <input type="hidden" id="costoTotal" value="0">
+        </section>
+
+        <!-- PASO 7: PREVIEW -->
+        <section class="wizard-panel" data-panel="7">
+          <div class="step-indicator">Paso 7 · Listo</div>
+          <div id="previewContainer"></div>
+        </section>
+      </main>
+    </div>
+
+    <!-- FOOTER (BOTONES) -->
+    <div style="padding: 16px; background: var(--bg-base); border-top: 1px solid var(--border-1); display: flex; gap: 12px; padding-bottom: calc(16px + env(safe-area-inset-bottom));">
+      <button type="button" class="btn btn-secondary" id="btnPrev" style="display: none; flex: 0 0 50px; padding: 14px 0;"><i class="fas fa-arrow-left"></i></button>
+      <button type="button" class="btn btn-primary" id="btnNext" style="flex: 1;">Siguiente <i class="fas fa-arrow-right"></i></button>
+      <button type="button" class="btn btn-primary" id="btnGenerate" style="display: none; flex: 1;"><i class="fas fa-paper-plane"></i> Generar Recibo</button>
+    </div>
+  </main>
+
+  <!-- MODAL ÉXITO -->
+  <div class="sheet-backdrop" id="successModal">
+    <div class="sheet" style="text-align: center;">
+      <div class="sheet-handle"></div>
+      <div style="font-size: 56px; color: var(--success-500); margin-bottom: 16px;"><i class="fas fa-check-circle"></i></div>
+      <h3 style="font-size: 24px; font-weight: 800; margin-bottom: 8px; color: var(--text-1);">¡Recibo guardado!</h3>
+      <p style="font-size: 15px; color: var(--text-3); margin-bottom: 24px;" id="successNumero">REC-XXX</p>
       
       <div style="display: flex; flex-direction: column; gap: 10px;">
-        <!-- 🔥 BOTÓN PRINCIPAL: ENVIAR LINK POR WHATSAPP -->
-        <button class="btn" style="background:#25D366;color:white;" id="sendWhatsappBtn"><i class="fab fa-whatsapp"></i> Enviar recibo por WhatsApp</button>
-        
-        <!-- BOTÓN SECUNDARIO: IR AL PANEL -->
+        <button class="btn btn-whatsapp" id="sendWhatsappBtn"><i class="fab fa-whatsapp"></i> Enviar recibo por WhatsApp</button>
         <button class="btn btn-secondary" id="backToPanelBtn2">Volver al panel</button>
       </div>
     </div>
   </div>
 
+  <!-- MODAL FOTO -->
   <div class="sheet-backdrop" id="fotoSheet">
     <div class="sheet">
-      <h3 style="margin-bottom: 16px; text-align: center;">Añadir foto</h3>
-      <button type="button" class="btn btn-primary" id="btnTomarFoto" style="width: 100%; margin-bottom: 10px;"><i class="fas fa-camera"></i> Cámara</button>
-      <button type="button" class="btn btn-secondary" id="btnSubirFoto" style="width: 100%; margin-bottom: 10px;"><i class="fas fa-image"></i> Galería</button>
-      <button type="button" class="btn" id="btnCancelarFoto" style="width: 100%; background:transparent; color:var(--text-mute);">Cancelar</button>
+      <div class="sheet-handle"></div>
+      <h3 style="margin-bottom: 20px; text-align: center; font-weight: 800;">Añadir foto</h3>
+      <button type="button" class="btn btn-primary" id="btnTomarFoto" style="width: 100%; margin-bottom: 10px;"><i class="fas fa-camera"></i> Tomar Foto</button>
+      <button type="button" class="btn btn-secondary" id="btnSubirFoto" style="width: 100%; margin-bottom: 10px;"><i class="fas fa-image"></i> Elegir de Galería</button>
+      <button type="button" class="btn" id="btnCancelarFoto" style="width: 100%; background:transparent; color:var(--text-3);">Cancelar</button>
     </div>
   </div>
 
-  <!-- 🔥 INPUTS OCULTOS PARA LA CÁMARA (Limpios) -->
-  <input type="file" id="inputCamara" accept="image/*" capture="environment" class="hidden-file-input">
-  <input type="file" id="inputGaleria" accept="image/*" class="hidden-file-input">
+  <!-- INPUTS OCULTOS -->
+  <input type="file" id="inputCamara" accept="image/*" capture="environment" style="display: none;">
+  <input type="file" id="inputGaleria" accept="image/*" style="display: none;">
 
   <script type="module" src="/js/cliente.js"></script>
 </body>
