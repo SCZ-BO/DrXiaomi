@@ -20,12 +20,12 @@ const ESTADO_COLORES = { 'recibido': '#9CA3AF', 'reparacion': '#FF6900', 'espera
 let sesion = null, ordenId = null, orden = null, unsubscribe = null;
 
 // 1. LAYOUT E INICIALIZACIÓN
-document.getElementById('btnSalir').addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
-document.getElementById('themeToggle').addEventListener('click', () => {
+document.getElementById('btnSalir')?.addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
+document.getElementById('themeToggle')?.addEventListener('click', () => {
   const act = document.documentElement.getAttribute('data-theme'), nue = act === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', nue); localStorage.setItem('theme', nue);
 });
-document.getElementById('backBtn').addEventListener('click', () => window.location.href = '/app/');
+document.getElementById('backBtn')?.addEventListener('click', () => window.location.href = '/app/');
 
 requireAuth((s) => { 
   sesion = s; 
@@ -41,7 +41,7 @@ function cargarOrden() {
     if (!snap.exists()) { window.location.href = '/app/'; return; }
     orden = { id: snap.id, ...snap.data() };
     renderOrden();
-    document.getElementById('appLoader').classList.remove('show');
+    document.getElementById('appLoader').classList.add('hidden');
   }, (error) => {
     toast('Error al cargar orden', 'error'); window.location.href = '/app/';
   });
