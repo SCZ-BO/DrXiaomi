@@ -2,7 +2,7 @@
 import { toast, haptic, tiempoRelativo, escapeHtml, initTheme } from './app-ui.js';
 import { requireAuth, logout } from './app-auth.js'; 
 import { db } from './firebase.js';
-import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { abrirSheetTelefono, abrirSheetVenta } from './panel-modals.js';
 import { generarPDFDia } from './panel-pdf.js';
 import { icono } from './icons.js';
@@ -17,11 +17,29 @@ const ITEMS_POR_PAGINA = 12;
 
 const reciboSheet = document.getElementById('reciboSheet');
 const modalVenta = document.getElementById('modalVenta');
+const modalNotaDueno = document.getElementById('modalNotaDueno');
 const paginationContainer = document.getElementById('paginationContainer');
 const appLoader = document.getElementById('appLoader');
 
 // ==========================================
-// 1. RENDERIZADO DEL LAYOUT (CORREGIDO)
+// NOTIFICACIONES (BADGE)
+// ==========================================
+let contadorNotificaciones = parseInt(localStorage.getItem('drx_notif_count') || '0');
+function actualizarBadge() {
+  if ('setAppBadge' in navigator) {
+    if (contadorNotificaciones > 0) navigator.setAppBadge(contadorNotificaciones).catch(console.error);
+    else navigator.clearAppBadge().catch(console.error);
+  }
+  localStorage.setItem('drx_notif_count', contadorNotificaciones);
+  const badge = document.getElementById('notifBadge');
+  if (badge) {
+    badge.textContent = contadorNotificaciones;
+    badge.style.display = contadorNotificaciones > 0 ? 'block' : 'none';
+  }
+}
+
+// ==========================================
+// 1. RENDERIZADO DEL LAYOUT
 // ==========================================
 function renderLayout() {
   const container = document.querySelector('.app-container');
@@ -34,8 +52,12 @@ function renderLayout() {
         <div class="brand-text"><h1>Panel</h1><p id="userInfo">Cargando...</p></div>
       </div>
       <div class="header-actions">
-        <button class="icon-btn" id="btnSalir">${icono('salir', 20)}</button>
+        <button class="icon-btn" id="btnNotificaciones" style="position:relative;">
+          ${icono('campana', 20)}
+          <span class="notif-badge" id="notifBadge" style="position:absolute; top:-4px; right:-4px; display:none; background:var(--danger-500); color:white; font-size:10px; font-weight:800; padding:2px 5px; border-radius:10px; border:2px solid var(--bg-elev-1);">0</span>
+        </button>
         <button class="icon-btn" id="btnTema">${icono('tema', 20)}</button>
+        <button class="icon-btn" id="btnSalir">${icono('salir', 20)}</button>
       </div>
     </header>`;
     
@@ -47,23 +69,24 @@ function renderLayout() {
       <a href="/app/inventario/" class="nav-item">${icono('inventario', 22)} <span>Stock</span></a>
     </nav>`;
     
-  // 🔥 INYECTAMOS DENTRO DEL CONTENEDOR, NO EN EL BODY
   container.insertAdjacentHTML('afterbegin', headerHTML);
   container.insertAdjacentHTML('beforeend', navHTML);
   
   document.getElementById('btnSalir')?.addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
+  document.getElementById('btnNotificaciones')?.addEventListener('click', () => { haptic(10); contadorNotificaciones = 0; actualizarBadge(); toast('Notificaciones leídas', 'success'); });
 }
 
 renderLayout();
 
 // ==========================================
-// 2. AUTENTICACIÓN E INICIO
+// 2. AUTENTICACIÓN Y POPUPS
 // ==========================================
 requireAuth((s) => {
   appState.sesion = s;
   setTimeout(() => { 
     iniciarApp(); 
     const sub = document.getElementById('userInfo'); if(sub) sub.textContent = s.nombre;
+    verificarPopups();
   }, 500);
 });
 
@@ -76,8 +99,28 @@ function iniciarApp() {
   setTimeout(() => { if(appLoader) appLoader.classList.add('hidden'); }, 800);
 }
 
+async function verificarPopups() {
+  try {
+    const docRef = doc(db, 'config', 'popup_mensaje');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const ahora = new Date().getTime();
+      if (data.activo && data.fechaExpiracion > ahora) {
+        document.getElementById('verPopupTitulo').textContent = data.titulo;
+        document.getElementById('verPopupTexto').textContent = data.texto;
+        document.getElementById('modalVerPopup').classList.add('show');
+      }
+    }
+  } catch(e) { console.log('No hay popups configurados.'); }
+}
+
+document.getElementById('btnOkPopup')?.addEventListener('click', () => {
+  document.getElementById('modalVerPopup').classList.remove('show');
+});
+
 // ==========================================
-// 3. HELPERS (Fechas y Formatos)
+// 3. HELPERS
 // ==========================================
 export function parsearFecha(f) {
   if (!f) return null;
@@ -98,12 +141,29 @@ function formatFechaCompleta(f) {
 export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
 
 // ==========================================
-// 4. EVENTOS (Modales, Ventas, Filtros)
+// 4. EVENTOS (Ventas, Filtros, PDF, Notas)
 // ==========================================
 function configurarEventos() {
   document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
   document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
   document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta.classList.remove('show'));
+  
+  // PDF Y NOTAS
+  document.getElementById('btnPDFDia')?.addEventListener('click', () => { haptic(15); generarPDFDia(); });
+  document.getElementById('btnAbrirNotaDueno')?.addEventListener('click', () => { haptic(15); modalNotaDueno.classList.add('show'); });
+  document.getElementById('btnCancelarNotaDueno')?.addEventListener('click', () => modalNotaDueno.classList.remove('show'));
+  
+  document.getElementById('btnGuardarNotaDueno')?.addEventListener('click', async () => {
+    const texto = document.getElementById('notaDuenoTexto').value.trim();
+    if (!texto) { toast('Escribe algo primero', 'error'); return; }
+    haptic(20);
+    try {
+      await addDoc(collection(db, 'notas'), { texto, autor: appState.sesion?.nombre || 'Técnico', fecha: serverTimestamp() });
+      toast('Nota guardada para el dueño', 'success');
+      modalNotaDueno.classList.remove('show');
+      document.getElementById('notaDuenoTexto').value = '';
+    } catch (e) { toast('Error al guardar', 'error'); }
+  });
 
   const tipoStep = document.getElementById('tipoVentaStep');
   const accesorioStep = document.getElementById('ventaAccesorioStep');
@@ -171,12 +231,9 @@ function configurarEventos() {
 
   document.getElementById('btnRegistrarAccesorio')?.addEventListener('click', async (e) => {
     const btn = e.target;
-    const id = btn.dataset.id;
-    const nombre = btn.dataset.nombre;
-    const precio = parseFloat(btn.dataset.precio);
-    const costo = parseFloat(btn.dataset.costo);
-    const stock = parseInt(btn.dataset.stock);
-    const cantidad = parseInt(document.getElementById('accesorioCantidad').value);
+    const id = btn.dataset.id, nombre = btn.dataset.nombre;
+    const precio = parseFloat(btn.dataset.precio), costo = parseFloat(btn.dataset.costo);
+    const stock = parseInt(btn.dataset.stock), cantidad = parseInt(document.getElementById('accesorioCantidad').value);
 
     if (!id) return;
     if (cantidad > stock) { toast('No hay suficiente stock', 'error'); return; }
@@ -205,7 +262,7 @@ function configurarEventos() {
 }
 
 // ==========================================
-// 5. CARGA DE DATOS (Firebase)
+// 5. CARGA DE DATOS Y RENDERIZADO
 // ==========================================
 function cargarDatos() {
   if (unsubscribe) unsubscribe();
@@ -238,9 +295,6 @@ function cargarDatos() {
 
 function procesarVentas() { appState.ventasHoy = [...ventasPanel, ...ventasCierre].sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0)); renderizarTodo(); }
 
-// ==========================================
-// 6. RENDERIZADO DE LA LISTA Y TARJETAS
-// ==========================================
 function renderizarTodo() {
   actualizarStats(); todosLosMovimientos = [];
   if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
