@@ -4,6 +4,8 @@ import { db } from './firebase.js';
 import { doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 // 🔥 IMPORTAMOS EL ESTADO Y FUNCIONES DEL PANEL PRINCIPAL
 import { appState, parsearFecha, formatBsLimpio, cerrarSheet } from './panel.js';
+// 🔥 IMPORTAMOS TU DIRECTORIO DE ICONOS
+import { icono } from './icons.js';
 
 let ordenAEntregar = null;
 let metodoPagoSeleccionado = null;
@@ -29,6 +31,9 @@ export function abrirSheetTelefono(id) {
   `;
   
   const btnEliminarHtml = esAdmin ? `<button class="btn btn-danger btn-block" id="btnEliminar" style="margin-top: 8px;"><i class="fas fa-trash"></i> Eliminar</button>` : '';
+  
+  // 🔥 BOTÓN NUEVO: NOTA AL DUEÑO
+  const btnNotaHtml = `<button class="btn btn-secondary btn-block" id="btnNotaDueno" style="margin-bottom: 8px;"><i class="fas fa-pen" style="color:var(--brand-500);"></i> Dejar Nota al Dueño</button>`;
 
   sheetContent.innerHTML = `
     <div style="margin-bottom: 24px;">
@@ -41,12 +46,19 @@ export function abrirSheetTelefono(id) {
       <select id="selectEstado" class="input-field">${opciones}</select>
     </div>
     <button class="btn btn-primary btn-block" id="btnActualizarEstado" style="margin-bottom: 8px;"><i class="fas fa-check"></i> Guardar Estado</button>
-    <button class="btn btn-whatsapp btn-block" id="btnWhatsApp" style="margin-bottom: 8px;"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+    <button class="btn btn-whatsapp btn-block" id="btnWhatsApp" style="margin-bottom: 8px;">${icono('whatsapp', 18)} WhatsApp</button>
+    ${btnNotaHtml}
     ${btnEliminarHtml}
   `;
 
   reciboSheet.classList.add('show'); 
   haptic(15);
+
+  // Evento para abrir el modal de Nota al Dueño
+  document.getElementById('btnNotaDueno')?.addEventListener('click', () => {
+    cerrarSheet(); // Cierra el modal actual
+    document.getElementById('modalNotaDueno').classList.add('show'); // Abre el modal de la nota
+  });
 
   document.getElementById('btnEditarOrden')?.addEventListener('click', () => { 
     window.location.href = `/app/orden.html?id=${id}`; 
