@@ -3,9 +3,9 @@
    Archivo: js/cliente.js
    ============================================================ */
 
-import { requireAuth, logout } from '/js/app-auth.js';
-import { toast, haptic, initTheme, escapeHtml, formatBs, showLoading, hideLoading } from '/js/app-ui.js';
-import { db } from '/js/firebase.js';
+import { requireAuth, logout } from './app-auth.js';
+import { toast, haptic, initTheme, escapeHtml, formatBs, showLoading, hideLoading } from './app-ui.js';
+import { db } from './firebase.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // 🔥 IMPORTANTE: Ya no necesitamos importar generarPDFUnificado aquí, 
