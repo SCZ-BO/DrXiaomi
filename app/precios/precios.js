@@ -99,7 +99,8 @@ function buscarCompatibles(term) {
 
 // 🚀 RENDERIZAR LA LISTA
 function renderList() {
-  let data = [...allData];
+ // Hacemos una copia y la desordenamos aleatoriamente
+let data = [...allData].sort(() => Math.random() - 0.5);
   
   // Filtros de categoría
   if (currentFilter === "FAV") data = data.filter(i => favorites.has(i.id));
