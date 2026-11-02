@@ -1,18 +1,36 @@
 // ============================================================
-// DR. XIAOMI · APP UI (Layout Dinámico)
+// DR. XIAOMI · APP UI (Layout Dinámico Definitivo)
 // Archivo: /app/js/app-ui.js
 // ============================================================
 
-// 🔥 DIRECTORIO DE ICONOS (Si cambias un icono, solo cambias la ruta aquí)
-const ICONS = {
+// 🔥 DIRECTORIO MAESTRO DE ICONOS
+export const ICONS = {
+  // Navegación
   home: '/app/icons/home.png',
   precios: '/app/icons/precios.png',
   reportes: '/app/icons/reportes.png',
   inventario: '/app/icons/inventario.png',
   volver: '/app/icons/volver.png',
   tema: '/app/icons/tema.png',
+  salir: '/app/icons/salir.png',
+
+  // Acciones Principales
   agregar: '/app/icons/agregar.png',
-  orden: '/app/icons/orden.png'
+  venta: '/app/icons/venta.png',
+  cierre: '/app/icons/cierre.png',
+  buscar: '/app/icons/buscar.png',
+
+  // Acciones de Orden
+  whatsapp: '/app/icons/whatsapp.png',
+  pdf: '/app/icons/pdf.png',
+  cobrar: '/app/icons/cobrar.png',
+  editar: '/app/icons/editar.png',
+  eliminar: '/app/icons/eliminar.png',
+  camara: '/app/icons/camara.png',
+  galeria: '/app/icons/galeria.png',
+
+  // Estados
+  estadoReparacion: '/app/icons/estado-reparacion.png'
 };
 
 // 1. INYECTAR HEADER Y BOTTOM NAV
@@ -31,6 +49,9 @@ export function initLayout(titulo, subtitulo = '', activo = '', padre = '/app/')
         </div>
       </div>
       <div class="header-actions">
+        <button class="icon-btn" id="btnSalir" aria-label="Cerrar sesión" style="margin-right: 4px;">
+          <img src="${ICONS.salir}" width="20" height="20" alt="Salir">
+        </button>
         <button class="icon-btn" id="btnTema" aria-label="Cambiar tema">
           <img src="${ICONS.tema}" width="20" height="20" alt="Tema">
         </button>
@@ -65,17 +86,23 @@ export function initLayout(titulo, subtitulo = '', activo = '', padre = '/app/')
     window.location.href = padre;
   });
 
-  // --- D. Lógica del Tema (Oscuro / Claro) ---
+  // --- D. Lógica del botón Salir ---
+  document.getElementById('btnSalir').addEventListener('click', async () => {
+    const confirmar = confirm('¿Estás seguro que deseas cerrar sesión?');
+    if (confirmar) {
+      localStorage.removeItem('dr-theme');
+      window.location.href = '/'; // Ir al login o landing
+    }
+  });
+
+  // --- E. Lógica del Tema ---
   const btnTema = document.getElementById('btnTema');
-  
-  // Cargar tema guardado al iniciar
   const temaGuardado = localStorage.getItem('dr-theme') || 'dark';
   document.documentElement.setAttribute('data-theme', temaGuardado);
 
   btnTema.addEventListener('click', () => {
     const actual = document.documentElement.getAttribute('data-theme');
     const nuevoTema = actual === 'dark' ? 'light' : 'dark';
-    
     document.documentElement.setAttribute('data-theme', nuevoTema);
     localStorage.setItem('dr-theme', nuevoTema);
   });
