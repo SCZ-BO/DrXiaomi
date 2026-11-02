@@ -19,29 +19,62 @@
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    .filter-chip { padding: 8px 16px; border-radius: var(--r-full); font-size: 12px; font-weight: 600; background: var(--bg-elev-1); color: var(--text-1); border: 1px solid var(--border-1); cursor: pointer; white-space: nowrap; transition: 0.2s; }
-    .filter-chip.active { background: var(--brand-500); color: white; border-color: var(--brand-500); box-shadow: 0 4px 14px var(--brand-100); }
+    /* Estilos específicos de la pantalla de Precios */
+    .filter-chip { 
+      padding: 8px 16px; border-radius: var(--r-full); font-size: 12px; font-weight: 600; 
+      background: var(--bg-elev-1); color: var(--text-1); border: 1px solid var(--border-1); 
+      cursor: pointer; white-space: nowrap; transition: 0.2s; 
+    }
+    .filter-chip.active { 
+      background: var(--brand-500); color: white; border-color: var(--brand-500); 
+      box-shadow: 0 4px 14px var(--brand-100); 
+    }
     
-    .product-card { background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: var(--r-lg); padding: 16px; margin-bottom: 12px; position: relative; box-shadow: var(--shadow-sm); }
-    .product-card::before { content: ''; position: absolute; left: 0; top: 16px; bottom: 16px; width: 3px; background: var(--brand-500); border-radius: 0 3px 3px 0; }
+    .product-card { 
+      background: var(--bg-elev-1); border: 1px solid var(--border-1); 
+      border-radius: var(--r-lg); padding: 16px; margin-bottom: 12px; 
+      position: relative; box-shadow: var(--shadow-sm); 
+    }
+    .product-card::before { 
+      content: ''; position: absolute; left: 0; top: 16px; bottom: 16px; 
+      width: 3px; background: var(--brand-500); border-radius: 0 3px 3px 0; 
+    }
     .product-card.is-orig::before { background: linear-gradient(180deg, #FFD700, #FFA500); }
+    .product-card.is-compat::before { background: #3B82F6; }
     
     .card-brand { font-size: 10px; font-weight: 800; color: var(--brand-500); text-transform: uppercase; letter-spacing: 0.5px; }
     .card-model { font-size: 16px; font-weight: 700; color: var(--text-1); line-height: 1.3; }
     .card-type { padding: 4px 10px; border-radius: var(--r-sm); font-size: 10px; font-weight: 700; background: var(--bg-elev-2); color: var(--text-3); }
+    .card-type.oled { background: rgba(255,105,0,0.1); color: var(--brand-500); }
+    .card-type.orig { background: linear-gradient(135deg, #FFD700, #FFA500); color: #4A2800; }
     
     .card-price { font-size: 22px; font-weight: 800; color: var(--text-1); letter-spacing: -0.5px; }
     
-    .image-btn, .whatsapp-btn, .edit-btn { border: none; padding: 8px 12px; border-radius: var(--r-sm); font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+    .image-btn, .whatsapp-btn, .edit-btn { 
+      border: none; padding: 8px 12px; border-radius: var(--r-sm); font-size: 11px; 
+      font-weight: 700; cursor: pointer; display: flex; align-items: center; 
+      gap: 5px; transition: 0.15s; 
+    }
     .image-btn { background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-1); }
     .whatsapp-btn { background: #25D366; color: white; }
     .edit-btn { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.3); }
     
-    .suggestions-panel { position: absolute; top: 100%; left: 0; right: 0; margin-top: 8px; background: var(--bg-elev-1); border: 1px solid var(--border-1); border-radius: var(--r-lg); box-shadow: var(--shadow-lg); max-height: 320px; overflow-y: auto; display: none; z-index: 60; }
+    .suggestions-panel { 
+      position: absolute; top: 100%; left: 0; right: 0; margin-top: 8px; 
+      background: var(--bg-elev-1); border: 1px solid var(--border-1); 
+      border-radius: var(--r-lg); box-shadow: var(--shadow-lg); 
+      max-height: 320px; overflow-y: auto; display: none; z-index: 60; 
+    }
     .suggestions-panel.active { display: block; }
-    .suggestion-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-1); display: flex; align-items: center; gap: 12px; }
+    .suggestion-item { 
+      padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-1); 
+      display: flex; align-items: center; gap: 12px; 
+    }
     
-    .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .lightbox { 
+      position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; 
+      display: none; align-items: center; justify-content: center; padding: 20px; 
+    }
     .lightbox.active { display: flex; }
     .lightbox img { max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: var(--r-md); }
   </style>
@@ -55,13 +88,13 @@
   <main class="app-container" id="appRoot" style="opacity:0;">
     <header class="app-header">
       <div class="brand">
-        <button class="icon-btn" id="backBtn"><img src="/app/icons/volver.png" width="20" height="20"></button>
+        <button class="icon-btn" id="backBtn"><img src="/app/icons/volver.png" width="20" height="20" alt="Volver"></button>
         <div class="brand-text"><h1>Catálogo</h1><p>Precios y Compatibilidad</p></div>
       </div>
       <div class="header-actions">
         <button class="icon-btn" id="adminEditBtn" style="display: none;"><i class="fas fa-list-ul" style="color:#3B82F6;"></i></button>
-        <button class="icon-btn" id="techModeBtn"><img src="/app/icons/ver.png" width="18" height="18"></button>
-        <button class="icon-btn" id="receiptBtn"><img src="/app/icons/agregar.png" width="18" height="18"></button>
+        <button class="icon-btn" id="techModeBtn"><img src="/app/icons/ver.png" width="18" height="18" alt="Ver"></button>
+        <button class="icon-btn" id="receiptBtn"><img src="/app/icons/agregar.png" width="18" height="18" alt="Nuevo"></button>
       </div>
     </header>
 
