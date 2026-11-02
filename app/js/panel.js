@@ -19,9 +19,6 @@ const modalVenta = document.getElementById('modalVenta');
 const paginationContainer = document.getElementById('paginationContainer');
 const appLoader = document.getElementById('appLoader');
 
-// ==========================================
-// 1. LAYOUT (Header y Bottom Nav)
-// ==========================================
 function renderLayout() {
   const headerHTML = `
     <header class="app-header">
@@ -46,14 +43,12 @@ function renderLayout() {
   document.body.insertAdjacentHTML('afterbegin', headerHTML);
   document.body.insertAdjacentHTML('beforeend', navHTML);
   
-  // Solo el botón de Salir (el de tema lo maneja app-ui.js)
   document.getElementById('btnSalir')?.addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
+  
+  // El botón de tema NO tiene lógica aquí, se la pasamos a app-ui.js que ya la tiene.
 }
 renderLayout();
 
-// ==========================================
-// 2. AUTENTICACIÓN
-// ==========================================
 requireAuth((s) => {
   appState.sesion = s;
   setTimeout(() => { 
@@ -71,9 +66,6 @@ function iniciarApp() {
   setTimeout(() => { if(appLoader) appLoader.classList.add('hidden'); }, 800);
 }
 
-// ==========================================
-// 3. UTILIDADES
-// ==========================================
 export function parsearFecha(f) {
   if (!f) return null;
   if (typeof f.toDate === 'function') return f.toDate();
@@ -92,9 +84,6 @@ function formatFechaCompleta(f) {
 
 export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
 
-// ==========================================
-// 4. EVENTOS
-// ==========================================
 function configurarEventos() {
   document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
   document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
@@ -104,7 +93,6 @@ function configurarEventos() {
   const accesorioStep = document.getElementById('ventaAccesorioStep');
   const servicioStep = document.getElementById('ventaServicioStep');
 
-  // 🔥 VENTA DE ACCESORIOS (Grid con Fotos)
   document.getElementById('btnVentaAccesorio')?.addEventListener('click', () => {
     if(tipoStep) tipoStep.style.display = 'none'; 
     if(accesorioStep) accesorioStep.style.display = 'block'; 
@@ -145,7 +133,6 @@ function configurarEventos() {
     }
   });
 
-  // 🔥 VENTA DE SERVICIOS
   document.getElementById('btnVentaServicio')?.addEventListener('click', () => {
     if(tipoStep) tipoStep.style.display = 'none'; 
     if(accesorioStep) accesorioStep.style.display = 'none'; 
@@ -155,7 +142,6 @@ function configurarEventos() {
   document.getElementById('btnBackToTipo')?.addEventListener('click', () => { if(tipoStep) tipoStep.style.display = 'block'; if(accesorioStep) accesorioStep.style.display = 'none'; if(servicioStep) servicioStep.style.display = 'none'; });
   document.getElementById('btnBackToTipo2')?.addEventListener('click', () => { if(tipoStep) tipoStep.style.display = 'block'; if(accesorioStep) accesorioStep.style.display = 'none'; if(servicioStep) servicioStep.style.display = 'none'; });
 
-  // Guardar Venta de Servicio
   document.getElementById('btnGuardarVenta')?.addEventListener('click', async () => {
     let concepto = document.getElementById('ventaConcepto').value, monto = parseFloat(document.getElementById('ventaMonto').value), metodo = document.getElementById('ventaMetodo').value;
     if (concepto === 'Otro') { const c = document.getElementById('ventaConceptoOtro').value.trim(); if (!c) { toast('Especifica qué se vendió', 'error'); return; } concepto = c; }
@@ -167,7 +153,6 @@ function configurarEventos() {
     } catch (err) { toast('Error al guardar', 'error'); }
   });
 
-  // Guardar Venta de Accesorio
   document.getElementById('btnRegistrarAccesorio')?.addEventListener('click', async (e) => {
     const btn = e.target;
     const id = btn.dataset.id;
@@ -192,7 +177,6 @@ function configurarEventos() {
     } catch (err) { console.error(err); toast('Error al guardar', 'error'); }
   });
 
-  // Filtros y Buscador
   document.getElementById('filtros')?.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-filtro]'); if (!btn) return;
     haptic(10); document.querySelectorAll('#filtros .chip-interactive').forEach(b => b.classList.remove('active'));
@@ -204,9 +188,6 @@ function configurarEventos() {
   });
 }
 
-// ==========================================
-// 5. BASE DE DATOS
-// ==========================================
 function cargarDatos() {
   if (unsubscribe) unsubscribe();
   unsubscribe = onSnapshot(query(collection(db, 'recibos'), orderBy('fecha', 'desc')), (snap) => {
@@ -230,7 +211,6 @@ function cargarDatos() {
     procesarVentas();
   });
 
-  // 🔥 CARGAR INVENTARIO (Colección 'productos')
   if (unsubscribeInventario) unsubscribeInventario();
   unsubscribeInventario = onSnapshot(query(collection(db, 'productos')), (snap) => {
     appState.inventario = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -239,9 +219,6 @@ function cargarDatos() {
 
 function procesarVentas() { appState.ventasHoy = [...ventasPanel, ...ventasCierre].sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0)); renderizarTodo(); }
 
-// ==========================================
-// 6. RENDERIZADO
-// ==========================================
 function renderizarTodo() {
   actualizarStats(); todosLosMovimientos = [];
   if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
