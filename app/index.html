@@ -19,18 +19,6 @@
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    /* 🔥 CSS DE ANIMACIÓN FORZADO EN EL HTML */
-    .loader-ring {
-      position: absolute; inset: 0; border-radius: 50%; 
-      border: 3px solid transparent; 
-      border-top-color: #FF6900; border-bottom-color: #FF6900;
-      animation: spin 1.2s linear infinite !important; /* El !important asegura que gire */
-    }
-    @keyframes spin { 
-      0% { transform: rotate(0deg); } 
-      100% { transform: rotate(360deg); } 
-    }
-    
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
     .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 16px; border-radius: var(--r-xl); font-weight: 700; font-size: 14px; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 105px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
     .btn-hero:active { transform: scale(0.96); }
@@ -62,7 +50,7 @@
 </head>
 <body>
 
-  <!-- LOADER CON LOGO Y ANILLO -->
+  <!-- LOADER -->
   <div class="loader-overlay" id="appLoader">
     <div class="loader-logo-container">
       <div class="loader-ring"></div>
@@ -73,11 +61,10 @@
 
   <main class="app-container">
     
-    <!-- HEADER MINIMALISTA CON LOGO -->
     <header class="app-header">
       <div class="brand">
         <div class="brand-logo">
-          <img src="/imagenes/web-app-manifest-192x192.png" alt="DR Xiaomi">
+          <img src="/imagenes/web-app-manifest-192x192.png" alt="Logo">
         </div>
         <div class="brand-text">
           <h1>Panel de Control</h1>
@@ -90,7 +77,6 @@
       </div>
     </header>
 
-    <!-- CONTENIDO PRINCIPAL -->
     <div class="app-content">
       
       <div class="hero-actions">
@@ -131,7 +117,7 @@
     </div>
   </main>
 
-  <!-- MODAL VENTA RÁPIDA -->
+  <!-- MODAL VENTA RÁPIDA (Rediseñado) -->
   <div class="sheet-backdrop" id="modalVenta">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -139,54 +125,63 @@
         <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1);"><i class="fas fa-cash-register" style="color: var(--brand-500);"></i> Venta Rápida</h3>
         <button class="icon-btn" id="btnCloseVenta"><i class="fas fa-times"></i></button>
       </div>
-      <div class="field"><select id="ventaConcepto" class="input-field"><option value="Botón">Botón</option><option value="Limpieza">Limpieza</option><option value="Reactivación">Reactivación</option><option value="Cargador">Cargador</option><option value="Otro">Otro (Especificar)</option></select></div>
-      <div class="field" id="wrapConceptoOtro" style="display: none;"><input type="text" id="ventaConceptoOtro" class="input-field" placeholder="Especifique qué se vendió"></div>
-      <div class="field"><input type="number" id="ventaMonto" class="input-field" placeholder="Monto (Bs.)" inputmode="decimal"></div>
-      <div class="field"><select id="ventaMetodo" class="input-field"><option value="Efectivo">💵 Efectivo</option><option value="QR">📱 QR</option></select></div>
-      <button class="btn btn-primary" id="btnGuardarVenta" style="width: 100%; margin-top: 10px;">Registrar Venta</button>
+
+      <!-- 1. ELECCIÓN: ACCESORIO O SERVICIO -->
+      <div id="tipoVentaStep">
+        <p style="font-size: 14px; color: var(--text-3); margin-bottom: 16px; text-align: center;">¿Qué vas a registrar?</p>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button class="btn btn-secondary" id="btnVentaAccesorio" style="padding: 20px; font-size: 16px; justify-content: flex-start;">
+            <i class="fas fa-box" style="color: var(--brand-500); font-size: 24px; margin-right: 12px;"></i>
+            <div style="text-align: left;">
+              <div style="font-weight: 800;">Venta de Accesorio</div>
+              <div style="font-size: 12px; color: var(--text-3);">Elegir producto con foto</div>
+            </div>
+          </button>
+          <button class="btn btn-secondary" id="btnVentaServicio" style="padding: 20px; font-size: 16px; justify-content: flex-start;">
+            <i class="fas fa-tools" style="color: var(--success-500); font-size: 24px; margin-right: 12px;"></i>
+            <div style="text-align: left;">
+              <div style="font-weight: 800;">Venta de Servicio</div>
+              <div style="font-size: 12px; color: var(--text-3);">Limpieza, botón, reactivación...</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. VENTA DE ACCESORIO (Inventario) -->
+      <div id="ventaAccesorioStep" style="display: none;">
+        <button class="btn btn-secondary" id="btnBackToTipo" style="margin-bottom: 16px; width: auto; padding: 8px 16px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
+        <div class="field">
+          <label class="input-label">Producto</label>
+          <select id="accesorioSelect" class="input-field"></select>
+        </div>
+        <div class="field">
+          <label class="input-label">Cantidad</label>
+          <input type="number" id="accesorioCantidad" class="input-field" value="1" min="1">
+        </div>
+        <button class="btn btn-primary" id="btnRegistrarAccesorio" style="width: 100%;">Registrar Venta</button>
+      </div>
+
+      <!-- 3. VENTA DE SERVICIO (Rápida) -->
+      <div id="ventaServicioStep" style="display: none;">
+        <button class="btn btn-secondary" id="btnBackToTipo2" style="margin-bottom: 16px; width: auto; padding: 8px 16px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
+        <div class="field"><select id="ventaConcepto" class="input-field"><option value="Botón">Botón</option><option value="Limpieza">Limpieza</option><option value="Reactivación">Reactivación</option><option value="Cargador">Cargador</option><option value="Otro">Otro</option></select></div>
+        <div class="field" id="wrapConceptoOtro" style="display: none;"><input type="text" id="ventaConceptoOtro" class="input-field" placeholder="Especifique qué se vendió"></div>
+        <div class="field"><input type="number" id="ventaMonto" class="input-field" placeholder="Monto (Bs.)" inputmode="decimal"></div>
+        <div class="field"><select id="ventaMetodo" class="input-field"><option value="Efectivo">💵 Efectivo</option><option value="QR">📱 QR</option></select></div>
+        <button class="btn btn-primary" id="btnGuardarVenta" style="width: 100%; margin-top: 10px;">Registrar Venta</button>
+      </div>
     </div>
   </div>
 
-  <!-- MODAL DETALLE / OPCIONES -->
-  <div class="sheet-backdrop" id="reciboSheet">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1);">Opciones</h3>
-        <button class="icon-btn" id="btnCloseSheet"><i class="fas fa-times"></i></button>
-      </div>
-      <div id="sheetContent"></div>
-    </div>
-  </div>
-
-  <!-- MODAL PAGO -->
-  <div class="sheet-backdrop" id="modalPago">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1);">Confirmar Entrega</h3>
-        <button class="icon-btn" id="btnClosePago"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="field"><input type="number" id="pagoMonto" class="input-field" placeholder="Monto Cobrado (Bs.)" inputmode="decimal"></div>
-      <label class="input-label" style="padding-left:0; margin-bottom: 8px; display:block;">Método de Pago</label>
-      <div id="metodosPagoGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
-          <button class="btn btn-secondary" data-metodo="Efectivo">💵 Efectivo</button>
-          <button class="btn btn-secondary" data-metodo="QR">📱 QR</button>
-      </div>
-      <button class="btn btn-primary" id="btnConfirmarPago" style="width: 100%;">Confirmar y Entregar</button>
-    </div>
-  </div>
-
+  <!-- SCRIPT PRINCIPAL -->
   <script type="module" src="./js/panel.js"></script>
   
-  <!-- 🔥 SCRIPT DE SEGURIDAD PARA CERRAR EL LOADER -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         const loader = document.getElementById('appLoader');
         if (loader && !loader.classList.contains('hidden')) {
           loader.classList.add('hidden');
-          console.warn('Loader apagado por seguridad.');
         }
       }, 1500);
     });
