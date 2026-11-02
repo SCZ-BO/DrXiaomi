@@ -77,7 +77,7 @@ function formatFechaCompleta(f) {
 export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
 
 function configurarEventos() {
-  document.getElementById('nuevoReciboBtn').addEventListener('click', () => { haptic(15); window.location.href = '/cliente/'; });
+  document.getElementById('nuevoReciboBtn').addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
   document.getElementById('ventaRapidaBtn').addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
   document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta.classList.remove('show'));
   
