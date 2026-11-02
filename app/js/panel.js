@@ -19,15 +19,29 @@ const modalVenta = document.getElementById('modalVenta');
 const paginationContainer = document.getElementById('paginationContainer');
 const appLoader = document.getElementById('appLoader');
 
+// ==========================================
+// 1. LAYOUT (Header y Bottom Nav)
+// ==========================================
 function renderLayout() {
   const headerHTML = `
     <header class="app-header">
-      <div class="brand"><div class="brand-text"><h1>Panel</h1><p id="userInfo">Cargando...</p></div></div>
+      <div class="brand">
+        <!-- 🔥 LOGO MINIMALISTA EN EL HEADER -->
+        <div class="brand-logo">
+          <img src="/imagenes/web-app-manifest-192x192.png" alt="Logo">
+        </div>
+        
+        <div class="brand-text">
+          <h1>Panel</h1>
+          <p id="userInfo">Cargando...</p>
+        </div>
+      </div>
       <div class="header-actions">
         <button class="icon-btn" id="btnSalir"><img src="/app/icons/salir.png" width="20" height="20"></button>
         <button class="icon-btn" id="btnTema"><img src="/app/icons/tema.png" width="20" height="20"></button>
       </div>
     </header>`;
+    
   const navHTML = `
     <nav class="bottom-nav">
       <a href="/app/" class="nav-item active"><img src="/app/icons/home.png"> <span>Panel</span></a>
@@ -35,8 +49,10 @@ function renderLayout() {
       <a href="/app/reportes/" class="nav-item"><img src="/app/icons/reportes.png"> <span>Reportes</span></a>
       <a href="/app/inventario/" class="nav-item"><img src="/app/icons/inventario.png"> <span>Stock</span></a>
     </nav>`;
+    
   document.body.insertAdjacentHTML('afterbegin', headerHTML);
   document.body.insertAdjacentHTML('beforeend', navHTML);
+  
   document.getElementById('btnSalir').addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
   document.getElementById('btnTema').addEventListener('click', () => {
     const act = document.documentElement.getAttribute('data-theme'), nue = act === 'dark' ? 'light' : 'dark';
@@ -45,6 +61,9 @@ function renderLayout() {
 }
 renderLayout();
 
+// ==========================================
+// 2. AUTENTICACIÓN
+// ==========================================
 requireAuth((s) => {
   appState.sesion = s;
   setTimeout(() => { 
@@ -57,10 +76,16 @@ function iniciarApp() {
   if (appState.sesion?.rol !== 'admin') {
     const btnRep = document.querySelector('.nav-item[href="/app/reportes/"]'); if(btnRep) btnRep.style.display = 'none';
   }
-  configurarEventos(); cargarDatos();
+  configurarEventos(); 
+  cargarDatos();
+  
+  // 🔥 OCULTAR LOADER
   setTimeout(() => { if(appLoader) appLoader.classList.add('hidden'); }, 800);
 }
 
+// ==========================================
+// 3. UTILIDADES
+// ==========================================
 export function parsearFecha(f) {
   if (!f) return null;
   if (typeof f.toDate === 'function') return f.toDate();
@@ -76,6 +101,9 @@ function formatFechaCompleta(f) {
 }
 export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
 
+// ==========================================
+// 4. EVENTOS
+// ==========================================
 function configurarEventos() {
   document.getElementById('nuevoReciboBtn').addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
   document.getElementById('ventaRapidaBtn').addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
@@ -116,13 +144,21 @@ function configurarEventos() {
   });
 }
 
+// ==========================================
+// 5. BASE DE DATOS
+// ==========================================
 function cargarDatos() {
   if (unsubscribe) unsubscribe();
   unsubscribe = onSnapshot(query(collection(db, 'recibos'), orderBy('fecha', 'desc')), (snap) => {
       appState.ordenes = snap.docs.map(d => { const data = d.data(); delete data.fotos; return { id: d.id, ...data }; });
       appState.ordenes.sort((a, b) => (parsearFecha(b.fechaEditada || b.fecha) || 0) - (parsearFecha(a.fechaEditada || a.fecha) || 0));
       renderizarTodo();
-    }, (err) => { document.getElementById('listaOrdenes').innerHTML = `<div class="empty-state"><h3>Error</h3><p>${err.message}</p></div>`; });
+      // 🔥 OCULTAR LOADER AL CARGAR DATOS
+      if (appLoader) appLoader.classList.add('hidden');
+    }, (err) => { 
+      document.getElementById('listaOrdenes').innerHTML = `<div class="empty-state"><h3>Error</h3><p>${err.message}</p></div>`; 
+      if (appLoader) appLoader.classList.add('hidden');
+    });
 
   if (unsubscribeVentas) unsubscribeVentas();
   unsubscribeVentas = onSnapshot(query(collection(db, 'ventas'), limit(100)), (snap) => {
@@ -145,6 +181,9 @@ function procesarVentas() {
   renderizarTodo();
 }
 
+// ==========================================
+// 6. RENDERIZADO
+// ==========================================
 function renderizarTodo() {
   actualizarStats(); todosLosMovimientos = [];
   if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
