@@ -1,19 +1,14 @@
 /* ============================================================
-   DR. XIAOMI · CONFIGURACIÓN FIREBASE (OPTIMIZADA + CACHÉ)
+   DR. XIAOMI · CONFIGURACIÓN FIREBASE
    Archivo: js/firebase.js
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-  initializeFirestore, 
-  persistentLocalCache, 
-  persistentMultipleTabManager 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
-  // 🔥 NUEVA API KEY (creada y restringida solo a Firestore y Auth)
   apiKey: "AIzaSyD8HfSlVivSJMyCaWVjoBCrECyCxccT6IU", 
   authDomain: "dr-xiaomi.firebaseapp.com",
   projectId: "dr-xiaomi",
@@ -25,16 +20,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// 🔥 AHORA LOS DATOS SE GUARDAN EN EL CELULAR (CACHÉ PERSISTENTE)
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager()
-  })
-});
+// 🔥 Usamos getFirestore estándar para evitar el error de doble inicialización
+export const db = getFirestore(app);
 
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 
 export { app };
 
-console.log('🔥 Firebase inicializado con Caché Persistente:', firebaseConfig.projectId);
+console.log('🔥 Firebase inicializado:', firebaseConfig.projectId);
