@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · INVENTARIO
+   DR. XIAOMI · INVENTARIO PRO (V2.0)
    Archivo: app/inventario/inventario.js
    ============================================================ */
 
@@ -13,13 +13,14 @@ let sesion = null;
 let productos = [];
 let unsubscribe = null;
 let fotoDataUrl = '';
+let productoEditandoId = null; // Para saber si estamos editando o creando
 
 requireAuth((s) => {
   sesion = s;
   
-  // 🔥 BLOQUEO DE SEGURIDAD: Si no es admin, lo sacamos
+  // 🔥 CONTROL DE ACCESO ESTRICTO
   if (sesion.rol !== 'admin') {
-    toast('Acceso denegado. Solo el dueño puede ver el inventario.', 'error');
+    toast('Acceso denegado. Área exclusiva del administrador.', 'error');
     setTimeout(() => window.location.href = '/app/', 1500);
     return;
   }
@@ -31,8 +32,7 @@ requireAuth((s) => {
 
 function configurarEventos() {
   document.getElementById('backBtn')?.addEventListener('click', () => window.location.href = '/app/');
-  
-  document.getElementById('btnNuevoProducto')?.addEventListener('click', abrirModal);
+  document.getElementById('btnNuevoProducto')?.addEventListener('click', () => abrirModal());
   document.getElementById('btnCloseModal')?.addEventListener('click', cerrarModal);
   
   document.getElementById('btnAddFoto')?.addEventListener('click', () => {
@@ -49,6 +49,7 @@ function configurarEventos() {
   });
 
   document.getElementById('btnGuardarProducto')?.addEventListener('click', guardarProducto);
+  document.getElementById('btnEliminarProducto')?.addEventListener('click', eliminarProducto);
   document.getElementById('btnWhatsApp')?.addEventListener('click', enviarInventarioWhatsApp);
 }
 
@@ -61,12 +62,24 @@ function cargarProductos() {
     productos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     productos.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
     renderProductos();
+    actualizarKPIs();
     document.getElementById('appLoader')?.classList.add('hidden');
   }, (error) => {
     console.error(error);
-    toast('Error al cargar inventario', 'error');
+    toast('Error de conexión', 'error');
     document.getElementById('appLoader')?.classList.add('hidden');
   });
+}
+
+function actualizarKPIs() {
+  const total = productos.length;
+  let valorTotal = 0;
+  productos.forEach(p => {
+    valorTotal += (Number(p.precio) || 0) * (Number(p.stock) || 0);
+  });
+  
+  document.getElementById('kpiTotal').textContent = total;
+  document.getElementById('kpiValor').textContent = formatBs(valorTotal);
 }
 
 function renderProductos() {
@@ -74,10 +87,10 @@ function renderProductos() {
   
   if (productos.length === 0) {
     grid.innerHTML = `
-      <div style="grid-column: span 2; text-align:center; padding:40px 20px; color:var(--text-mute);">
-        <i class="fas fa-box-open" style="font-size:40px; opacity:0.3; margin-bottom:12px; display:block;"></i>
-        <h3 style="font-size:15px; margin-bottom:4px;">Inventario vacío</h3>
-        <p style="font-size:12px;">Toca el botón "+" para agregar tu primer producto.</p>
+      <div style="grid-column: span 2; text-align:center; padding:60px 20px; color:var(--text-mute);">
+        <i class="fas fa-box-open" style="font-size:48px; opacity:0.2; margin-bottom:16px; display:block;"></i>
+        <h3 style="font-size:16px; margin-bottom:6px; color:var(--text-main);">Inventario Vacío</h3>
+        <p style="font-size:13px;">Toca el botón <b>+</b> para agregar tu primer producto.</p>
       </div>
     `;
     return;
@@ -87,70 +100,83 @@ function renderProductos() {
     const stock = Number(p.stock) || 0;
     const costo = Number(p.costo) || 0;
     const precio = Number(p.precio) || 0;
-    const ganancia = precio - costo; // 🔥 Calculamos la ganancia
+    const ganancia = precio - costo; 
 
     let stockClass = '';
-    if (stock === 0) stockClass = 'stock-cero';
-    else if (stock <= 3) stockClass = 'stock-bajo';
+    if (stock === 0) stockClass = 'empty';
+    else if (stock <= 3) stockClass = 'low';
 
     const imgUrl = p.foto || 'https://via.placeholder.com/300?text=Sin+Foto';
 
     return `
-      <div class="producto-card">
+      <div class="producto-card" onclick="window.abrirEdicion('${p.id}')">
         <img src="${imgUrl}" alt="${escapeHtml(p.nombre)}" class="producto-img">
         <div class="producto-info">
           <div class="producto-nombre">${escapeHtml(p.nombre || 'Sin nombre')}</div>
           <div class="producto-precio">${formatBs(precio)}</div>
           
-          <!-- 🔥 MOSTRAMOS COSTO Y GANANCIA -->
           <div class="producto-costos">
             <span>Costo: ${formatBs(costo)}</span>
-            <span class="producto-ganancia">Ganancia: ${formatBs(ganancia)}</span>
+            <span class="producto-ganancia">+${formatBs(ganancia)}</span>
           </div>
           
-          <div class="producto-stock ${stockClass}">Stock: ${stock}</div>
+          <div class="stock-controls" onclick="event.stopPropagation()">
+            <span class="stock-display ${stockClass}">Stock: ${stock}</span>
+            <div class="stock-actions">
+              <button class="btn-stock-action" onclick="window.ajustarStock('${p.id}', -1)" ${stock <= 0 ? 'disabled' : ''}>
+                <i class="fas fa-minus"></i>
+              </button>
+              <button class="btn-stock-action" onclick="window.ajustarStock('${p.id}', 1)">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+          </div>
         </div>
-        <button class="btn-stock" data-id="${p.id}" data-stock="${stock}" ${stock <= 0 ? 'disabled' : ''}>
-          <i class="fas fa-minus"></i>
-        </button>
       </div>
     `;
   }).join('');
-
-  grid.querySelectorAll('.btn-stock').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      const stockActual = parseInt(btn.dataset.stock);
-      
-      if (stockActual <= 0) return;
-      
-      haptic(15);
-      
-      try {
-        await updateDoc(doc(db, 'productos', id), {
-          stock: increment(-1)
-        });
-        toast('Stock actualizado', 'success', 1000);
-      } catch (err) {
-        toast('Error al actualizar', 'error');
-      }
-    });
-  });
 }
 
-function abrirModal() {
-  document.getElementById('inputNombre').value = '';
-  document.getElementById('inputCosto').value = ''; // 🔥 Limpiar costo
-  document.getElementById('inputPrecio').value = '';
-  document.getElementById('inputStock').value = '';
-  fotoDataUrl = '';
+// 🔥 FUNCIONES GLOBALES PARA LOS BOTONES DE LA TARJETA
+window.ajustarStock = async function(id, cantidad) {
+  haptic(15);
+  try {
+    await updateDoc(doc(db, 'productos', id), {
+      stock: increment(cantidad)
+    });
+  } catch (err) {
+    toast('Error al actualizar stock', 'error');
+  }
+};
+
+window.abrirEdicion = function(id) {
+  const p = productos.find(x => x.id === id);
+  if (!p) return;
+  haptic(15);
+  abrirModal(p);
+};
+
+// 🔥 MODAL (CREAR / EDITAR)
+function abrirModal(producto = null) {
+  productoEditandoId = producto ? producto.id : null;
+  
+  document.getElementById('modalTitle').textContent = producto ? 'Editar Producto' : 'Nuevo Producto';
+  document.getElementById('btnEliminarProducto').style.display = producto ? 'flex' : 'none';
+  
+  document.getElementById('inputNombre').value = producto ? producto.nombre : '';
+  document.getElementById('inputCosto').value = producto ? producto.costo : '';
+  document.getElementById('inputPrecio').value = producto ? producto.precio : '';
+  document.getElementById('inputStock').value = producto ? producto.stock : '';
+  
+  fotoDataUrl = producto ? producto.foto : '';
   renderFotoPreview();
+  
   document.getElementById('modalProducto').classList.add('show');
 }
 
 function cerrarModal() {
   document.getElementById('modalProducto').classList.remove('show');
+  productoEditandoId = null;
 }
 
 function renderFotoPreview() {
@@ -162,43 +188,86 @@ function renderFotoPreview() {
   if (fotoDataUrl) {
     const div = document.createElement('div');
     div.className = 'foto-preview';
-    div.innerHTML = `<img src="${fotoDataUrl}">`;
+    div.innerHTML = `
+      <img src="${fotoDataUrl}">
+      <button class="btn-remove-foto" onclick="window.removerFoto(event)"><i class="fas fa-times"></i></button>
+    `;
     cont.insertBefore(div, btnAdd);
   }
 }
 
+window.removerFoto = function(e) {
+  e.stopPropagation();
+  fotoDataUrl = '';
+  renderFotoPreview();
+  haptic(15);
+};
+
 async function guardarProducto() {
   const nombre = document.getElementById('inputNombre').value.trim();
-  const costo = parseFloat(document.getElementById('inputCosto').value) || 0; // 🔥 Nuevo campo
+  const costo = parseFloat(document.getElementById('inputCosto').value) || 0; 
   const precio = parseFloat(document.getElementById('inputPrecio').value) || 0;
   const stock = parseInt(document.getElementById('inputStock').value) || 0;
   
-  if (!nombre) { toast('Ponle un nombre al producto', 'error'); return; }
-  if (precio <= 0) { toast('Ponle un precio válido', 'error'); return; }
+  if (!nombre) { toast('El nombre es obligatorio', 'error'); return; }
+  if (precio <= 0) { toast('El precio debe ser mayor a 0', 'error'); return; }
 
   haptic(20);
   const btn = document.getElementById('btnGuardarProducto');
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
   btn.disabled = true;
 
+  const data = {
+    nombre: nombre,
+    costo: costo, 
+    precio: precio,
+    stock: stock,
+    foto: fotoDataUrl || '',
+    actualizadoEn: serverTimestamp()
+  };
+
   try {
-    await addDoc(collection(db, 'productos'), {
-      nombre: nombre,
-      costo: costo, // 🔥 Guardamos el costo
-      precio: precio,
-      stock: stock,
-      foto: fotoDataUrl || '',
-      creadoEn: serverTimestamp(),
-      creadoPor: sesion.nombre
-    });
-    
-    toast('Producto agregado', 'success');
+    if (productoEditandoId) {
+      // Editar existente
+      await updateDoc(doc(db, 'productos', productoEditandoId), data);
+      toast('Producto actualizado', 'success');
+    } else {
+      // Crear nuevo
+      data.creadoEn = serverTimestamp();
+      data.creadoPor = sesion.nombre;
+      await addDoc(collection(db, 'productos'), data);
+      toast('Producto agregado', 'success');
+    }
     cerrarModal();
   } catch (err) {
     console.error(err);
     toast('Error al guardar', 'error');
   } finally {
     btn.innerHTML = '<i class="fas fa-save"></i> Guardar Producto';
+    btn.disabled = false;
+  }
+}
+
+async function eliminarProducto() {
+  if (!productoEditandoId) return;
+  
+  const confirmar = confirm("¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.");
+  if (!confirmar) return;
+
+  haptic(30);
+  const btn = document.getElementById('btnEliminarProducto');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+  btn.disabled = true;
+
+  try {
+    await deleteDoc(doc(db, 'productos', productoEditandoId));
+    toast('Producto eliminado', 'success');
+    cerrarModal();
+  } catch (err) {
+    console.error(err);
+    toast('Error al eliminar', 'error');
+  } finally {
+    btn.innerHTML = '<i class="fas fa-trash-alt"></i> Eliminar Producto';
     btn.disabled = false;
   }
 }
@@ -231,23 +300,28 @@ function enviarInventarioWhatsApp() {
 
   haptic(15);
   
-  let msg = `*INVENTARIO - DR. XIAOMI*\n`;
+  let msg = `*REPORTE DE INVENTARIO - DR. XIAOMI*\n`;
   msg += `📅 ${new Date().toLocaleDateString('es-BO')}\n`;
-  msg += `👤 Por: ${sesion.nombre}\n\n`;
+  msg += `👤 Admin: ${sesion.nombre}\n\n`;
+
+  let productosConStock = 0;
 
   productos.forEach(p => {
     const stock = Number(p.stock) || 0;
-    const costo = Number(p.costo) || 0;
     const precio = Number(p.precio) || 0;
-    const ganancia = precio - costo;
 
     if (stock > 0) {
-      msg += `- ${p.nombre}: ${stock} uds. (${formatBs(precio)})\n`;
-      msg += `  _Costo: ${formatBs(costo)} | Ganancia: ${formatBs(ganancia)}_\n`; // 🔥 Agregamos costo y ganancia al WhatsApp
+      msg += `▪️ *${p.nombre}*\n`;
+      msg += `   Stock: ${stock} uds. | PVP: ${formatBs(precio)}\n`;
+      productosConStock++;
     }
   });
 
-  msg += `\n*Total de productos:* ${productos.length}`;
+  if (productosConStock === 0) {
+    msg += `_No hay productos con stock disponible._\n`;
+  }
+
+  msg += `\n*Total de ítems:* ${productosConStock}`;
 
   const telDueno = '59175959450'; 
   window.open(`https://wa.me/${telDueno}?text=${encodeURIComponent(msg)}`, '_blank');
