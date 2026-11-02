@@ -6,53 +6,34 @@
   <meta name="theme-color" content="#0A0A0B" id="metaThemeColor">
   <title>DR. Xiaomi · Panel</title>
 
-  <!-- Favicon -->
   <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
-  
-  <!-- Fuentes e Iconos -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
-  <!-- Librería para PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <!-- NUESTROS CSS UNIFICADOS -->
   <link rel="stylesheet" href="./css/app-theme.css">
   <link rel="stylesheet" href="./css/app-layouts.css">
   <link rel="stylesheet" href="./css/app-components.css">
   <link rel="manifest" href="/manifest.json">
 
-  <!-- ESTILOS ESPECÍFICOS DE ESTA PÁGINA (Hero Buttons, Stats, etc) -->
   <style>
-    /* Botones Hero (Nuevo Equipo / Venta Rápida) */
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-    .btn-hero { 
-      display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; 
-      padding: 16px; border-radius: var(--r-xl); font-weight: 700; font-size: 14px; 
-      border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 105px; 
-      box-shadow: var(--shadow-md); position: relative; overflow: hidden; 
-    }
+    .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 16px; border-radius: var(--r-xl); font-weight: 700; font-size: 14px; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 105px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
     .btn-hero:active { transform: scale(0.96); }
     .btn-hero-nuevo { background: linear-gradient(135deg, var(--brand-500), #FF8C00); color: white; box-shadow: var(--shadow-glow); }
     .btn-hero-venta { background: var(--bg-elev-1); color: var(--success-500); border: 1px solid var(--border-1); }
-    
     .icon-box { width: 38px; height: 38px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 6px; margin-bottom: auto; z-index: 2; box-shadow: var(--shadow-sm); }
     .icon-box img { width: 100%; height: 100%; object-fit: contain; }
     .icon-raw { width: 38px; height: 38px; object-fit: contain; margin-bottom: auto; z-index: 2; }
-
-    /* Stats Grid */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
     .stat-card { background: var(--bg-elev-1); border-radius: var(--r-lg); padding: 14px 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--border-1); }
     .stat-value { font-size: 22px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 6px; letter-spacing: -0.5px; }
     .stat-label { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
-
-    /* Lista de Movimientos */
     .section-title { font-size: 15px; font-weight: 800; color: var(--text-1); margin-bottom: 12px; margin-top: 10px; display: flex; align-items: center; gap: 8px; }
     .ingreso-card { background: var(--bg-elev-1); border-radius: var(--r-lg); padding: 14px; margin-bottom: 10px; transition: var(--dur) var(--ease); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-1); border-left-width: 4px; border-left-style: solid; }
     .ingreso-card:active { transform: scale(0.98); background: var(--bg-elev-2); }
-    
     .icon-circle { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 14px; flex-shrink: 0; }
     .info-col { flex: 1; min-width: 0; }
     .info-title { font-size: 15px; font-weight: 700; color: var(--text-1); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -60,8 +41,6 @@
     .monto-col { text-align: right; margin-left: 10px; }
     .monto { font-size: 16px; font-weight: 800; }
     .estado-chip { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; margin-top: 6px; display: inline-block; text-transform: uppercase; }
-
-    /* Paginación */
     .pagination-container { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px; }
     .page-btn { background: var(--bg-elev-1); border: 1px solid var(--border-1); color: var(--text-1); width: 38px; height: 38px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; cursor: pointer; transition: var(--dur); }
     .page-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: white; box-shadow: var(--shadow-glow); }
@@ -71,20 +50,35 @@
 </head>
 <body>
 
-  <!-- LOADER CON LOGO Y ANILLO GIRATORIO -->
-  <div class="loading-overlay" id="appLoader">
+  <!-- LOADER CON LOGO Y ANILLO (Solo aparece al cargar) -->
+  <div class="loader-overlay" id="appLoader">
     <div class="loader-logo-container">
       <div class="loader-ring"></div>
-      <img src="/imagenes/web-app-manifest-192x192.png" alt="Logo DR Xiaomi" class="loader-logo-img">
+      <img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." class="loader-logo-img">
     </div>
     <div class="loader-text">Sincronizando...</div>
   </div>
 
-  <!-- CONTENEDOR PRINCIPAL -->
   <main class="app-container">
+    
+    <!-- HEADER CON LOGO MINIMALISTA -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-logo">
+          <img src="/imagenes/web-app-manifest-192x192.png" alt="Logo">
+        </div>
+        <div class="brand-text">
+          <h1>Panel de Control</h1>
+          <p id="userInfo">Cargando...</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="btnSalir"><img src="/app/icons/salir.png" width="20" height="20" alt="Salir"></button>
+        <button class="icon-btn" id="btnTema"><img src="/app/icons/tema.png" width="20" height="20" alt="Tema"></button>
+      </div>
+    </header>
+
     <div class="app-content">
-      
-      <!-- BOTONES HERO -->
       <div class="hero-actions">
         <button class="btn-hero btn-hero-nuevo" id="nuevoReciboBtn">
           <div class="icon-box"><img src="/app/icons/agregar.png" alt="Nuevo Equipo"></div>
@@ -96,7 +90,6 @@
         </button>
       </div>
 
-      <!-- STATS -->
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-value" id="statActivas">—</div><div class="stat-label">Activas</div></div>
         <div class="stat-card"><div class="stat-value" id="statListas" style="color: var(--success-500);">—</div><div class="stat-label">Listas</div></div>
@@ -105,13 +98,11 @@
 
       <div class="section-title">Movimientos Recientes</div>
 
-      <!-- BUSCADOR -->
       <div class="search-bar">
         <img src="/app/icons/buscar.png" width="18" height="18" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.5;">
         <input type="search" id="buscador" placeholder="Buscar cliente o equipo..." autocomplete="off" style="padding-left: 44px;">
       </div>
 
-      <!-- FILTROS -->
       <div class="filters-row" id="filtros">
         <button class="chip-interactive active" data-filtro="todos">Todos</button>
         <button class="chip-interactive" data-filtro="reparacion">Reparación</button>
@@ -121,10 +112,7 @@
         <button class="chip-interactive" data-filtro="venta">Ventas</button>
       </div>
 
-      <!-- LISTA DE MOVIMIENTOS -->
       <div class="cards-list" id="listaOrdenes"></div>
-
-      <!-- PAGINACIÓN -->
       <div class="pagination-container" id="paginationContainer"></div>
     </div>
   </main>
@@ -175,7 +163,6 @@
     </div>
   </div>
 
-  <!-- SCRIPT PRINCIPAL (Aquí conecta todo) -->
   <script type="module" src="./js/panel.js"></script>
 </body>
 </html>
