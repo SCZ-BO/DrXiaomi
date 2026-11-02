@@ -407,36 +407,6 @@ window.aplicarTema = function(tema) {
   }
 };
 
-// 3. Escuchar el clic en el botón de tema (si existe en la página)
-document.addEventListener('click', (e) => {
-  const btnTema = e.target.closest('#btnTema') || e.target.closest('#themeToggleBtn');
-  if (btnTema) {
-    e.preventDefault();
-    const actual = document.documentElement.getAttribute('data-theme');
-    const nuevo = actual === 'dark' ? 'light' : 'dark';
-    window.aplicarTema(nuevo);
-  }
-});
-// ============================================================
-// CONTROL GLOBAL DEL TEMA (MODO CLARO / OSCURO)
-// ============================================================
-
-// 1. Iniciar el tema guardado al cargar cualquier página
-const temaGuardado = localStorage.getItem('theme') || 'dark';
-document.documentElement.setAttribute('data-theme', temaGuardado);
-
-// 2. Función para aplicar el tema
-window.aplicarTema = function(tema) {
-  document.documentElement.setAttribute('data-theme', tema);
-  localStorage.setItem('theme', tema);
-  
-  // Actualizar el meta tag de color (para la barra de estado del celular)
-  const metaColor = document.getElementById('metaThemeColor');
-  if (metaColor) {
-    metaColor.setAttribute('content', tema === 'light' ? '#F8F8F9' : '#0A0A0B');
-  }
-};
-
 // 3. Escuchar el clic en el botón de tema
 document.addEventListener('click', (e) => {
   const btnTema = e.target.closest('#btnTema') || e.target.closest('#themeToggleBtn');
