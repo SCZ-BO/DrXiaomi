@@ -1,0 +1,348 @@
+/* ============================================================
+   DR. XIAOMI · LAYOUTS
+   Archivo: css/app-layouts.css
+   Descripción: Estructura principal, Header, Bottom Nav, Modales
+   ============================================================ */
+
+/* ---------- APP CONTAINER ---------- */
+.app-container {
+  max-width: 500px; /* Ancho máximo tipo app móvil */
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--bg-base);
+}
+
+/* ---------- CONTENIDO PRINCIPAL ---------- */
+.app-content {
+  flex: 1;
+  padding: var(--sp-4);
+  /* Deja espacio abajo para que la barra flotante no tape el contenido */
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  overflow-x: hidden;
+}
+
+/* ---------- HEADER ---------- */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  padding-top: calc(var(--sp-3) + env(safe-area-inset-top));
+  background: color-mix(in srgb, var(--bg-base) 85%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border-1);
+}
+
+.app-header .brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+  flex: 1;
+}
+
+.app-header .brand-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.app-header h1 {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-1);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-header p {
+  font-size: 12px;
+  color: var(--text-3);
+  font-weight: 500;
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.app-header .header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+}
+
+/* Botón redondo del header */
+.app-header .icon-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-full);
+  background: var(--bg-elev-2);
+  color: var(--text-1);
+  font-size: 18px;
+  transition: all var(--dur-fast) var(--ease);
+  border: 1px solid var(--border-1);
+}
+
+.app-header .icon-btn:active {
+  transform: scale(0.9);
+  background: var(--bg-elev-3);
+}
+
+/* ---------- BOTTOM NAV (Barra Flotante tipo iOS) ---------- */
+.bottom-nav {
+  position: fixed;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 468px; /* 500px - 32px de margen */
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px;
+  background: rgba(26, 26, 29, 0.85); /* Fondo oscuro semitransparente */
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-full); /* 🔥 Píldora redondeada */
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-bottomnav);
+}
+
+[data-theme="light"] .bottom-nav {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--border-1);
+}
+
+.bottom-nav .nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 16px;
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--dur) var(--ease-spring);
+  border-radius: var(--r-full);
+  border: none;
+  background: none;
+}
+
+.bottom-nav .nav-item i,
+.bottom-nav .nav-item img {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  transition: transform var(--dur) var(--ease-spring);
+  opacity: 0.7;
+}
+
+.bottom-nav .nav-item:active {
+  transform: scale(0.9);
+}
+
+.bottom-nav .nav-item.active {
+  color: var(--brand-500);
+  background: var(--bg-elev-3);
+}
+
+[data-theme="light"] .bottom-nav .nav-item.active {
+  background: var(--bg-elev-2);
+}
+
+.bottom-nav .nav-item.active i,
+.bottom-nav .nav-item.active img {
+  opacity: 1;
+  transform: translateY(-1px) scale(1.1);
+}
+
+/* ---------- BOTTOM SHEET (Modal desde abajo) ---------- */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: var(--z-sheet);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur) var(--ease);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sheet {
+  background: var(--bg-elev-1);
+  border-top-left-radius: var(--r-2xl);
+  border-top-right-radius: var(--r-2xl);
+  width: 100%;
+  max-width: 500px;
+  padding: 16px 20px calc(24px + env(safe-area-inset-bottom));
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform var(--dur-slow) var(--ease-spring);
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+  border: 1px solid var(--border-1);
+  border-bottom: none;
+}
+
+.sheet-backdrop.show .sheet {
+  transform: translateY(0);
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 5px;
+  background: var(--border-3);
+  border-radius: var(--r-full);
+  margin: 0 auto var(--sp-4);
+}
+
+/* ---------- MODAL (Centrado en pantalla) ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.modal-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-2xl);
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  transform: scale(0.95) translateY(10px);
+  transition: transform var(--dur) var(--ease-spring);
+}
+
+.modal-backdrop.show .modal {
+  transform: scale(1) translateY(0);
+}
+
+/* ---------- TOASTS ---------- */
+.toast-container {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  padding: 0 16px;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border-2);
+  border-left: 4px solid var(--brand-500);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1);
+  transform: translateY(-120%) scale(0.95);
+  opacity: 0;
+  transition: all var(--dur) var(--ease-spring);
+  pointer-events: auto;
+}
+
+.toast.show {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.toast i { font-size: 18px; flex-shrink: 0; }
+.toast-success { border-left-color: var(--success-500); }
+.toast-success i { color: var(--success-500); }
+.toast-error { border-left-color: var(--danger-500); }
+.toast-error i { color: var(--danger-500); }
+.toast-warning { border-left-color: var(--warning-500); }
+.toast-warning i { color: var(--warning-500); }
+.toast-info { border-left-color: var(--info-500); }
+.toast-info i { color: var(--info-500); }
+
+/* ---------- SEARCH BAR ---------- */
+.search-bar {
+  position: relative;
+  margin-bottom: var(--sp-4);
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  background: var(--bg-elev-2);
+  border: 1.5px solid var(--border-1);
+  border-radius: var(--r-full);
+  color: var(--text-1);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--dur) var(--ease);
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  background: var(--bg-elev-1);
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+.search-bar i {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  font-size: 15px;
+}

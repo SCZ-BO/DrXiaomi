@@ -1,0 +1,313 @@
+/* ============================================================
+   DR. XIAOMI · COMPONENTES
+   Archivo: css/app-components.css
+   Descripción: Botones, inputs, cards, chips, badges
+   ============================================================ */
+
+/* ---------- BOTONES ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: 14px 20px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  border: none;
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  transition: all var(--dur) var(--ease-spring);
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn i { font-size: 16px; }
+
+/* Botón Principal (Naranja Xiaomi) */
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
+  color: white;
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.95);
+  box-shadow: 0 4px 12px rgba(255, 105, 0, 0.2);
+}
+
+/* Botón Secundario (Gris oscuro/claro) */
+.btn-secondary {
+  background: var(--bg-elev-2);
+  color: var(--text-1);
+  border: 1px solid var(--border-2);
+}
+
+/* Botón de WhatsApp */
+.btn-whatsapp {
+  background: #25D366;
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+}
+
+/* Botón de Peligro (Rojo) */
+.btn-danger {
+  background: var(--danger-100);
+  color: var(--danger-500);
+}
+
+/* Botones pequeños o redondos (Iconos) */
+.btn-icon {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: var(--r-full);
+}
+
+/* Botón flotante (FAB) */
+.btn-fab {
+  position: fixed;
+  bottom: calc(90px + env(safe-area-inset-bottom));
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: var(--r-full);
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
+  color: white;
+  box-shadow: var(--shadow-glow-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  z-index: var(--z-dropdown);
+  padding: 0;
+}
+
+.btn-fab:active { transform: scale(0.9); }
+
+/* ---------- INPUTS (Formularios Modernos) ---------- */
+.field {
+  position: relative;
+  margin-bottom: var(--sp-4);
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 16px 14px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  background: var(--input-bg);
+  color: var(--text-1);
+  border: 1.5px solid var(--border-2);
+  border-radius: var(--r-lg);
+  transition: all var(--dur) var(--ease);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  background: var(--bg-elev-1);
+  box-shadow: 0 0 0 4px var(--brand-100);
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+/* ---------- CARDS (Tarjetas) ---------- */
+.card {
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-xl);
+  padding: var(--sp-4);
+  transition: all var(--dur) var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Tarjeta interactiva (cuando se puede tocar) */
+.card-interactive {
+  cursor: pointer;
+}
+
+.card-interactive:active {
+  transform: scale(0.97);
+  background: var(--bg-elev-2);
+}
+
+/* Tarjeta con franja de color (para estados) */
+.card-accent {
+  padding-left: var(--sp-5);
+}
+
+.card-accent::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 5px;
+  border-radius: 0 4px 4px 0;
+  background: var(--brand-500);
+}
+
+/* Colores de franja */
+.card-accent.success::before { background: var(--success-500); }
+.card-accent.warning::before { background: var(--warning-500); }
+.card-accent.danger::before  { background: var(--danger-500); }
+.card-accent.info::before    { background: var(--info-500); }
+
+/* ---------- CHIPS (Filtros y Etiquetas) ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: var(--r-full);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+/* Chips de estado */
+.chip-recibido { background: var(--warning-100); color: var(--warning-500); }
+.chip-reparacion { background: var(--brand-100); color: var(--brand-500); }
+.chip-listo { background: var(--success-100); color: var(--success-500); }
+.chip-entregado { background: var(--purple-100); color: var(--purple-500); }
+.chip-devuelto { background: var(--danger-100); color: var(--danger-500); }
+
+/* Chip interactivo (para filtrar en las listas) */
+.chip-interactive {
+  cursor: pointer;
+  background: var(--bg-elev-2);
+  color: var(--text-2);
+  border: 1.5px solid var(--border-2);
+  text-transform: none;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: var(--r-full);
+  transition: all var(--dur) var(--ease);
+}
+
+.chip-interactive:active {
+  transform: scale(0.95);
+}
+
+.chip-interactive.active {
+  background: var(--brand-500);
+  color: white;
+  border-color: var(--brand-500);
+  box-shadow: 0 4px 12px var(--brand-100);
+}
+
+/* Fila de chips scrolleable horizontalmente */
+.filters-row {
+  display: flex;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: var(--sp-4);
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.filters-row::-webkit-scrollbar { display: none; }
+.filters-row .chip-interactive { flex-shrink: 0; }
+
+/* ---------- BADGES (Contadores) ---------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: var(--r-full);
+  background: var(--brand-500);
+  color: white;
+}
+
+/* ---------- AVATARES ---------- */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-full);
+  background: var(--bg-elev-3);
+  color: var(--text-2);
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-brand {
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
+  color: white;
+}
+
+/* ---------- PROGRESS BAR ---------- */
+.progress {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-elev-3);
+  border-radius: var(--r-full);
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand-500), var(--brand-400));
+  border-radius: var(--r-full);
+  transition: width var(--dur-slow) var(--ease);
+}
+
+/* ---------- SKELETON (Animación de carga) ---------- */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-elev-2) 0%, var(--bg-elev-3) 50%, var(--bg-elev-2) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--r-md);
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-text { height: 14px; margin-bottom: 8px; }
+.skeleton-title { height: 20px; width: 60%; margin-bottom: 12px; }
