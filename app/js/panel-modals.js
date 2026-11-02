@@ -2,14 +2,15 @@
 import { toast, haptic, escapeHtml } from './app-ui.js';
 import { db } from './firebase.js';
 import { doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { appState, parsearFecha, formatBsLimpio, cerrarSheet } from './panel.js'; // 🔥 Importamos estado y funciones de panel.js
+// 🔥 IMPORTAMOS EL ESTADO Y FUNCIONES DEL PANEL PRINCIPAL
+import { appState, parsearFecha, formatBsLimpio, cerrarSheet } from './panel.js';
 
-let ordenAEntregar = null; 
+let ordenAEntregar = null;
 let metodoPagoSeleccionado = null;
 
-// ============================================================
-// MODAL 1: DETALLE DEL TELÉFONO (Cambiar estado, cobrar, etc.)
-// ============================================================
+// ==========================================
+// MODAL 1: DETALLE DEL TELÉFONO
+// ==========================================
 export function abrirSheetTelefono(id) {
   const orden = appState.ordenes.find(o => o.id === id); 
   if (!orden) return;
@@ -47,12 +48,10 @@ export function abrirSheetTelefono(id) {
   reciboSheet.classList.add('show'); 
   haptic(15);
 
-  // Abrir orden completa
   document.getElementById('btnEditarOrden')?.addEventListener('click', () => { 
     window.location.href = `/app/orden.html?id=${id}`; 
   });
 
-  // Guardar nuevo estado
   document.getElementById('btnActualizarEstado')?.addEventListener('click', async () => {
     const nuevoEstado = document.getElementById('selectEstado').value;
     if (nuevoEstado === 'entregado') { 
@@ -60,13 +59,9 @@ export function abrirSheetTelefono(id) {
       abrirModalPago(orden); 
       return; 
     }
-    
     try {
       await updateDoc(doc(db, 'recibos', id), { estadoOrden: nuevoEstado });
-      toast('Estado actualizado', 'success');
-      cerrarSheet();
-      
-      // Si pasa a listo, preguntar por WhatsApp
+      toast('Estado actualizado', 'success'); cerrarSheet();
       if (nuevoEstado === 'listo' && orden.telefono) {
         setTimeout(() => {
           if (confirm(`El equipo está listo. ¿Deseas avisar a ${orden.cliente.split(' ')[0]} por WhatsApp?`)) {
@@ -78,7 +73,6 @@ export function abrirSheetTelefono(id) {
     } catch (err) { toast('Error al actualizar', 'error'); }
   });
 
-  // Botón WhatsApp
   document.getElementById('btnWhatsApp')?.addEventListener('click', () => {
     const urlRecibo = `${window.location.origin}/recibo/?id=${orden.numeroRecibo}`;
     const mensaje = `Hola ${orden.cliente.split(' ')[0]}, tu equipo *${orden.marca} ${orden.modelo}* ya está en nuestro taller.\n\n📄 *Recibo:*\n${urlRecibo}\n\n¡Gracias! - DR. XIAOMI`;
@@ -86,21 +80,17 @@ export function abrirSheetTelefono(id) {
     cerrarSheet();
   });
 
-  // Eliminar Orden
   document.getElementById('btnEliminar')?.addEventListener('click', async () => {
     if (confirm('¿Eliminar este recibo permanentemente?')) {
-      try { 
-        await deleteDoc(doc(db, 'recibos', id)); 
-        toast('Recibo eliminado', 'success'); 
-        cerrarSheet(); 
-      } catch (err) { toast('Error al eliminar', 'error'); }
+      try { await deleteDoc(doc(db, 'recibos', id)); toast('Recibo eliminado', 'success'); cerrarSheet(); }
+      catch (err) { toast('Error al eliminar', 'error'); }
     }
   });
 }
 
-// ============================================================
+// ==========================================
 // MODAL 2: CONFIRMAR ENTREGA Y COBRO
-// ============================================================
+// ==========================================
 function abrirModalPago(orden) {
   ordenAEntregar = orden; 
   metodoPagoSeleccionado = null;
@@ -109,44 +99,35 @@ function abrirModalPago(orden) {
   document.getElementById('pagoMonto').value = orden.saldo > 0 ? orden.saldo : orden.total;
   document.querySelectorAll('#metodosPagoGrid [data-metodo]').forEach(b => { b.classList.remove('btn-primary'); b.classList.add('btn-secondary'); });
   
-  modalPago.classList.add('show'); 
-  haptic(15);
+  modalPago.classList.add('show'); haptic(15);
 
-  // Selección de método (Efectivo/QR)
   document.getElementById('metodosPagoGrid').onclick = (e) => {
-    const btn = e.target.closest('[data-metodo]'); 
-    if (!btn) return;
+    const btn = e.target.closest('[data-metodo]'); if (!btn) return;
     haptic(10);
     document.querySelectorAll('#metodosPagoGrid [data-metodo]').forEach(b => { b.classList.remove('btn-primary'); b.classList.add('btn-secondary'); });
     btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
     metodoPagoSeleccionado = btn.dataset.metodo;
   };
 
-  // Confirmar Pago
   document.getElementById('btnConfirmarPago').onclick = async () => {
     const monto = parseFloat(document.getElementById('pagoMonto').value);
     if (!metodoPagoSeleccionado) { toast('Selecciona un método de pago', 'error'); return; }
     if (!monto || monto <= 0) { toast('Ingresa un monto válido', 'error'); return; }
-    
     haptic(20);
     try {
       await updateDoc(doc(db, 'recibos', ordenAEntregar.id), {
-        estadoOrden: 'entregado', 
-        fechaEntrega: serverTimestamp(), 
-        montoCobrado: monto, 
-        metodoPago: metodoPagoSeleccionado
+        estadoOrden: 'entregado', fechaEntrega: serverTimestamp(), montoCobrado: monto, metodoPago: metodoPagoSeleccionado
       });
-      toast('Equipo entregado y cobrado', 'success'); 
-      modalPago.classList.remove('show');
+      toast('Equipo entregado y cobrado', 'success'); modalPago.classList.remove('show');
     } catch (err) { toast('Error al entregar', 'error'); }
   };
   
   document.getElementById('btnClosePago').onclick = () => modalPago.classList.remove('show');
 }
 
-// ============================================================
-// MODAL 3: DETALLE DE VENTA RÁPIDA
-// ============================================================
+// ==========================================
+// MODAL 3: DETALLE DE VENTA
+// ==========================================
 export function abrirSheetVenta(id, origen, extra) {
   const venta = appState.ventasHoy.find(v => v.id === id && (v.indexExtra || '') === extra);
   if (!venta) return;
@@ -167,8 +148,7 @@ export function abrirSheetVenta(id, origen, extra) {
     ${btnEliminarHtml}
   `;
   
-  reciboSheet.classList.add('show'); 
-  haptic(15);
+  reciboSheet.classList.add('show'); haptic(15);
 
   if (origen === 'panel' && esAdmin) {
     document.getElementById('btnEditarVenta')?.addEventListener('click', () => { cerrarSheet(); abrirModalEditarVenta(venta); });
@@ -180,15 +160,14 @@ export function abrirSheetVenta(id, origen, extra) {
     try {
       if (origen === 'panel') await deleteDoc(doc(db, 'ventas', id));
       else await deleteDoc(doc(db, 'cierres', id));
-      toast('Eliminado', 'success'); 
-      cerrarSheet();
+      toast('Eliminado', 'success'); cerrarSheet();
     } catch (err) { toast('Error al eliminar', 'error'); }
   });
 }
 
-// ============================================================
-// MODAL 4: EDITAR VENTA EXISTENTE
-// ============================================================
+// ==========================================
+// MODAL 4: EDITAR VENTA
+// ==========================================
 export function abrirModalEditarVenta(venta) {
   const modal = document.createElement('div');
   modal.className = 'sheet-backdrop'; modal.id = 'modalEditarVenta'; modal.style.display = 'flex';
@@ -216,8 +195,7 @@ export function abrirModalEditarVenta(venta) {
     </div>
   `;
   
-  document.body.appendChild(modal); 
-  setTimeout(() => modal.classList.add('show'), 10);
+  document.body.appendChild(modal); setTimeout(() => modal.classList.add('show'), 10);
 
   const cerrar = () => { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); };
   document.getElementById('btnCloseEditV').addEventListener('click', cerrar);
@@ -228,12 +206,10 @@ export function abrirModalEditarVenta(venta) {
     const nuevoMonto = parseFloat(document.getElementById('editMontoV').value) || 0;
     const nuevoMetodo = document.getElementById('editMetodoV').value;
     const nuevoCosto = document.getElementById('editCostoV') ? (parseFloat(document.getElementById('editCostoV').value) || 0) : 0;
-    
     haptic(20);
     try {
       await updateDoc(doc(db, 'ventas', venta.id), { concepto: nuevoConcepto, monto: nuevoMonto, costo: nuevoCosto, metodoPago: nuevoMetodo });
-      toast('Venta actualizada', 'success'); 
-      cerrar();
+      toast('Venta actualizada', 'success'); cerrar();
     } catch (err) { toast('Error al actualizar', 'error'); }
   });
 }
