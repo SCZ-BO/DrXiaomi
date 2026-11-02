@@ -5,7 +5,7 @@ import { db } from './firebase.js';
 import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { abrirSheetTelefono, abrirSheetVenta } from './panel-modals.js';
 import { generarPDFDia } from './panel-pdf.js';
-import { icono } from './icons.js'; // 🔥 IMPORTAMOS EL DIRECTORIO DE ICONOS
+import { icono } from './icons.js';
 
 initTheme();
 
@@ -21,10 +21,12 @@ const paginationContainer = document.getElementById('paginationContainer');
 const appLoader = document.getElementById('appLoader');
 
 // ==========================================
-// 1. RENDERIZADO DEL LAYOUT (HEADER Y NAV)
+// 1. RENDERIZADO DEL LAYOUT (CORREGIDO)
 // ==========================================
 function renderLayout() {
-  // 🔥 Usamos la función icono() que toma los PNG de tu carpeta
+  const container = document.querySelector('.app-container');
+  if (!container) return;
+
   const headerHTML = `
     <header class="app-header">
       <div class="brand">
@@ -45,8 +47,9 @@ function renderLayout() {
       <a href="/app/inventario/" class="nav-item">${icono('inventario', 22)} <span>Stock</span></a>
     </nav>`;
     
-  document.body.insertAdjacentHTML('afterbegin', headerHTML);
-  document.body.insertAdjacentHTML('beforeend', navHTML);
+  // 🔥 INYECTAMOS DENTRO DEL CONTENEDOR, NO EN EL BODY
+  container.insertAdjacentHTML('afterbegin', headerHTML);
+  container.insertAdjacentHTML('beforeend', navHTML);
   
   document.getElementById('btnSalir')?.addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
 }
@@ -312,9 +315,8 @@ function renderCardTelefono(o) {
 function renderCardVenta(v, tipo) {
   const f = parsearFecha(v.fecha); const hora = f ? `${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')}` : '';
   
-  // Usamos tus iconos según el concepto
   let iconoNombre = 'venta';
-  if (v.concepto === 'Botón') iconoNombre = 'bateria'; // o 'servicios'
+  if (v.concepto === 'Botón') iconoNombre = 'bateria'; 
   else if (v.concepto === 'Limpieza') iconoNombre = 'servicios';
   else if (v.concepto === 'Reactivación') iconoNombre = 'estado';
   else if (v.concepto === 'Cargador') iconoNombre = 'bateria';
