@@ -1,8 +1,7 @@
-
 /* ============================================================
    DR. XIAOMI · COMPONENTES
-   Archivo: app-components.css
-   Descripción: Botones, inputs, cards, chips, badges, etc.
+   Archivo: css/app-components.css
+   Descripción: Botones, inputs, cards, chips, badges
    ============================================================ */
 
 /* ---------- BOTONES ---------- */
@@ -16,20 +15,17 @@
   font-size: 15px;
   font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.01em;
   border: none;
   border-radius: var(--r-lg);
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
   user-select: none;
-  transition: all var(--dur) var(--ease);
-  position: relative;
-  overflow: hidden;
+  transition: all var(--dur) var(--ease-spring);
 }
 
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(0.95);
 }
 
 .btn:disabled {
@@ -38,106 +34,52 @@
   transform: none;
 }
 
-.btn i {
-  font-size: 15px;
-}
+.btn i { font-size: 16px; }
 
-/* Primario (naranja con gradient) */
+/* Botón Principal (Naranja Xiaomi) */
 .btn-primary {
   background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
   color: white;
   box-shadow: var(--shadow-glow);
 }
 
-.btn-primary:hover:not(:disabled) {
-  box-shadow: var(--shadow-glow-strong);
-  transform: translateY(-1px);
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.95);
+  box-shadow: 0 4px 12px rgba(255, 105, 0, 0.2);
 }
 
-.btn-primary:active {
-  transform: translateY(0) scale(0.97);
-}
-
-/* Secundario (superficie elevada) */
+/* Botón Secundario (Gris oscuro/claro) */
 .btn-secondary {
   background: var(--bg-elev-2);
   color: var(--text-1);
-  border: 1.5px solid var(--border-2);
+  border: 1px solid var(--border-2);
 }
 
-.btn-secondary:hover:not(:disabled) {
-  background: var(--bg-elev-3);
-  border-color: var(--border-3);
-}
-
-/* Ghost (transparente) */
-.btn-ghost {
-  background: transparent;
-  color: var(--brand-500);
-  box-shadow: none;
-}
-
-.btn-ghost:hover:not(:disabled) {
-  background: var(--brand-100);
-}
-
-/* Danger (rojo) */
-.btn-danger {
-  background: var(--danger-500);
-  color: white;
-}
-
-.btn-danger:hover:not(:disabled) {
-  background: #DC2626;
-}
-
-/* Success (verde) */
-.btn-success {
-  background: var(--success-500);
-  color: white;
-}
-
-/* WhatsApp (verde oficial) */
+/* Botón de WhatsApp */
 .btn-whatsapp {
   background: #25D366;
   color: white;
-  box-shadow: 0 8px 24px rgba(37, 211, 102, 0.35);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
 }
 
-.btn-whatsapp:hover:not(:disabled) {
-  background: #1FB855;
-  box-shadow: 0 12px 32px rgba(37, 211, 102, 0.45);
+/* Botón de Peligro (Rojo) */
+.btn-danger {
+  background: var(--danger-100);
+  color: var(--danger-500);
 }
 
-/* Tamaños */
-.btn-sm {
-  padding: 10px 16px;
-  font-size: 13px;
-  border-radius: var(--r-md);
-}
-
-.btn-lg {
-  padding: 18px 28px;
-  font-size: 16px;
-  border-radius: var(--r-xl);
-}
-
-.btn-block {
-  width: 100%;
-}
-
+/* Botones pequeños o redondos (Iconos) */
 .btn-icon {
   width: 42px;
   height: 42px;
   padding: 0;
   border-radius: var(--r-full);
-  flex-shrink: 0;
 }
 
 /* Botón flotante (FAB) */
 .btn-fab {
   position: fixed;
-  bottom: 90px;
+  bottom: calc(90px + env(safe-area-inset-bottom));
   right: 20px;
   width: 60px;
   height: 60px;
@@ -148,16 +90,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 24px;
   z-index: var(--z-dropdown);
   padding: 0;
 }
 
-.btn-fab:active {
-  transform: scale(0.92);
-}
+.btn-fab:active { transform: scale(0.9); }
 
-/* ---------- INPUTS (con floating label) ---------- */
+/* ---------- INPUTS (Formularios Modernos) ---------- */
 .field {
   position: relative;
   margin-bottom: var(--sp-4);
@@ -167,32 +107,17 @@
 .field select,
 .field textarea {
   width: 100%;
-  padding: 20px 14px 8px;
+  padding: 16px 14px;
   font-family: inherit;
   font-size: 15px;
   font-weight: 500;
   background: var(--input-bg);
   color: var(--text-1);
   border: 1.5px solid var(--border-2);
-  border-radius: var(--r-md);
+  border-radius: var(--r-lg);
   transition: all var(--dur) var(--ease);
   appearance: none;
   -webkit-appearance: none;
-}
-
-.field textarea {
-  min-height: 90px;
-  resize: vertical;
-  padding-top: 24px;
-  line-height: 1.5;
-}
-
-.field select {
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23A3A3A3' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  padding-right: 40px;
 }
 
 .field input:focus,
@@ -200,73 +125,17 @@
 .field textarea:focus {
   outline: none;
   border-color: var(--brand-500);
-  box-shadow: 0 0 0 3px rgba(255, 105, 0, 0.15);
+  background: var(--bg-elev-1);
+  box-shadow: 0 0 0 4px var(--brand-100);
 }
 
-.field label {
-  position: absolute;
-  left: 14px;
-  top: 17px;
-  font-size: 15px;
-  font-weight: 500;
+.field input::placeholder,
+.field textarea::placeholder {
   color: var(--text-3);
-  pointer-events: none;
-  transition: all var(--dur) var(--ease);
-  transform-origin: left top;
+  font-weight: 400;
 }
 
-/* Label flota hacia arriba cuando el input tiene valor o focus */
-.field input:focus + label,
-.field input:not(:placeholder-shown) + label,
-.field textarea:focus + label,
-.field textarea:not(:placeholder-shown) + label,
-.field select:focus + label,
-.field select:valid + label {
-  top: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--brand-500);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Estado de error */
-.field.error input,
-.field.error select,
-.field.error textarea {
-  border-color: var(--danger-500);
-  box-shadow: 0 0 0 3px var(--danger-100);
-}
-
-.field.error label {
-  color: var(--danger-500);
-}
-
-.field-error {
-  display: block;
-  font-size: 12px;
-  color: var(--danger-500);
-  margin-top: -8px;
-  margin-bottom: var(--sp-3);
-  padding-left: 4px;
-}
-
-/* Con icono a la izquierda */
-.field.has-icon input {
-  padding-left: 46px;
-}
-
-.field .field-icon {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-3);
-  font-size: 16px;
-  pointer-events: none;
-}
-
-/* ---------- CARDS ---------- */
+/* ---------- CARDS (Tarjetas) ---------- */
 .card {
   background: var(--bg-elev-1);
   border: 1px solid var(--border-1);
@@ -277,30 +146,17 @@
   overflow: hidden;
 }
 
-.card:hover {
-  border-color: var(--border-2);
-}
-
+/* Tarjeta interactiva (cuando se puede tocar) */
 .card-interactive {
   cursor: pointer;
 }
 
-.card-interactive:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-3);
-  box-shadow: var(--shadow-md);
-}
-
 .card-interactive:active {
-  transform: translateY(0) scale(0.99);
+  transform: scale(0.97);
+  background: var(--bg-elev-2);
 }
 
-.card-elevated {
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-2);
-}
-
-/* Card con franja de color a la izquierda */
+/* Tarjeta con franja de color (para estados) */
 .card-accent {
   padding-left: var(--sp-5);
 }
@@ -311,75 +167,40 @@
   left: 0;
   top: 12px;
   bottom: 12px;
-  width: 4px;
+  width: 5px;
   border-radius: 0 4px 4px 0;
   background: var(--brand-500);
 }
 
+/* Colores de franja */
 .card-accent.success::before { background: var(--success-500); }
 .card-accent.warning::before { background: var(--warning-500); }
 .card-accent.danger::before  { background: var(--danger-500); }
 .card-accent.info::before    { background: var(--info-500); }
-.card-accent.purple::before  { background: var(--purple-500); }
 
-/* ---------- CHIPS ---------- */
+/* ---------- CHIPS (Filtros y Etiquetas) ---------- */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 11px;
-  font-size: 11px;
+  padding: 6px 12px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
   border-radius: var(--r-full);
   text-transform: uppercase;
   letter-spacing: 0.4px;
   white-space: nowrap;
-  transition: all var(--dur-fast) var(--ease);
-}
-
-.chip i {
-  font-size: 10px;
 }
 
 /* Chips de estado */
-.chip-recibido {
-  background: var(--warning-100);
-  color: var(--warning-500);
-}
+.chip-recibido { background: var(--warning-100); color: var(--warning-500); }
+.chip-reparacion { background: var(--brand-100); color: var(--brand-500); }
+.chip-listo { background: var(--success-100); color: var(--success-500); }
+.chip-entregado { background: var(--purple-100); color: var(--purple-500); }
+.chip-devuelto { background: var(--danger-100); color: var(--danger-500); }
 
-.chip-diagnostico {
-  background: var(--info-100);
-  color: var(--info-500);
-}
-
-.chip-espera,
-.chip-espera-repuesto {
-  background: var(--brand-100);
-  color: var(--brand-500);
-}
-
-.chip-listo {
-  background: var(--success-100);
-  color: var(--success-500);
-}
-
-.chip-entregado {
-  background: rgba(139, 92, 246, 0.15);
-  color: var(--purple-500);
-}
-
-.chip-devuelto {
-  background: var(--danger-100);
-  color: var(--danger-500);
-}
-
-.chip-cancelado {
-  background: rgba(115, 115, 115, 0.15);
-  color: var(--gray-400);
-}
-
-/* Chip interactivo (botones de filtro) */
+/* Chip interactivo (para filtrar en las listas) */
 .chip-interactive {
   cursor: pointer;
   background: var(--bg-elev-2);
@@ -387,51 +208,52 @@
   border: 1.5px solid var(--border-2);
   text-transform: none;
   font-size: 13px;
-  font-weight: 600;
-  padding: 8px 14px;
-  letter-spacing: 0;
+  padding: 8px 16px;
+  border-radius: var(--r-full);
+  transition: all var(--dur) var(--ease);
 }
 
-.chip-interactive:hover {
-  background: var(--bg-elev-3);
-  border-color: var(--border-3);
+.chip-interactive:active {
+  transform: scale(0.95);
 }
 
 .chip-interactive.active {
   background: var(--brand-500);
   color: white;
   border-color: var(--brand-500);
+  box-shadow: 0 4px 12px var(--brand-100);
 }
 
-/* ---------- BADGES (contadores) ---------- */
+/* Fila de chips scrolleable horizontalmente */
+.filters-row {
+  display: flex;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: var(--sp-4);
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.filters-row::-webkit-scrollbar { display: none; }
+.filters-row .chip-interactive { flex-shrink: 0; }
+
+/* ---------- BADGES (Contadores) ---------- */
 .badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
+  min-width: 22px;
+  height: 22px;
   padding: 0 6px;
   font-size: 11px;
   font-weight: 800;
-  line-height: 1;
   border-radius: var(--r-full);
   background: var(--brand-500);
   color: white;
 }
 
-.badge-dot {
-  width: 8px;
-  height: 8px;
-  padding: 0;
-  min-width: 8px;
-  border-radius: var(--r-full);
-}
-
-.badge-success { background: var(--success-500); }
-.badge-danger  { background: var(--danger-500); }
-.badge-warning { background: var(--warning-500); }
-
-/* ---------- AVATAR ---------- */
+/* ---------- AVATARES ---------- */
 .avatar {
   display: inline-flex;
   align-items: center;
@@ -447,18 +269,6 @@
   overflow: hidden;
 }
 
-.avatar-lg {
-  width: 56px;
-  height: 56px;
-  font-size: 22px;
-}
-
-.avatar-sm {
-  width: 32px;
-  height: 32px;
-  font-size: 13px;
-}
-
 .avatar img {
   width: 100%;
   height: 100%;
@@ -468,33 +278,6 @@
 .avatar-brand {
   background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
   color: white;
-}
-
-/* ---------- DIVISOR ---------- */
-.divider {
-  height: 1px;
-  background: var(--border-1);
-  border: none;
-  margin: var(--sp-4) 0;
-}
-
-.divider-text {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  color: var(--text-3);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.divider-text::before,
-.divider-text::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border-1);
 }
 
 /* ---------- PROGRESS BAR ---------- */
@@ -513,14 +296,9 @@
   transition: width var(--dur-slow) var(--ease);
 }
 
-/* ---------- SKELETON (carga) ---------- */
+/* ---------- SKELETON (Animación de carga) ---------- */
 .skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--bg-elev-2) 0%,
-    var(--bg-elev-3) 50%,
-    var(--bg-elev-2) 100%
-  );
+  background: linear-gradient(90deg, var(--bg-elev-2) 0%, var(--bg-elev-3) 50%, var(--bg-elev-2) 100%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
   border-radius: var(--r-md);
@@ -531,116 +309,5 @@
   100% { background-position: -200% 0; }
 }
 
-.skeleton-text {
-  height: 14px;
-  margin-bottom: 8px;
-}
-
-.skeleton-title {
-  height: 20px;
-  width: 60%;
-  margin-bottom: 12px;
-}
-
-/* ---------- STAT CARD (estadísticas) ---------- */
-.stat-card {
-  background: var(--bg-elev-1);
-  border: 1px solid var(--border-1);
-  border-radius: var(--r-lg);
-  padding: var(--sp-3) var(--sp-4);
-  text-align: center;
-}
-
-.stat-value {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text-1);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-}
-
-.stat-value.brand   { color: var(--brand-500); }
-.stat-value.success { color: var(--success-500); }
-.stat-value.danger  { color: var(--danger-500); }
-
-.stat-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-top: 4px;
-}
-
-/* ---------- TOGGLE SWITCH ---------- */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 26px;
-  flex-shrink: 0;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.switch-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--bg-elev-3);
-  border-radius: var(--r-full);
-  transition: var(--dur) var(--ease);
-}
-
-.switch-slider::before {
-  content: '';
-  position: absolute;
-  height: 20px;
-  width: 20px;
-  left: 3px;
-  bottom: 3px;
-  background: white;
-  border-radius: var(--r-full);
-  transition: var(--dur) var(--ease-spring);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.switch input:checked + .switch-slider {
-  background: var(--brand-500);
-}
-
-.switch input:checked + .switch-slider::before {
-  transform: translateX(18px);
-}
-
-/* ---------- EMPTY STATE ---------- */
-.empty-state {
-  text-align: center;
-  padding: var(--sp-10) var(--sp-4);
-  color: var(--text-3);
-}
-
-.empty-state i {
-  font-size: 56px;
-  opacity: 0.3;
-  margin-bottom: var(--sp-4);
-  display: block;
-}
-
-.empty-state h3 {
-  font-size: 16px;
-  color: var(--text-2);
-  margin-bottom: 6px;
-}
-
-.empty-state p {
-  font-size: 13px;
-  color: var(--text-3);
-}
+.skeleton-text { height: 14px; margin-bottom: 8px; }
+.skeleton-title { height: 20px; width: 60%; margin-bottom: 12px; }
