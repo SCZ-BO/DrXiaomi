@@ -18,6 +18,9 @@ let favorites = new Set(JSON.parse(localStorage.getItem("drxiaomi_favs_v1") || "
 let techMode = false;
 let currentTerm = "";
 
+// ==========================================
+// 1. PERMISOS Y SEGURIDAD
+// ==========================================
 let sesion = null;
 try { sesion = JSON.parse(localStorage.getItem('drx_sesion') || 'null'); } catch(e) {}
 const isAdmin = sesion && sesion.rol === 'admin';
@@ -25,33 +28,48 @@ const isAdmin = sesion && sesion.rol === 'admin';
 if (isAdmin) {
   document.getElementById('adminEditBtn').style.display = 'flex';
   document.getElementById('adminEditBtn').onclick = () => window.location.href = '/app/precios-admin/';
+} else {
+  // 🔥 Si es técnico, ocultamos el botón de Reportes de la barra inferior
+  const navReportes = document.getElementById('navReportes');
+  if (navReportes) navReportes.style.display = 'none';
 }
 
-// Logo por marca
+// ==========================================
+// 2. UTILIDADES
+// ==========================================
 function getLogo(marca) {
   let m = marca ? marca.split(" ")[0].toUpperCase() : "GENERAL";
   if (m.includes("APPLE") || m.includes("IPHONE")) m = "APPLE";
   if (m.includes("XIAOMI") || m.includes("REDMI") || m.includes("POCO")) m = "XIAOMI";
-  return `https://xiaomi.scz.red/app/precio/logos/${m.toLowerCase()}.png`;
+  
+  // 🔥 Ruta corregida a la carpeta local de logos
+  return `/app/precios/logos/${m.toLowerCase()}.png`;
 }
 
-// 🚀 CONEXIÓN A FIREBASE
+// ==========================================
+// 3. CONEXIÓN A FIREBASE Y DESORDEN ALEATORIO
+// ==========================================
 onSnapshot(collection(db, "precios"), (snap) => {
   allData = [];
   snap.forEach(d => { if (d.data().activo !== false) allData.push({ id: d.id, ...d.data() }); });
+  
+  // 🎲 Desordenamos solo al cargar
+  allData.sort(() => Math.random() - 0.5);
+  
   splash.classList.add('hidden');
   appRoot.style.opacity = "1";
   renderList();
 });
 
-// 🚀 BUSCADOR INTELIGENTE (SCORING)
+// ==========================================
+// 4. BUSCADORES
+// ==========================================
 function aplicarBusqueda(data, term) {
   if (!term) return data;
   const tokens = term.toLowerCase().split(" ").filter(t => t.length > 0);
   if (!tokens.length) return data;
 
   const results = [];
-  
   for (const item of data) {
     const combined = `${item.marca} ${item.modelo}`.toLowerCase();
     let score = 0;
@@ -68,25 +86,22 @@ function aplicarBusqueda(data, term) {
         if (coincideAlguna) score = 10;
       }
     }
-
     if (score > 0) results.push({ item, score });
   }
   
+  // Los resultados se ordenan de mayor a menor puntaje
   return results.sort((a, b) => b.score - a.score).map(r => r.item);
 }
 
-// 🚀 BUSCADOR DE COMPATIBILIDADES
 function buscarCompatibles(term) {
   term = term.toLowerCase().trim();
   if (!term) return [];
-  
   const tokens = term.split(" ").filter(t => t.length > 0);
   const resultados = [];
 
   for (const [clave, grupo] of Object.entries(COMPATIBILIDADES)) {
     const claveLimpia = clave.toLowerCase();
     const modelos = grupo.modelos || [];
-    
     let matchClave = claveLimpia.includes(term);
     let matchModelo = modelos.some(m => tokens.every(t => m.toLowerCase().includes(t)));
     
@@ -97,16 +112,16 @@ function buscarCompatibles(term) {
   return resultados;
 }
 
-// 🚀 RENDERIZAR LA LISTA
+// ==========================================
+// 5. RENDERIZADO PRINCIPAL
+// ==========================================
 function renderList() {
- // Hacemos una copia y la desordenamos aleatoriamente
-let data = [...allData].sort(() => Math.random() - 0.5);
+  let data = [...allData]; // Copiamos sin desordenar de nuevo
   
-  // Filtros de categoría
   if (currentFilter === "FAV") data = data.filter(i => favorites.has(i.id));
   else if (currentFilter !== "all" && currentFilter !== "COMPAT") data = data.filter(i => i.tipo === currentFilter);
   
-  // Si estamos en modo Compatibilidad
+  // MODO COMPATIBILIDAD
   if (currentFilter === "COMPAT") {
     if (!currentTerm) {
       container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><p>Escribe un modelo para ver sus compatibles.</p></div>`;
@@ -121,7 +136,6 @@ let data = [...allData].sort(() => Math.random() - 0.5);
     }
 
     resultsCount.innerHTML = `<span>${grupos.length} grupos encontrados</span>`;
-    
     container.innerHTML = grupos.map(g => `
       <div class="product-card is-compat" style="border-left-color: #3B82F6;">
         <div style="font-weight: 800; color: #3B82F6; margin-bottom: 8px;">${g.marca}</div>
@@ -135,7 +149,7 @@ let data = [...allData].sort(() => Math.random() - 0.5);
     return;
   }
 
-  // Modo normal (con buscador scoring)
+  // MODO NORMAL
   if (currentTerm) {
     data = aplicarBusqueda(data, currentTerm);
   }
@@ -180,7 +194,9 @@ let data = [...allData].sort(() => Math.random() - 0.5);
   `).join('');
 }
 
-// 🚀 EVENTOS
+// ==========================================
+// 6. EVENTOS (BOTONES)
+// ==========================================
 searchInput.addEventListener('input', (e) => {
   currentTerm = e.target.value;
   clearSearchBtn.style.display = currentTerm ? 'block' : 'none';
@@ -204,15 +220,41 @@ document.getElementById('quickFilters').addEventListener('click', (e) => {
   renderList();
 });
 
+// 🔥 MODO TÉCNICO CON CONFIRMACIÓN (Añadido)
 document.getElementById('techModeBtn').addEventListener('click', () => {
-  techMode = !techMode;
-  renderList();
+  if (techMode) {
+    techMode = false; renderList(); return;
+  }
+  
+  const modal = document.createElement('div');
+  modal.className = 'sheet-backdrop show';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="sheet" style="text-align: center; padding: 32px 20px;">
+      <div class="sheet-handle"></div>
+      <div style="font-size: 56px; margin-bottom: 16px;"><i class="fas fa-user-shield" style="color: var(--brand-500);"></i></div>
+      <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 12px;">¿Eres el técnico?</h3>
+      <p style="color: var(--text-3); font-size: 14px; margin-bottom: 24px;">Al confirmar, se mostrarán los precios de compra.</p>
+      <div style="display: flex; gap: 12px;">
+        <button id="btnCancelarTech" class="btn btn-secondary" style="flex: 1;">Cancelar</button>
+        <button id="btnConfirmarTech" class="btn btn-primary" style="flex: 1;">Sí, soy técnico</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  document.getElementById('btnCancelarTech').onclick = () => modal.remove();
+  document.getElementById('btnConfirmarTech').onclick = () => {
+    techMode = true; modal.remove(); renderList();
+  };
 });
 
 document.getElementById('backBtn').addEventListener('click', () => window.location.href = '/app/');
 document.getElementById('receiptBtn').addEventListener('click', () => window.location.href = '/app/cliente/');
 
-// 🚀 FUNCIONES GLOBALES
+// ==========================================
+// 7. FUNCIONES GLOBALES
+// ==========================================
 window.toggleFav = (id) => {
   if (favorites.has(id)) favorites.delete(id); else favorites.add(id);
   localStorage.setItem("drxiaomi_favs_v1", JSON.stringify([...favorites]));
