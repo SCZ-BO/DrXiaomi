@@ -13,21 +13,22 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+  <!-- 🎨 PLANTILLA PRIME -->
   <link rel="stylesheet" href="./css/app-theme.css">
   <link rel="stylesheet" href="./css/app-layouts.css">
   <link rel="stylesheet" href="./css/app-components.css">
   <link rel="manifest" href="/manifest.json">
 
   <style>
+    /* Solo estilos ultra-específicos del Home que no están en los CSS globales */
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loader-ring {
       position: absolute; inset: 0; border-radius: 50%; 
       border: 3px solid transparent; 
-      border-top-color: #FF6900; border-bottom-color: #FF6900;
+      border-top-color: var(--brand-500); border-bottom-color: var(--brand-500);
       animation: spin 1.2s linear infinite !important; 
     }
 
-    /* Botones Hero compactos */
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
     .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 12px; border-radius: var(--r-xl); font-weight: 700; font-size: 13px; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 80px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
     .btn-hero:active { transform: scale(0.96); }
@@ -59,27 +60,6 @@
     .page-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: white; box-shadow: var(--shadow-glow); }
     .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
     .page-nav { background: var(--bg-elev-2); border: 1px solid var(--border-1); color: var(--text-1); padding: 0 16px; height: 38px; border-radius: var(--r-md); font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-    /* Barra de Navegación Inferior Compacta */
-    .bottom-nav { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 468px; display: flex; align-items: center; justify-content: space-around; padding: 4px 8px; background: rgba(26, 26, 29, 0.85); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid var(--border-2); border-radius: 30px; box-shadow: var(--shadow-lg); z-index: var(--z-bottomnav); }
-    [data-theme="light"] .bottom-nav { background: rgba(255, 255, 255, 0.85); border: 1px solid var(--border-1); }
-    .bottom-nav .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px 12px; color: var(--text-3); font-size: 9px; font-weight: 600; text-decoration: none; transition: all var(--dur) var(--ease-spring); border-radius: var(--r-full); border: none; background: none; }
-    .bottom-nav .nav-item img { width: 18px; height: 18px; transition: transform var(--dur) var(--ease-spring); opacity: 0.7; }
-    .bottom-nav .nav-item:active { transform: scale(0.9); }
-    .bottom-nav .nav-item.active { color: var(--brand-500); background: var(--bg-elev-3); }
-    [data-theme="light"] .bottom-nav .nav-item.active { background: var(--bg-elev-2); }
-    .bottom-nav .nav-item.active img { opacity: 1; transform: translateY(-1px) scale(1.1); }
-
-    /* Notificaciones */
-    .notif-btn { position: relative; }
-    .notif-btn img { width: 20px; height: 20px; }
-    .notif-badge {
-      position: absolute; top: -2px; right: -2px;
-      background: var(--danger-500); color: white;
-      font-size: 9px; font-weight: 800; padding: 2px 4px;
-      border-radius: 10px; display: none;
-      border: 2px solid var(--bg-elev-1);
-    }
   </style>
 </head>
 <body>
@@ -92,24 +72,9 @@
     <div class="loader-text">Sincronizando...</div>
   </div>
 
+  <!-- CONTENEDOR PRINCIPAL -->
   <main class="app-container">
-    <header class="app-header">
-      <div class="brand">
-        <div class="brand-logo"><img src="/imagenes/web-app-manifest-192x192.png" alt="Logo"></div>
-        <div class="brand-text"><h1>Panel</h1><p id="userInfo">Cargando...</p></div>
-      </div>
-      <div class="header-actions">
-        <!-- 🔔 BOTÓN DE NOTIFICACIONES CON TU ICONO -->
-        <button class="icon-btn notif-btn" id="btnNotificaciones">
-          <img src="/app/icons/campana.png" alt="Notificaciones">
-          <span class="notif-badge" id="notifBadge">0</span>
-        </button>
-        <!-- BOTÓN DE TEMA -->
-        <button class="icon-btn" id="btnTema"><img src="/app/icons/tema.png" width="20" height="20" alt="Tema"></button>
-        <!-- BOTÓN DE SALIR -->
-        <button class="icon-btn" id="btnSalir"><img src="/app/icons/salir.png" width="20" height="20" alt="Salir"></button>
-      </div>
-    </header>
+    <!-- 🔥 EL HEADER SE INYECTA AQUÍ AUTOMÁTICAMENTE DESDE panel.js 🔥 -->
 
     <div class="app-content">
       <!-- BOTONES HERO -->
@@ -133,11 +98,13 @@
 
       <div class="section-title">Movimientos Recientes</div>
 
+      <!-- BUSCADOR -->
       <div class="search-bar">
         <img src="/app/icons/buscar.png" width="18" height="18" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.5;">
         <input type="search" id="buscador" placeholder="Buscar cliente o equipo..." autocomplete="off" style="padding-left: 44px;">
       </div>
 
+      <!-- FILTROS -->
       <div class="filters-row" id="filtros">
         <button class="chip-interactive active" data-filtro="todos">Todos</button>
         <button class="chip-interactive" data-filtro="reparacion">Reparación</button>
@@ -147,10 +114,17 @@
         <button class="chip-interactive" data-filtro="venta">Ventas</button>
       </div>
 
+      <!-- LISTA Y PAGINACIÓN -->
       <div class="cards-list" id="listaOrdenes"></div>
       <div class="pagination-container" id="paginationContainer"></div>
     </div>
+    
+    <!-- 🔥 EL BOTTOM NAV SE INYECTA AQUÍ AUTOMÁTICAMENTE DESDE panel.js 🔥 -->
   </main>
+
+  <!-- ========================================== -->
+  <!-- MODALES (Venta, Pago, Detalle, Notas, Popups) -->
+  <!-- ========================================== -->
 
   <!-- MODAL VENTA RÁPIDA -->
   <div class="sheet-backdrop" id="modalVenta">
@@ -231,7 +205,7 @@
     </div>
   </div>
 
-  <!-- MODAL NOTA PARA EL DUEÑO (Técnico) -->
+  <!-- MODAL NOTA PARA EL DUEÑO -->
   <div class="sheet-backdrop" id="modalNotaDueno">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -286,6 +260,7 @@
     </div>
   </div>
 
+  <!-- SCRIPT PRINCIPAL -->
   <script type="module" src="./js/panel.js"></script>
   
   <script>
