@@ -58,7 +58,7 @@ function iniciarApp() {
     const btnRep = document.querySelector('.nav-item[href="/app/reportes/"]'); if(btnRep) btnRep.style.display = 'none';
   }
   configurarEventos(); cargarDatos();
-  setTimeout(() => { if(appLoader) appLoader.classList.remove('show'); }, 800);
+  setTimeout(() => { if(appLoader) appLoader.classList.add('hidden'); }, 800);
 }
 
 export function parsearFecha(f) {
