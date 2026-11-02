@@ -22,7 +22,6 @@
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    /* 🔥 FORZAR ANIMACIÓN GIRATORIA DEL LOGO */
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loader-ring {
       position: absolute; inset: 0; border-radius: 50%; 
@@ -31,36 +30,33 @@
       animation: spin 1.2s linear infinite !important; 
     }
 
-    /* TARJETAS GLASSMORPHISM */
     .section-block { 
       background: var(--bg-elev-1); border: 1px solid var(--border-1); 
       border-radius: var(--r-lg); padding: 20px; margin-bottom: 16px; 
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
     }
-    .section-block:nth-child(1) { animation-delay: 0.05s; }
-    .section-block:nth-child(2) { animation-delay: 0.1s; }
-    .section-block:nth-child(3) { animation-delay: 0.15s; }
     @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
     .section-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     
+    /* 🔥 ICONOS PNG PARA LAS SECCIONES */
+    .icon-seccion {
+      width: 20px; height: 20px; object-fit: contain;
+    }
+
     .fila-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 12px; font-size: 14px; }
-    .fila-info .label { color: var(--text-3); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    .fila-info .label { color: var(--text-3); font-weight: 500; display: flex; align-items: center; gap: 8px; }
     .fila-info .valor { color: var(--text-1); font-weight: 700; text-align: right; }
 
     .total-destacado { background: var(--bg-elev-2); border-radius: var(--r-lg); padding: 20px; text-align: center; margin-top: 16px; }
     .total-destacado .valor { font-size: 36px; font-weight: 900; color: var(--brand-500); line-height: 1; letter-spacing: -1px; }
     .total-destacado .label { font-size: 11px; color: var(--text-3); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-top: 6px; }
     
-    .ganancia-destacada { 
-      background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success-500); 
-      border-radius: var(--r-lg); padding: 24px; text-align: center; margin-bottom: 24px; 
-    }
+    .ganancia-destacada { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success-500); border-radius: var(--r-lg); padding: 24px; text-align: center; margin-bottom: 24px; }
     .ganancia-destacada .valor { font-size: 32px; font-weight: 900; color: var(--success-500); line-height: 1; letter-spacing: -1px; }
     .ganancia-destacada .label { font-size: 11px; color: var(--success-500); text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-top: 6px; }
 
-    /* VENTAS EXTRAS */
     .item-extra { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
     .item-extra input { padding: 12px; border-radius: 8px; border: 1px solid var(--border-1); background: var(--bg-elev-2); color: var(--text-1); font-family: inherit; font-size: 14px; outline: none; }
     .item-extra input:focus { border-color: var(--brand-500); }
@@ -69,7 +65,6 @@
     .item-extra input.costo { flex: 1; min-width: 80px; text-align: right; color: var(--danger-500); font-weight: 700; }
     .btn-remove { width: 42px; height: 42px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); color: var(--danger-500); border: none; cursor: pointer; }
 
-    /* PRODUCTOS DEL INVENTARIO */
     .producto-btn { background: var(--bg-elev-2); border: 1px solid var(--border-1); border-radius: 12px; padding: 10px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; }
     .producto-btn:active { transform: scale(0.95); border-color: var(--brand-500); }
     .producto-btn img { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; }
@@ -79,7 +74,6 @@
 </head>
 <body>
 
-  <!-- LOADER CON LOGO -->
   <div class="loader-overlay" id="appLoader">
     <div class="loader-logo-container">
       <div class="loader-ring"></div>
@@ -89,7 +83,6 @@
   </div>
 
   <main class="app-container">
-    <!-- HEADER -->
     <header class="app-header">
       <div class="brand">
         <button class="icon-btn" id="backBtn"><img src="/app/icons/volver.png" width="20" height="20" alt="Volver"></button>
@@ -103,7 +96,9 @@
     <div class="app-content">
       <!-- 1. Reparaciones -->
       <div class="section-block" style="border-top: 3px solid var(--brand-500);">
-        <div class="section-title" style="color: var(--brand-500);"><i class="fas fa-wrench"></i> Reparaciones (Hoy)</div>
+        <div class="section-title" style="color: var(--brand-500);">
+          <img src="/app/icons/estado-reparacion.png" class="icon-seccion" alt="Reparaciones"> Reparaciones (Hoy)
+        </div>
         <div class="fila-info"><span class="label">Cantidad entregada:</span><span class="valor" id="cantReparaciones">0</span></div>
         <div class="fila-info"><span class="label">Total Cobrado:</span><span class="valor" id="totalReparaciones" style="color:var(--success-500); font-weight:800; font-size:16px;">Bs. 0.00</span></div>
         <div style="margin-top:16px; border-top:1px solid var(--border-1); padding-top:16px;">
@@ -115,13 +110,17 @@
 
       <!-- 2. Ventas de Accesorios -->
       <div class="section-block" style="border-top: 3px solid var(--info-500);">
-        <div class="section-title" style="color: var(--info-500);"><i class="fas fa-box-open"></i> Ventas de Accesorios</div>
+        <div class="section-title" style="color: var(--info-500);">
+          <img src="/app/icons/inventario.png" class="icon-seccion" alt="Accesorios"> Ventas de Accesorios
+        </div>
         <div id="listaInventario" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
       </div>
 
       <!-- 3. Ventas Extras -->
       <div class="section-block" style="border-top: 3px solid var(--purple-500);">
-        <div class="section-title" style="color: var(--purple-500);"><i class="fas fa-cart-plus"></i> Ventas Extras (Manual)</div>
+        <div class="section-title" style="color: var(--purple-500);">
+          <img src="/app/icons/venta.png" class="icon-seccion" alt="Extras"> Ventas Extras (Manual)
+        </div>
         <div id="listaExtras"></div>
         <button class="btn btn-secondary" id="btnAddExtra" style="width: 100%; padding: 12px; font-size: 13px; border: 1px dashed var(--purple-500); color: var(--purple-500); background: transparent;"><i class="fas fa-plus"></i> Añadir Venta Manual</button>
       </div>
@@ -138,7 +137,7 @@
 
       <!-- 5. Botones -->
       <button class="btn btn-whatsapp" id="btnEnviarWhatsApp" style="width: 100%; margin-bottom: 12px;"><i class="fab fa-whatsapp"></i> Enviar Cierre al Admin</button>
-      <button class="btn btn-primary" id="btnGuardarCierre" style="width: 100%; margin-bottom: 32px;"><i class="fas fa-save"></i> Guardar en Historial</button>
+      <button class="btn btn-primary" id="btnGuardarCierre" style="width: 100%; margin-bottom: 32px;"><img src="/app/icons/cierre.png" width="20" height="20" style="margin-right: 8px;"> Guardar en Historial</button>
     </div>
   </main>
 
