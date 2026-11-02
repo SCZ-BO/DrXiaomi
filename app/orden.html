@@ -24,6 +24,15 @@
 
   <!-- ESTILOS ESPECÍFICOS DE ESTA PÁGINA -->
   <style>
+    /* 🔥 FORZAR ANIMACIÓN DEL LOADER */
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loader-ring {
+      position: absolute; inset: 0; border-radius: 50%; 
+      border: 3px solid transparent; 
+      border-top-color: #FF6900; border-bottom-color: #FF6900;
+      animation: spin 1.2s linear infinite !important; 
+    }
+
     .recibo-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
     .recibo-row span:first-child { color: var(--text-3); font-weight: 500; }
     .recibo-row span:last-child { font-weight: 600; color: var(--text-1); text-align: right; }
@@ -55,9 +64,13 @@
 </head>
 <body>
 
-  <!-- LOADER -->
+  <!-- LOADER CON LOGO Y ANILLO GIRATORIO -->
   <div class="loading-overlay" id="appLoader">
-    <div class="loading-card"><div class="spinner"></div><p>Cargando orden...</p></div>
+    <div class="loading-card">
+      <div class="loader-ring" style="width:60px; height:60px; margin: 0 auto 16px;"></div>
+      <img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." style="width: 40px; height: 40px; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+      <p style="position: relative; margin-top: 80px;">Cargando orden...</p>
+    </div>
   </div>
 
   <main class="app-container">
@@ -118,5 +131,12 @@
 
   <!-- SCRIPT PRINCIPAL -->
   <script type="module" src="./orden.js"></script>
+  
+  <script>
+    setTimeout(() => {
+      const loader = document.getElementById('appLoader');
+      if (loader) loader.style.display = 'none';
+    }, 1500);
+  </script>
 </body>
 </html>
