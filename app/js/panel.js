@@ -5,6 +5,7 @@ import { db } from './firebase.js';
 import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { abrirSheetTelefono, abrirSheetVenta } from './panel-modals.js';
 import { generarPDFDia } from './panel-pdf.js';
+import { icono } from './icons.js'; // 🔥 IMPORTAMOS EL DIRECTORIO DE ICONOS
 
 initTheme();
 
@@ -19,7 +20,11 @@ const modalVenta = document.getElementById('modalVenta');
 const paginationContainer = document.getElementById('paginationContainer');
 const appLoader = document.getElementById('appLoader');
 
+// ==========================================
+// 1. RENDERIZADO DEL LAYOUT (HEADER Y NAV)
+// ==========================================
 function renderLayout() {
+  // 🔥 Usamos la función icono() que toma los PNG de tu carpeta
   const headerHTML = `
     <header class="app-header">
       <div class="brand">
@@ -27,28 +32,30 @@ function renderLayout() {
         <div class="brand-text"><h1>Panel</h1><p id="userInfo">Cargando...</p></div>
       </div>
       <div class="header-actions">
-        <button class="icon-btn" id="btnSalir"><img src="/app/icons/salir.png" width="20" height="20" alt="Salir"></button>
-        <button class="icon-btn" id="btnTema"><img src="/app/icons/tema.png" width="20" height="20" alt="Tema"></button>
+        <button class="icon-btn" id="btnSalir">${icono('salir', 20)}</button>
+        <button class="icon-btn" id="btnTema">${icono('tema', 20)}</button>
       </div>
     </header>`;
     
   const navHTML = `
     <nav class="bottom-nav">
-      <a href="/app/" class="nav-item active"><img src="/app/icons/home.png" alt="Panel"> <span>Panel</span></a>
-      <a href="/app/precios/" class="nav-item"><img src="/app/icons/precios.png" alt="Precios"> <span>Precios</span></a>
-      <a href="/app/reportes/" class="nav-item"><img src="/app/icons/reportes.png" alt="Reportes"> <span>Reportes</span></a>
-      <a href="/app/inventario/" class="nav-item"><img src="/app/icons/inventario.png" alt="Stock"> <span>Stock</span></a>
+      <a href="/app/" class="nav-item active">${icono('home', 22)} <span>Panel</span></a>
+      <a href="/app/precios/" class="nav-item">${icono('precios', 22)} <span>Precios</span></a>
+      <a href="/app/reportes/" class="nav-item">${icono('reportes', 22)} <span>Reportes</span></a>
+      <a href="/app/inventario/" class="nav-item">${icono('inventario', 22)} <span>Stock</span></a>
     </nav>`;
     
   document.body.insertAdjacentHTML('afterbegin', headerHTML);
   document.body.insertAdjacentHTML('beforeend', navHTML);
   
   document.getElementById('btnSalir')?.addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
-  
-  // El botón de tema NO tiene lógica aquí, se la pasamos a app-ui.js que ya la tiene.
 }
+
 renderLayout();
 
+// ==========================================
+// 2. AUTENTICACIÓN E INICIO
+// ==========================================
 requireAuth((s) => {
   appState.sesion = s;
   setTimeout(() => { 
@@ -66,6 +73,9 @@ function iniciarApp() {
   setTimeout(() => { if(appLoader) appLoader.classList.add('hidden'); }, 800);
 }
 
+// ==========================================
+// 3. HELPERS (Fechas y Formatos)
+// ==========================================
 export function parsearFecha(f) {
   if (!f) return null;
   if (typeof f.toDate === 'function') return f.toDate();
@@ -84,6 +94,9 @@ function formatFechaCompleta(f) {
 
 export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
 
+// ==========================================
+// 4. EVENTOS (Modales, Ventas, Filtros)
+// ==========================================
 function configurarEventos() {
   document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
   document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
@@ -102,7 +115,7 @@ function configurarEventos() {
     if (grid) {
       grid.innerHTML = appState.inventario.map(i => `
         <div class="accesorio-card" data-id="${i.id}" data-nombre="${i.nombre}" data-precio="${i.precio}" data-costo="${i.costo}" data-stock="${i.stock}">
-          ${i.foto ? `<img src="${i.foto}" alt="${i.nombre}">` : `<div class="no-img"><i class="fas fa-box"></i></div>`}
+          ${i.foto ? `<img src="${i.foto}" alt="${i.nombre}">` : `<div class="no-img">${icono('inventario', 24)}</div>`}
           <div class="nombre">${i.nombre}</div>
           <div class="precio">${i.precio} Bs</div>
           <div class="stock">Stock: ${i.stock}</div>
@@ -188,6 +201,9 @@ function configurarEventos() {
   });
 }
 
+// ==========================================
+// 5. CARGA DE DATOS (Firebase)
+// ==========================================
 function cargarDatos() {
   if (unsubscribe) unsubscribe();
   unsubscribe = onSnapshot(query(collection(db, 'recibos'), orderBy('fecha', 'desc')), (snap) => {
@@ -219,6 +235,9 @@ function cargarDatos() {
 
 function procesarVentas() { appState.ventasHoy = [...ventasPanel, ...ventasCierre].sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0)); renderizarTodo(); }
 
+// ==========================================
+// 6. RENDERIZADO DE LA LISTA Y TARJETAS
+// ==========================================
 function renderizarTodo() {
   actualizarStats(); todosLosMovimientos = [];
   if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
@@ -270,14 +289,51 @@ window.cambiarPagina = (p) => { haptic(8); paginaActual = p; renderizarTodo(); d
 function renderCardTelefono(o) {
   const est = o.estadoOrden || 'recibido';
   const info = { recibido: { t: 'Recibido', c: 'var(--warning-500)' }, reparacion: { t: 'Reparación', c: 'var(--brand-500)' }, 'espera-repuesto': { t: 'Repuesto', c: 'var(--purple-500)' }, listo: { t: 'Listo', c: 'var(--yellow-500)' }, entregado: { t: 'Entregado', c: 'var(--success-500)' }, devuelto: { t: 'Devuelto', c: 'var(--info-500)' } }[est] || { t: est, c: 'var(--text-3)' };
-  return `<div class="ingreso-card" data-tipo="telefono" data-id="${o.id}" style="border-left-color: ${info.c};"><div class="icon-circle" style="color: ${info.c}; background: color-mix(in srgb, ${info.c} 15%, transparent);"><i class="fas fa-mobile-alt"></i></div><div class="info-col"><div class="info-title">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div><div class="info-sub">${escapeHtml(o.cliente || '')}</div><div class="info-sub" style="font-size: 11px;">${est === 'entregado' ? `Entregado: ${formatFechaCompleta(o.fechaEntrega)}` : `Ingreso: ${tiempoRelativo ? tiempoRelativo(o.fechaEditada || o.fecha) : ''}`}</div><span class="estado-chip" style="background: color-mix(in srgb, ${info.c} 15%, transparent); color: ${info.c};">${info.t}</span></div><div class="monto-col"><div class="monto" style="color: var(--text-1);">${formatBsLimpio(Number(o.montoCobrado) || Number(o.total) || 0)}</div></div></div>`;
+  
+  return `
+    <div class="ingreso-card" data-tipo="telefono" data-id="${o.id}" style="border-left-color: ${info.c};">
+      <div class="icon-circle" style="color: ${info.c}; background: color-mix(in srgb, ${info.c} 15%, transparent);">
+        ${icono('telefono', 24)}
+      </div>
+      <div class="info-col">
+        <div class="info-title">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
+        <div class="info-sub">${escapeHtml(o.cliente || '')}</div>
+        <div class="info-sub" style="font-size: 11px;">
+          ${est === 'entregado' ? `Entregado: ${formatFechaCompleta(o.fechaEntrega)}` : `Ingreso: ${tiempoRelativo(o.fechaEditada || o.fecha)}`}
+        </div>
+        <span class="estado-chip" style="background: color-mix(in srgb, ${info.c} 15%, transparent); color: ${info.c};">${info.t}</span>
+      </div>
+      <div class="monto-col">
+        <div class="monto" style="color: var(--text-1);">${formatBsLimpio(Number(o.montoCobrado) || Number(o.total) || 0)}</div>
+      </div>
+    </div>`;
 }
 
 function renderCardVenta(v, tipo) {
   const f = parsearFecha(v.fecha); const hora = f ? `${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')}` : '';
-  let ic = 'fa-box'; if (v.concepto === 'Botón') ic = 'fa-hand-pointer'; else if (v.concepto === 'Limpieza') ic = 'fa-broom'; else if (v.concepto === 'Reactivación') ic = 'fa-bolt'; else if (v.concepto === 'Cargador') ic = 'fa-plug';
+  
+  // Usamos tus iconos según el concepto
+  let iconoNombre = 'venta';
+  if (v.concepto === 'Botón') iconoNombre = 'bateria'; // o 'servicios'
+  else if (v.concepto === 'Limpieza') iconoNombre = 'servicios';
+  else if (v.concepto === 'Reactivación') iconoNombre = 'estado';
+  else if (v.concepto === 'Cargador') iconoNombre = 'bateria';
+  
   const cor = tipo === 'venta' ? 'var(--success-500)' : 'var(--purple-500)';
-  return `<div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}" style="border-left-color: ${cor};"><div class="icon-circle" style="color: ${cor}; background: color-mix(in srgb, ${cor} 15%, transparent);"><i class="fas ${ic}"></i></div><div class="info-col"><div class="info-title">${escapeHtml(v.concepto)}</div><div class="info-sub">${hora} · ${escapeHtml(v.metodoPago)}</div></div><div class="monto-col"><div class="monto" style="color: ${cor};">${formatBsLimpio(v.monto)}</div></div></div>`;
+  
+  return `
+    <div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}" style="border-left-color: ${cor};">
+      <div class="icon-circle" style="color: ${cor}; background: color-mix(in srgb, ${cor} 15%, transparent);">
+        ${icono(iconoNombre, 24)}
+      </div>
+      <div class="info-col">
+        <div class="info-title">${escapeHtml(v.concepto)}</div>
+        <div class="info-sub">${hora} · ${escapeHtml(v.metodoPago)}</div>
+      </div>
+      <div class="monto-col">
+        <div class="monto" style="color: ${cor};">${formatBsLimpio(v.monto)}</div>
+      </div>
+    </div>`;
 }
 
 function actualizarStats() {
