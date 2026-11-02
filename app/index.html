@@ -13,23 +13,15 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <!-- 🎨 PLANTILLA PRIME -->
   <link rel="stylesheet" href="./css/app-theme.css">
   <link rel="stylesheet" href="./css/app-layouts.css">
   <link rel="stylesheet" href="./css/app-components.css">
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    /* Estilos específicos de la pantalla principal */
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .loader-ring {
-      position: absolute; inset: 0; border-radius: 50%; 
-      border: 3px solid transparent; 
-      border-top-color: var(--brand-500); border-bottom-color: var(--brand-500);
-      animation: spin 1.2s linear infinite !important; 
-    }
-
-    /* Botones Hero */
+    .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand-500); border-bottom-color: var(--brand-500); animation: spin 1.2s linear infinite !important; }
+    
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
     .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 12px; border-radius: var(--r-xl); font-weight: 700; font-size: 13px; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 80px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
     .btn-hero:active { transform: scale(0.96); }
@@ -39,7 +31,6 @@
     .icon-box img { width: 100%; height: 100%; object-fit: contain; }
     .icon-raw { width: 32px; height: 32px; object-fit: contain; margin-bottom: auto; z-index: 2; }
 
-    /* Stats */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
     .stat-card { background: var(--bg-elev-1); border-radius: var(--r-lg); padding: 14px 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--border-1); }
     .stat-value { font-size: 22px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 6px; letter-spacing: -0.5px; }
@@ -57,7 +48,6 @@
     .monto { font-size: 16px; font-weight: 800; }
     .estado-chip { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; margin-top: 6px; display: inline-block; text-transform: uppercase; }
 
-    /* Paginación */
     .pagination-container { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px; }
     .page-btn { background: var(--bg-elev-1); border: 1px solid var(--border-1); color: var(--text-1); width: 38px; height: 38px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; cursor: pointer; transition: var(--dur); }
     .page-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: white; box-shadow: var(--shadow-glow); }
@@ -67,29 +57,20 @@
 </head>
 <body>
 
-  <!-- LOADER -->
   <div class="loader-overlay" id="appLoader">
-    <div class="loader-logo-container">
-      <div class="loader-ring"></div>
-      <img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." class="loader-logo-img">
-    </div>
+    <div class="loader-logo-container"><div class="loader-ring"></div><img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." class="loader-logo-img"></div>
     <div class="loader-text">Sincronizando...</div>
   </div>
 
-  <!-- CONTENEDOR PRINCIPAL -->
   <main class="app-container">
-    <!-- 🔥 AQUÍ SE INYECTA EL HEADER AUTOMÁTICAMENTE DESDE panel.js 🔥 -->
-
     <div class="app-content">
-      <!-- BOTONES HERO -->
+      <!-- HERO -->
       <div class="hero-actions">
         <button class="btn-hero btn-hero-nuevo" id="nuevoReciboBtn">
-          <div class="icon-box"><img src="/app/icons/agregar.png" alt="Nuevo Equipo"></div>
-          <span>Nuevo<br>Equipo</span>
+          <div class="icon-box"><img src="/app/icons/agregar.png" alt="Nuevo Equipo"></div><span>Nuevo<br>Equipo</span>
         </button>
         <button class="btn-hero btn-hero-venta" id="ventaRapidaBtn">
-          <img src="/app/icons/venta.png" alt="Venta Rápida" class="icon-raw">
-          <span>Venta<br>Rápida</span>
+          <img src="/app/icons/venta.png" alt="Venta Rápida" class="icon-raw"><span>Venta<br>Rápida</span>
         </button>
       </div>
 
@@ -100,15 +81,23 @@
         <div class="stat-card"><div class="stat-value" id="statHoy" style="color: var(--brand-500);">—</div><div class="stat-label">Ingresos Hoy</div></div>
       </div>
 
-      <div class="section-title">Movimientos Recientes</div>
+      <!-- BOTONES DE ACCIÓN RECUPERADOS -->
+      <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="btn btn-secondary" id="btnPDFDia" style="flex: 1; justify-content:center;">
+          <i class="fas fa-file-pdf" style="color:var(--danger-500);"></i> PDF del Día
+        </button>
+        <button class="btn btn-secondary" id="btnAbrirNotaDueno" style="flex: 1; justify-content:center;">
+          <i class="fas fa-pen" style="color:var(--brand-500);"></i> Nota al Dueño
+        </button>
+      </div>
 
-      <!-- BUSCADOR -->
+      <div class="section-title">Movimientos Recientes</div>
+      
       <div class="search-bar">
         <img src="/app/icons/buscar.png" width="18" height="18" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.5;">
         <input type="search" id="buscador" placeholder="Buscar cliente o equipo..." autocomplete="off" style="padding-left: 44px;">
       </div>
 
-      <!-- FILTROS -->
       <div class="filters-row" id="filtros">
         <button class="chip-interactive active" data-filtro="todos">Todos</button>
         <button class="chip-interactive" data-filtro="reparacion">Reparación</button>
@@ -118,19 +107,13 @@
         <button class="chip-interactive" data-filtro="venta">Ventas</button>
       </div>
 
-      <!-- LISTA Y PAGINACIÓN -->
       <div class="cards-list" id="listaOrdenes"></div>
       <div class="pagination-container" id="paginationContainer"></div>
     </div>
-    
-    <!-- 🔥 AQUÍ SE INYECTA EL BOTTOM NAV AUTOMÁTICAMENTE DESDE panel.js 🔥 -->
   </main>
 
-  <!-- ========================================== -->
-  <!-- MODALES -->
-  <!-- ========================================== -->
+  <!-- ================= MODALES ================= -->
 
-  <!-- MODAL VENTA RÁPIDA -->
   <div class="sheet-backdrop" id="modalVenta">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -138,7 +121,6 @@
         <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1);"><i class="fas fa-cash-register" style="color: var(--brand-500);"></i> Venta Rápida</h3>
         <button class="icon-btn" id="btnCloseVenta"><i class="fas fa-times"></i></button>
       </div>
-
       <div id="tipoVentaStep">
         <p style="font-size: 14px; color: var(--text-3); margin-bottom: 16px; text-align: center;">¿Qué vas a registrar?</p>
         <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -152,7 +134,6 @@
           </button>
         </div>
       </div>
-
       <div id="ventaAccesorioStep" style="display: none;">
         <button class="btn btn-secondary" id="btnBackToTipo" style="margin-bottom: 16px; width: auto; padding: 8px 16px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
         <label class="input-label" style="margin-bottom: 8px; display:block;">Selecciona un producto:</label>
@@ -160,14 +141,10 @@
         <div id="productoSeleccionadoInfo" style="display: none; background: var(--bg-elev-2); padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border-1);">
           <div style="font-weight: 800; font-size: 14px;" id="infoProdNombre">-</div>
           <div style="font-size: 12px; color: var(--text-3);">Precio: <span id="infoProdPrecio">0</span> Bs</div>
-          <div class="field" style="margin-top: 8px; margin-bottom: 0;">
-            <label class="input-label">Cantidad</label>
-            <input type="number" id="accesorioCantidad" class="input-field" value="1" min="1">
-          </div>
+          <div class="field" style="margin-top: 8px; margin-bottom: 0;"><label class="input-label">Cantidad</label><input type="number" id="accesorioCantidad" class="input-field" value="1" min="1"></div>
         </div>
         <button class="btn btn-primary" id="btnRegistrarAccesorio" style="width: 100%;" disabled>Registrar Venta</button>
       </div>
-
       <div id="ventaServicioStep" style="display: none;">
         <button class="btn btn-secondary" id="btnBackToTipo2" style="margin-bottom: 16px; width: auto; padding: 8px 16px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
         <div class="field"><select id="ventaConcepto" class="input-field"><option value="Botón">Botón</option><option value="Limpieza">Limpieza</option><option value="Reactivación">Reactivación</option><option value="Cargador">Cargador</option><option value="Otro">Otro</option></select></div>
@@ -179,7 +156,6 @@
     </div>
   </div>
 
-  <!-- MODAL OPCIONES / DETALLE -->
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -191,7 +167,6 @@
     </div>
   </div>
 
-  <!-- MODAL PAGO -->
   <div class="sheet-backdrop" id="modalPago">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -202,22 +177,19 @@
       <div class="field"><input type="number" id="pagoMonto" class="input-field" placeholder="Monto Cobrado (Bs.)" inputmode="decimal"></div>
       <label class="input-label" style="padding-left:0; margin-bottom: 8px; display:block;">Método de Pago</label>
       <div id="metodosPagoGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
-          <button class="btn btn-secondary" data-metodo="Efectivo">💵 Efectivo</button>
-          <button class="btn btn-secondary" data-metodo="QR">📱 QR</button>
+          <button class="btn btn-secondary" data-metodo="Efectivo">💵 Efectivo</button><button class="btn btn-secondary" data-metodo="QR">📱 QR</button>
       </div>
       <button class="btn btn-primary" id="btnConfirmarPago" style="width: 100%;">Confirmar y Entregar</button>
     </div>
   </div>
 
-  <!-- MODAL NOTA PARA EL DUEÑO -->
+  <!-- MODAL NOTA AL DUEÑO -->
   <div class="sheet-backdrop" id="modalNotaDueno">
     <div class="sheet">
       <div class="sheet-handle"></div>
       <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1); margin-bottom: 8px;">Nota para el Dueño</h3>
       <p style="font-size: 14px; color: var(--text-3); margin-bottom: 16px;">Escribe una constancia que el dueño verá en su panel.</p>
-      <div class="field">
-        <textarea id="notaDuenoTexto" class="input-field" rows="4" placeholder="Ej: Faltó cambiar el flex del modelo X..."></textarea>
-      </div>
+      <div class="field"><textarea id="notaDuenoTexto" class="input-field" rows="4" placeholder="Ej: Faltó cambiar el flex del modelo X..."></textarea></div>
       <div style="display: flex; gap: 10px; margin-top: 16px;">
         <button class="btn btn-secondary" id="btnCancelarNotaDueno" style="flex: 1;">Cancelar</button>
         <button class="btn btn-primary" id="btnGuardarNotaDueno" style="flex: 1;">Guardar Nota</button>
@@ -231,20 +203,11 @@
       <div class="sheet-handle"></div>
       <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1); margin-bottom: 8px;">Mensaje para el Técnico</h3>
       <p style="font-size: 14px; color: var(--text-3); margin-bottom: 16px;">Este mensaje aparecerá en un popup al técnico al entrar.</p>
-      <div class="field">
-        <input type="text" id="mensajePopupTitulo" class="input-field" placeholder="Título (Ej: Aviso importante)">
-      </div>
-      <div class="field">
-        <textarea id="mensajePopupTexto" class="input-field" rows="3" placeholder="Escribe el mensaje aquí..."></textarea>
-      </div>
+      <div class="field"><input type="text" id="mensajePopupTitulo" class="input-field" placeholder="Título (Ej: Aviso importante)"></div>
+      <div class="field"><textarea id="mensajePopupTexto" class="input-field" rows="3" placeholder="Escribe el mensaje aquí..."></textarea></div>
       <div class="field">
         <label class="input-label">Duración</label>
-        <select id="mensajePopupDuracion" class="input-field">
-          <option value="1">1 día</option>
-          <option value="3">3 días</option>
-          <option value="7">1 semana</option>
-          <option value="0">Hasta que el técnico lo cierre</option>
-        </select>
+        <select id="mensajePopupDuracion" class="input-field"><option value="1">1 día</option><option value="3">3 días</option><option value="7">1 semana</option><option value="0">Hasta que el técnico lo cierre</option></select>
       </div>
       <div style="display: flex; gap: 10px; margin-top: 16px;">
         <button class="btn btn-secondary" id="btnCancelarMensajePopup" style="flex: 1;">Cancelar</button>
@@ -264,14 +227,6 @@
     </div>
   </div>
 
-  <!-- SCRIPT PRINCIPAL -->
   <script type="module" src="./js/panel.js"></script>
-  
-  <script>
-    setTimeout(() => {
-      const loader = document.getElementById('appLoader');
-      if (loader && !loader.classList.contains('hidden')) loader.classList.add('hidden');
-    }, 1500);
-  </script>
 </body>
 </html>
