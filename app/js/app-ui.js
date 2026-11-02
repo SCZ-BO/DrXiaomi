@@ -1,11 +1,11 @@
 // ============================================================
-// DR. XIAOMI · APP UI (Layout Dinámico Definitivo)
+// DR. XIAOMI · APP UI (Layout y Directorio Definitivo)
 // Archivo: /app/js/app-ui.js
 // ============================================================
 
-// 🔥 DIRECTORIO MAESTRO DE ICONOS
+// 🔥 DIRECTORIO MAESTRO DE ICONOS (28 iconos)
 export const ICONS = {
-  // Navegación
+  // 1. Navegación y Layout
   home: '/app/icons/home.png',
   precios: '/app/icons/precios.png',
   reportes: '/app/icons/reportes.png',
@@ -13,27 +13,42 @@ export const ICONS = {
   volver: '/app/icons/volver.png',
   tema: '/app/icons/tema.png',
   salir: '/app/icons/salir.png',
+  buscar: '/app/icons/buscar.png',
 
-  // Acciones Principales
+  // 2. Acciones Principales
   agregar: '/app/icons/agregar.png',
   venta: '/app/icons/venta.png',
   cierre: '/app/icons/cierre.png',
-  buscar: '/app/icons/buscar.png',
+  editar: '/app/icons/editar.png',
+  eliminar: '/app/icons/eliminar.png',
 
-  // Acciones de Orden
+  // 3. Acciones de la Orden
   whatsapp: '/app/icons/whatsapp.png',
   pdf: '/app/icons/pdf.png',
   cobrar: '/app/icons/cobrar.png',
-  editar: '/app/icons/editar.png',
-  eliminar: '/app/icons/eliminar.png',
   camara: '/app/icons/camara.png',
   galeria: '/app/icons/galeria.png',
+  estadoReparacion: '/app/icons/estado-reparacion.png',
 
-  // Estados
-  estadoReparacion: '/app/icons/estado-reparacion.png'
+  // 4. Wizard (Cliente)
+  cliente: '/app/icons/cliente.png',
+  telefono: '/app/icons/telefono.png',
+  patron: '/app/icons/patron.png',
+  bateria: '/app/icons/bateria.png',
+  senal: '/app/icons/senal.png',
+  falla: '/app/icons/falla.png',
+  servicios: '/app/icons/servicios.png',
+  total: '/app/icons/total.png',
+
+  // 5. Reportes y Extras
+  calendario: '/app/icons/calendario.png',
+  ganancia: '/app/icons/ganancia.png',
+  ver: '/app/icons/ver.png'
 };
 
-// 1. INYECTAR HEADER Y BOTTOM NAV
+// ============================================================
+// FUNCIÓN PRINCIPAL DEL LAYOUT
+// ============================================================
 export function initLayout(titulo, subtitulo = '', activo = '', padre = '/app/') {
   
   // --- A. Crear Header ---
@@ -90,12 +105,13 @@ export function initLayout(titulo, subtitulo = '', activo = '', padre = '/app/')
   document.getElementById('btnSalir').addEventListener('click', async () => {
     const confirmar = confirm('¿Estás seguro que deseas cerrar sesión?');
     if (confirmar) {
-      localStorage.removeItem('dr-theme');
-      window.location.href = '/'; // Ir al login o landing
+      // Si usas Firebase Auth, aquí deberías poner: await auth.signOut();
+      localStorage.removeItem('dr-theme'); // Limpiamos preferencias
+      window.location.href = '/'; // Redirigir al inicio/login
     }
   });
 
-  // --- E. Lógica del Tema ---
+  // --- E. Lógica del Tema (Oscuro / Claro) ---
   const btnTema = document.getElementById('btnTema');
   const temaGuardado = localStorage.getItem('dr-theme') || 'dark';
   document.documentElement.setAttribute('data-theme', temaGuardado);
