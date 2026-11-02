@@ -58,6 +58,23 @@
     .page-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: white; box-shadow: var(--shadow-glow); }
     .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
     .page-nav { background: var(--bg-elev-2); border: 1px solid var(--border-1); color: var(--text-1); padding: 0 16px; height: 38px; border-radius: var(--r-md); font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    /* 🔥 GRID DE ACCESORIOS PARA VENTA RÁPIDA */
+    .grid-accesorios {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+      max-height: 300px; overflow-y: auto; padding-bottom: 10px;
+    }
+    .accesorio-card {
+      background: var(--bg-elev-1); border: 1px solid var(--border-1);
+      border-radius: 12px; padding: 10px; cursor: pointer; text-align: center;
+      transition: 0.2s; position: relative;
+    }
+    .accesorio-card.seleccionado { border: 2px solid var(--brand-500); background: var(--bg-elev-2); }
+    .accesorio-card img { width: 100%; height: 80px; object-fit: contain; background: #fff; border-radius: 8px; margin-bottom: 8px; }
+    .accesorio-card .no-img { width: 100%; height: 80px; background: var(--bg-elev-2); display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-bottom: 8px; color: var(--text-3); }
+    .accesorio-card .nombre { font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .accesorio-card .precio { font-size: 13px; font-weight: 800; color: var(--brand-500); }
+    .accesorio-card .stock { font-size: 10px; color: var(--text-3); }
   </style>
 </head>
 <body>
@@ -110,6 +127,7 @@
     </div>
   </main>
 
+  <!-- MODAL VENTA RÁPIDA -->
   <div class="sheet-backdrop" id="modalVenta">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -123,7 +141,7 @@
         <div style="display: flex; flex-direction: column; gap: 12px;">
           <button class="btn btn-secondary" id="btnVentaAccesorio" style="padding: 20px; font-size: 16px; justify-content: flex-start;">
             <i class="fas fa-box" style="color: var(--brand-500); font-size: 24px; margin-right: 12px;"></i>
-            <div style="text-align: left;"><div style="font-weight: 800;">Venta de Accesorio</div><div style="font-size: 12px; color: var(--text-3);">Elegir producto del inventario</div></div>
+            <div style="text-align: left;"><div style="font-weight: 800;">Venta de Accesorio</div><div style="font-size: 12px; color: var(--text-3);">Elegir producto con foto</div></div>
           </button>
           <button class="btn btn-secondary" id="btnVentaServicio" style="padding: 20px; font-size: 16px; justify-content: flex-start;">
             <i class="fas fa-tools" style="color: var(--success-500); font-size: 24px; margin-right: 12px;"></i>
@@ -134,9 +152,20 @@
 
       <div id="ventaAccesorioStep" style="display: none;">
         <button class="btn btn-secondary" id="btnBackToTipo" style="margin-bottom: 16px; width: auto; padding: 8px 16px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
-        <div class="field"><label class="input-label">Producto</label><select id="accesorioSelect" class="input-field"></select></div>
-        <div class="field"><label class="input-label">Cantidad</label><input type="number" id="accesorioCantidad" class="input-field" value="1" min="1"></div>
-        <button class="btn btn-primary" id="btnRegistrarAccesorio" style="width: 100%;">Registrar Venta</button>
+        
+        <label class="input-label" style="margin-bottom: 8px; display:block;">Selecciona un producto:</label>
+        <div id="gridAccesorios" class="grid-accesorios"></div>
+
+        <div id="productoSeleccionadoInfo" style="display: none; background: var(--bg-elev-2); padding: 12px; border-radius: 8px; margin-top: 12px; border: 1px solid var(--border-1);">
+          <div style="font-weight: 800; font-size: 14px;" id="infoProdNombre">-</div>
+          <div style="font-size: 12px; color: var(--text-3);">Precio: <span id="infoProdPrecio">0</span> Bs</div>
+          <div class="field" style="margin-top: 8px; margin-bottom: 0;">
+            <label class="input-label">Cantidad</label>
+            <input type="number" id="accesorioCantidad" class="input-field" value="1" min="1">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="btnRegistrarAccesorio" style="width: 100%; margin-top: 12px;" disabled>Registrar Venta</button>
       </div>
 
       <div id="ventaServicioStep" style="display: none;">
