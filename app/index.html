@@ -19,7 +19,6 @@
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    /* 🔥 FORZAR ANIMACIÓN GIRATORIA */
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loader-ring {
       position: absolute; inset: 0; border-radius: 50%; 
@@ -27,24 +26,26 @@
       border-top-color: #FF6900; border-bottom-color: #FF6900;
       animation: spin 1.2s linear infinite !important; 
     }
-    
-    .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-    .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 16px; border-radius: var(--r-xl); font-weight: 700; font-size: 14px; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 105px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
+
+    /* Botones Hero compactos */
+    .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 12px; border-radius: var(--r-xl); font-weight: 700; font-size: 13px; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 80px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
     .btn-hero:active { transform: scale(0.96); }
     .btn-hero-nuevo { background: linear-gradient(135deg, var(--brand-500), #FF8C00); color: white; box-shadow: var(--shadow-glow); }
     .btn-hero-venta { background: var(--bg-elev-1); color: var(--success-500); border: 1px solid var(--border-1); }
-    .icon-box { width: 38px; height: 38px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 6px; margin-bottom: auto; z-index: 2; box-shadow: var(--shadow-sm); }
+    .icon-box { width: 32px; height: 32px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; margin-bottom: auto; z-index: 2; box-shadow: var(--shadow-sm); }
     .icon-box img { width: 100%; height: 100%; object-fit: contain; }
-    .icon-raw { width: 38px; height: 38px; object-fit: contain; margin-bottom: auto; z-index: 2; }
-    
+    .icon-raw { width: 32px; height: 32px; object-fit: contain; margin-bottom: auto; z-index: 2; }
+
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
     .stat-card { background: var(--bg-elev-1); border-radius: var(--r-lg); padding: 14px 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--border-1); }
     .stat-value { font-size: 22px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 6px; letter-spacing: -0.5px; }
     .stat-label { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
-    
+
     .section-title { font-size: 15px; font-weight: 800; color: var(--text-1); margin-bottom: 12px; margin-top: 10px; display: flex; align-items: center; gap: 8px; }
     .ingreso-card { background: var(--bg-elev-1); border-radius: var(--r-lg); padding: 14px; margin-bottom: 10px; transition: var(--dur) var(--ease); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-1); border-left-width: 4px; border-left-style: solid; }
     .ingreso-card:active { transform: scale(0.98); background: var(--bg-elev-2); }
+
     .icon-circle { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 14px; flex-shrink: 0; }
     .info-col { flex: 1; min-width: 0; }
     .info-title { font-size: 15px; font-weight: 700; color: var(--text-1); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -52,29 +53,33 @@
     .monto-col { text-align: right; margin-left: 10px; }
     .monto { font-size: 16px; font-weight: 800; }
     .estado-chip { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; margin-top: 6px; display: inline-block; text-transform: uppercase; }
-    
+
     .pagination-container { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px; }
     .page-btn { background: var(--bg-elev-1); border: 1px solid var(--border-1); color: var(--text-1); width: 38px; height: 38px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; cursor: pointer; transition: var(--dur); }
     .page-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: white; box-shadow: var(--shadow-glow); }
     .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
     .page-nav { background: var(--bg-elev-2); border: 1px solid var(--border-1); color: var(--text-1); padding: 0 16px; height: 38px; border-radius: var(--r-md); font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    /* 🔥 GRID DE ACCESORIOS PARA VENTA RÁPIDA */
-    .grid-accesorios {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
-      max-height: 300px; overflow-y: auto; padding-bottom: 10px;
+    /* Barra de Navegación Inferior Compacta */
+    .bottom-nav { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 468px; display: flex; align-items: center; justify-content: space-around; padding: 4px 8px; background: rgba(26, 26, 29, 0.85); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid var(--border-2); border-radius: 30px; box-shadow: var(--shadow-lg); z-index: var(--z-bottomnav); }
+    [data-theme="light"] .bottom-nav { background: rgba(255, 255, 255, 0.85); border: 1px solid var(--border-1); }
+    .bottom-nav .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px 12px; color: var(--text-3); font-size: 9px; font-weight: 600; text-decoration: none; transition: all var(--dur) var(--ease-spring); border-radius: var(--r-full); border: none; background: none; }
+    .bottom-nav .nav-item img { width: 18px; height: 18px; transition: transform var(--dur) var(--ease-spring); opacity: 0.7; }
+    .bottom-nav .nav-item:active { transform: scale(0.9); }
+    .bottom-nav .nav-item.active { color: var(--brand-500); background: var(--bg-elev-3); }
+    [data-theme="light"] .bottom-nav .nav-item.active { background: var(--bg-elev-2); }
+    .bottom-nav .nav-item.active img { opacity: 1; transform: translateY(-1px) scale(1.1); }
+
+    /* Notificaciones */
+    .notif-btn { position: relative; }
+    .notif-btn img { width: 20px; height: 20px; }
+    .notif-badge {
+      position: absolute; top: -2px; right: -2px;
+      background: var(--danger-500); color: white;
+      font-size: 9px; font-weight: 800; padding: 2px 4px;
+      border-radius: 10px; display: none;
+      border: 2px solid var(--bg-elev-1);
     }
-    .accesorio-card {
-      background: var(--bg-elev-1); border: 1px solid var(--border-1);
-      border-radius: 12px; padding: 10px; cursor: pointer; text-align: center;
-      transition: 0.2s; position: relative;
-    }
-    .accesorio-card.seleccionado { border: 2px solid var(--brand-500); background: var(--bg-elev-2); }
-    .accesorio-card img { width: 100%; height: 80px; object-fit: contain; background: #fff; border-radius: 8px; margin-bottom: 8px; }
-    .accesorio-card .no-img { width: 100%; height: 80px; background: var(--bg-elev-2); display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-bottom: 8px; color: var(--text-3); }
-    .accesorio-card .nombre { font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .accesorio-card .precio { font-size: 13px; font-weight: 800; color: var(--brand-500); }
-    .accesorio-card .stock { font-size: 10px; color: var(--text-3); }
   </style>
 </head>
 <body>
@@ -88,7 +93,26 @@
   </div>
 
   <main class="app-container">
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-logo"><img src="/imagenes/web-app-manifest-192x192.png" alt="Logo"></div>
+        <div class="brand-text"><h1>Panel</h1><p id="userInfo">Cargando...</p></div>
+      </div>
+      <div class="header-actions">
+        <!-- 🔔 BOTÓN DE NOTIFICACIONES CON TU ICONO -->
+        <button class="icon-btn notif-btn" id="btnNotificaciones">
+          <img src="/app/icons/campana.png" alt="Notificaciones">
+          <span class="notif-badge" id="notifBadge">0</span>
+        </button>
+        <!-- BOTÓN DE TEMA -->
+        <button class="icon-btn" id="btnTema"><img src="/app/icons/tema.png" width="20" height="20" alt="Tema"></button>
+        <!-- BOTÓN DE SALIR -->
+        <button class="icon-btn" id="btnSalir"><img src="/app/icons/salir.png" width="20" height="20" alt="Salir"></button>
+      </div>
+    </header>
+
     <div class="app-content">
+      <!-- BOTONES HERO -->
       <div class="hero-actions">
         <button class="btn-hero btn-hero-nuevo" id="nuevoReciboBtn">
           <div class="icon-box"><img src="/app/icons/agregar.png" alt="Nuevo Equipo"></div>
@@ -100,6 +124,7 @@
         </button>
       </div>
 
+      <!-- STATS -->
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-value" id="statActivas">—</div><div class="stat-label">Activas</div></div>
         <div class="stat-card"><div class="stat-value" id="statListas" style="color: var(--success-500);">—</div><div class="stat-label">Listas</div></div>
@@ -141,7 +166,7 @@
         <div style="display: flex; flex-direction: column; gap: 12px;">
           <button class="btn btn-secondary" id="btnVentaAccesorio" style="padding: 20px; font-size: 16px; justify-content: flex-start;">
             <i class="fas fa-box" style="color: var(--brand-500); font-size: 24px; margin-right: 12px;"></i>
-            <div style="text-align: left;"><div style="font-weight: 800;">Venta de Accesorio</div><div style="font-size: 12px; color: var(--text-3);">Elegir producto con foto</div></div>
+            <div style="text-align: left;"><div style="font-weight: 800;">Venta de Accesorio</div><div style="font-size: 12px; color: var(--text-3);">Elegir producto del inventario</div></div>
           </button>
           <button class="btn btn-secondary" id="btnVentaServicio" style="padding: 20px; font-size: 16px; justify-content: flex-start;">
             <i class="fas fa-tools" style="color: var(--success-500); font-size: 24px; margin-right: 12px;"></i>
@@ -152,11 +177,9 @@
 
       <div id="ventaAccesorioStep" style="display: none;">
         <button class="btn btn-secondary" id="btnBackToTipo" style="margin-bottom: 16px; width: auto; padding: 8px 16px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
-        
         <label class="input-label" style="margin-bottom: 8px; display:block;">Selecciona un producto:</label>
-        <div id="gridAccesorios" class="grid-accesorios"></div>
-
-        <div id="productoSeleccionadoInfo" style="display: none; background: var(--bg-elev-2); padding: 12px; border-radius: 8px; margin-top: 12px; border: 1px solid var(--border-1);">
+        <div id="gridAccesorios" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 300px; overflow-y: auto; margin-bottom: 16px;"></div>
+        <div id="productoSeleccionadoInfo" style="display: none; background: var(--bg-elev-2); padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border-1);">
           <div style="font-weight: 800; font-size: 14px;" id="infoProdNombre">-</div>
           <div style="font-size: 12px; color: var(--text-3);">Precio: <span id="infoProdPrecio">0</span> Bs</div>
           <div class="field" style="margin-top: 8px; margin-bottom: 0;">
@@ -164,8 +187,7 @@
             <input type="number" id="accesorioCantidad" class="input-field" value="1" min="1">
           </div>
         </div>
-
-        <button class="btn btn-primary" id="btnRegistrarAccesorio" style="width: 100%; margin-top: 12px;" disabled>Registrar Venta</button>
+        <button class="btn btn-primary" id="btnRegistrarAccesorio" style="width: 100%;" disabled>Registrar Venta</button>
       </div>
 
       <div id="ventaServicioStep" style="display: none;">
@@ -179,6 +201,7 @@
     </div>
   </div>
 
+  <!-- MODAL OPCIONES / DETALLE -->
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -190,6 +213,7 @@
     </div>
   </div>
 
+  <!-- MODAL PAGO -->
   <div class="sheet-backdrop" id="modalPago">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -207,17 +231,68 @@
     </div>
   </div>
 
+  <!-- MODAL NOTA PARA EL DUEÑO (Técnico) -->
+  <div class="sheet-backdrop" id="modalNotaDueno">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1); margin-bottom: 8px;">Nota para el Dueño</h3>
+      <p style="font-size: 14px; color: var(--text-3); margin-bottom: 16px;">Escribe una constancia que el dueño verá en su panel.</p>
+      <div class="field">
+        <textarea id="notaDuenoTexto" class="input-field" rows="4" placeholder="Ej: Faltó cambiar el flex del modelo X..."></textarea>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 16px;">
+        <button class="btn btn-secondary" id="btnCancelarNotaDueno" style="flex: 1;">Cancelar</button>
+        <button class="btn btn-primary" id="btnGuardarNotaDueno" style="flex: 1;">Guardar Nota</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CREAR MENSAJE POPUP (Admin) -->
+  <div class="sheet-backdrop" id="modalMensajePopup">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1); margin-bottom: 8px;">Mensaje para el Técnico</h3>
+      <p style="font-size: 14px; color: var(--text-3); margin-bottom: 16px;">Este mensaje aparecerá en un popup al técnico al entrar.</p>
+      <div class="field">
+        <input type="text" id="mensajePopupTitulo" class="input-field" placeholder="Título (Ej: Aviso importante)">
+      </div>
+      <div class="field">
+        <textarea id="mensajePopupTexto" class="input-field" rows="3" placeholder="Escribe el mensaje aquí..."></textarea>
+      </div>
+      <div class="field">
+        <label class="input-label">Duración</label>
+        <select id="mensajePopupDuracion" class="input-field">
+          <option value="1">1 día</option>
+          <option value="3">3 días</option>
+          <option value="7">1 semana</option>
+          <option value="0">Hasta que el técnico lo cierre</option>
+        </select>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 16px;">
+        <button class="btn btn-secondary" id="btnCancelarMensajePopup" style="flex: 1;">Cancelar</button>
+        <button class="btn btn-primary" id="btnGuardarMensajePopup" style="flex: 1;">Enviar Mensaje</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL VER MENSAJE POPUP (Técnico) -->
+  <div class="sheet-backdrop" id="modalVerPopup">
+    <div class="sheet" style="text-align: center;">
+      <div class="sheet-handle"></div>
+      <div style="font-size: 56px; color: var(--brand-500); margin-bottom: 16px;"><i class="fas fa-bullhorn"></i></div>
+      <h3 id="verPopupTitulo" style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Mensaje del Dueño</h3>
+      <p id="verPopupTexto" style="font-size: 16px; color: var(--text-3); margin-bottom: 24px;">...</p>
+      <button class="btn btn-primary" id="btnOkPopup" style="width: 100%;">Entendido</button>
+    </div>
+  </div>
+
   <script type="module" src="./js/panel.js"></script>
   
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        const loader = document.getElementById('appLoader');
-        if (loader && !loader.classList.contains('hidden')) {
-          loader.classList.add('hidden');
-        }
-      }, 1500);
-    });
+    setTimeout(() => {
+      const loader = document.getElementById('appLoader');
+      if (loader && !loader.classList.contains('hidden')) loader.classList.add('hidden');
+    }, 1500);
   </script>
 </body>
 </html>
