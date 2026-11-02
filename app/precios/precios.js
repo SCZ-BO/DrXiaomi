@@ -32,7 +32,7 @@ function getLogo(marca) {
   let m = marca ? marca.split(" ")[0].toUpperCase() : "GENERAL";
   if (m.includes("APPLE") || m.includes("IPHONE")) m = "APPLE";
   if (m.includes("XIAOMI") || m.includes("REDMI") || m.includes("POCO")) m = "XIAOMI";
-  return `https://xiaomi.scz.red/precio/logos/${m.toLowerCase()}.png`;
+  return `https://xiaomi.scz.red/app/precio/logos/${m.toLowerCase()}.png`;
 }
 
 // 🚀 CONEXIÓN A FIREBASE
