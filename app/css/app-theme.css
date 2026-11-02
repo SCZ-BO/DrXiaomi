@@ -392,3 +392,37 @@ input, select, textarea {
     padding-right: env(safe-area-inset-right);
   }
 }
+
+/* ==========================================
+   PANTALLA DE CARGA (LOADER CON LOGO)
+   ========================================== */
+.loader-overlay {
+  position: fixed; inset: 0; 
+  background: var(--bg-main);
+  z-index: 999999; 
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity 0.4s ease;
+}
+.loader-overlay.hidden { opacity: 0; pointer-events: none; }
+
+.loader-logo-container {
+  position: relative; width: 90px; height: 90px; 
+  display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+}
+.loader-ring {
+  position: absolute; inset: 0; border-radius: 50%; 
+  border: 3px solid transparent; 
+  border-top-color: var(--brand-500); border-bottom-color: var(--brand-500);
+  animation: spin 1.2s linear infinite;
+}
+.loader-logo-img {
+  width: 70px; height: 70px; border-radius: 50%; object-fit: cover; 
+  background: var(--bg-elev-1); border: 2px solid var(--border-1);
+  box-shadow: 0 0 20px var(--brand-100);
+}
+.loader-text {
+  font-size: 15px; font-weight: 600; color: var(--text-3); 
+  letter-spacing: 0.5px; animation: pulse 1.5s infinite;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
