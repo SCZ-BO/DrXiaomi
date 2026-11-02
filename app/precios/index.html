@@ -112,13 +112,17 @@
       <a href="/app/precios/" class="nav-item active">
         <img src="/app/icons/precios.png" alt="Precios"> <span>Precios</span>
       </a>
-      <a href="/app/reportes/" class="nav-item">
+      
+      <!-- 🔥 ID para ocultar a los técnicos -->
+      <a href="/app/reportes/" class="nav-item" id="navReportes">
         <img src="/app/icons/reportes.png" alt="Reportes"> <span>Reportes</span>
       </a>
+      
       <a href="/app/inventario/" class="nav-item">
         <img src="/app/icons/inventario.png" alt="Stock"> <span>Stock</span>
       </a>
-      <a href="/app/index.html" class="nav-item" onclick="localStorage.removeItem('drx_sesion');">
+      
+      <a href="/login/" class="nav-item" onclick="localStorage.removeItem('drx_sesion');">
         <img src="/app/icons/salir.png" alt="Salir"> <span>Salir</span>
       </a>
     </nav>
