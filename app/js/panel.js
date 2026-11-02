@@ -46,14 +46,8 @@ function renderLayout() {
   document.body.insertAdjacentHTML('afterbegin', headerHTML);
   document.body.insertAdjacentHTML('beforeend', navHTML);
   
+  // Solo el botón de Salir (el de tema lo maneja app-ui.js)
   document.getElementById('btnSalir')?.addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
-  document.getElementById('btnTema')?.addEventListener('click', () => {
-    const act = document.documentElement.getAttribute('data-theme'), nue = act === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', nue); 
-    localStorage.setItem('theme', nue);
-    const meta = document.getElementById('metaThemeColor');
-    if(meta) meta.setAttribute('content', nue === 'light' ? '#F8F8F9' : '#0A0A0B');
-  });
 }
 renderLayout();
 
@@ -110,7 +104,7 @@ function configurarEventos() {
   const accesorioStep = document.getElementById('ventaAccesorioStep');
   const servicioStep = document.getElementById('ventaServicioStep');
 
-  // 🔥 VENTA DE ACCESORIOS (Grid con Fotos corregido)
+  // 🔥 VENTA DE ACCESORIOS (Grid con Fotos)
   document.getElementById('btnVentaAccesorio')?.addEventListener('click', () => {
     if(tipoStep) tipoStep.style.display = 'none'; 
     if(accesorioStep) accesorioStep.style.display = 'block'; 
@@ -173,7 +167,7 @@ function configurarEventos() {
     } catch (err) { toast('Error al guardar', 'error'); }
   });
 
-  // Guardar Venta de Accesorio (con los nombres correctos: precio y costo)
+  // Guardar Venta de Accesorio
   document.getElementById('btnRegistrarAccesorio')?.addEventListener('click', async (e) => {
     const btn = e.target;
     const id = btn.dataset.id;
@@ -190,7 +184,7 @@ function configurarEventos() {
     try {
       const total = precio * cantidad;
       await addDoc(collection(db, 'ventas'), { concepto: `${cantidad}x ${nombre}`, monto: total, costo: costo * cantidad, metodoPago: 'Efectivo', fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
-      await updateDoc(doc(db, 'productos', id), { stock: stock - cantidad }); // 🔥 Usa 'productos' y 'stock'
+      await updateDoc(doc(db, 'productos', id), { stock: stock - cantidad });
       toast('Venta de accesorio registrada', 'success'); 
       modalVenta.classList.remove('show');
       document.getElementById('productoSeleccionadoInfo').style.display = 'none';
