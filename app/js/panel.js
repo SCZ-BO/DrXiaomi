@@ -19,6 +19,9 @@ const modalVenta = document.getElementById('modalVenta');
 const paginationContainer = document.getElementById('paginationContainer');
 const appLoader = document.getElementById('appLoader');
 
+// ==========================================
+// 1. LAYOUT (Header y Bottom Nav)
+// ==========================================
 function renderLayout() {
   const headerHTML = `
     <header class="app-header">
@@ -27,30 +30,36 @@ function renderLayout() {
         <div class="brand-text"><h1>Panel</h1><p id="userInfo">Cargando...</p></div>
       </div>
       <div class="header-actions">
-        <button class="icon-btn" id="btnSalir"><img src="/app/icons/salir.png" width="20" height="20"></button>
-        <button class="icon-btn" id="btnTema"><img src="/app/icons/tema.png" width="20" height="20"></button>
+        <button class="icon-btn" id="btnSalir"><img src="/app/icons/salir.png" width="20" height="20" alt="Salir"></button>
+        <button class="icon-btn" id="btnTema"><img src="/app/icons/tema.png" width="20" height="20" alt="Tema"></button>
       </div>
     </header>`;
     
   const navHTML = `
     <nav class="bottom-nav">
-      <a href="/app/" class="nav-item active"><img src="/app/icons/home.png"> <span>Panel</span></a>
-      <a href="/app/precios/" class="nav-item"><img src="/app/icons/precios.png"> <span>Precios</span></a>
-      <a href="/app/reportes/" class="nav-item"><img src="/app/icons/reportes.png"> <span>Reportes</span></a>
-      <a href="/app/inventario/" class="nav-item"><img src="/app/icons/inventario.png"> <span>Stock</span></a>
+      <a href="/app/" class="nav-item active"><img src="/app/icons/home.png" alt="Panel"> <span>Panel</span></a>
+      <a href="/app/precios/" class="nav-item"><img src="/app/icons/precios.png" alt="Precios"> <span>Precios</span></a>
+      <a href="/app/reportes/" class="nav-item"><img src="/app/icons/reportes.png" alt="Reportes"> <span>Reportes</span></a>
+      <a href="/app/inventario/" class="nav-item"><img src="/app/icons/inventario.png" alt="Stock"> <span>Stock</span></a>
     </nav>`;
     
   document.body.insertAdjacentHTML('afterbegin', headerHTML);
   document.body.insertAdjacentHTML('beforeend', navHTML);
   
-  document.getElementById('btnSalir').addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
-  document.getElementById('btnTema').addEventListener('click', () => {
+  document.getElementById('btnSalir')?.addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
+  document.getElementById('btnTema')?.addEventListener('click', () => {
     const act = document.documentElement.getAttribute('data-theme'), nue = act === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', nue); localStorage.setItem('theme', nue);
+    document.documentElement.setAttribute('data-theme', nue); 
+    localStorage.setItem('theme', nue);
+    const meta = document.getElementById('metaThemeColor');
+    if(meta) meta.setAttribute('content', nue === 'light' ? '#F8F8F9' : '#0A0A0B');
   });
 }
 renderLayout();
 
+// ==========================================
+// 2. AUTENTICACIÓN
+// ==========================================
 requireAuth((s) => {
   appState.sesion = s;
   setTimeout(() => { 
@@ -68,37 +77,92 @@ function iniciarApp() {
   setTimeout(() => { if(appLoader) appLoader.classList.add('hidden'); }, 800);
 }
 
-// UTILIDADES
-export function parsearFecha(f) { if (!f) return null; if (typeof f.toDate === 'function') return f.toDate(); if (f.seconds !== undefined) return new Date(f.seconds * 1000); const d = new Date(f); return isNaN(d.getTime()) ? null : d; }
-export function formatBsLimpio(n) { const v = Number(n) || 0; return v === Math.floor(v) ? `Bs. ${v}` : `Bs. ${v.toFixed(2)}`; }
-function formatFechaCompleta(f) { let d = parsearFecha(f); if (!d) return 'Reciente'; return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} a las ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+// ==========================================
+// 3. UTILIDADES
+// ==========================================
+export function parsearFecha(f) {
+  if (!f) return null;
+  if (typeof f.toDate === 'function') return f.toDate();
+  if (f.seconds !== undefined) return new Date(f.seconds * 1000);
+  const d = new Date(f); return isNaN(d.getTime()) ? null : d;
+}
+
+export function formatBsLimpio(n) {
+  const v = Number(n) || 0; return v === Math.floor(v) ? `Bs. ${v}` : `Bs. ${v.toFixed(2)}`;
+}
+
+function formatFechaCompleta(f) {
+  let d = parsearFecha(f); if (!d) return 'Reciente';
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} a las ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
 export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
 
-// EVENTOS
+// ==========================================
+// 4. EVENTOS
+// ==========================================
 function configurarEventos() {
-  document.getElementById('nuevoReciboBtn').addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
-  document.getElementById('ventaRapidaBtn').addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
+  document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
+  document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
   document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta.classList.remove('show'));
 
   const tipoStep = document.getElementById('tipoVentaStep');
   const accesorioStep = document.getElementById('ventaAccesorioStep');
   const servicioStep = document.getElementById('ventaServicioStep');
 
-  document.getElementById('btnVentaAccesorio').onclick = () => {
-    tipoStep.style.display = 'none'; accesorioStep.style.display = 'block'; servicioStep.style.display = 'none';
-    const select = document.getElementById('accesorioSelect');
-    select.innerHTML = appState.inventario.map(i => `<option value="${i.id}" data-precio="${i.venta}">${i.nombre} (${i.venta} Bs)</option>`).join('');
-  };
+  // 🔥 VENTA DE ACCESORIOS (Grid con Fotos)
+  document.getElementById('btnVentaAccesorio')?.addEventListener('click', () => {
+    if(tipoStep) tipoStep.style.display = 'none'; 
+    if(accesorioStep) accesorioStep.style.display = 'block'; 
+    if(servicioStep) servicioStep.style.display = 'none';
+    
+    const grid = document.getElementById('gridAccesorios');
+    if (grid) {
+      grid.innerHTML = appState.inventario.map(i => `
+        <div class="accesorio-card" data-id="${i.id}" data-nombre="${i.nombre}" data-precio="${i.venta}" data-costo="${i.compra}" data-stock="${i.stock}">
+          ${i.foto ? `<img src="${i.foto}" alt="${i.nombre}">` : `<div class="no-img"><i class="fas fa-box"></i></div>`}
+          <div class="nombre">${i.nombre}</div>
+          <div class="precio">${i.venta} Bs</div>
+          <div class="stock">Stock: ${i.stock}</div>
+        </div>
+      `).join('');
+      
+      grid.querySelectorAll('.accesorio-card').forEach(card => {
+        card.addEventListener('click', () => {
+          haptic(10);
+          grid.querySelectorAll('.accesorio-card').forEach(c => c.classList.remove('seleccionado'));
+          card.classList.add('seleccionado');
+          
+          document.getElementById('productoSeleccionadoInfo').style.display = 'block';
+          document.getElementById('infoProdNombre').textContent = card.dataset.nombre;
+          document.getElementById('infoProdPrecio').textContent = card.dataset.precio;
+          document.getElementById('accesorioCantidad').value = 1;
+          document.getElementById('accesorioCantidad').max = card.dataset.stock;
+          
+          const btnReg = document.getElementById('btnRegistrarAccesorio');
+          btnReg.disabled = false;
+          btnReg.dataset.id = card.dataset.id;
+          btnReg.dataset.nombre = card.dataset.nombre;
+          btnReg.dataset.precio = card.dataset.precio;
+          btnReg.dataset.costo = card.dataset.costo;
+          btnReg.dataset.stock = card.dataset.stock;
+        });
+      });
+    }
+  });
 
-  document.getElementById('btnVentaServicio').onclick = () => {
-    tipoStep.style.display = 'none'; accesorioStep.style.display = 'none'; servicioStep.style.display = 'block';
-  };
+  // 🔥 VENTA DE SERVICIOS
+  document.getElementById('btnVentaServicio')?.addEventListener('click', () => {
+    if(tipoStep) tipoStep.style.display = 'none'; 
+    if(accesorioStep) accesorioStep.style.display = 'none'; 
+    if(servicioStep) servicioStep.style.display = 'block';
+  });
 
-  document.getElementById('btnBackToTipo').onclick = document.getElementById('btnBackToTipo2').onclick = () => {
-    tipoStep.style.display = 'block'; accesorioStep.style.display = 'none'; servicioStep.style.display = 'none';
-  };
+  document.getElementById('btnBackToTipo')?.addEventListener('click', () => { if(tipoStep) tipoStep.style.display = 'block'; if(accesorioStep) accesorioStep.style.display = 'none'; if(servicioStep) servicioStep.style.display = 'none'; });
+  document.getElementById('btnBackToTipo2')?.addEventListener('click', () => { if(tipoStep) tipoStep.style.display = 'block'; if(accesorioStep) accesorioStep.style.display = 'none'; if(servicioStep) servicioStep.style.display = 'none'; });
 
-  document.getElementById('btnGuardarVenta').onclick = async () => {
+  // Guardar Venta de Servicio
+  document.getElementById('btnGuardarVenta')?.addEventListener('click', async () => {
     let concepto = document.getElementById('ventaConcepto').value, monto = parseFloat(document.getElementById('ventaMonto').value), metodo = document.getElementById('ventaMetodo').value;
     if (concepto === 'Otro') { const c = document.getElementById('ventaConceptoOtro').value.trim(); if (!c) { toast('Especifica qué se vendió', 'error'); return; } concepto = c; }
     if (!monto || monto <= 0) { toast('Ingresa un monto válido', 'error'); return; }
@@ -107,36 +171,48 @@ function configurarEventos() {
       await addDoc(collection(db, 'ventas'), { concepto, monto, costo: 0, metodoPago: metodo, fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
       toast('Venta registrada', 'success'); modalVenta.classList.remove('show');
     } catch (err) { toast('Error al guardar', 'error'); }
-  };
+  });
 
-  document.getElementById('btnRegistrarAccesorio').onclick = async () => {
-    const select = document.getElementById('accesorioSelect');
-    const id = select.value;
+  // Guardar Venta de Accesorio
+  document.getElementById('btnRegistrarAccesorio')?.addEventListener('click', async (e) => {
+    const btn = e.target;
+    const id = btn.dataset.id;
+    const nombre = btn.dataset.nombre;
+    const precio = parseFloat(btn.dataset.precio);
+    const costo = parseFloat(btn.dataset.costo);
+    const stock = parseInt(btn.dataset.stock);
     const cantidad = parseInt(document.getElementById('accesorioCantidad').value);
-    const prod = appState.inventario.find(p => p.id === id);
-    if (!prod) return;
+
+    if (!id) return;
+    if (cantidad > stock) { toast('No hay suficiente stock', 'error'); return; }
 
     haptic(20);
     try {
-      const total = prod.venta * cantidad;
-      await addDoc(collection(db, 'ventas'), { concepto: `${cantidad}x ${prod.nombre}`, monto: total, costo: prod.compra * cantidad, metodoPago: 'Efectivo', fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
-      await updateDoc(doc(db, 'inventario', id), { stock: prod.stock - cantidad });
-      toast('Venta de accesorio registrada', 'success'); modalVenta.classList.remove('show');
-    } catch (err) { toast('Error al guardar', 'error'); }
-  };
+      const total = precio * cantidad;
+      await addDoc(collection(db, 'ventas'), { concepto: `${cantidad}x ${nombre}`, monto: total, costo: costo * cantidad, metodoPago: 'Efectivo', fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
+      await updateDoc(doc(db, 'inventario', id), { stock: stock - cantidad });
+      toast('Venta de accesorio registrada', 'success'); 
+      modalVenta.classList.remove('show');
+      document.getElementById('productoSeleccionadoInfo').style.display = 'none';
+      btn.disabled = true;
+    } catch (err) { console.error(err); toast('Error al guardar', 'error'); }
+  });
 
-  document.getElementById('filtros').addEventListener('click', (e) => {
+  // Filtros y Buscador
+  document.getElementById('filtros')?.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-filtro]'); if (!btn) return;
     haptic(10); document.querySelectorAll('#filtros .chip-interactive').forEach(b => b.classList.remove('active'));
     btn.classList.add('active'); filtroActual = btn.dataset.filtro;
     busquedaActual = ''; document.getElementById('buscador').value = ''; paginaActual = 1; renderizarTodo();
   });
-  document.getElementById('buscador').addEventListener('input', (e) => {
+  document.getElementById('buscador')?.addEventListener('input', (e) => {
     busquedaActual = e.target.value.toLowerCase().trim(); paginaActual = 1; renderizarTodo();
   });
 }
 
-// BASE DE DATOS
+// ==========================================
+// 5. BASE DE DATOS
+// ==========================================
 function cargarDatos() {
   if (unsubscribe) unsubscribe();
   unsubscribe = onSnapshot(query(collection(db, 'recibos'), orderBy('fecha', 'desc')), (snap) => {
@@ -168,7 +244,9 @@ function cargarDatos() {
 
 function procesarVentas() { appState.ventasHoy = [...ventasPanel, ...ventasCierre].sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0)); renderizarTodo(); }
 
-// RENDERIZADO
+// ==========================================
+// 6. RENDERIZADO
+// ==========================================
 function renderizarTodo() {
   actualizarStats(); todosLosMovimientos = [];
   if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
@@ -230,7 +308,6 @@ function renderCardVenta(v, tipo) {
   return `<div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}" style="border-left-color: ${cor};"><div class="icon-circle" style="color: ${cor}; background: color-mix(in srgb, ${cor} 15%, transparent);"><i class="fas ${ic}"></i></div><div class="info-col"><div class="info-title">${escapeHtml(v.concepto)}</div><div class="info-sub">${hora} · ${escapeHtml(v.metodoPago)}</div></div><div class="monto-col"><div class="monto" style="color: ${cor};">${formatBsLimpio(v.monto)}</div></div></div>`;
 }
 
-// 🔥 FUNCIÓN QUE FALTABA Y CAUSABA EL ERROR
 function actualizarStats() {
   document.getElementById('statActivas').textContent = appState.ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
   document.getElementById('statListas').textContent = appState.ordenes.filter(o => o.estadoOrden === 'listo').length;
