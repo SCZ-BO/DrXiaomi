@@ -19,6 +19,18 @@
   <link rel="manifest" href="/manifest.json">
 
   <style>
+    /* 🔥 CSS DE ANIMACIÓN FORZADO EN EL HTML */
+    .loader-ring {
+      position: absolute; inset: 0; border-radius: 50%; 
+      border: 3px solid transparent; 
+      border-top-color: #FF6900; border-bottom-color: #FF6900;
+      animation: spin 1.2s linear infinite !important; /* El !important asegura que gire */
+    }
+    @keyframes spin { 
+      0% { transform: rotate(0deg); } 
+      100% { transform: rotate(360deg); } 
+    }
+    
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
     .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 16px; border-radius: var(--r-xl); font-weight: 700; font-size: 14px; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 105px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
     .btn-hero:active { transform: scale(0.96); }
@@ -81,7 +93,6 @@
     <!-- CONTENIDO PRINCIPAL -->
     <div class="app-content">
       
-      <!-- BOTONES HERO -->
       <div class="hero-actions">
         <button class="btn-hero btn-hero-nuevo" id="nuevoReciboBtn">
           <div class="icon-box"><img src="/app/icons/agregar.png" alt="Nuevo Equipo"></div>
@@ -93,7 +104,6 @@
         </button>
       </div>
 
-      <!-- STATS -->
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-value" id="statActivas">—</div><div class="stat-label">Activas</div></div>
         <div class="stat-card"><div class="stat-value" id="statListas" style="color: var(--success-500);">—</div><div class="stat-label">Listas</div></div>
@@ -102,13 +112,11 @@
 
       <div class="section-title">Movimientos Recientes</div>
 
-      <!-- BUSCADOR -->
       <div class="search-bar">
         <img src="/app/icons/buscar.png" width="18" height="18" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.5;">
         <input type="search" id="buscador" placeholder="Buscar cliente o equipo..." autocomplete="off" style="padding-left: 44px;">
       </div>
 
-      <!-- FILTROS -->
       <div class="filters-row" id="filtros">
         <button class="chip-interactive active" data-filtro="todos">Todos</button>
         <button class="chip-interactive" data-filtro="reparacion">Reparación</button>
@@ -118,10 +126,7 @@
         <button class="chip-interactive" data-filtro="venta">Ventas</button>
       </div>
 
-      <!-- LISTA DE MOVIMIENTOS -->
       <div class="cards-list" id="listaOrdenes"></div>
-
-      <!-- PAGINACIÓN -->
       <div class="pagination-container" id="paginationContainer"></div>
     </div>
   </main>
