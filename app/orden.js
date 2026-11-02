@@ -401,3 +401,104 @@ async function regenerarYEnviarPDF() {
     toast('Error al generar el PDF', 'error');
   }
 }
+// /app/orden.js - PARTE 4 (Lógica de Cobro y Extras)
+
+// 8. MODAL DE COBRO (Cuando se cambia a Entregado)
+async function cambiarEstado(nuevoEstado) {
+  if (nuevoEstado === (orden.estadoOrden || 'recibido')) return;
+  
+  if (nuevoEstado === 'entregado') {
+    abrirModalCobro(); // Si es entregado, abrimos el modal de cobro
+    return;
+  }
+
+  haptic(20);
+  try {
+    const entrada = { tipo: 'estado', texto: `Estado cambiado a: ${ESTADOS[nuevoEstado].texto}`, autor: sesion.nombre, fecha: new Date().toISOString() };
+    await updateDoc(doc(db, 'recibos', ordenId), { estadoOrden: nuevoEstado, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
+    toast('Estado actualizado', 'success');
+  } catch (err) { toast('Error al cambiar estado', 'error'); }
+}
+
+function abrirModalCobro() {
+  haptic(15);
+  const total = Number(orden.total) || 0;
+  const saldo = Number(orden.saldo) || 0;
+  const montoSugerido = saldo > 0 ? saldo : total;
+
+  const modal = document.createElement('div');
+  modal.className = 'sheet-backdrop show'; // Usamos las clases de tu nuevo diseño
+  modal.style.display = 'flex';
+  
+  modal.innerHTML = `
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h3 style="font-size: 20px; font-weight: 800; color: var(--brand-500); margin-bottom: 8px;">✅ Confirmar entrega</h3>
+      <p style="margin-bottom:20px; font-size:14px;"><strong>${escapeHtml(orden.cliente)}</strong><br><span style="font-size:12px; color:var(--text-3);">Total: ${formatBs(total)}${saldo > 0 && saldo !== total ? ` · Saldo: ${formatBs(saldo)}` : ''}</span></p>
+      
+      <div class="field">
+        <label class="input-label">Monto cobrado</label>
+        <input type="number" id="inputMonto" class="input-field" step="0.01" min="0" value="${montoSugerido.toFixed(2)}" inputmode="decimal" style="text-align:center; font-size:18px; font-weight:700;">
+      </div>
+
+      <div class="field">
+        <label class="input-label">Método de pago</label>
+        <div id="metodosPago" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <button type="button" class="btn btn-secondary metodo-btn" data-metodo="Efectivo" style="flex-direction:column; padding:14px 10px;"><i class="fas fa-money-bill-wave" style="font-size:22px; color:#10B981;"></i><span>Efectivo</span></button>
+          <button type="button" class="btn btn-secondary metodo-btn" data-metodo="QR" style="flex-direction:column; padding:14px 10px;"><i class="fas fa-qrcode" style="font-size:22px; color:#3B82F6;"></i><span>QR</span></button>
+          <button type="button" class="btn btn-secondary metodo-btn" data-metodo="Transferencia" style="flex-direction:column; padding:14px 10px;"><i class="fas fa-building-columns" style="font-size:22px; color:#8B5CF6;"></i><span>Transf.</span></button>
+          <button type="button" class="btn btn-secondary metodo-btn" data-metodo="Mixto" style="flex-direction:column; padding:14px 10px;"><i class="fas fa-shuffle" style="font-size:22px; color:#F59E0B;"></i><span>Mixto</span></button>
+        </div>
+        <div id="detalleMixtoContainer" style="display:none; margin-top:10px;">
+          <input type="text" id="detalleMixto" class="input-field" placeholder="Ej: 200 efectivo + 150 QR" maxlength="100">
+        </div>
+        <div id="errorMetodo" style="color:#EF4444; font-size:12px; margin-top:8px; display:none;"></div>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:20px;">
+        <button type="button" id="btnCancelarCobro" class="btn btn-secondary" style="flex:1;">Cancelar</button>
+        <button type="button" id="btnConfirmarCobro" class="btn btn-primary" style="flex:1;"><i class="fas fa-check"></i> Confirmar</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+
+  let metodoSeleccionado = null;
+  modal.querySelectorAll('.metodo-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      haptic(8);
+      modal.querySelectorAll('.metodo-btn').forEach(b => { b.classList.remove('btn-primary'); b.classList.add('btn-secondary'); });
+      btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
+      metodoSeleccionado = btn.dataset.metodo;
+      document.getElementById('detalleMixtoContainer').style.display = metodoSeleccionado === 'Mixto' ? 'block' : 'none';
+      document.getElementById('errorMetodo').style.display = 'none';
+    });
+  });
+
+  document.getElementById('btnCancelarCobro').addEventListener('click', () => { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); });
+
+  document.getElementById('btnConfirmarCobro').addEventListener('click', async () => {
+    const monto = parseFloat(document.getElementById('inputMonto').value) || 0;
+    if (!metodoSeleccionado) { document.getElementById('errorMetodo').textContent = 'Selecciona un método de pago'; document.getElementById('errorMetodo').style.display = 'block'; return; }
+    if (monto <= 0) { document.getElementById('errorMetodo').textContent = 'Ingresa un monto válido'; document.getElementById('errorMetodo').style.display = 'block'; return; }
+    
+    let metodoFinal = metodoSeleccionado;
+    if (metodoSeleccionado === 'Mixto') {
+      const detalle = document.getElementById('detalleMixto').value.trim();
+      if (!detalle) { document.getElementById('errorMetodo').textContent = 'Especifica el detalle'; document.getElementById('errorMetodo').style.display = 'block'; return; }
+      metodoFinal = `Mixto (${detalle})`;
+    }
+
+    modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
+    await confirmarCobro(monto, metodoFinal);
+  });
+}
+
+async function confirmarCobro(monto, metodo) {
+  haptic(20);
+  try {
+    const entrada = { tipo: 'estado', texto: `Estado cambiado a: Entregado · Cobrado: ${formatBs(monto)} (${metodo})`, autor: sesion.nombre, fecha: new Date().toISOString() };
+    await updateDoc(doc(db, 'recibos', ordenId), { estadoOrden: 'entregado', fechaEntrega: serverTimestamp(), montoCobrado: monto, metodoPago: metodo, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
+    toast(`Entregado · ${formatBs(monto)}`, 'success');
+  } catch (err) { toast('Error al registrar entrega', 'error'); }
+}
