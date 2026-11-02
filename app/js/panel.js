@@ -2,7 +2,7 @@
 import { toast, haptic, tiempoRelativo, escapeHtml, initTheme } from './app-ui.js';
 import { requireAuth, logout } from './app-auth.js'; 
 import { db } from './firebase.js';
-import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy, doc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { abrirSheetTelefono, abrirSheetVenta } from './panel-modals.js';
 import { generarPDFDia } from './panel-pdf.js';
 
@@ -69,9 +69,9 @@ function iniciarApp() {
 }
 
 // UTILIDADES
-export function parsearFecha(f) { /* ... */ return f ? new Date(f.seconds * 1000) : null; }
+export function parsearFecha(f) { if (!f) return null; if (typeof f.toDate === 'function') return f.toDate(); if (f.seconds !== undefined) return new Date(f.seconds * 1000); const d = new Date(f); return isNaN(d.getTime()) ? null : d; }
 export function formatBsLimpio(n) { const v = Number(n) || 0; return v === Math.floor(v) ? `Bs. ${v}` : `Bs. ${v.toFixed(2)}`; }
-function formatFechaCompleta(f) { /* ... */ }
+function formatFechaCompleta(f) { let d = parsearFecha(f); if (!d) return 'Reciente'; return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} a las ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
 export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
 
 // EVENTOS
@@ -80,14 +80,12 @@ function configurarEventos() {
   document.getElementById('ventaRapidaBtn').addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
   document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta.classList.remove('show'));
 
-  // Lógica de Pasos para Venta Rápida
   const tipoStep = document.getElementById('tipoVentaStep');
   const accesorioStep = document.getElementById('ventaAccesorioStep');
   const servicioStep = document.getElementById('ventaServicioStep');
 
   document.getElementById('btnVentaAccesorio').onclick = () => {
     tipoStep.style.display = 'none'; accesorioStep.style.display = 'block'; servicioStep.style.display = 'none';
-    // Cargar inventario en el select
     const select = document.getElementById('accesorioSelect');
     select.innerHTML = appState.inventario.map(i => `<option value="${i.id}" data-precio="${i.venta}">${i.nombre} (${i.venta} Bs)</option>`).join('');
   };
@@ -100,7 +98,6 @@ function configurarEventos() {
     tipoStep.style.display = 'block'; accesorioStep.style.display = 'none'; servicioStep.style.display = 'none';
   };
 
-  // Registrar Venta de Servicio
   document.getElementById('btnGuardarVenta').onclick = async () => {
     let concepto = document.getElementById('ventaConcepto').value, monto = parseFloat(document.getElementById('ventaMonto').value), metodo = document.getElementById('ventaMetodo').value;
     if (concepto === 'Otro') { const c = document.getElementById('ventaConceptoOtro').value.trim(); if (!c) { toast('Especifica qué se vendió', 'error'); return; } concepto = c; }
@@ -112,7 +109,6 @@ function configurarEventos() {
     } catch (err) { toast('Error al guardar', 'error'); }
   };
 
-  // Registrar Venta de Accesorio
   document.getElementById('btnRegistrarAccesorio').onclick = async () => {
     const select = document.getElementById('accesorioSelect');
     const id = select.value;
@@ -124,13 +120,11 @@ function configurarEventos() {
     try {
       const total = prod.venta * cantidad;
       await addDoc(collection(db, 'ventas'), { concepto: `${cantidad}x ${prod.nombre}`, monto: total, costo: prod.compra * cantidad, metodoPago: 'Efectivo', fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
-      // Actualizar stock
       await updateDoc(doc(db, 'inventario', id), { stock: prod.stock - cantidad });
       toast('Venta de accesorio registrada', 'success'); modalVenta.classList.remove('show');
     } catch (err) { toast('Error al guardar', 'error'); }
   };
 
-  // Resto de eventos (filtros, buscador, etc)
   document.getElementById('filtros').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-filtro]'); if (!btn) return;
     haptic(10); document.querySelectorAll('#filtros .chip-interactive').forEach(b => b.classList.remove('active'));
@@ -144,7 +138,6 @@ function configurarEventos() {
 
 // BASE DE DATOS
 function cargarDatos() {
-  // Recibos
   if (unsubscribe) unsubscribe();
   unsubscribe = onSnapshot(query(collection(db, 'recibos'), orderBy('fecha', 'desc')), (snap) => {
       appState.ordenes = snap.docs.map(d => { const data = d.data(); delete data.fotos; return { id: d.id, ...data }; });
@@ -152,13 +145,11 @@ function cargarDatos() {
       renderizarTodo();
     }, (err) => { console.error(err); });
 
-  // Ventas
   if (unsubscribeVentas) unsubscribeVentas();
   unsubscribeVentas = onSnapshot(query(collection(db, 'ventas'), limit(100)), (snap) => {
     ventasPanel = snap.docs.map(d => ({ id: d.id, origen: 'panel', coleccion: 'ventas', ...d.data() })); procesarVentas();
   });
 
-  // Cierres
   if (unsubscribeCierres) unsubscribeCierres();
   unsubscribeCierres = onSnapshot(query(collection(db, 'cierres'), limit(100)), (snap) => {
     ventasCierre = [];
@@ -169,7 +160,6 @@ function cargarDatos() {
     procesarVentas();
   });
 
-  // Inventario (para ventas rápidas)
   if (unsubscribeInventario) unsubscribeInventario();
   unsubscribeInventario = onSnapshot(query(collection(db, 'inventario')), (snap) => {
     appState.inventario = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -181,9 +171,71 @@ function procesarVentas() { appState.ventasHoy = [...ventasPanel, ...ventasCierr
 // RENDERIZADO
 function renderizarTodo() {
   actualizarStats(); todosLosMovimientos = [];
-  // ... (Lógica de renderizado de tarjetas de movimientos igual que antes)
-  // ... (Paginación igual que antes)
+  if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
+    appState.ordenes.forEach(o => {
+      const est = o.estadoOrden || 'recibido';
+      if (filtroActual === 'reparacion' && est !== 'reparacion' && est !== 'espera-repuesto' && est !== 'recibido') return;
+      else if (filtroActual !== 'todos' && filtroActual !== 'reparacion' && filtroActual !== est) return;
+      const entregado = est === 'entregado';
+      todosLosMovimientos.push({ tipo: 'telefono', data: o, fechaOrden: entregado ? (parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha)) : (parsearFecha(o.fechaEditada) || parsearFecha(o.fecha)) });
+    });
+  }
+  if (filtroActual === 'todos' || filtroActual === 'venta') {
+    appState.ventasHoy.forEach(v => { todosLosMovimientos.push({ tipo: v.origen === 'panel' ? 'venta' : 'cierre', data: v, fechaOrden: parsearFecha(v.fecha) }); });
+  }
+  if (busquedaActual) {
+    todosLosMovimientos = todosLosMovimientos.filter(m => {
+      const txt = m.tipo === 'telefono' ? [m.data.numeroRecibo, m.data.cliente, m.data.telefono, m.data.marca, m.data.modelo].filter(Boolean).join(' ').toLowerCase() : m.data.concepto.toLowerCase();
+      return txt.includes(busquedaActual);
+    });
+  }
+  todosLosMovimientos.sort((a, b) => b.fechaOrden - a.fechaOrden);
+  const totalPag = Math.ceil(todosLosMovimientos.length / ITEMS_POR_PAGINA);
+  if (paginaActual > totalPag) paginaActual = totalPag || 1;
+  const pagItems = todosLosMovimientos.slice((paginaActual - 1) * ITEMS_POR_PAGINA, paginaActual * ITEMS_POR_PAGINA);
+  const lista = document.getElementById('listaOrdenes');
+  if (todosLosMovimientos.length === 0) {
+    lista.innerHTML = `<div class="empty-state"><h3>Sin movimientos</h3><p>No hay resultados.</p></div>`; paginationContainer.innerHTML = ''; return;
+  }
+  lista.innerHTML = pagItems.map(m => m.tipo === 'telefono' ? renderCardTelefono(m.data) : renderCardVenta(m.data, m.tipo)).join('');
+  lista.querySelectorAll('.ingreso-card').forEach(card => {
+    card.addEventListener('click', () => { haptic(10); if(card.dataset.tipo === 'telefono') abrirSheetTelefono(card.dataset.id); else abrirSheetVenta(card.dataset.id, card.dataset.origen, card.dataset.extra); });
+  });
+  renderizarPaginacion(totalPag);
 }
 
-// RESTO DE FUNCIONES (cambiarPagina, renderCardTelefono, renderCardVenta, actualizarStats)
-// ... (Mantén las funciones que ya tenías, no las he cambiado en esta respuesta para no alargarla)
+function renderizarPaginacion(total) {
+  if (total <= 1) { paginationContainer.innerHTML = ''; return; }
+  let html = `<button class="page-nav" ${paginaActual === 1 ? 'disabled' : ''} onclick="cambiarPagina(${paginaActual - 1})">Ant</button>`;
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || (i >= paginaActual - 1 && i <= paginaActual + 1)) html += `<button class="page-btn ${i === paginaActual ? 'active' : ''}" onclick="cambiarPagina(${i})">${i}</button>`;
+    else if (i === paginaActual - 2 || i === paginaActual + 2) html += `<span>...</span>`;
+  }
+  html += `<button class="page-nav" ${paginaActual === total ? 'disabled' : ''} onclick="cambiarPagina(${paginaActual + 1})">Sig</button>`;
+  paginationContainer.innerHTML = html;
+}
+
+window.cambiarPagina = (p) => { haptic(8); paginaActual = p; renderizarTodo(); document.querySelector('.app-content').scrollTo({ top: 0, behavior: 'smooth' }); };
+
+function renderCardTelefono(o) {
+  const est = o.estadoOrden || 'recibido';
+  const info = { recibido: { t: 'Recibido', c: 'var(--warning-500)' }, reparacion: { t: 'Reparación', c: 'var(--brand-500)' }, 'espera-repuesto': { t: 'Repuesto', c: 'var(--purple-500)' }, listo: { t: 'Listo', c: 'var(--yellow-500)' }, entregado: { t: 'Entregado', c: 'var(--success-500)' }, devuelto: { t: 'Devuelto', c: 'var(--info-500)' } }[est] || { t: est, c: 'var(--text-3)' };
+  return `<div class="ingreso-card" data-tipo="telefono" data-id="${o.id}" style="border-left-color: ${info.c};"><div class="icon-circle" style="color: ${info.c}; background: color-mix(in srgb, ${info.c} 15%, transparent);"><i class="fas fa-mobile-alt"></i></div><div class="info-col"><div class="info-title">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div><div class="info-sub">${escapeHtml(o.cliente || '')}</div><div class="info-sub" style="font-size: 11px;">${est === 'entregado' ? `Entregado: ${formatFechaCompleta(o.fechaEntrega)}` : `Ingreso: ${tiempoRelativo ? tiempoRelativo(o.fechaEditada || o.fecha) : ''}`}</div><span class="estado-chip" style="background: color-mix(in srgb, ${info.c} 15%, transparent); color: ${info.c};">${info.t}</span></div><div class="monto-col"><div class="monto" style="color: var(--text-1);">${formatBsLimpio(Number(o.montoCobrado) || Number(o.total) || 0)}</div></div></div>`;
+}
+
+function renderCardVenta(v, tipo) {
+  const f = parsearFecha(v.fecha); const hora = f ? `${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')}` : '';
+  let ic = 'fa-box'; if (v.concepto === 'Botón') ic = 'fa-hand-pointer'; else if (v.concepto === 'Limpieza') ic = 'fa-broom'; else if (v.concepto === 'Reactivación') ic = 'fa-bolt'; else if (v.concepto === 'Cargador') ic = 'fa-plug';
+  const cor = tipo === 'venta' ? 'var(--success-500)' : 'var(--purple-500)';
+  return `<div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}" style="border-left-color: ${cor};"><div class="icon-circle" style="color: ${cor}; background: color-mix(in srgb, ${cor} 15%, transparent);"><i class="fas ${ic}"></i></div><div class="info-col"><div class="info-title">${escapeHtml(v.concepto)}</div><div class="info-sub">${hora} · ${escapeHtml(v.metodoPago)}</div></div><div class="monto-col"><div class="monto" style="color: ${cor};">${formatBsLimpio(v.monto)}</div></div></div>`;
+}
+
+// 🔥 FUNCIÓN QUE FALTABA Y CAUSABA EL ERROR
+function actualizarStats() {
+  document.getElementById('statActivas').textContent = appState.ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
+  document.getElementById('statListas').textContent = appState.ordenes.filter(o => o.estadoOrden === 'listo').length;
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  let ingRep = 0; appState.ordenes.forEach(o => { if (o.estadoOrden === 'entregado') { const f = parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha); if (f && f >= hoy) ingRep += Number(o.montoCobrado) || Number(o.total) || 0; } });
+  const ingVent = appState.ventasHoy.filter(v => { const f = parsearFecha(v.fecha); return f && f >= hoy; }).reduce((s, v) => s + (Number(v.monto) || 0), 0);
+  document.getElementById('statHoy').textContent = formatBsLimpio(ingRep + ingVent);
+}
