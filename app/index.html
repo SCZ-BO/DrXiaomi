@@ -20,7 +20,7 @@
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    /* Solo estilos ultra-específicos del Home que no están en los CSS globales */
+    /* Estilos específicos de la pantalla principal */
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loader-ring {
       position: absolute; inset: 0; border-radius: 50%; 
@@ -29,6 +29,7 @@
       animation: spin 1.2s linear infinite !important; 
     }
 
+    /* Botones Hero */
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
     .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 12px; border-radius: var(--r-xl); font-weight: 700; font-size: 13px; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 80px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
     .btn-hero:active { transform: scale(0.96); }
@@ -38,6 +39,7 @@
     .icon-box img { width: 100%; height: 100%; object-fit: contain; }
     .icon-raw { width: 32px; height: 32px; object-fit: contain; margin-bottom: auto; z-index: 2; }
 
+    /* Stats */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
     .stat-card { background: var(--bg-elev-1); border-radius: var(--r-lg); padding: 14px 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--border-1); }
     .stat-value { font-size: 22px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 6px; letter-spacing: -0.5px; }
@@ -55,6 +57,7 @@
     .monto { font-size: 16px; font-weight: 800; }
     .estado-chip { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; margin-top: 6px; display: inline-block; text-transform: uppercase; }
 
+    /* Paginación */
     .pagination-container { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px; }
     .page-btn { background: var(--bg-elev-1); border: 1px solid var(--border-1); color: var(--text-1); width: 38px; height: 38px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; cursor: pointer; transition: var(--dur); }
     .page-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: white; box-shadow: var(--shadow-glow); }
@@ -64,6 +67,7 @@
 </head>
 <body>
 
+  <!-- LOADER -->
   <div class="loader-overlay" id="appLoader">
     <div class="loader-logo-container">
       <div class="loader-ring"></div>
@@ -74,7 +78,7 @@
 
   <!-- CONTENEDOR PRINCIPAL -->
   <main class="app-container">
-    <!-- 🔥 EL HEADER SE INYECTA AQUÍ AUTOMÁTICAMENTE DESDE panel.js 🔥 -->
+    <!-- 🔥 AQUÍ SE INYECTA EL HEADER AUTOMÁTICAMENTE DESDE panel.js 🔥 -->
 
     <div class="app-content">
       <!-- BOTONES HERO -->
@@ -119,11 +123,11 @@
       <div class="pagination-container" id="paginationContainer"></div>
     </div>
     
-    <!-- 🔥 EL BOTTOM NAV SE INYECTA AQUÍ AUTOMÁTICAMENTE DESDE panel.js 🔥 -->
+    <!-- 🔥 AQUÍ SE INYECTA EL BOTTOM NAV AUTOMÁTICAMENTE DESDE panel.js 🔥 -->
   </main>
 
   <!-- ========================================== -->
-  <!-- MODALES (Venta, Pago, Detalle, Notas, Popups) -->
+  <!-- MODALES -->
   <!-- ========================================== -->
 
   <!-- MODAL VENTA RÁPIDA -->
