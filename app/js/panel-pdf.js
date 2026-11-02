@@ -20,7 +20,7 @@ export function generarPDFDia(ordenes, ventasHoy) {
   const hoy = new Date(); 
   hoy.setHours(0,0,0,0);
 
-  // Sección: Reparaciones
+  // Sección de Reparaciones
   pdf.setFontSize(12); 
   pdf.text("Reparaciones Entregadas Hoy", 14, y); 
   y += 8; 
@@ -38,7 +38,7 @@ export function generarPDFDia(ordenes, ventasHoy) {
     }
   });
 
-  // Sección: Ventas Rápidas
+  // Sección de Ventas Rápidas
   y += 4; 
   pdf.setFontSize(12); 
   pdf.text("Ventas Rápidas y Extras (Mostrador)", 14, y); 
