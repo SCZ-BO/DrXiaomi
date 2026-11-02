@@ -110,7 +110,7 @@ function configurarEventos() {
   const accesorioStep = document.getElementById('ventaAccesorioStep');
   const servicioStep = document.getElementById('ventaServicioStep');
 
-  // 🔥 VENTA DE ACCESORIOS (Grid con Fotos)
+  // 🔥 VENTA DE ACCESORIOS (Grid con Fotos corregido)
   document.getElementById('btnVentaAccesorio')?.addEventListener('click', () => {
     if(tipoStep) tipoStep.style.display = 'none'; 
     if(accesorioStep) accesorioStep.style.display = 'block'; 
@@ -119,10 +119,10 @@ function configurarEventos() {
     const grid = document.getElementById('gridAccesorios');
     if (grid) {
       grid.innerHTML = appState.inventario.map(i => `
-        <div class="accesorio-card" data-id="${i.id}" data-nombre="${i.nombre}" data-precio="${i.venta}" data-costo="${i.compra}" data-stock="${i.stock}">
+        <div class="accesorio-card" data-id="${i.id}" data-nombre="${i.nombre}" data-precio="${i.precio}" data-costo="${i.costo}" data-stock="${i.stock}">
           ${i.foto ? `<img src="${i.foto}" alt="${i.nombre}">` : `<div class="no-img"><i class="fas fa-box"></i></div>`}
           <div class="nombre">${i.nombre}</div>
-          <div class="precio">${i.venta} Bs</div>
+          <div class="precio">${i.precio} Bs</div>
           <div class="stock">Stock: ${i.stock}</div>
         </div>
       `).join('');
@@ -173,7 +173,7 @@ function configurarEventos() {
     } catch (err) { toast('Error al guardar', 'error'); }
   });
 
-  // Guardar Venta de Accesorio
+  // Guardar Venta de Accesorio (con los nombres correctos: precio y costo)
   document.getElementById('btnRegistrarAccesorio')?.addEventListener('click', async (e) => {
     const btn = e.target;
     const id = btn.dataset.id;
@@ -190,7 +190,7 @@ function configurarEventos() {
     try {
       const total = precio * cantidad;
       await addDoc(collection(db, 'ventas'), { concepto: `${cantidad}x ${nombre}`, monto: total, costo: costo * cantidad, metodoPago: 'Efectivo', fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
-      await updateDoc(doc(db, 'inventario', id), { stock: stock - cantidad });
+      await updateDoc(doc(db, 'productos', id), { stock: stock - cantidad }); // 🔥 Usa 'productos' y 'stock'
       toast('Venta de accesorio registrada', 'success'); 
       modalVenta.classList.remove('show');
       document.getElementById('productoSeleccionadoInfo').style.display = 'none';
@@ -236,8 +236,9 @@ function cargarDatos() {
     procesarVentas();
   });
 
+  // 🔥 CARGAR INVENTARIO (Colección 'productos')
   if (unsubscribeInventario) unsubscribeInventario();
-  unsubscribeInventario = onSnapshot(query(collection(db, 'inventario')), (snap) => {
+  unsubscribeInventario = onSnapshot(query(collection(db, 'productos')), (snap) => {
     appState.inventario = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   });
 }
