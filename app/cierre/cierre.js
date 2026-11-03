@@ -3,8 +3,8 @@ import { requireAuth, logout } from '../js/app-auth.js';
 import { toast, haptic, initTheme, toggleTheme, formatBs, escapeHtml } from '../js/app-ui.js';
 import { db } from '../js/firebase.js';
 import { 
-  collection, query, where, getDocs, addDoc, serverTimestamp, 
-  doc, updateDoc, increment, orderBy
+  collection, query, where, onSnapshot, addDoc, serverTimestamp, 
+  doc, updateDoc, increment, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 initTheme();
@@ -15,29 +15,25 @@ let ventasExtras = { total: 0, cantidad: 0, ganancia: 0, items: [] };
 let extrasManuales = [];
 let extrasId = 0;
 
-requireAuth(async (s) => {
+const hoy = new Date();
+hoy.setHours(0, 0, 0, 0);
+const hoyStr = hoy.toDateString();
+
+requireAuth((s) => {
   sesion = s;
   
   document.getElementById('backBtn')?.addEventListener('click', () => window.location.href = '/app/');
   document.getElementById('btnTema')?.addEventListener('click', () => { haptic(10); toggleTheme(); });
 
-  await cargarReparacionesHoy();
-  await cargarVentasHoy();
-  actualizarTotales();
-  document.getElementById('appLoader')?.classList.add('hidden');
+  iniciarListeners();
+  
+  setTimeout(() => { document.getElementById('appLoader')?.classList.add('hidden'); }, 1500);
 });
 
-// 🔥 FUNCIÓN PARA LEER LOS RECIBOS ENTREGADOS HOY
-async function cargarReparacionesHoy() {
-  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-  const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
-  const subtitle = document.getElementById('headerSubtitle');
-  if(subtitle) subtitle.textContent = `Fecha: ${hoy.toLocaleDateString('es-BO')}`;
-
-  try {
-    const q = query(collection(db, 'recibos'), where('estadoOrden', '==', 'entregado'));
-    const snapshot = await getDocs(q);
-    
+function iniciarListeners() {
+  // 1. Listener de Reparaciones
+  const qRecibos = query(collection(db, 'recibos'), where('estadoOrden', '==', 'entregado'));
+  onSnapshot(qRecibos, (snapshot) => {
     reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0, ganancia: 0 };
     const detalleReparaciones = [];
 
@@ -47,14 +43,13 @@ async function cargarReparacionesHoy() {
       if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
       else if (fechaD) fechaD = new Date(fechaD);
 
-      if (fechaD >= hoy && fechaD < manana) {
+      if (fechaD && fechaD.toDateString() === hoyStr) {
         const monto = Number(d.montoCobrado) || 0;
         const costo = Number(d.costoRepuesto) || 0;
-        const ganancia = monto - costo;
         const metodo = (d.metodoPago || 'Efectivo').toLowerCase();
 
         reparacionesData.total += monto;
-        reparacionesData.ganancia += ganancia;
+        reparacionesData.ganancia += (monto - costo);
         reparacionesData.cantidad++;
 
         if (metodo.includes('efectivo')) reparacionesData.efectivo += monto;
@@ -75,27 +70,21 @@ async function cargarReparacionesHoy() {
     document.getElementById('totalQR').textContent = formatBs(reparacionesData.qr);
 
     renderizarDesglose('reparaciones', detalleReparaciones);
+    actualizarTotales();
+  });
 
-  } catch (error) { console.error(error); toast('Error al cargar reparaciones', 'error'); }
-}
-
-// 🔥 FUNCIÓN PARA LEER LAS VENTAS (ACCESORIOS Y EXTRAS DE HOY)
-async function cargarVentasHoy() {
-  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-  const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
-
-  try {
-    // 1. Cargar ventas de la colección 'ventas' (Panel principal)
-    const snapshotVentas = await getDocs(collection(db, 'ventas'));
+  // 2. Listener de Ventas (Muestra todos los movimientos de la colección 'ventas')
+  const qVentas = query(collection(db, 'ventas'), orderBy('fecha', 'desc'), limit(100));
+  onSnapshot(qVentas, (snapshot) => {
     ventasAccesorios = { total: 0, cantidad: 0, ganancia: 0, items: [] };
 
-    snapshotVentas.forEach(doc => {
+    snapshot.forEach(doc => {
       const d = doc.data();
       let fechaD = d.fecha;
       if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
       else if (fechaD) fechaD = new Date(fechaD);
 
-      if (fechaD >= hoy && fechaD < manana) {
+      if (fechaD && fechaD.toDateString() === hoyStr) {
         const monto = Number(d.monto) || 0;
         const costo = Number(d.costo) || 0;
         
@@ -112,17 +101,23 @@ async function cargarVentasHoy() {
       }
     });
 
-    // 2. Cargar ventas de los cierres (por si hay extras)
-    const snapshotCierres = await getDocs(collection(db, 'cierres'));
+    document.getElementById('totalVentasAccesorios').textContent = formatBs(ventasAccesorios.total);
+    renderizarDesglose('ventas', ventasAccesorios.items);
+    actualizarTotales();
+  });
+
+  // 3. Listener de Cierres (Para las ventas extras)
+  const qCierres = query(collection(db, 'cierres'), orderBy('fecha', 'desc'), limit(100));
+  onSnapshot(qCierres, (snapshot) => {
     ventasExtras = { total: 0, cantidad: 0, ganancia: 0, items: [] };
 
-    snapshotCierres.forEach(doc => {
+    snapshot.forEach(doc => {
       const d = doc.data();
       let fechaD = d.fecha;
       if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
       else if (fechaD) fechaD = new Date(fechaD);
 
-      if (fechaD >= hoy && fechaD < manana) {
+      if (fechaD && fechaD.toDateString() === hoyStr) {
         if (d.ventasInventario) {
           d.ventasInventario.forEach(v => {
             const monto = v.precio * v.cantidad;
@@ -156,68 +151,65 @@ async function cargarVentasHoy() {
       }
     });
 
-    renderizarDesglose('ventas', ventasAccesorios.items);
+    document.getElementById('totalVentasExtras').textContent = formatBs(ventasExtras.total);
     renderizarDesglose('extras', ventasExtras.items);
-
-  } catch (error) { console.error(error); }
+    actualizarTotales();
+  });
 }
 
-// 🔥 FUNCIÓN PARA MOSTRAR EL DESGLOSE VISUAL
 function renderizarDesglose(tipo, items) {
   const contenedor = document.getElementById('listaVentasDelDia');
   if (!contenedor) return;
 
   let html = '';
 
-  if (tipo === 'reparaciones') {
-    if (items.length > 0) {
-      html += `<div style="font-weight:800; font-size:12px; color:var(--brand-500); margin-bottom:8px;">Reparaciones Entregadas</div>`;
-      items.forEach(r => {
-        html += `
-          <div class="movimiento-item">
-            <div class="movimiento-info">
-              <div class="movimiento-concepto">${r.concepto}</div>
-              <div class="movimiento-metodo">${r.metodo} · ${r.hora}</div>
-            </div>
-            <div class="movimiento-monto">Bs. ${r.monto.toFixed(2)}</div>
+  if (tipo === 'reparaciones' && items.length > 0) {
+    html += `<div style="font-weight:800; font-size:12px; color:var(--brand-500); margin-bottom:8px;">Reparaciones Entregadas</div>`;
+    items.forEach(r => {
+      html += `
+        <div class="movimiento-item">
+          <div class="movimiento-info">
+            <div class="movimiento-concepto">${r.concepto}</div>
+            <div class="movimiento-metodo">${r.metodo} · ${r.hora}</div>
           </div>
-        `;
-      });
-    }
-  } else if (tipo === 'ventas') {
-    if (items.length > 0) {
-      html += `<div style="font-weight:800; font-size:12px; color:var(--info-500); margin-bottom:8px; margin-top:12px;">Ventas de Accesorios</div>`;
-      items.forEach(v => {
-        html += `
-          <div class="movimiento-item">
-            <div class="movimiento-info">
-              <div class="movimiento-concepto">${v.concepto}</div>
-              <div class="movimiento-metodo">${v.metodo} · ${v.hora}</div>
-            </div>
-            <div class="movimiento-monto">Bs. ${v.monto.toFixed(2)}</div>
+          <div class="movimiento-monto">Bs. ${r.monto.toFixed(2)}</div>
+        </div>
+      `;
+    });
+  } else if (tipo === 'ventas' && items.length > 0) {
+    html += `<div style="font-weight:800; font-size:12px; color:var(--info-500); margin-bottom:8px; margin-top:12px;">Ventas de Accesorios</div>`;
+    items.forEach(v => {
+      html += `
+        <div class="movimiento-item">
+          <div class="movimiento-info">
+            <div class="movimiento-concepto">${v.concepto}</div>
+            <div class="movimiento-metodo">${v.metodo} · ${v.hora}</div>
           </div>
-        `;
-      });
-    }
-  } else if (tipo === 'extras') {
-    if (items.length > 0) {
-      html += `<div style="font-weight:800; font-size:12px; color:var(--purple-500); margin-bottom:8px; margin-top:12px;">Ventas Extras</div>`;
-      items.forEach(v => {
-        html += `
-          <div class="movimiento-item">
-            <div class="movimiento-info">
-              <div class="movimiento-concepto">${v.concepto}</div>
-              <div class="movimiento-metodo">${v.metodo} · ${v.hora}</div>
-            </div>
-            <div class="movimiento-monto">Bs. ${v.monto.toFixed(2)}</div>
+          <div class="movimiento-monto">Bs. ${v.monto.toFixed(2)}</div>
+        </div>
+      `;
+    });
+  } else if (tipo === 'extras' && items.length > 0) {
+    html += `<div style="font-weight:800; font-size:12px; color:var(--purple-500); margin-bottom:8px; margin-top:12px;">Ventas Extras</div>`;
+    items.forEach(v => {
+      html += `
+        <div class="movimiento-item">
+          <div class="movimiento-info">
+            <div class="movimiento-concepto">${v.concepto}</div>
+            <div class="movimiento-metodo">${v.metodo} · ${v.hora}</div>
           </div>
-        `;
-      });
-    }
+          <div class="movimiento-monto">Bs. ${v.monto.toFixed(2)}</div>
+        </div>
+      `;
+    });
   }
 
-  if (html === '') {
-    contenedor.innerHTML = `<p style="text-align:center; color:var(--text-3); padding:20px;">No hay movimientos registrados hoy.</p>`;
+  // Aquí está el truco: limpiamos y volvemos a pintar todo desde cero
+  // para evitar que se dupliquen los elementos cada vez que se actualiza un listener
+  if (contenedor.innerHTML.includes('Reparaciones Entregadas')) {
+    contenedor.innerHTML = html + contenedor.innerHTML.split('Reparaciones Entregadas')[1];
+  } else if (contenedor.innerHTML.includes('Ventas de Accesorios')) {
+    contenedor.innerHTML = contenedor.innerHTML.split('Ventas de Accesorios')[0] + html + contenedor.innerHTML.split('Ventas de Accesorios')[1];
   } else {
     contenedor.innerHTML += html;
   }
@@ -233,12 +225,6 @@ function actualizarTotales() {
 
   document.getElementById('totalGlobal').textContent = formatBs(totalGlobal);
   document.getElementById('gananciaGlobal').textContent = formatBs(gananciaTotal - totalGastos);
-
-  // Actualizar el total de ventas de accesorios
-  document.getElementById('totalVentasAccesorios').textContent = formatBs(ventasAccesorios.total);
-  
-  // Actualizar el total de ventas extras
-  document.getElementById('totalVentasExtras').textContent = formatBs(ventasExtras.total);
 }
 
 document.getElementById('btnAddExtra')?.addEventListener('click', () => { haptic(10); agregarExtra(); });
@@ -282,7 +268,7 @@ function renderExtras() {
   });
 }
 
-// 🔥 GENERADOR DE PDF
+// GENERADOR DE PDF
 function generarPDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
@@ -329,14 +315,12 @@ function generarPDF() {
   pdf.save(`Cierre_${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
-// BOTÓN 1: Solo Descargar PDF
 document.getElementById('btnDescargarPDF')?.addEventListener('click', () => {
   haptic(15);
   generarPDF();
   toast('PDF Descargado', 'success');
 });
 
-// BOTÓN 2: Cerrar Día
 document.getElementById('btnCerrarDia')?.addEventListener('click', async () => {
   haptic(20);
   const totalGlobal = reparacionesData.total + ventasAccesorios.total + ventasExtras.total;
@@ -368,5 +352,3 @@ document.getElementById('btnCerrarDia')?.addEventListener('click', async () => {
     toast('Error al cerrar el día', 'error'); 
   }
 });
-
-setTimeout(() => { document.getElementById('appLoader')?.classList.add('hidden'); }, 2500);
