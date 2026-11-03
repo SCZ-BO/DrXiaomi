@@ -127,8 +127,15 @@ async function verificarPopups() {
   } catch(e) { console.log('No hay popups configurados.'); }
 }
 
-document.getElementById('btnOkPopup')?.addEventListener('click', () => {
+// 🔥 CONFIRMACIÓN DE LECTURA DEL POPUP
+document.getElementById('btnOkPopup')?.addEventListener('click', async () => {
   document.getElementById('modalVerPopup').classList.remove('show');
+  haptic(15);
+  try {
+    // Marcamos el popup como leído en Firebase
+    await updateDoc(doc(db, 'config', 'popup_mensaje'), { leidoPorTecnico: true });
+    toast('Mensaje del dueño confirmado', 'success');
+  } catch(e) { console.log('Error al confirmar lectura'); }
 });
 
 // ==========================================
@@ -153,7 +160,7 @@ function formatFechaCompleta(f) {
 export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
 
 // ==========================================
-// 4. EVENTOS (Ventas, Filtros, PDF, Notas)
+// 4. EVENTOS (Ventas, Filtros, PDF, Notas, Popups)
 // ==========================================
 function configurarEventos() {
   document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
@@ -218,7 +225,7 @@ function configurarEventos() {
   document.getElementById('gastoPasajes')?.addEventListener('input', recalcularCierre);
   document.getElementById('toggleAlmuerzo')?.addEventListener('change', recalcularCierre);
 
-  // NOTAS
+  // NOTAS AL DUEÑO
   document.getElementById('btnAbrirNotaDueno')?.addEventListener('click', () => { haptic(15); modalNotaDueno.classList.add('show'); });
   document.getElementById('btnCancelarNotaDueno')?.addEventListener('click', () => modalNotaDueno.classList.remove('show'));
   
@@ -232,6 +239,38 @@ function configurarEventos() {
       modalNotaDueno.classList.remove('show');
       document.getElementById('notaDuenoTexto').value = '';
     } catch (e) { toast('Error al guardar', 'error'); }
+  });
+
+  // 🔥 ADMIN: ENVIAR MENSAJE POPUP AL TÉCNICO
+  document.getElementById('btnAbrirMensajePopup')?.addEventListener('click', () => {
+    document.getElementById('modalMensajePopup').classList.add('show');
+  });
+
+  document.getElementById('btnGuardarMensajePopup')?.addEventListener('click', async () => {
+    const titulo = document.getElementById('mensajePopupTitulo').value.trim();
+    const texto = document.getElementById('mensajePopupTexto').value.trim();
+    const dias = parseInt(document.getElementById('mensajePopupDuracion').value) || 0;
+    
+    if (!titulo || !texto) { toast('Completa todos los campos', 'error'); return; }
+    haptic(20);
+    try {
+      const fechaExpiracion = dias > 0 ? new Date().getTime() + (dias * 24 * 60 * 60 * 1000) : 9999999999999;
+      await updateDoc(doc(db, 'config', 'popup_mensaje'), {
+        titulo, texto, fechaExpiracion, activo: true, leidoPorTecnico: false, fechaCreacion: serverTimestamp()
+      });
+      toast('Mensaje enviado al técnico', 'success');
+      document.getElementById('modalMensajePopup').classList.remove('show');
+    } catch(e) {
+      // Si el documento no existe, lo creamos
+      try {
+        const fechaExpiracion = dias > 0 ? new Date().getTime() + (dias * 24 * 60 * 60 * 1000) : 9999999999999;
+        await setDoc(doc(db, 'config', 'popup_mensaje'), {
+          titulo, texto, fechaExpiracion, activo: true, leidoPorTecnico: false, fechaCreacion: serverTimestamp()
+        });
+        toast('Mensaje enviado al técnico', 'success');
+        document.getElementById('modalMensajePopup').classList.remove('show');
+      } catch(err) { toast('Error al enviar', 'error'); }
+    }
   });
 
   // LÓGICA DE VENTA
