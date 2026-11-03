@@ -4,14 +4,15 @@ import { toast, haptic, initTheme, toggleTheme, formatBs, escapeHtml } from '../
 import { db } from '../js/firebase.js';
 import { 
   collection, query, where, getDocs, addDoc, serverTimestamp, 
-  doc, updateDoc, increment 
+  doc, updateDoc, increment, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 initTheme();
 let sesion = null;
 let reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0, ganancia: 0 };
-let ventasInventario = [];
-let extras = [];
+let ventasAccesorios = { total: 0, cantidad: 0, ganancia: 0, items: [] };
+let ventasExtras = { total: 0, cantidad: 0, ganancia: 0, items: [] };
+let extrasManuales = [];
 let extrasId = 0;
 
 requireAuth(async (s) => {
@@ -46,7 +47,6 @@ async function cargarReparacionesHoy() {
       if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
       else if (fechaD) fechaD = new Date(fechaD);
 
-      // Filtramos solo los de HOY
       if (fechaD >= hoy && fechaD < manana) {
         const monto = Number(d.montoCobrado) || 0;
         const costo = Number(d.costoRepuesto) || 0;
@@ -69,13 +69,11 @@ async function cargarReparacionesHoy() {
       }
     });
 
-    // Actualizar UI
     document.getElementById('cantReparaciones').textContent = reparacionesData.cantidad;
     document.getElementById('totalReparaciones').textContent = formatBs(reparacionesData.total);
     document.getElementById('totalEfectivo').textContent = formatBs(reparacionesData.efectivo);
     document.getElementById('totalQR').textContent = formatBs(reparacionesData.qr);
 
-    // Renderizar el desglose de reparaciones en el historial
     renderizarDesglose('reparaciones', detalleReparaciones);
 
   } catch (error) { console.error(error); toast('Error al cargar reparaciones', 'error'); }
@@ -89,7 +87,7 @@ async function cargarVentasHoy() {
   try {
     // 1. Cargar ventas de la colección 'ventas' (Panel principal)
     const snapshotVentas = await getDocs(collection(db, 'ventas'));
-    const ventasDelDia = [];
+    ventasAccesorios = { total: 0, cantidad: 0, ganancia: 0, items: [] };
 
     snapshotVentas.forEach(doc => {
       const d = doc.data();
@@ -98,10 +96,16 @@ async function cargarVentasHoy() {
       else if (fechaD) fechaD = new Date(fechaD);
 
       if (fechaD >= hoy && fechaD < manana) {
-        ventasDelDia.push({
+        const monto = Number(d.monto) || 0;
+        const costo = Number(d.costo) || 0;
+        
+        ventasAccesorios.total += monto;
+        ventasAccesorios.cantidad++;
+        ventasAccesorios.ganancia += (monto - costo);
+
+        ventasAccesorios.items.push({
           concepto: d.concepto,
-          monto: Number(d.monto) || 0,
-          costo: Number(d.costo) || 0,
+          monto: monto,
           metodo: d.metodoPago || 'Efectivo',
           hora: fechaD.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })
         });
@@ -110,6 +114,8 @@ async function cargarVentasHoy() {
 
     // 2. Cargar ventas de los cierres (por si hay extras)
     const snapshotCierres = await getDocs(collection(db, 'cierres'));
+    ventasExtras = { total: 0, cantidad: 0, ganancia: 0, items: [] };
+
     snapshotCierres.forEach(doc => {
       const d = doc.data();
       let fechaD = d.fecha;
@@ -119,10 +125,14 @@ async function cargarVentasHoy() {
       if (fechaD >= hoy && fechaD < manana) {
         if (d.ventasInventario) {
           d.ventasInventario.forEach(v => {
-            ventasDelDia.push({
+            const monto = v.precio * v.cantidad;
+            const costo = v.costo * v.cantidad;
+            ventasExtras.total += monto;
+            ventasExtras.cantidad++;
+            ventasExtras.ganancia += (monto - costo);
+            ventasExtras.items.push({
               concepto: `${v.cantidad}x ${v.nombre}`,
-              monto: v.precio * v.cantidad,
-              costo: v.costo * v.cantidad,
+              monto: monto,
               metodo: 'Efectivo',
               hora: fechaD.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })
             });
@@ -131,10 +141,12 @@ async function cargarVentasHoy() {
         if (d.extras) {
           d.extras.forEach(e => {
             if (e.monto > 0) {
-              ventasDelDia.push({
+              ventasExtras.total += e.monto;
+              ventasExtras.cantidad++;
+              ventasExtras.ganancia += (e.monto - (e.costo || 0));
+              ventasExtras.items.push({
                 concepto: e.desc || 'Venta Extra',
                 monto: Number(e.monto),
-                costo: Number(e.costo) || 0,
                 metodo: 'Efectivo',
                 hora: fechaD.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })
               });
@@ -144,16 +156,13 @@ async function cargarVentasHoy() {
       }
     });
 
-    // Actualizar ventasInventario para que los cálculos funcionen
-    ventasInventario = ventasDelDia;
-
-    // Renderizar el desglose de ventas en el historial
-    renderizarDesglose('ventas', ventasDelDia);
+    renderizarDesglose('ventas', ventasAccesorios.items);
+    renderizarDesglose('extras', ventasExtras.items);
 
   } catch (error) { console.error(error); }
 }
 
-// 🔥 FUNCIÓN PARA MOSTRAR EL DESGLOSE VISUAL EN EL HTML
+// 🔥 FUNCIÓN PARA MOSTRAR EL DESGLOSE VISUAL
 function renderizarDesglose(tipo, items) {
   const contenedor = document.getElementById('listaVentasDelDia');
   if (!contenedor) return;
@@ -177,7 +186,22 @@ function renderizarDesglose(tipo, items) {
     }
   } else if (tipo === 'ventas') {
     if (items.length > 0) {
-      html += `<div style="font-weight:800; font-size:12px; color:var(--info-500); margin-bottom:8px; margin-top:12px;">Ventas del Día</div>`;
+      html += `<div style="font-weight:800; font-size:12px; color:var(--info-500); margin-bottom:8px; margin-top:12px;">Ventas de Accesorios</div>`;
+      items.forEach(v => {
+        html += `
+          <div class="movimiento-item">
+            <div class="movimiento-info">
+              <div class="movimiento-concepto">${v.concepto}</div>
+              <div class="movimiento-metodo">${v.metodo} · ${v.hora}</div>
+            </div>
+            <div class="movimiento-monto">Bs. ${v.monto.toFixed(2)}</div>
+          </div>
+        `;
+      });
+    }
+  } else if (tipo === 'extras') {
+    if (items.length > 0) {
+      html += `<div style="font-weight:800; font-size:12px; color:var(--purple-500); margin-bottom:8px; margin-top:12px;">Ventas Extras</div>`;
       items.forEach(v => {
         html += `
           <div class="movimiento-item">
@@ -195,35 +219,26 @@ function renderizarDesglose(tipo, items) {
   if (html === '') {
     contenedor.innerHTML = `<p style="text-align:center; color:var(--text-3); padding:20px;">No hay movimientos registrados hoy.</p>`;
   } else {
-    // Si ya había reparaciones en el HTML, las mantenemos y agregamos las ventas debajo
     contenedor.innerHTML += html;
   }
 }
 
 function actualizarTotales() {
-  const totalExtras = ventasInventario.reduce((sum, v) => sum + (v.monto || 0), 0);
-  const totalInventario = 0; // Si quieres separar accesorios de ventas, hazlo aquí
-  const totalGlobal = reparacionesData.total + totalExtras + totalInventario;
-  const gananciaGlobal = calcularGananciaTotal();
+  const totalGlobal = reparacionesData.total + ventasAccesorios.total + ventasExtras.total;
+  const gananciaTotal = reparacionesData.ganancia + ventasAccesorios.ganancia + ventasExtras.ganancia;
 
   const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
   const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0;
   const totalGastos = pasajes + almuerzo;
 
   document.getElementById('totalGlobal').textContent = formatBs(totalGlobal);
-  document.getElementById('gananciaGlobal').textContent = formatBs(gananciaGlobal - totalGastos);
+  document.getElementById('gananciaGlobal').textContent = formatBs(gananciaTotal - totalGastos);
 
   // Actualizar el total de ventas de accesorios
-  document.getElementById('totalVentasAccesorios').textContent = formatBs(ventasInventario.filter(v => v.concepto.includes('x')).reduce((sum, v) => sum + v.monto, 0));
+  document.getElementById('totalVentasAccesorios').textContent = formatBs(ventasAccesorios.total);
   
   // Actualizar el total de ventas extras
-  document.getElementById('totalVentasExtras').textContent = formatBs(ventasInventario.filter(v => !v.concepto.includes('x')).reduce((sum, v) => sum + v.monto, 0));
-}
-
-function calcularGananciaTotal() {
-  const gananciaReparaciones = reparacionesData.ganancia;
-  const gananciaVentas = ventasInventario.reduce((sum, v) => sum + (v.monto - v.costo), 0);
-  return gananciaReparaciones + gananciaVentas;
+  document.getElementById('totalVentasExtras').textContent = formatBs(ventasExtras.total);
 }
 
 document.getElementById('btnAddExtra')?.addEventListener('click', () => { haptic(10); agregarExtra(); });
@@ -232,7 +247,7 @@ document.getElementById('toggleAlmuerzo')?.addEventListener('change', actualizar
 
 function agregarExtra() {
   const id = extrasId++;
-  extras.push({ id, desc: '', monto: 0, costo: 0 });
+  extrasManuales.push({ id, desc: '', monto: 0, costo: 0 });
   renderExtras();
 }
 
@@ -241,7 +256,7 @@ function renderExtras() {
   if (!cont) return;
   cont.innerHTML = '';
 
-  extras.forEach(ext => {
+  extrasManuales.forEach(ext => {
     const div = document.createElement('div');
     div.className = 'item-extra';
     div.innerHTML = `
@@ -254,16 +269,16 @@ function renderExtras() {
   });
 
   cont.querySelectorAll('.desc').forEach(input => {
-    input.addEventListener('input', (e) => { const id = parseInt(e.target.dataset.id); const ext = extras.find(x => x.id === id); if (ext) ext.desc = e.target.value; });
+    input.addEventListener('input', (e) => { const id = parseInt(e.target.dataset.id); const ext = extrasManuales.find(x => x.id === id); if (ext) ext.desc = e.target.value; });
   });
   cont.querySelectorAll('.monto').forEach(input => {
-    input.addEventListener('input', (e) => { const id = parseInt(e.target.dataset.id); const ext = extras.find(x => x.id === id); if (ext) ext.monto = parseFloat(e.target.value) || 0; actualizarTotales(); });
+    input.addEventListener('input', (e) => { const id = parseInt(e.target.dataset.id); const ext = extrasManuales.find(x => x.id === id); if (ext) ext.monto = parseFloat(e.target.value) || 0; actualizarTotales(); });
   });
   cont.querySelectorAll('.costo').forEach(input => {
-    input.addEventListener('input', (e) => { const id = parseInt(e.target.dataset.id); const ext = extras.find(x => x.id === id); if (ext) ext.costo = parseFloat(e.target.value) || 0; actualizarTotales(); });
+    input.addEventListener('input', (e) => { const id = parseInt(e.target.dataset.id); const ext = extrasManuales.find(x => x.id === id); if (ext) ext.costo = parseFloat(e.target.value) || 0; actualizarTotales(); });
   });
   cont.querySelectorAll('.btn-remove').forEach(btn => {
-    btn.addEventListener('click', () => { const id = parseInt(btn.dataset.id); extras = extras.filter(x => x.id !== id); renderExtras(); actualizarTotales(); haptic(10); });
+    btn.addEventListener('click', () => { const id = parseInt(btn.dataset.id); extrasManuales = extrasManuales.filter(x => x.id !== id); renderExtras(); actualizarTotales(); haptic(10); });
   });
 }
 
@@ -285,15 +300,22 @@ function generarPDF() {
   pdf.text(`- Total Cobrado: ${formatBs(reparacionesData.total)}`, 18, 79);
 
   let y = 90;
-  if (ventasInventario.length > 0) {
-    pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Ventas del Día', 14, y); y += 7;
+  if (ventasAccesorios.items.length > 0) {
+    pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Ventas de Accesorios', 14, y); y += 7;
     pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
-    ventasInventario.forEach(v => { pdf.text(`- ${v.concepto}: ${formatBs(v.monto)}`, 18, y); y += 7; });
+    ventasAccesorios.items.forEach(v => { pdf.text(`- ${v.concepto}: ${formatBs(v.monto)}`, 18, y); y += 7; });
     y += 5;
   }
 
-  const totalGlobal = reparacionesData.total + ventasInventario.reduce((sum, v) => sum + (v.monto || 0), 0);
-  const gananciaReal = calcularGananciaTotal() - (parseFloat(document.getElementById('gastoPasajes')?.value) || 0) - (document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0);
+  if (ventasExtras.items.length > 0) {
+    pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Ventas Extras', 14, y); y += 7;
+    pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
+    ventasExtras.items.forEach(v => { pdf.text(`- ${v.concepto}: ${formatBs(v.monto)}`, 18, y); y += 7; });
+    y += 5;
+  }
+
+  const totalGlobal = reparacionesData.total + ventasAccesorios.total + ventasExtras.total;
+  const gananciaReal = reparacionesData.ganancia + ventasAccesorios.ganancia + ventasExtras.ganancia - (parseFloat(document.getElementById('gastoPasajes')?.value) || 0) - (document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0);
 
   pdf.setFillColor(240, 240, 240); pdf.rect(14, y, 182, 20, 'F');
   pdf.setFontSize(16); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(255, 105, 0);
@@ -314,22 +336,21 @@ document.getElementById('btnDescargarPDF')?.addEventListener('click', () => {
   toast('PDF Descargado', 'success');
 });
 
-// BOTÓN 2: Cerrar Día (Guarda + Genera PDF + WhatsApp)
+// BOTÓN 2: Cerrar Día
 document.getElementById('btnCerrarDia')?.addEventListener('click', async () => {
   haptic(20);
-  const totalExtras = ventasInventario.reduce((sum, v) => sum + (v.monto || 0), 0);
-  const totalGlobal = reparacionesData.total + totalExtras;
+  const totalGlobal = reparacionesData.total + ventasAccesorios.total + ventasExtras.total;
   
   const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
   const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0;
-  const gananciaReal = calcularGananciaTotal() - pasajes - almuerzo;
+  const gananciaReal = reparacionesData.ganancia + ventasAccesorios.ganancia + ventasExtras.ganancia - pasajes - almuerzo;
 
   if (totalGlobal === 0) { toast('No hay ingresos para cerrar el día', 'warning'); return; }
 
   try {
     await addDoc(collection(db, 'cierres'), {
       fecha: serverTimestamp(), realizadoPor: sesion.nombre,
-      reparaciones: reparacionesData, ventasInventario: ventasInventario, extras: extras,
+      reparaciones: reparacionesData, ventasAccesorios: ventasAccesorios, ventasExtras: ventasExtras, extrasManuales: extrasManuales,
       totalGlobal, gananciaReal, gastoPasajes: pasajes, gastoAlmuerzo: almuerzo
     });
 
