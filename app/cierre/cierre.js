@@ -9,7 +9,7 @@ import {
 
 initTheme();
 let sesion = null;
-let reparacionesData = { total: 0, efectivo: 0, qr: 0, transf: 0, cantidad: 0, ganancia: 0 };
+let reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0, ganancia: 0 };
 let extras = [];
 let ventasInventario = [];
 let extrasId = 0;
@@ -36,12 +36,13 @@ requireAuth(async (s) => {
 async function cargarReparacionesHoy() {
   const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
   const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
-  document.getElementById('headerSubtitle').textContent = `Fecha: ${hoy.toLocaleDateString('es-BO')}`;
+  const subtitle = document.getElementById('headerSubtitle');
+  if(subtitle) subtitle.textContent = `Fecha: ${hoy.toLocaleDateString('es-BO')}`;
 
   try {
     const q = query(collection(db, 'recibos'), where('estadoOrden', '==', 'entregado'));
     const snapshot = await getDocs(q);
-    reparacionesData = { total: 0, efectivo: 0, qr: 0, transf: 0, cantidad: 0, ganancia: 0 };
+    reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0, ganancia: 0 };
 
     snapshot.forEach(doc => {
       const d = doc.data();
@@ -61,7 +62,6 @@ async function cargarReparacionesHoy() {
 
         if (metodo.includes('efectivo')) reparacionesData.efectivo += monto;
         else if (metodo.includes('qr')) reparacionesData.qr += monto;
-        else if (metodo.includes('transf')) reparacionesData.transf += monto;
         else reparacionesData.efectivo += monto;
       }
     });
@@ -70,7 +70,6 @@ async function cargarReparacionesHoy() {
     document.getElementById('totalReparaciones').textContent = formatBs(reparacionesData.total);
     document.getElementById('totalEfectivo').textContent = formatBs(reparacionesData.efectivo);
     document.getElementById('totalQR').textContent = formatBs(reparacionesData.qr);
-    document.getElementById('totalTransf').textContent = formatBs(reparacionesData.transf);
   } catch (error) { console.error(error); toast('Error al cargar reparaciones', 'error'); }
 }
 
@@ -80,6 +79,7 @@ async function cargarInventario() {
     const productos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     const cont = document.getElementById('listaInventario');
     
+    if (!cont) return;
     if (productos.length === 0) {
       cont.innerHTML = '<p style="font-size:12px; color:var(--text-3); grid-column:span 3; text-align:center;">No hay productos.</p>';
       return;
@@ -120,6 +120,7 @@ function agregarExtra() {
 
 function renderExtras() {
   const cont = document.getElementById('listaExtras');
+  if (!cont) return;
   cont.innerHTML = '';
 
   extras.forEach(ext => {
@@ -129,7 +130,7 @@ function renderExtras() {
       <input type="text" placeholder="Descripción" value="${escapeHtml(ext.desc)}" data-id="${ext.id}" class="desc">
       <input type="number" placeholder="Venta Bs." value="${ext.monto || ''}" data-id="${ext.id}" class="monto" inputmode="decimal">
       <input type="number" placeholder="Costo Bs." value="${ext.costo || ''}" data-id="${ext.id}" class="costo" inputmode="decimal">
-      <button class="btn-remove" data-id="${ext.id}"><i class="fas fa-times"></i></button>
+      <button class="btn-remove" data-id="${ext.id}"><img src="/app/icons/eliminar.png" width="18" height="18" alt="X"></button>
     `;
     cont.appendChild(div);
   });
@@ -144,7 +145,7 @@ function renderExtras() {
     input.addEventListener('input', (e) => { const id = parseInt(e.target.dataset.id); const ext = extras.find(x => x.id === id); if (ext) ext.costo = parseFloat(e.target.value) || 0; actualizarTotales(); });
   });
   cont.querySelectorAll('.btn-remove').forEach(btn => {
-    btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); extras = extras.filter(x => x.id !== id); renderExtras(); actualizarTotales(); haptic(10); });
+    btn.addEventListener('click', () => { const id = parseInt(btn.dataset.id); extras = extras.filter(x => x.id !== id); renderExtras(); actualizarTotales(); haptic(10); });
   });
 }
 
@@ -163,18 +164,31 @@ function actualizarTotales() {
   const totalGlobal = reparacionesData.total + totalExtras + totalInventario;
   const gananciaGlobal = calcularGananciaTotal();
 
+  const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
+  const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0;
+  const totalGastos = pasajes + almuerzo;
+
   document.getElementById('totalGlobal').textContent = formatBs(totalGlobal);
-  document.getElementById('gananciaGlobal').textContent = formatBs(gananciaGlobal);
+  document.getElementById('gananciaGlobal').textContent = formatBs(gananciaGlobal - totalGastos);
+
+  const efectivoFinal = reparacionesData.efectivo - totalGastos;
+  // Si tienes un elemento con id 'efectivoFinalDisplay', puedes actualizarlo aquí.
 }
 
 document.getElementById('btnAddExtra')?.addEventListener('click', () => { haptic(10); agregarExtra(); });
+
+document.getElementById('gastoPasajes')?.addEventListener('input', actualizarTotales);
+document.getElementById('toggleAlmuerzo')?.addEventListener('change', actualizarTotales);
 
 document.getElementById('btnGuardarCierre')?.addEventListener('click', async () => {
   haptic(15);
   const totalExtras = calcularTotalExtras();
   const totalInventario = calcularTotalInventario();
   const totalGlobal = reparacionesData.total + totalExtras + totalInventario;
-  const gananciaGlobal = calcularGananciaTotal();
+  
+  const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
+  const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0;
+  const gananciaGlobal = calcularGananciaTotal() - pasajes - almuerzo;
 
   if (totalGlobal === 0) { toast('No hay ingresos para guardar', 'warning'); return; }
 
@@ -182,7 +196,8 @@ document.getElementById('btnGuardarCierre')?.addEventListener('click', async () 
     await addDoc(collection(db, 'cierres'), {
       fecha: serverTimestamp(), realizadoPor: sesion.nombre,
       reparaciones: reparacionesData, ventasInventario: ventasInventario, extras: extras,
-      totalInventario, totalExtras, totalGlobal, gananciaGlobal
+      totalInventario, totalExtras, totalGlobal, gananciaGlobal,
+      gastoPasajes: pasajes, gastoAlmuerzo: almuerzo
     });
 
     for (const v of ventasInventario) {
@@ -248,7 +263,7 @@ document.getElementById('btnEnviarWhatsApp')?.addEventListener('click', async ()
 
     setTimeout(() => {
       const mensaje = `Hola, le envío el Cierre de Caja del día ${new Date().toLocaleDateString('es-BO')}.\n\n*Total del día: ${formatBs(totalGlobal)}*\n*Ganancia Neta: ${formatBs(gananciaGlobal)}*\n\nLe adjunto el PDF con el detalle.`;
-      window.open(`https://wa.me/59175959450?text=${encodeURIComponent(mensaje)}`, '_blank');
+      window.open(`https://wa.me/59175589308?text=${encodeURIComponent(mensaje)}`, '_blank');
     }, 1000);
   } catch (error) { console.error(error); toast('Error al generar el PDF', 'error'); }
 });
