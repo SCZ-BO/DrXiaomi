@@ -13,7 +13,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
   <!-- CSS UNIFICADOS -->
   <link rel="stylesheet" href="../css/app-theme.css">
@@ -39,11 +38,7 @@
     @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
     .section-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    
-    /* 🔥 ICONOS PNG PARA LAS SECCIONES */
-    .icon-seccion {
-      width: 20px; height: 20px; object-fit: contain;
-    }
+    .icon-seccion { width: 20px; height: 20px; object-fit: contain; }
 
     .fila-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 12px; font-size: 14px; }
     .fila-info .label { color: var(--text-3); font-weight: 500; display: flex; align-items: center; gap: 8px; }
@@ -62,15 +57,32 @@
     .item-extra input:focus { border-color: var(--brand-500); }
     .item-extra input.desc { flex: 2; min-width: 120px; }
     .item-extra input.monto { flex: 1; min-width: 80px; text-align: right; color: var(--brand-500); font-weight: 700; }
-    .item-extra input.costo { flex: 1; min-width: 80px; text-align: right; color: var(--danger-500); font-weight: 700; }
     .btn-remove { width: 42px; height: 42px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); color: var(--danger-500); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .btn-remove img { width: 20px; height: 20px; object-fit: contain; }
 
-    .producto-btn { background: var(--bg-elev-2); border: 1px solid var(--border-1); border-radius: 12px; padding: 10px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; }
-    .producto-btn:active { transform: scale(0.95); border-color: var(--brand-500); }
-    .producto-btn img { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; }
-    .producto-btn span.nombre { font-size: 10px; font-weight: 700; text-align: center; line-height: 1.2; color: var(--text-1); }
-    .producto-btn span.precio { font-size: 12px; font-weight: 800; color: var(--brand-500); }
+    .movimiento-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-1); font-size: 13px; }
+    .movimiento-item:last-child { border-bottom: none; }
+    .movimiento-info { display: flex; flex-direction: column; gap: 2px; }
+    .movimiento-concepto { color: var(--text-1); font-weight: 600; }
+    .movimiento-metodo { font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 4px; }
+    .movimiento-monto { color: var(--text-1); font-weight: 800; white-space: nowrap; }
+    
+    .fila-info .valor.efectivo { color: var(--success-500); }
+    .fila-info .valor.qr { color: var(--info-500); }
+
+    /* 🔥 ESTILOS PARA EL DESCUENTO DE GASTOS */
+    .gasto-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .gasto-row label { color: var(--text-1); font-weight: 600; font-size: 14px; }
+    .input-gasto { width: 100px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-1); background: var(--bg-elev-2); color: var(--brand-500); font-weight: 800; text-align: right; font-size: 15px; outline: none; }
+    .input-gasto:focus { border-color: var(--brand-500); }
+    
+    /* Toggle switch para almuerzo */
+    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-elev-3); transition: .3s; border-radius: 34px; border: 1px solid var(--border-2); }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--success-500); border-color: var(--success-500); }
+    input:checked + .slider:before { transform: translateX(22px); }
   </style>
 </head>
 <body>
@@ -91,68 +103,95 @@
   </div>
 
   <main class="app-container">
-    <!-- HEADER Y BOTTOM NAV INYECTADOS DESDE LAYOUT.JS -->
     <script type="module">
       import { montarLayout } from '../js/layout.js';
-      montarLayout({
-        titulo: 'Cierre de Caja',
-        padre: '/app/',
-        activo: 'panel'
-      });
+      montarLayout({ titulo: 'Cierre de Caja', padre: '/app/', activo: 'panel' });
     </script>
 
     <div class="app-content">
-      <!-- 1. Reparaciones -->
+      <!-- 1. Resumen General -->
       <div class="section-block" style="border-top: 3px solid var(--brand-500);">
         <div class="section-title" style="color: var(--brand-500);">
-          <img src="/app/icons/estado-reparacion.png" class="icon-seccion" alt="Reparaciones"> Reparaciones (Hoy)
+          <img src="/app/icons/estado-reparacion.png" class="icon-seccion" alt="Resumen"> Resumen General
         </div>
-        <div class="fila-info"><span class="label">Cantidad entregada:</span><span class="valor" id="cantReparaciones">0</span></div>
-        <div class="fila-info"><span class="label">Total Cobrado:</span><span class="valor" id="totalReparaciones" style="color:var(--success-500); font-weight:800; font-size:16px;">Bs. 0.00</span></div>
-        <div style="margin-top:16px; border-top:1px solid var(--border-1); padding-top:16px;">
-          <div class="fila-info"><span class="label"><img src="/app/icons/cobrar.png" width="18" height="18" alt="Efectivo"> Efectivo:</span><span class="valor" id="totalEfectivo">Bs. 0</span></div>
-          <div class="fila-info"><span class="label"><img src="/app/icons/reportes.png" width="18" height="18" alt="QR"> QR:</span><span class="valor" id="totalQR">Bs. 0</span></div>
-          <div class="fila-info"><span class="label"><img src="/app/icons/total.png" width="18" height="18" alt="Transf"> Transf:</span><span class="valor" id="totalTransf">Bs. 0</span></div>
-        </div>
+        <div class="fila-info"><span class="label">Reparaciones entregadas:</span><span class="valor" id="cantReparaciones">0</span></div>
+        <div class="fila-info"><span class="label">Total Reparaciones:</span><span class="valor" id="totalReparaciones" style="color:var(--success-500); font-weight:800; font-size:16px;">Bs. 0.00</span></div>
+        <div class="fila-info"><span class="label">Total Ventas Accesorios:</span><span class="valor" id="totalVentasAccesorios" style="color:var(--info-500); font-weight:800; font-size:16px;">Bs. 0.00</span></div>
+        <div class="fila-info"><span class="label">Total Ventas Extras:</span><span class="valor" id="totalVentasExtras" style="color:var(--purple-500); font-weight:800; font-size:16px;">Bs. 0.00</span></div>
       </div>
 
-      <!-- 2. Ventas de Accesorios -->
+      <!-- 2. Desglose de Pagos (Solo Efectivo y QR) -->
+      <div class="section-block" style="border-top: 3px solid var(--success-500);">
+        <div class="section-title" style="color: var(--success-500);">
+          <img src="/app/icons/cobrar.png" class="icon-seccion" alt="Pagos"> Desglose de Pagos (Sistema)
+        </div>
+        <div class="fila-info"><span class="label">Cobrado en Efectivo:</span><span class="valor efectivo" id="totalEfectivo">Bs. 0.00</span></div>
+        <div class="fila-info"><span class="label">Cobrado por QR:</span><span class="valor qr" id="totalQR">Bs. 0.00</span></div>
+      </div>
+
+      <!-- 3. Historial Detallado -->
       <div class="section-block" style="border-top: 3px solid var(--info-500);">
         <div class="section-title" style="color: var(--info-500);">
-          <img src="/app/icons/inventario.png" class="icon-seccion" alt="Accesorios"> Ventas de Accesorios
+          <img src="/app/icons/venta.png" class="icon-seccion" alt="Ventas"> Historial Detallado
         </div>
-        <div id="listaInventario" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
+        <div id="listaVentasDelDia" style="max-height: 300px; overflow-y: auto; padding-right: 5px;"></div>
       </div>
 
-      <!-- 3. Ventas Extras -->
+      <!-- 4. Ventas Extras -->
       <div class="section-block" style="border-top: 3px solid var(--purple-500);">
         <div class="section-title" style="color: var(--purple-500);">
-          <img src="/app/icons/venta.png" class="icon-seccion" alt="Extras"> Ventas Extras (Manual)
+          <img src="/app/icons/agregar.png" class="icon-seccion" alt="Extras"> Ventas Extras (Manual)
         </div>
         <div id="listaExtras"></div>
         <button class="btn btn-secondary" id="btnAddExtra" style="width: 100%; padding: 12px; font-size: 13px; border: 1px dashed var(--purple-500); color: var(--purple-500); background: transparent;"><img src="/app/icons/agregar.png" width="16" height="16" style="margin-right: 6px;"> Añadir Venta Manual</button>
       </div>
 
-      <!-- 4. Total y Ganancia -->
+      <!-- 5. GASTOS DEL TÉCNICO -->
+      <div class="section-block" style="border-top: 3px solid var(--danger-500);">
+        <div class="section-title" style="color: var(--danger-500);">
+          <img src="/app/icons/cobrar.png" class="icon-seccion" alt="Gastos"> Gastos del Técnico
+        </div>
+        
+        <div class="gasto-row">
+          <label for="gastoPasajes">Pasajes (Bs.):</label>
+          <input type="number" id="gastoPasajes" class="input-gasto" placeholder="0.00" inputmode="decimal">
+        </div>
+        
+        <div class="gasto-row" style="margin-bottom: 0;">
+          <label for="toggleAlmuerzo">Descontar Almuerzo (Bs. 20):</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleAlmuerzo">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 6. Total y Ganancia -->
       <div class="total-destacado">
         <div class="valor" id="totalGlobal">Bs. 0.00</div>
         <div class="label">Total Ingresos del Día</div>
       </div>
       <div class="ganancia-destacada">
         <div class="valor" id="gananciaGlobal">Bs. 0.00</div>
-        <div class="label">Ganancia Real del Día</div>
+        <div class="label">Ganancia Real (Libre)</div>
       </div>
 
-      <!-- 5. Botones -->
+      <!-- 7. Botones -->
       <button class="btn btn-whatsapp" id="btnEnviarWhatsApp" style="width: 100%; margin-bottom: 12px;"><img src="/app/icons/whatsapp.png" width="20" height="20" style="margin-right: 8px;"> Enviar Cierre al Admin</button>
-      <button class="btn btn-primary" id="btnGuardarCierre" style="width: 100%; margin-bottom: 32px;"><img src="/app/icons/cierre.png" width="20" height="20" style="margin-right: 8px;"> Guardar en Historial</button>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 32px;">
+        <button class="btn btn-secondary" id="btnDescargarPDF" style="height: 48px;">
+          <img src="/app/icons/pdf.png" width="20" height="20" style="margin-right: 8px;"> Descargar PDF
+        </button>
+        <button class="btn btn-primary" id="btnGuardarCierre" style="height: 48px;">
+          <img src="/app/icons/cierre.png" width="20" height="20" style="margin-right: 8px;"> Guardar Historial
+        </button>
+      </div>
     </div>
   </main>
 
-  <!-- AQUÍ SE CARGA TODA LA LÓGICA DESDE TU ARCHIVO CIERRE.JS -->
   <script type="module" src="./cierre.js"></script>
   
-  <!-- SCRIPT DE SEGURIDAD (Oculta el loader si algo falla) -->
   <script>
     setTimeout(() => { document.getElementById('appLoader')?.classList.add('hidden'); }, 1500);
   </script>
