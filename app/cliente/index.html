@@ -32,19 +32,19 @@
     .step-indicator { font-size: 12px; font-weight: 800; color: var(--brand-500); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
     .field-title { font-size: 11px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* 🔥 SELECTOR DE MARCA CON TUS ICONOS (Efecto Táctil) */
+    /* 🔥 SELECTOR DE MARCA CON TUS ICONOS */
     .marcas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
     .marca-btn { padding: 10px 4px; border-radius: 12px; border: 1px solid var(--border-1); background: var(--bg-elev-1); color: var(--text-1); font-weight: 600; font-size: 11px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 6px; }
     .marca-btn img { width: 28px; height: 28px; object-fit: contain; }
     .marca-btn.active { background: color-mix(in srgb, var(--brand-500) 15%, transparent); border-color: var(--brand-500); color: var(--brand-500); font-weight: 800; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 105, 0, 0.15); }
     
-    /* 🔥 BOTONES DE ESTADO (Enciende / No enciende) */
+    /* 🔥 BOTONES DE ESTADO */
     .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .radio-option { padding: 12px 4px; border-radius: 12px; border: 1px solid var(--border-1); background: var(--bg-elev-1); color: var(--text-1); font-weight: 600; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; }
     .radio-option img { width: 24px; height: 24px; object-fit: contain; }
     .radio-option.active { background: color-mix(in srgb, var(--brand-500) 15%, transparent); border-color: var(--brand-500); color: var(--brand-500); font-weight: 800; }
 
-    /* 🔥 CHIPS DE MOTIVO DE REPARACIÓN */
+    /* 🔥 CHIPS DE MOTIVO */
     .chips-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
     .chip-btn { padding: 8px 12px; border-radius: 20px; background: var(--bg-elev-1); border: 1px solid var(--border-1); color: var(--text-1); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
     .chip-btn img { width: 16px; height: 16px; object-fit: contain; }
@@ -103,8 +103,8 @@
       
       montarLayout({
         titulo: 'Nuevo Recibo',
-        padre: '/app/', // Botón volver al panel
-        activo: 'panel' // El botón de Panel se verá resaltado
+        padre: '/app/',
+        activo: 'panel'
       });
     </script>
 
@@ -300,5 +300,16 @@
   <input type="file" id="inputGaleria" accept="image/*" style="display: none;">
 
   <script type="module" src="/app/js/clientes.js"></script>
+
+  <!-- 🔥 SCRIPT DE SEGURIDAD: Oculta el loader si clientes.js falla o tarda -->
+  <script>
+    setTimeout(() => {
+      const loader = document.getElementById('appLoader');
+      if (loader && !loader.classList.contains('hidden')) {
+        loader.classList.add('hidden');
+        console.log('✅ Loader cerrado por el script de seguridad.');
+      }
+    }, 1500); // 1.5 segundos
+  </script>
 </body>
 </html>
