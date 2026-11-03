@@ -19,50 +19,58 @@
   <link rel="manifest" href="/manifest.json">
 
   <style>
-  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-  .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand-500); border-bottom-color: var(--brand-500); animation: spin 1.2s linear infinite !important; }
-  
-  /* 🔥 BOTONES HERO MÁS COMPACTOS */
-  .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-  .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 10px; border-radius: var(--r-lg); font-weight: 700; font-size: 12px; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 70px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
-  .btn-hero:active { transform: scale(0.96); }
-  .btn-hero-nuevo { background: linear-gradient(135deg, var(--brand-500), #FF8C00); color: white; box-shadow: var(--shadow-glow); }
-  .btn-hero-venta { background: var(--bg-elev-1); color: var(--success-500); border: 1px solid var(--border-1); }
-  .icon-box { width: 28px; height: 28px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: auto; z-index: 2; box-shadow: var(--shadow-sm); }
-  .icon-box img { width: 100%; height: 100%; object-fit: contain; }
-  .icon-raw { width: 28px; height: 28px; object-fit: contain; margin-bottom: auto; z-index: 2; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand-500); border-bottom-color: var(--brand-500); animation: spin 1.2s linear infinite !important; }
+    
+    /* 🔥 HERO BUTTONS - PEGADOS */
+    .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 10px; border-radius: var(--r-lg); font-weight: 700; font-size: 12px; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 65px; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+    .btn-hero:active { transform: scale(0.96); }
+    .btn-hero-nuevo { background: linear-gradient(135deg, var(--brand-500), #FF8C00); color: white; box-shadow: var(--shadow-glow); }
+    .btn-hero-venta { background: var(--bg-elev-1); color: var(--success-500); border: 1px solid var(--border-1); }
+    .icon-box { width: 26px; height: 26px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: auto; z-index: 2; box-shadow: var(--shadow-sm); }
+    .icon-box img { width: 100%; height: 100%; object-fit: contain; }
+    .icon-raw { width: 26px; height: 26px; object-fit: contain; margin-bottom: auto; z-index: 2; }
 
-  /* 🔥 ESTADÍSTICAS MÁS PEGADAS */
-  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
-  .stat-card { background: var(--bg-elev-1); border-radius: var(--r-md); padding: 10px 8px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--border-1); }
-  .stat-value { font-size: 18px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 2px; letter-spacing: -0.5px; }
-  .stat-label { font-size: 9px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+    /* 🔥 STATS - PEGADAS */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+    .stat-card { background: var(--bg-elev-1); border-radius: var(--r-md); padding: 8px 6px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--border-1); }
+    .stat-value { font-size: 18px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 2px; letter-spacing: -0.5px; }
+    .stat-label { font-size: 9px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
 
-  /* 🔥 BOTONES DE PDF Y NOTA */
-  #btnPDFDia, #btnAbrirNotaDueno { padding: 10px; font-size: 13px; border-radius: var(--r-md); }
-  #btnPDFDia i, #btnAbrirNotaDueno i { font-size: 16px; margin-right: 6px; }
+    /* 🔥 BOTONES PDF Y NOTA - COMPACTOS Y CON TUS ICONOS */
+    .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .action-buttons .btn { padding: 8px; font-size: 12px; border-radius: var(--r-md); height: 36px; display: flex; align-items: center; justify-content: center; }
+    .action-buttons .btn img { margin-right: 6px; }
 
-  .section-title { font-size: 14px; font-weight: 800; color: var(--text-1); margin-bottom: 8px; margin-top: 8px; display: flex; align-items: center; gap: 8px; }
-  
-  /* 🔥 TARJETAS DE MOVIMIENTOS MÁS COMPACTAS */
-  .ingreso-card { background: var(--bg-elev-1); border-radius: var(--r-md); padding: 10px; margin-bottom: 8px; transition: var(--dur) var(--ease); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-1); border-left-width: 4px; border-left-style: solid; }
-  .ingreso-card:active { transform: scale(0.98); background: var(--bg-elev-2); }
+    .section-title { font-size: 13px; font-weight: 800; color: var(--text-1); margin-bottom: 6px; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+    
+    /* 🔥 TARJETAS DE MOVIMIENTOS - PEGADAS */
+    .ingreso-card { background: var(--bg-elev-1); border-radius: var(--r-md); padding: 10px; margin-bottom: 6px; transition: var(--dur) var(--ease); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-1); border-left-width: 4px; border-left-style: solid; }
+    .ingreso-card:active { transform: scale(0.98); background: var(--bg-elev-2); }
 
-  .icon-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; flex-shrink: 0; }
-  .info-col { flex: 1; min-width: 0; }
-  .info-title { font-size: 14px; font-weight: 700; color: var(--text-1); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .info-sub { font-size: 11px; color: var(--text-3); font-weight: 500; }
-  .monto-col { text-align: right; margin-left: 8px; }
-  .monto { font-size: 15px; font-weight: 800; }
-  .estado-chip { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; text-transform: uppercase; }
+    .icon-circle { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; flex-shrink: 0; }
+    .info-col { flex: 1; min-width: 0; }
+    .info-title { font-size: 14px; font-weight: 700; color: var(--text-1); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .info-sub { font-size: 11px; color: var(--text-3); font-weight: 500; }
+    .monto-col { text-align: right; margin-left: 8px; }
+    .monto { font-size: 15px; font-weight: 800; }
+    .estado-chip { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; text-transform: uppercase; }
 
-  /* 🔥 PAGINACIÓN MÁS PEGADA */
-  .pagination-container { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 12px; margin-bottom: 20px; }
-  .page-btn { background: var(--bg-elev-1); border: 1px solid var(--border-1); color: var(--text-1); width: 32px; height: 32px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; cursor: pointer; transition: var(--dur); }
-  .page-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: white; box-shadow: var(--shadow-glow); }
-  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-  .page-nav { background: var(--bg-elev-2); border: 1px solid var(--border-1); color: var(--text-1); padding: 0 12px; height: 32px; border-radius: var(--r-md); font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-</style>
+    /* 🔥 PAGINACIÓN - PEGADA */
+    .pagination-container { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 12px; margin-bottom: 20px; }
+    .page-btn { background: var(--bg-elev-1); border: 1px solid var(--border-1); color: var(--text-1); width: 32px; height: 32px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; cursor: pointer; transition: var(--dur); }
+    .page-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: white; box-shadow: var(--shadow-glow); }
+    .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .page-nav { background: var(--bg-elev-2); border: 1px solid var(--border-1); color: var(--text-1); padding: 0 12px; height: 32px; border-radius: var(--r-md); font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    /* 🔥 BUSCADOR COMPACTO */
+    .search-bar { margin-bottom: 8px; }
+    .search-bar input { padding: 8px 12px 8px 36px; font-size: 13px; }
+    .search-bar img { left: 12px; width: 16px; height: 16px; }
+    .filters-row { margin-bottom: 12px; gap: 6px; }
+    .chip-interactive { padding: 6px 12px; font-size: 12px; }
+  </style>
 </head>
 <body>
 
@@ -90,21 +98,21 @@
         <div class="stat-card"><div class="stat-value" id="statHoy" style="color: var(--brand-500);">—</div><div class="stat-label">Ingresos Hoy</div></div>
       </div>
 
-      <!-- BOTONES DE ACCIÓN RECUPERADOS -->
-      <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button class="btn btn-secondary" id="btnPDFDia" style="flex: 1; justify-content:center;">
-          <i class="fas fa-file-pdf" style="color:var(--danger-500);"></i> PDF del Día
+      <!-- BOTONES PDF Y NOTA CON TUS ICONOS -->
+      <div class="action-buttons">
+        <button class="btn btn-secondary" id="btnPDFDia">
+          <img src="/app/icons/pdf.png" width="16" height="16" alt="PDF"> PDF del Día
         </button>
-        <button class="btn btn-secondary" id="btnAbrirNotaDueno" style="flex: 1; justify-content:center;">
-          <i class="fas fa-pen" style="color:var(--brand-500);"></i> Nota al Dueño
+        <button class="btn btn-secondary" id="btnAbrirNotaDueno">
+          <img src="/app/icons/nota.png" width="16" height="16" alt="Nota"> Nota al Dueño
         </button>
       </div>
 
       <div class="section-title">Movimientos Recientes</div>
       
       <div class="search-bar">
-        <img src="/app/icons/buscar.png" width="18" height="18" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.5;">
-        <input type="search" id="buscador" placeholder="Buscar cliente o equipo..." autocomplete="off" style="padding-left: 44px;">
+        <img src="/app/icons/buscar.png" width="18" height="18" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5;">
+        <input type="search" id="buscador" placeholder="Buscar cliente o equipo..." autocomplete="off" style="padding-left: 36px;">
       </div>
 
       <div class="filters-row" id="filtros">
