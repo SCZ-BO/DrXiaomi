@@ -18,6 +18,7 @@ const ITEMS_POR_PAGINA = 12;
 const reciboSheet = document.getElementById('reciboSheet');
 const modalVenta = document.getElementById('modalVenta');
 const modalNotaDueno = document.getElementById('modalNotaDueno');
+const modalPreviewPDF = document.getElementById('modalPreviewPDF');
 const paginationContainer = document.getElementById('paginationContainer');
 const appLoader = document.getElementById('appLoader');
 
@@ -74,6 +75,7 @@ function renderLayout() {
   
   document.getElementById('btnSalir')?.addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
   document.getElementById('btnNotificaciones')?.addEventListener('click', () => { haptic(10); contadorNotificaciones = 0; actualizarBadge(); toast('Notificaciones leídas', 'success'); });
+  document.getElementById('btnTema')?.addEventListener('click', toggleTheme);
 }
 
 renderLayout();
@@ -92,7 +94,10 @@ requireAuth((s) => {
 
 function iniciarApp() {
   if (appState.sesion?.rol !== 'admin') {
-    const btnRep = document.querySelector('.nav-item[href="/app/reportes/"]'); if(btnRep) btnRep.style.display = 'none';
+    const btnRep = document.querySelector('.nav-item[href="/app/reportes/"]'); 
+    if(btnRep) btnRep.style.display = 'none';
+    const btnPDF = document.getElementById('btnPDFDia'); 
+    if(btnPDF) btnPDF.style.display = 'none'; // Ocultar PDF a técnicos si así se desea
   }
   configurarEventos(); 
   cargarDatos();
@@ -146,8 +151,6 @@ export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('s
 function configurarEventos() {
   document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
   document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
-  
-  // 🔥 CIERRE DE MODALES (Para que la "X" funcione)
   document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta.classList.remove('show'));
   document.getElementById('btnCloseSheet')?.addEventListener('click', () => reciboSheet.classList.remove('show'));
   document.getElementById('btnClosePago')?.addEventListener('click', () => document.getElementById('modalPago').classList.remove('show'));
@@ -159,15 +162,7 @@ function configurarEventos() {
     });
   });
 
-  // 🔥 BOTÓN DE TEMA (Llamamos a la función de app-ui.js)
-  document.getElementById('btnTema')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    haptic(10);
-    toggleTheme(); // Función que cambia las variables CSS
-  });
-  
   // PDF Y NOTAS
-  document.getElementById('btnPDFDia')?.addEventListener('click', () => { haptic(15); generarPDFDia(); });
   document.getElementById('btnAbrirNotaDueno')?.addEventListener('click', () => { haptic(15); modalNotaDueno.classList.add('show'); });
   document.getElementById('btnCancelarNotaDueno')?.addEventListener('click', () => modalNotaDueno.classList.remove('show'));
   
@@ -183,6 +178,64 @@ function configurarEventos() {
     } catch (e) { toast('Error al guardar', 'error'); }
   });
 
+  // CIERRE DE CAJA (PDF)
+  document.getElementById('btnPDFDia')?.addEventListener('click', () => { haptic(15); abrirVistaPreviaPDF(); });
+  document.getElementById('btnClosePreviewPDF')?.addEventListener('click', () => modalPreviewPDF.classList.remove('show'));
+  
+  document.getElementById('btnDescargarPDF')?.addEventListener('click', () => {
+    haptic(20);
+    generarPDFDia(); 
+    toast('PDF Descargado', 'success');
+  });
+
+  document.getElementById('btnEnviarPDFDueno')?.addEventListener('click', async () => {
+    haptic(20);
+    const btn = document.getElementById('btnEnviarPDFDueno');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    btn.disabled = true;
+
+    try {
+      generarPDFDia(); 
+      const efectivo = parseFloat(document.getElementById('efectivoCaja').value) || 0;
+      const totalSistema = calcularTotalDia();
+      const diferencia = efectivo - totalSistema;
+      
+      let textoDif = diferencia === 0 ? '✅ Caja Cuadrada Exacta' : (diferencia < 0 ? `⚠️ Faltante: Bs. ${Math.abs(diferencia).toFixed(2)}` : `💰 Sobrante: Bs. ${diferencia.toFixed(2)}`);
+
+      const mensaje = `*CIERRE DE CAJA - DR. XIAOMI*\n\n` +
+        `👨‍🔧 *Técnico:* ${appState.sesion.nombre}\n` +
+        `📅 *Fecha:* ${new Date().toLocaleDateString()}\n\n` +
+        `💵 *Efectivo en Caja:* Bs. ${efectivo.toFixed(2)}\n` +
+        `💻 *Total en Sistema:* Bs. ${totalSistema.toFixed(2)}\n` +
+        `📊 *Resultado:* ${textoDif}\n\n` +
+        `📄 Adjunto el PDF del reporte diario.`;
+
+      const numeroDueno = '59170000000'; // 🔥 CAMBIA ESTO POR EL NÚMERO DEL DUEÑO
+      window.open(`https://wa.me/${numeroDueno}?text=${encodeURIComponent(mensaje)}`, '_blank');
+      
+      toast('Reporte enviado al dueño', 'success');
+      modalPreviewPDF.classList.remove('show');
+    } catch (e) {
+      toast('Error al enviar', 'error');
+    } finally {
+      btn.innerHTML = '<i class="fab fa-whatsapp"></i> Enviar al Dueño';
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('efectivoCaja')?.addEventListener('input', (e) => {
+    const efectivo = parseFloat(e.target.value) || 0;
+    const totalSistema = calcularTotalDia();
+    const diff = efectivo - totalSistema;
+    const elDiff = document.getElementById('diferenciaCaja');
+    
+    elDiff.style.display = 'block';
+    if (diff === 0) { elDiff.textContent = '✅ Caja cuadrada exacta.'; elDiff.style.color = 'var(--success-500)'; } 
+    else if (diff < 0) { elDiff.textContent = `⚠️ Faltante de Bs. ${Math.abs(diff).toFixed(2)}`; elDiff.style.color = 'var(--danger-500)'; } 
+    else { elDiff.textContent = `💰 Sobrante de Bs. ${diff.toFixed(2)}`; elDiff.style.color = 'var(--warning-500)'; }
+  });
+
+  // LÓGICA DE VENTA
   const tipoStep = document.getElementById('tipoVentaStep');
   const accesorioStep = document.getElementById('ventaAccesorioStep');
   const servicioStep = document.getElementById('ventaServicioStep');
@@ -417,4 +470,169 @@ function actualizarStats() {
   let ingRep = 0; appState.ordenes.forEach(o => { if (o.estadoOrden === 'entregado') { const f = parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha); if (f && f >= hoy) ingRep += Number(o.montoCobrado) || Number(o.total) || 0; } });
   const ingVent = appState.ventasHoy.filter(v => { const f = parsearFecha(v.fecha); return f && f >= hoy; }).reduce((s, v) => s + (Number(v.monto) || 0), 0);
   document.getElementById('statHoy').textContent = formatBsLimpio(ingRep + ingVent);
+}
+
+// ==========================================
+// 6. FUNCIONES DE CIERRE Y PREVIEW
+// ==========================================
+function calcularTotalDia() {
+  let total = 0;
+  const hoy = new Date();
+  hoy.setHours(0,0,0,0);
+  
+  appState.ordenes.forEach(o => {
+    if (o.estadoOrden === 'entregado') {
+      const fEntrega = parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada);
+      if (fEntrega && fEntrega >= hoy) total += Number(o.montoCobrado) || 0;
+    }
+  });
+  
+  appState.ventasHoy.forEach(v => {
+    const f = parsearFecha(v.fecha);
+    if (f && f >= hoy) total += Number(v.monto) || 0;
+  });
+  
+  return total;
+}
+
+function abrirVistaPreviaPDF() {
+  const container = document.getElementById('previewPDFContent');
+  const hoy = new Date();
+  const fechaStr = `${String(hoy.getDate()).padStart(2,'0')}/${String(hoy.getMonth()+1).padStart(2,'0')}/${hoy.getFullYear()}`;
+  
+  let totalDia = 0;
+  let htmlFilas = '';
+
+  appState.ordenes.forEach(o => {
+    if (o.estadoOrden === 'entregado') {
+      const fEntrega = parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha);
+      if (fEntrega && fEntrega.toDateString() === hoy.toDateString()) {
+        const monto = Number(o.montoCobrado) || Number(o.total) || 0;
+        totalDia += monto;
+        htmlFilas += `
+          <tr>
+            <td style="padding: 6px 0; border-bottom: 1px solid #eee;">${o.numeroRecibo || 'S/N'}</td>
+            <td style="padding: 6px 0; border-bottom: 1px solid #eee;">${o.cliente}</td>
+            <td style="padding: 6px 0; border-bottom: 1px solid #eee;">${o.marca} ${o.modelo}</td>
+            <td style="padding: 6px 0; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">Bs. ${monto.toFixed(2)}</td>
+          </tr>`;
+      }
+    }
+  });
+
+  appState.ventasHoy.forEach(v => {
+    const f = parsearFecha(v.fecha);
+    if (f && f.toDateString() === hoy.toDateString()) {
+      const monto = Number(v.monto) || 0;
+      totalDia += monto;
+      htmlFilas += `
+        <tr>
+          <td style="padding: 6px 0; border-bottom: 1px solid #eee;">VENTA</td>
+          <td style="padding: 6px 0; border-bottom: 1px solid #eee;">Mostrador</td>
+          <td style="padding: 6px 0; border-bottom: 1px solid #eee;">${v.concepto}</td>
+          <td style="padding: 6px 0; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">Bs. ${monto.toFixed(2)}</td>
+        </tr>`;
+    }
+  });
+
+  if (!htmlFilas) {
+    htmlFilas = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: #888;">No hay movimientos registrados hoy.</td></tr>`;
+  }
+
+  container.innerHTML = `
+    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 16px;">
+      <h1 style="font-size: 20px; margin: 0 0 4px 0; font-family: 'Helvetica';">DR. XIAOMI SCZ</h1>
+      <p style="margin: 0; font-size: 10px; color: #555;">Reporte de Cierre Diario</p>
+      <p style="margin: 4px 0 0 0; font-size: 11px; font-weight: bold;">Fecha: ${fechaStr}</p>
+    </div>
+    
+    <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+      <thead>
+        <tr style="border-bottom: 2px solid #000; text-align: left;">
+          <th style="padding-bottom: 6px;">Recibo</th>
+          <th style="padding-bottom: 6px;">Cliente</th>
+          <th style="padding-bottom: 6px;">Concepto</th>
+          <th style="padding-bottom: 6px; text-align: right;">Monto</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${htmlFilas}
+      </tbody>
+    </table>
+    
+    <div style="margin-top: 20px; text-align: right; border-top: 2px solid #000; padding-top: 10px;">
+      <h2 style="font-size: 16px; margin: 0;">TOTAL DEL DÍA: Bs. ${totalDia.toFixed(2)}</h2>
+    </div>
+  `;
+
+  document.getElementById('efectivoCaja').value = '';
+  document.getElementById('diferenciaCaja').style.display = 'none';
+  modalPreviewPDF.classList.add('show');
+}
+
+// ==========================================
+// 7. LÓGICA DE PULL TO REFRESH (Jalar para actualizar)
+// ==========================================
+let touchStartY = 0;
+let touchCurrentY = 0;
+let isPulling = false;
+const pullThreshold = 100; 
+const appContent = document.querySelector('.app-content');
+const pullIndicator = document.getElementById('pullToRefresh');
+const ptrIcon = document.getElementById('ptrIcon');
+
+if (appContent && pullIndicator) {
+  appContent.addEventListener('touchstart', (e) => {
+    if (appContent.scrollTop === 0) {
+      touchStartY = e.touches[0].clientY;
+      isPulling = true;
+    }
+  }, { passive: true });
+
+  appContent.addEventListener('touchmove', (e) => {
+    if (!isPulling) return;
+    touchCurrentY = e.touches[0].clientY;
+    const distance = touchCurrentY - touchStartY;
+
+    if (distance > 0 && appContent.scrollTop === 0) {
+      e.preventDefault(); 
+      const progress = Math.min(distance / pullThreshold, 1);
+      pullIndicator.style.transform = `translateX(-50%) translateY(${progress * 60}px)`;
+      pullIndicator.style.opacity = progress;
+      ptrIcon.style.transform = `rotate(${progress * 360}deg)`;
+    }
+  }, { passive: false });
+
+  appContent.addEventListener('touchend', () => {
+    if (!isPulling) return;
+    const distance = touchCurrentY - touchStartY;
+
+    if (distance > pullThreshold && appContent.scrollTop === 0) {
+      pullIndicator.style.transform = 'translateX(-50%) translateY(50px)';
+      ptrIcon.style.animation = 'spin 0.8s linear infinite'; 
+      
+      if (typeof cargarDatos === 'function') {
+        cargarDatos(); 
+        setTimeout(() => {
+          resetPullToRefresh();
+          toast('Datos actualizados', 'success');
+        }, 1000);
+      } else {
+        window.location.reload();
+      }
+    } else {
+      resetPullToRefresh();
+    }
+    
+    isPulling = false;
+    touchStartY = 0;
+    touchCurrentY = 0;
+  });
+
+  function resetPullToRefresh() {
+    pullIndicator.style.transform = 'translateX(-50%) translateY(-60px)';
+    pullIndicator.style.opacity = '0';
+    ptrIcon.style.animation = 'none';
+    ptrIcon.style.transform = 'rotate(0deg)';
+  }
 }
