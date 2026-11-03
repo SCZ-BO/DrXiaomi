@@ -97,29 +97,16 @@
   </div>
 
   <main class="app-container">
-    <!-- HEADER -->
-    <header class="app-header">
-      <div class="brand">
-        <button class="icon-btn" id="backToPanelBtn">
-          <img src="/app/icons/volver.png" width="20" height="20" alt="Volver">
-        </button>
-        <div class="brand-logo">
-          <img src="/imagenes/web-app-manifest-192x192.png" alt="DR Xiaomi">
-        </div>
-        <div class="brand-text">
-          <h1>Nuevo Recibo</h1>
-          <p id="userInfo">Cargando...</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <button class="icon-btn" id="clearDraftBtn" title="Limpiar">
-          <img src="/app/icons/eliminar.png" width="18" height="18" alt="Limpiar">
-        </button>
-        <button class="icon-btn" id="themeToggleBtn" title="Tema">
-          <img src="/app/icons/tema.png" width="18" height="18" alt="Tema">
-        </button>
-      </div>
-    </header>
+    <!-- 🔥 EL HEADER SE INYECTA AQUÍ AUTOMÁTICAMENTE DESDE LAYOUT.JS 🔥 -->
+    <script type="module">
+      import { montarLayout } from '../js/layout.js';
+      
+      montarLayout({
+        titulo: 'Nuevo Recibo',
+        padre: '/app/', // Botón volver al panel
+        activo: 'panel' // El botón de Panel se verá resaltado
+      });
+    </script>
 
     <div class="app-content" id="appBody">
       <div class="wizard-progress" id="wizardProgress">
@@ -143,7 +130,6 @@
           <div class="card">
             <label class="field-title">Marca *</label>
             <div class="marcas-grid" id="marcasGrid">
-              <!-- Reemplazamos texto por tus íconos si lo deseas, aquí usamos texto e ícono genérico -->
               <button type="button" class="marca-btn" data-marca="Xiaomi"><img src="/app/icons/telefono.png" alt="Xiaomi">Xiaomi</button>
               <button type="button" class="marca-btn" data-marca="Samsung"><img src="/app/icons/telefono.png" alt="Samsung">Samsung</button>
               <button type="button" class="marca-btn" data-marca="Huawei"><img src="/app/icons/telefono.png" alt="Huawei">Huawei</button>
