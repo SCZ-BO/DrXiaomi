@@ -22,66 +22,34 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand-500); border-bottom-color: var(--brand-500); animation: spin 1.2s linear infinite !important; }
     
-    /* 🔥 HERO BUTTONS - REDISEÑADOS Y MODERNOS */
+    /* 🔥 HERO BUTTONS */
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-    .btn-hero { 
-      display: flex; 
-      flex-direction: row; /* Horizontal */
-      align-items: center; 
-      justify-content: flex-start; 
-      padding: 10px 12px; 
-      border-radius: var(--r-lg); 
-      font-weight: 700; 
-      font-size: 12px; 
-      line-height: 1.2;
-      border: none; 
-      cursor: pointer; 
-      transition: var(--dur) var(--ease-spring); 
-      height: 60px; /* Altura compacta */
-      box-shadow: var(--shadow-sm); 
-      position: relative; 
-      overflow: hidden;
-    }
+    .btn-hero { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; padding: 10px 12px; border-radius: var(--r-lg); font-weight: 700; font-size: 12px; line-height: 1.2; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 60px; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
     .btn-hero:active { transform: scale(0.96); }
     .btn-hero-nuevo { background: linear-gradient(135deg, var(--brand-500), #FF8C00); color: white; box-shadow: var(--shadow-glow); }
     .btn-hero-venta { background: var(--bg-elev-1); color: var(--success-500); border: 1px solid var(--border-1); }
-    
-    .icon-box { 
-      width: 28px; 
-      height: 28px; 
-      background: rgba(255, 255, 255, 0.2); 
-      border-radius: 8px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      padding: 4px; 
-      margin-right: 8px; 
-      flex-shrink: 0;
-      z-index: 2; 
-    }
+    .icon-box { width: 28px; height: 28px; background: rgba(255, 255, 255, 0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-right: 8px; flex-shrink: 0; z-index: 2; }
     .btn-hero-nuevo .icon-box { background: white; }
     .icon-box img { width: 100%; height: 100%; object-fit: contain; }
-    
     .icon-raw { width: 28px; height: 28px; object-fit: contain; margin-right: 8px; flex-shrink: 0; z-index: 2; }
     .btn-hero span { z-index: 2; text-align: left; }
 
-    /* 🔥 STATS - PEGADAS */
+    /* 🔥 STATS */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
     .stat-card { background: var(--bg-elev-1); border-radius: var(--r-md); padding: 8px 6px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--border-1); }
     .stat-value { font-size: 18px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 2px; letter-spacing: -0.5px; }
     .stat-label { font-size: 9px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* 🔥 BOTONES PDF Y NOTA - COMPACTOS Y CON TUS ICONOS */
+    /* 🔥 BOTONES PDF Y NOTA */
     .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .action-buttons .btn { padding: 8px; font-size: 12px; border-radius: var(--r-md); height: 36px; display: flex; align-items: center; justify-content: center; }
     .action-buttons .btn img { margin-right: 6px; }
 
     .section-title { font-size: 13px; font-weight: 800; color: var(--text-1); margin-bottom: 6px; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
     
-    /* 🔥 TARJETAS DE MOVIMIENTOS - PEGADAS */
+    /* 🔥 TARJETAS */
     .ingreso-card { background: var(--bg-elev-1); border-radius: var(--r-md); padding: 10px; margin-bottom: 6px; transition: var(--dur) var(--ease); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-1); border-left-width: 4px; border-left-style: solid; }
     .ingreso-card:active { transform: scale(0.98); background: var(--bg-elev-2); }
-
     .icon-circle { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; flex-shrink: 0; }
     .info-col { flex: 1; min-width: 0; }
     .info-title { font-size: 14px; font-weight: 700; color: var(--text-1); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -90,19 +58,47 @@
     .monto { font-size: 15px; font-weight: 800; }
     .estado-chip { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; text-transform: uppercase; }
 
-    /* 🔥 PAGINACIÓN - PEGADA */
+    /* 🔥 PAGINACIÓN */
     .pagination-container { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 12px; margin-bottom: 20px; }
     .page-btn { background: var(--bg-elev-1); border: 1px solid var(--border-1); color: var(--text-1); width: 32px; height: 32px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; cursor: pointer; transition: var(--dur); }
     .page-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: white; box-shadow: var(--shadow-glow); }
     .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
     .page-nav { background: var(--bg-elev-2); border: 1px solid var(--border-1); color: var(--text-1); padding: 0 12px; height: 32px; border-radius: var(--r-md); font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    /* 🔥 BUSCADOR COMPACTO */
+    /* 🔥 BUSCADOR */
     .search-bar { margin-bottom: 8px; }
     .search-bar input { padding: 8px 12px 8px 36px; font-size: 13px; }
     .search-bar img { left: 12px; width: 16px; height: 16px; }
     .filters-row { margin-bottom: 12px; gap: 6px; }
     .chip-interactive { padding: 6px 12px; font-size: 12px; }
+
+    /* 🔥 ARREGLO DEL SCROLL PARA LA VENTA RÁPIDA */
+    #gridAccesorios {
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 10px;
+      max-height: 40vh; /* 🔥 Scroll interno */
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    #gridAccesorios::-webkit-scrollbar { width: 4px; }
+    #gridAccesorios::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+    
+    .accesorio-card {
+      background: var(--bg-elev-2); border: 2px solid transparent; border-radius: var(--r-md);
+      padding: 8px; cursor: pointer; transition: 0.2s; text-align: center; position: relative;
+    }
+    .accesorio-card.seleccionado {
+      border-color: var(--brand-500); background: color-mix(in srgb, var(--brand-500) 10%, var(--bg-elev-2));
+      box-shadow: 0 0 12px var(--brand-100);
+    }
+    .accesorio-card img { width: 100%; height: 70px; object-fit: contain; border-radius: 6px; margin-bottom: 6px; }
+    .accesorio-card .nombre { font-size: 11px; font-weight: 700; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .accesorio-card .precio { font-size: 12px; font-weight: 800; color: var(--success-500); }
+    .accesorio-card .stock { font-size: 10px; color: var(--text-3); }
+
+    /* 🔥 MODAL DE CIERRE DE CAJA */
+    #previewPDFContent { background: white; color: black; padding: 20px; border-radius: 4px; font-family: 'Helvetica', sans-serif; font-size: 11px; min-height: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
@@ -114,15 +110,15 @@
 
   <main class="app-container">
     <div class="app-content">
-      <!-- HERO REDISEÑADO -->
+      <!-- HERO -->
       <div class="hero-actions">
         <button class="btn-hero btn-hero-nuevo" id="nuevoReciboBtn">
           <div class="icon-box"><img src="/app/icons/agregar.png" alt="Nuevo Equipo"></div>
-          <span>Nuevo Equipo</span> <!-- 🔥 Sin <br> -->
+          <span>Nuevo Equipo</span>
         </button>
         <button class="btn-hero btn-hero-venta" id="ventaRapidaBtn">
           <img src="/app/icons/venta.png" alt="Venta Rápida" class="icon-raw">
-          <span>Venta Rápida</span> <!-- 🔥 Sin <br> -->
+          <span>Venta Rápida</span>
         </button>
       </div>
 
@@ -133,7 +129,7 @@
         <div class="stat-card"><div class="stat-value" id="statHoy" style="color: var(--brand-500);">—</div><div class="stat-label">Ingresos Hoy</div></div>
       </div>
 
-      <!-- BOTONES PDF Y NOTA (AHORA CON TUS PNG) -->
+      <!-- BOTONES PDF Y NOTA -->
       <div class="action-buttons">
         <button class="btn btn-secondary" id="btnPDFDia">
           <img src="/app/icons/pdf.png" width="16" height="16" alt="PDF"> PDF del Día
@@ -164,8 +160,9 @@
     </div>
   </main>
 
-  <!-- ================= MODALES ================= -->
+  <!-- ================= MODALES (Todos incluidos) ================= -->
 
+  <!-- 1. MODAL VENTA RÁPIDA -->
   <div class="sheet-backdrop" id="modalVenta">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -189,8 +186,8 @@
       <div id="ventaAccesorioStep" style="display: none;">
         <button class="btn btn-secondary" id="btnBackToTipo" style="margin-bottom: 16px; width: auto; padding: 8px 16px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
         <label class="input-label" style="margin-bottom: 8px; display:block;">Selecciona un producto:</label>
-        <div id="gridAccesorios" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 300px; overflow-y: auto; margin-bottom: 16px;"></div>
-        <div id="productoSeleccionadoInfo" style="display: none; background: var(--bg-elev-2); padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border-1);">
+        <div id="gridAccesorios"></div>
+        <div id="productoSeleccionadoInfo" style="display: none; background: var(--bg-elev-2); padding: 12px; border-radius: 8px; margin-top: 12px; margin-bottom: 12px; border: 1px solid var(--border-1);">
           <div style="font-weight: 800; font-size: 14px;" id="infoProdNombre">-</div>
           <div style="font-size: 12px; color: var(--text-3);">Precio: <span id="infoProdPrecio">0</span> Bs</div>
           <div class="field" style="margin-top: 8px; margin-bottom: 0;"><label class="input-label">Cantidad</label><input type="number" id="accesorioCantidad" class="input-field" value="1" min="1"></div>
@@ -208,6 +205,7 @@
     </div>
   </div>
 
+  <!-- 2. MODAL OPCIONES / DETALLE -->
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -219,6 +217,7 @@
     </div>
   </div>
 
+  <!-- 3. MODAL PAGO -->
   <div class="sheet-backdrop" id="modalPago">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -235,7 +234,7 @@
     </div>
   </div>
 
-  <!-- MODAL NOTA AL DUEÑO -->
+  <!-- 4. MODAL NOTA AL DUEÑO -->
   <div class="sheet-backdrop" id="modalNotaDueno">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -249,7 +248,38 @@
     </div>
   </div>
 
-  <!-- MODAL CREAR MENSAJE POPUP (Admin) -->
+  <!-- 5. MODAL CIERRE DE CAJA / PDF -->
+  <div class="sheet-backdrop" id="modalPreviewPDF">
+    <div class="sheet" style="max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="sheet-handle"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1);"><i class="fas fa-cash-register" style="color: var(--brand-500);"></i> Cierre de Caja</h3>
+        <button class="icon-btn" id="btnClosePreviewPDF"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <div style="flex: 1; overflow-y: auto; background: var(--bg-elev-2); padding: 10px; border-radius: var(--r-md); margin-bottom: 12px;">
+        <div id="previewPDFContent"></div>
+      </div>
+
+      <!-- Cuadre de caja -->
+      <div style="background: var(--bg-elev-1); padding: 12px; border-radius: var(--r-md); border: 1px solid var(--border-1); margin-bottom: 12px;">
+        <label class="input-label" style="margin-bottom: 4px; display:block;">¿Cuánto efectivo tienes en caja?</label>
+        <input type="number" id="efectivoCaja" class="input-field" placeholder="Monto en Bs." inputmode="decimal" style="font-size: 16px; font-weight: 800; color: var(--brand-500);">
+        <div id="diferenciaCaja" style="font-size: 12px; margin-top: 6px; font-weight: 700; display: none;"></div>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button class="btn btn-secondary" id="btnDescargarPDF" style="height: 48px;">
+          <i class="fas fa-download"></i> Descargar
+        </button>
+        <button class="btn btn-whatsapp" id="btnEnviarPDFDueno" style="height: 48px;">
+          <i class="fab fa-whatsapp"></i> Enviar al Dueño
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. MODAL CREAR MENSAJE POPUP (Admin) -->
   <div class="sheet-backdrop" id="modalMensajePopup">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -268,7 +298,7 @@
     </div>
   </div>
 
-  <!-- MODAL VER MENSAJE POPUP (Técnico) -->
+  <!-- 7. MODAL VER MENSAJE POPUP (Técnico) -->
   <div class="sheet-backdrop" id="modalVerPopup">
     <div class="sheet" style="text-align: center;">
       <div class="sheet-handle"></div>
