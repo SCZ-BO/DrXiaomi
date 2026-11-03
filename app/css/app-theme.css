@@ -133,26 +133,27 @@ html {
 }
 
 /* ---------- TEMA CLARO ---------- */
+/* ---------- TEMA CLARO (MÁS CONTRASTE) ---------- */
 [data-theme="light"] {
-  --bg-base:    #F8F8F9;
-  --bg-elev-1:  #FFFFFF;
-  --bg-elev-2:  #F5F5F6;
-  --bg-elev-3:  #EEEEF0;
+  --bg-base:    #F0F2F5; /* 🔥 Fondo gris un poco más oscuro para que resalten las tarjetas */
+  --bg-elev-1:  #FFFFFF; /* 🔥 Tarjetas totalmente blancas */
+  --bg-elev-2:  #F5F6F8; 
+  --bg-elev-3:  #EBECEF; 
   --bg-overlay: rgba(255, 255, 255, 0.75);
 
-  --border-1:   #EDEDF0;
-  --border-2:   #E0E0E5;
-  --border-3:   #CACAD1;
+  --border-1:   #D1D5DB; /* 🔥 Bordes más visibles */
+  --border-2:   #9CA3AF;
+  --border-3:   #6B7280;
 
-  --text-1:     #0A0A0B;
-  --text-2:     #52525A;
-  --text-3:     #8A8A94;
+  --text-1:     #111827; /* 🔥 Negro casi puro (más legible) */
+  --text-2:     #4B5563;
+  --text-3:     #6B7280;
 
-  --input-bg:   #F5F5F6;
+  --input-bg:   #F3F4F6;
 
-  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md:   0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg:   0 12px 32px rgba(0, 0, 0, 0.12);
+  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md:   0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-lg:   0 10px 15px rgba(0, 0, 0, 0.1);
 }
 
 /* ---------- BASE ---------- */
