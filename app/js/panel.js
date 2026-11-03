@@ -6,9 +6,6 @@ import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy,
 import { abrirSheetTelefono, abrirSheetVenta } from './panel-modals.js';
 import { icono } from './icons.js';
 
-// Importamos jsPDF directamente para generar el PDF aquí mismo y evitar fallos
-import { jsPDF } from "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.es.min.js";
-
 initTheme();
 
 export let appState = { sesion: null, ordenes: [], ventasHoy: [], inventario: [] };
@@ -573,6 +570,7 @@ function abrirVistaPreviaPDF() {
 // 🔥 7. GENERADOR DE PDF REAL (Corregido)
 // ==========================================
 function generarPDFReal() {
+  // Usamos window.jspdf que es como se carga desde el CDN en el HTML
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const hoy = new Date();
