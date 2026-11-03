@@ -7,7 +7,6 @@ const appRoot = document.getElementById('appRoot');
 const splash = document.getElementById('splash');
 const container = document.getElementById('resultsContainer');
 const searchInput = document.getElementById('searchInput');
-const suggestionsPanel = document.getElementById('suggestionsPanel');
 const resultsCount = document.getElementById('resultsCount');
 const clearSearchBtn = document.getElementById('clearSearchBtn');
 
@@ -34,13 +33,23 @@ if (isAdmin) {
 }
 
 // ==========================================
-// 2. UTILIDADES
+// 2. UTILIDADES (LOGO CON FALLBACK A DEFAULT)
 // ==========================================
 function getLogo(marca) {
-  let m = marca ? marca.split(" ")[0].toUpperCase() : "GENERAL";
+  if (!marca) return '/app/precios/logos/default.png';
+  let m = marca.split(" ")[0].toUpperCase();
   if (m.includes("APPLE") || m.includes("IPHONE")) m = "APPLE";
   if (m.includes("XIAOMI") || m.includes("REDMI") || m.includes("POCO")) m = "XIAOMI";
-  return `/app/precios/logos/${m.toLowerCase()}.png`;
+  
+  // Lista de logos que sabemos que tienes en GitHub
+  const logosExistentes = ["apple", "default", "honor", "huawei", "infinix", "realme", "motorola", "oppo", "samsung", "tecno", "vivo", "xiaomi", "zte"];
+  const mLower = m.toLowerCase();
+  
+  if (logosExistentes.includes(mLower)) {
+    return `/app/precios/logos/${mLower}.png`;
+  }
+  // Si no está en la lista, usa default.png
+  return '/app/precios/logos/default.png';
 }
 
 // ==========================================
@@ -50,7 +59,6 @@ onSnapshot(collection(db, "precios"), (snap) => {
   allData = [];
   snap.forEach(d => { if (d.data().activo !== false) allData.push({ id: d.id, ...d.data() }); });
   
-  // 🎲 Desordenamos solo al cargar
   allData.sort(() => Math.random() - 0.5);
   
   splash.classList.add('hidden');
@@ -117,7 +125,6 @@ function renderList() {
   if (currentFilter === "FAV") data = data.filter(i => favorites.has(i.id));
   else if (currentFilter !== "all" && currentFilter !== "COMPAT") data = data.filter(i => i.tipo === currentFilter);
   
-  // MODO COMPATIBILIDAD
   if (currentFilter === "COMPAT") {
     if (!currentTerm) {
       container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><p>Escribe un modelo para ver sus compatibles.</p></div>`;
@@ -145,7 +152,6 @@ function renderList() {
     return;
   }
 
-  // MODO NORMAL
   if (currentTerm) {
     data = aplicarBusqueda(data, currentTerm);
   }
@@ -162,7 +168,10 @@ function renderList() {
     <div class="product-card ${item.tipo === 'ORIG' ? 'is-orig' : ''}">
       <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
         <div style="display:flex; gap:10px; align-items:center;">
-          <img src="${getLogo(item.marca)}" style="width:32px; height:32px; object-fit:contain;" onerror="this.style.display='none'">
+          <div style="width:32px; height:32px; border-radius:8px; background:var(--bg-elev-2); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+             <img src="${getLogo(item.marca)}" style="width:100%; height:100%; object-fit:contain;" 
+                  onerror="this.onerror=null; this.src='/app/precios/logos/default.png';">
+          </div>
           <div>
             <div class="card-brand">${item.marca}</div>
             <div class="card-model">${item.modelo}</div>
@@ -181,7 +190,6 @@ function renderList() {
       <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-1); padding-top:12px;">
         <div class="card-price">${item.venta} Bs</div>
         <div style="display:flex; gap:6px;">
-          <!-- 🔥 AQUÍ EL CAMBIO: El botón de editar ya NO está envuelto en isAdmin -->
           <button class="edit-btn" onclick="window.editPrice('${item.id}')"><i class="fas fa-pen"></i></button>
           <button class="image-btn" onclick="window.openGoogle('${item.modelo}')"><i class="fab fa-google"></i></button>
           <button class="whatsapp-btn" onclick="window.shareWA('${item.id}')"><i class="fab fa-whatsapp"></i></button>
@@ -218,7 +226,7 @@ document.getElementById('quickFilters').addEventListener('click', (e) => {
 });
 
 // ==========================================
-// 7. MODO TÉCNICO CON CONFIRMACIÓN (CONECTADO AL MODAL DEL HTML)
+// 7. MODO TÉCNICO CON CONFIRMACIÓN
 // ==========================================
 const modalTechConfirm = document.getElementById('modalTechConfirm');
 const btnConfirmTech = document.getElementById('btnConfirmTech');
@@ -235,7 +243,6 @@ document.getElementById('techModeBtn')?.addEventListener('click', () => {
     renderList();
     return;
   }
-  // Si no está activo, mostramos el modal
   modalTechConfirm.classList.add('show');
 });
 
