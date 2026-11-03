@@ -22,15 +22,48 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand-500); border-bottom-color: var(--brand-500); animation: spin 1.2s linear infinite !important; }
     
-    /* 🔥 HERO BUTTONS - PEGADOS */
+    /* 🔥 HERO BUTTONS - REDISEÑADOS Y MODERNOS */
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-    .btn-hero { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 10px; border-radius: var(--r-lg); font-weight: 700; font-size: 12px; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 65px; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+    .btn-hero { 
+      display: flex; 
+      flex-direction: row; /* Horizontal */
+      align-items: center; 
+      justify-content: flex-start; 
+      padding: 10px 12px; 
+      border-radius: var(--r-lg); 
+      font-weight: 700; 
+      font-size: 12px; 
+      line-height: 1.2;
+      border: none; 
+      cursor: pointer; 
+      transition: var(--dur) var(--ease-spring); 
+      height: 60px; /* Altura compacta */
+      box-shadow: var(--shadow-sm); 
+      position: relative; 
+      overflow: hidden;
+    }
     .btn-hero:active { transform: scale(0.96); }
     .btn-hero-nuevo { background: linear-gradient(135deg, var(--brand-500), #FF8C00); color: white; box-shadow: var(--shadow-glow); }
     .btn-hero-venta { background: var(--bg-elev-1); color: var(--success-500); border: 1px solid var(--border-1); }
-    .icon-box { width: 26px; height: 26px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-bottom: auto; z-index: 2; box-shadow: var(--shadow-sm); }
+    
+    .icon-box { 
+      width: 28px; 
+      height: 28px; 
+      background: rgba(255, 255, 255, 0.2); 
+      border-radius: 8px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      padding: 4px; 
+      margin-right: 8px; 
+      flex-shrink: 0;
+      z-index: 2; 
+    }
+    .btn-hero-nuevo .icon-box { background: white; }
     .icon-box img { width: 100%; height: 100%; object-fit: contain; }
-    .icon-raw { width: 26px; height: 26px; object-fit: contain; margin-bottom: auto; z-index: 2; }
+    
+    .icon-raw { width: 28px; height: 28px; object-fit: contain; margin-right: 8px; flex-shrink: 0; z-index: 2; }
+    .btn-hero span { z-index: 2; text-align: left; }
 
     /* 🔥 STATS - PEGADAS */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
@@ -81,13 +114,15 @@
 
   <main class="app-container">
     <div class="app-content">
-      <!-- HERO -->
+      <!-- HERO REDISEÑADO -->
       <div class="hero-actions">
         <button class="btn-hero btn-hero-nuevo" id="nuevoReciboBtn">
-          <div class="icon-box"><img src="/app/icons/agregar.png" alt="Nuevo Equipo"></div><span>Nuevo<br>Equipo</span>
+          <div class="icon-box"><img src="/app/icons/agregar.png" alt="Nuevo Equipo"></div>
+          <span>Nuevo Equipo</span> <!-- 🔥 Sin <br> -->
         </button>
         <button class="btn-hero btn-hero-venta" id="ventaRapidaBtn">
-          <img src="/app/icons/venta.png" alt="Venta Rápida" class="icon-raw"><span>Venta<br>Rápida</span>
+          <img src="/app/icons/venta.png" alt="Venta Rápida" class="icon-raw">
+          <span>Venta Rápida</span> <!-- 🔥 Sin <br> -->
         </button>
       </div>
 
@@ -98,7 +133,7 @@
         <div class="stat-card"><div class="stat-value" id="statHoy" style="color: var(--brand-500);">—</div><div class="stat-label">Ingresos Hoy</div></div>
       </div>
 
-      <!-- BOTONES PDF Y NOTA CON TUS ICONOS -->
+      <!-- BOTONES PDF Y NOTA (AHORA CON TUS PNG) -->
       <div class="action-buttons">
         <button class="btn btn-secondary" id="btnPDFDia">
           <img src="/app/icons/pdf.png" width="16" height="16" alt="PDF"> PDF del Día
