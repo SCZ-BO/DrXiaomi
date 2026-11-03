@@ -2,9 +2,13 @@
 import { toast, haptic, tiempoRelativo, escapeHtml, initTheme, toggleTheme, formatBs } from './app-ui.js';
 import { requireAuth, logout } from './app-auth.js'; 
 import { db } from './firebase.js';
-import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy, doc, updateDoc, getDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy, doc, updateDoc, getDoc, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { abrirSheetTelefono, abrirSheetVenta } from './panel-modals.js';
 import { icono } from './icons.js';
+
+// 🔥 IMPORTACIONES PARA NOTIFICACIONES PUSH (FCM)
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+import { app } from './firebase.js';
 
 initTheme();
 
@@ -27,7 +31,36 @@ const paginationContainer = document.getElementById('paginationContainer');
 const appLoader = document.getElementById('appLoader');
 
 // ==========================================
-// NOTIFICACIONES (BADGE)
+// 🔥 NOTIFICACIONES PUSH (FCM)
+// ==========================================
+let messaging = null;
+try { messaging = getMessaging(app); } catch(e) { console.warn('FCM no disponible', e); }
+
+async function solicitarPermisoNotificaciones() {
+  if (!('Notification' in window)) return;
+  const permiso = await Notification.requestPermission();
+  if (permiso === 'granted') {
+    try {
+      // 🔥 PEGA TU VAPID KEY AQUÍ (la que empieza con B...)
+      const token = await getToken(messaging, { vapidKey: 'TU_VAPID_KEY_AQUI' });
+      
+      if (token && appState.sesion && appState.sesion.rol === 'admin') {
+        await updateDoc(doc(db, 'usuarios', appState.sesion.uid), { fcmToken: token });
+        console.log('Token FCM guardado:', token);
+      }
+    } catch(e) { console.error('Error al obtener token:', e); }
+  }
+}
+
+if (messaging) {
+  onMessage(messaging, (payload) => {
+    const { title, body } = payload.notification;
+    toast(`🔔 ${title}: ${body}`, 'info', 6000);
+  });
+}
+
+// ==========================================
+// NOTIFICACIONES (BADGE LOCAL)
 // ==========================================
 let contadorNotificaciones = parseInt(localStorage.getItem('drx_notif_count') || '0');
 function actualizarBadge() {
@@ -88,6 +121,7 @@ function renderLayout() {
 }
 
 renderLayout();
+actualizarBadge();
 
 // ==========================================
 // 2. AUTENTICACIÓN Y POPUPS
@@ -98,6 +132,11 @@ requireAuth((s) => {
     iniciarApp(); 
     const sub = document.getElementById('userInfo'); if(sub) sub.textContent = s.nombre;
     verificarPopups();
+    
+    // 🔥 SOLICITAR PERMISO DE NOTIFICACIONES SI ES ADMIN
+    if (s.rol === 'admin') {
+      solicitarPermisoNotificaciones();
+    }
   }, 500);
 });
 
@@ -118,7 +157,7 @@ async function verificarPopups() {
     if (docSnap.exists()) {
       const data = docSnap.data();
       const ahora = new Date().getTime();
-      if (data.activo && data.fechaExpiracion > ahora) {
+      if (data.activo && data.fechaExpiracion > ahora && !data.leidoPorTecnico) {
         document.getElementById('verPopupTitulo').textContent = data.titulo;
         document.getElementById('verPopupTexto').textContent = data.texto;
         document.getElementById('modalVerPopup').classList.add('show');
@@ -127,12 +166,10 @@ async function verificarPopups() {
   } catch(e) { console.log('No hay popups configurados.'); }
 }
 
-// 🔥 CONFIRMACIÓN DE LECTURA DEL POPUP
 document.getElementById('btnOkPopup')?.addEventListener('click', async () => {
   document.getElementById('modalVerPopup').classList.remove('show');
   haptic(15);
   try {
-    // Marcamos el popup como leído en Firebase
     await updateDoc(doc(db, 'config', 'popup_mensaje'), { leidoPorTecnico: true });
     toast('Mensaje del dueño confirmado', 'success');
   } catch(e) { console.log('Error al confirmar lectura'); }
@@ -160,7 +197,7 @@ function formatFechaCompleta(f) {
 export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
 
 // ==========================================
-// 4. EVENTOS (Ventas, Filtros, PDF, Notas, Popups)
+// 4. EVENTOS
 // ==========================================
 function configurarEventos() {
   document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
@@ -173,11 +210,7 @@ function configurarEventos() {
     backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.classList.remove('show'); });
   });
 
-  // 🔥 BOTÓN DE CIERRE DE CAJA (Abre el modal, NO redirige)
-  document.getElementById('btnPDFDia')?.addEventListener('click', () => { 
-    haptic(15); 
-    abrirCierreDeCaja(); 
-  });
+  document.getElementById('btnPDFDia')?.addEventListener('click', () => { haptic(15); abrirCierreDeCaja(); });
   document.getElementById('btnClosePreviewPDF')?.addEventListener('click', () => modalPreviewPDF.classList.remove('show'));
 
   document.getElementById('btnDescargarPDF')?.addEventListener('click', () => {
@@ -225,7 +258,6 @@ function configurarEventos() {
   document.getElementById('gastoPasajes')?.addEventListener('input', recalcularCierre);
   document.getElementById('toggleAlmuerzo')?.addEventListener('change', recalcularCierre);
 
-  // NOTAS AL DUEÑO
   document.getElementById('btnAbrirNotaDueno')?.addEventListener('click', () => { haptic(15); modalNotaDueno.classList.add('show'); });
   document.getElementById('btnCancelarNotaDueno')?.addEventListener('click', () => modalNotaDueno.classList.remove('show'));
   
@@ -241,7 +273,6 @@ function configurarEventos() {
     } catch (e) { toast('Error al guardar', 'error'); }
   });
 
-  // 🔥 ADMIN: ENVIAR MENSAJE POPUP AL TÉCNICO
   document.getElementById('btnAbrirMensajePopup')?.addEventListener('click', () => {
     document.getElementById('modalMensajePopup').classList.add('show');
   });
@@ -255,22 +286,12 @@ function configurarEventos() {
     haptic(20);
     try {
       const fechaExpiracion = dias > 0 ? new Date().getTime() + (dias * 24 * 60 * 60 * 1000) : 9999999999999;
-      await updateDoc(doc(db, 'config', 'popup_mensaje'), {
+      await setDoc(doc(db, 'config', 'popup_mensaje'), {
         titulo, texto, fechaExpiracion, activo: true, leidoPorTecnico: false, fechaCreacion: serverTimestamp()
       });
       toast('Mensaje enviado al técnico', 'success');
       document.getElementById('modalMensajePopup').classList.remove('show');
-    } catch(e) {
-      // Si el documento no existe, lo creamos
-      try {
-        const fechaExpiracion = dias > 0 ? new Date().getTime() + (dias * 24 * 60 * 60 * 1000) : 9999999999999;
-        await setDoc(doc(db, 'config', 'popup_mensaje'), {
-          titulo, texto, fechaExpiracion, activo: true, leidoPorTecnico: false, fechaCreacion: serverTimestamp()
-        });
-        toast('Mensaje enviado al técnico', 'success');
-        document.getElementById('modalMensajePopup').classList.remove('show');
-      } catch(err) { toast('Error al enviar', 'error'); }
-    }
+    } catch(err) { toast('Error al enviar', 'error'); }
   });
 
   // LÓGICA DE VENTA
