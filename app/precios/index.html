@@ -1,37 +1,190 @@
-// ==========================================
-// 🔥 LÓGICA DEL MODO TÉCNICO CON CONFIRMACIÓN
-// ==========================================
-let modoTecnicoActivo = false;
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0B" id="metaThemeColor">
+  <title>DR. Xiaomi · Catálogo</title>
 
-// Al cargar, verificamos si ya estaba activo en localStorage
-if (localStorage.getItem('drx_modo_tecnico') === 'true') {
-  modoTecnicoActivo = true;
-  document.getElementById('techModeBtn')?.classList.add('tech-active');
-}
+  <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-document.getElementById('techModeBtn')?.addEventListener('click', () => {
-  if (modoTecnicoActivo) {
-    // Si ya está activo, lo desactivamos directamente
-    modoTecnicoActivo = false;
-    localStorage.setItem('drx_modo_tecnico', 'false');
-    document.getElementById('techModeBtn')?.classList.remove('tech-active');
-    toast('Modo Técnico desactivado', 'info');
-    renderizarProductos(); // Vuelve a renderizar sin precios de compra
-  } else {
-    // Si no está activo, mostramos el modal de confirmación
-    document.getElementById('modalTechConfirm').classList.add('show');
-  }
-});
+  <!-- CSS UNIFICADOS -->
+  <link rel="stylesheet" href="../css/app-theme.css">
+  <link rel="stylesheet" href="../css/app-layouts.css">
+  <link rel="stylesheet" href="../css/app-components.css">
+  <link rel="manifest" href="/manifest.json">
 
-document.getElementById('btnCancelTech')?.addEventListener('click', () => {
-  document.getElementById('modalTechConfirm').classList.remove('show');
-});
+  <style>
+    /* 🔥 ANIMACIÓN DE CARGA SUAVE */
+    .fade-in {
+      animation: fadeIn 0.4s ease-in-out forwards;
+      opacity: 0;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-document.getElementById('btnConfirmTech')?.addEventListener('click', () => {
-  modoTecnicoActivo = true;
-  localStorage.setItem('drx_modo_tecnico', 'true');
-  document.getElementById('techModeBtn')?.classList.add('tech-active');
-  document.getElementById('modalTechConfirm').classList.remove('show');
-  toast('Modo Técnico activado. Mostrando precios de compra.', 'success');
-  renderizarProductos(); // Vuelve a renderizar con precios de compra
-});
+    /* 🔥 BUSCADOR PRO */
+    .search-bar { position: relative; margin-bottom: 16px; }
+    .search-bar input {
+      width: 100%; padding: 14px 16px 14px 48px;
+      border-radius: var(--r-lg); background: var(--bg-elev-2);
+      border: 1.5px solid var(--border-2); color: var(--text-1);
+      font-size: 15px; font-weight: 500; transition: all 0.2s ease;
+    }
+    .search-bar input:focus {
+      border-color: var(--brand-500); background: var(--bg-elev-1);
+      box-shadow: 0 0 0 4px var(--brand-100);
+    }
+    .search-bar .search-icon {
+      position: absolute; left: 16px; top: 50%;
+      transform: translateY(-50%); opacity: 0.5; pointer-events: none;
+    }
+    .search-bar .clear-btn {
+      position: absolute; right: 16px; top: 50%;
+      transform: translateY(-50%); background: none; border: none;
+      color: var(--text-3); cursor: pointer; display: none; font-size: 16px;
+    }
+    .search-bar .clear-btn.visible { display: block; }
+
+    /* 🔥 PANEL DE SUGERENCIAS */
+    .suggestions-panel {
+      position: absolute; top: 100%; left: 0; right: 0; margin-top: 8px;
+      background: var(--bg-elev-1); border: 1px solid var(--border-1);
+      border-radius: var(--r-lg); box-shadow: var(--shadow-lg);
+      max-height: 300px; overflow-y: auto; display: none; z-index: 60;
+    }
+    .suggestions-panel.active { display: block; }
+    .suggestion-item {
+      padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-1);
+      display: flex; align-items: center; gap: 12px; transition: background 0.2s;
+    }
+    .suggestion-item:hover { background: var(--bg-elev-2); }
+    .suggestion-item:last-child { border-bottom: none; }
+
+    /* 🔥 FILTROS */
+    .filter-chip {
+      padding: 8px 16px; border-radius: var(--r-full); font-size: 12px; font-weight: 600;
+      background: var(--bg-elev-1); color: var(--text-1); border: 1px solid var(--border-1);
+      cursor: pointer; white-space: nowrap; transition: 0.2s;
+    }
+    .filter-chip.active {
+      background: var(--brand-500); color: white; border-color: var(--brand-500);
+      box-shadow: 0 4px 14px var(--brand-100);
+    }
+
+    /* 🔥 TARJETAS DE PRODUCTO */
+    .product-card {
+      background: var(--bg-elev-1); border: 1px solid var(--border-1);
+      border-radius: var(--r-lg); padding: 16px; margin-bottom: 12px;
+      position: relative; box-shadow: var(--shadow-sm); transition: all 0.2s ease;
+    }
+    .product-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .product-card::before {
+      content: ''; position: absolute; left: 0; top: 16px; bottom: 16px;
+      width: 3px; background: var(--brand-500); border-radius: 0 3px 3px 0;
+    }
+    .product-card.is-orig::before { background: linear-gradient(180deg, #FFD700, #FFA500); }
+
+    .card-brand { font-size: 10px; font-weight: 800; color: var(--brand-500); text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-model { font-size: 16px; font-weight: 700; color: var(--text-1); line-height: 1.3; }
+    .card-type { padding: 4px 10px; border-radius: var(--r-sm); font-size: 10px; font-weight: 700; background: var(--bg-elev-2); color: var(--text-3); }
+    .card-type.oled { background: rgba(255,105,0,0.1); color: var(--brand-500); }
+    .card-type.orig { background: linear-gradient(135deg, #FFD700, #FFA500); color: #4A2800; }
+
+    .card-price { font-size: 22px; font-weight: 800; color: var(--text-1); letter-spacing: -0.5px; }
+
+    .image-btn, .whatsapp-btn, .edit-btn {
+      border: none; padding: 8px 12px; border-radius: var(--r-sm);
+      font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px;
+    }
+    .image-btn { background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-1); }
+    .whatsapp-btn { background: #25D366; color: white; }
+    .edit-btn { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+    /* Botón de Modo Técnico Activo */
+    .tech-active { background: var(--brand-100) !important; border-color: var(--brand-500) !important; }
+  </style>
+</head>
+<body>
+
+  <!-- LOADER CORREGIDO -->
+  <div class="loader-overlay" id="splash">
+    <div class="loader-logo-container">
+      <div class="loader-ring"></div>
+      <img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." class="loader-logo-img">
+    </div>
+    <div class="loader-text">Sincronizando...</div>
+  </div>
+
+  <main class="app-container" id="appRoot" style="opacity:0;">
+    
+    <!-- 🔥 HEADER Y NAV INYECTADOS DESDE LAYOUT.JS 🔥 -->
+    <script type="module">
+      import { montarLayout } from '../js/layout.js';
+      montarLayout({
+        titulo: 'Catálogo',
+        padre: '/app/',
+        activo: 'precios'
+      });
+    </script>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="app-content" id="mainScrollContainer">
+      
+      <!-- BOTONES DE ACCIÓN (Admin y Modo Técnico) -->
+      <div style="display: flex; gap: 8px; margin-bottom: 12px; justify-content: flex-end;">
+        <button class="icon-btn" id="adminEditBtn" style="display: none; width: 36px; height: 36px; background: var(--bg-elev-2);">
+          <i class="fas fa-list-ul" style="color: #3B82F6; font-size: 14px;"></i>
+        </button>
+        <button class="icon-btn" id="techModeBtn" style="width: 36px; height: 36px; background: var(--bg-elev-2);">
+          <img src="/app/icons/ver.png" width="16" height="16" alt="Ver">
+        </button>
+      </div>
+
+      <!-- BUSCADOR PRO -->
+      <div class="search-bar">
+        <img src="/app/icons/buscar.png" width="20" height="20" class="search-icon" alt="Buscar">
+        <input type="text" id="searchInput" placeholder="Buscar modelo, marca o compatibilidad..." autocomplete="off">
+        <button id="clearSearchBtn" class="clear-btn"><i class="fas fa-times"></i></button>
+        <div class="suggestions-panel" id="suggestionsPanel"></div>
+      </div>
+
+      <!-- FILTROS -->
+      <div class="filters-row" id="quickFilters" style="margin-bottom: 16px; gap: 8px;">
+        <button class="filter-chip active" data-filter="all">Todos</button>
+        <button class="filter-chip" data-filter="ORIG">ORIG</button>
+        <button class="filter-chip" data-filter="OLED">OLED</button>
+        <button class="filter-chip" data-filter="LCD">LCD</button>
+        <button class="filter-chip" data-filter="FAV">⭐ Favoritos</button>
+        <button class="filter-chip" data-filter="COMPAT">🔄 Compatibles</button>
+      </div>
+
+      <!-- RESULTADOS -->
+      <div id="resultsCount" style="font-size: 12px; color: var(--text-3); margin-bottom: 12px; display: flex; justify-content: space-between;"></div>
+      <div id="resultsContainer"></div>
+    </div>
+  </main>
+
+  <!-- 🔥 MODAL DE CONFIRMACIÓN PARA MODO TÉCNICO -->
+  <div class="sheet-backdrop" id="modalTechConfirm">
+    <div class="sheet" style="text-align: center;">
+      <div class="sheet-handle"></div>
+      <div style="font-size: 56px; color: var(--brand-500); margin-bottom: 16px;"><i class="fas fa-eye"></i></div>
+      <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 8px;">Activar Modo Técnico</h3>
+      <p style="font-size: 14px; color: var(--text-3); margin-bottom: 24px;">Al activar este modo, podrás ver los **precios de compra** de los repuestos. ¿Estás seguro de que quieres continuar?</p>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-secondary" id="btnCancelTech" style="flex: 1;">Cancelar</button>
+        <button class="btn btn-primary" id="btnConfirmTech" style="flex: 1;">Activar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./precios.js"></script>
+</body>
+</html>
