@@ -4,8 +4,10 @@ import { requireAuth, logout } from './app-auth.js';
 import { db } from './firebase.js';
 import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { abrirSheetTelefono, abrirSheetVenta } from './panel-modals.js';
-import { generarPDFDia } from './panel-pdf.js';
 import { icono } from './icons.js';
+
+// Importamos jsPDF directamente para generar el PDF aquí mismo y evitar fallos
+import { jsPDF } from "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.es.min.js";
 
 initTheme();
 
@@ -97,7 +99,7 @@ function iniciarApp() {
     const btnRep = document.querySelector('.nav-item[href="/app/reportes/"]'); 
     if(btnRep) btnRep.style.display = 'none';
     const btnPDF = document.getElementById('btnPDFDia'); 
-    if(btnPDF) btnPDF.style.display = 'none'; // Ocultar PDF a técnicos si así se desea
+    if(btnPDF) btnPDF.style.display = 'none'; 
   }
   configurarEventos(); 
   cargarDatos();
@@ -155,11 +157,8 @@ function configurarEventos() {
   document.getElementById('btnCloseSheet')?.addEventListener('click', () => reciboSheet.classList.remove('show'));
   document.getElementById('btnClosePago')?.addEventListener('click', () => document.getElementById('modalPago').classList.remove('show'));
   
-  // Cerrar modales al tocar el fondo oscuro
   document.querySelectorAll('.sheet-backdrop').forEach(backdrop => {
-    backdrop.addEventListener('click', (e) => {
-      if (e.target === backdrop) backdrop.classList.remove('show');
-    });
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.classList.remove('show'); });
   });
 
   // PDF Y NOTAS
@@ -184,7 +183,7 @@ function configurarEventos() {
   
   document.getElementById('btnDescargarPDF')?.addEventListener('click', () => {
     haptic(20);
-    generarPDFDia(); 
+    generarPDFReal(); 
     toast('PDF Descargado', 'success');
   });
 
@@ -195,7 +194,7 @@ function configurarEventos() {
     btn.disabled = true;
 
     try {
-      generarPDFDia(); 
+      generarPDFReal(); 
       const efectivo = parseFloat(document.getElementById('efectivoCaja').value) || 0;
       const totalSistema = calcularTotalDia();
       const diferencia = efectivo - totalSistema;
@@ -571,7 +570,61 @@ function abrirVistaPreviaPDF() {
 }
 
 // ==========================================
-// 7. LÓGICA DE PULL TO REFRESH (Jalar para actualizar)
+// 🔥 7. GENERADOR DE PDF REAL (Corregido)
+// ==========================================
+function generarPDFReal() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const hoy = new Date();
+  const fechaStr = `${String(hoy.getDate()).padStart(2,'0')}/${String(hoy.getMonth()+1).padStart(2,'0')}/${hoy.getFullYear()}`;
+  
+  doc.setFontSize(20);
+  doc.text("DR. XIAOMI SCZ", 14, 20);
+  doc.setFontSize(10);
+  doc.text("Reporte de Cierre Diario", 14, 26);
+  doc.setFontSize(12);
+  doc.text(`Fecha: ${fechaStr}`, 14, 34);
+
+  let y = 45;
+  let totalDia = 0;
+
+  doc.setFontSize(12);
+  doc.text("Detalle de Movimientos:", 14, y); y += 8;
+  doc.setFontSize(10);
+
+  // Reparaciones
+  appState.ordenes.forEach(o => {
+    if (o.estadoOrden === 'entregado') {
+      const fEntrega = parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha);
+      if (fEntrega && fEntrega.toDateString() === hoy.toDateString()) {
+        const monto = Number(o.montoCobrado) || Number(o.total) || 0;
+        totalDia += monto;
+        doc.text(`- Rep: ${o.marca} ${o.modelo} | ${o.cliente} | Bs. ${monto.toFixed(2)}`, 14, y);
+        y += 6;
+      }
+    }
+  });
+
+  // Ventas
+  appState.ventasHoy.forEach(v => {
+    const f = parsearFecha(v.fecha);
+    if (f && f.toDateString() === hoy.toDateString()) {
+      const monto = Number(v.monto) || 0;
+      totalDia += monto;
+      doc.text(`- Venta: ${v.concepto} | Bs. ${monto.toFixed(2)}`, 14, y);
+      y += 6;
+    }
+  });
+
+  y += 10;
+  doc.setFontSize(14);
+  doc.text(`TOTAL DEL DÍA: Bs. ${totalDia.toFixed(2)}`, 14, y);
+
+  doc.save(`Cierre_${hoy.toISOString().slice(0, 10)}.pdf`);
+}
+
+// ==========================================
+// 8. LÓGICA DE PULL TO REFRESH (Jalar para actualizar)
 // ==========================================
 let touchStartY = 0;
 let touchCurrentY = 0;
