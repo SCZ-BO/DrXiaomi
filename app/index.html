@@ -86,7 +86,7 @@
     /* CIERRE DE CAJA */
     #previewPDFContent { background: white; color: black; padding: 20px; border-radius: 4px; font-family: 'Helvetica', sans-serif; font-size: 11px; min-height: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
-    /* ESTILOS ADICIONALES PARA LOS NUEVOS MODALES */
+    /* ESTILOS PARA LOS SWITCHES */
     .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-elev-3); transition: .3s; border-radius: 34px; border: 1px solid var(--border-2); }
@@ -248,54 +248,55 @@
     </div>
   </div>
 
-  <!-- 5. MODAL CIERRE DE CAJA / PDF -->
+  <!-- 5. MODAL CIERRE DE CAJA / PDF (REDISEÑADO) -->
   <div class="sheet-backdrop" id="modalPreviewPDF">
-    <div class="sheet" style="max-height: 95vh; display: flex; flex-direction: column;">
+    <div class="sheet" style="max-height: 80vh; display: flex; flex-direction: column; padding: 14px;">
       <div class="sheet-handle"></div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1);"><i class="fas fa-cash-register" style="color: var(--brand-500);"></i> Cierre de Caja</h3>
-        <button class="icon-btn" id="btnClosePreviewPDF"><i class="fas fa-times"></i></button>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-1);"><i class="fas fa-cash-register" style="color: var(--brand-500);"></i> Cierre de Caja</h3>
+        <button class="icon-btn" id="btnClosePreviewPDF" style="width: 28px; height: 28px; background: var(--bg-elev-2);"><i class="fas fa-times" style="font-size: 12px;"></i></button>
       </div>
       
-      <div style="flex: 1; overflow-y: auto; background: var(--bg-elev-2); padding: 10px; border-radius: var(--r-md); margin-bottom: 12px;">
+      <div style="flex: 1; overflow-y: auto; background: var(--bg-elev-2); padding: 6px; border-radius: var(--r-md); margin-bottom: 10px; min-height: 100px;">
         <div id="previewPDFContent"></div>
       </div>
 
-      <!-- Gastos del Técnico -->
-      <div style="background: var(--bg-elev-1); padding: 12px; border-radius: var(--r-md); border: 1px solid var(--border-1); margin-bottom: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <label style="font-size: 13px; font-weight: 600; color: var(--text-1);">Pasajes (Bs.):</label>
-          <input type="number" id="gastoPasajes" class="input-field" placeholder="0.00" inputmode="decimal" style="width: 100px; padding: 8px; text-align: right; font-weight: 700; color: var(--brand-500);">
+      <div style="background: var(--bg-elev-1); padding: 10px; border-radius: var(--r-md); border: 1px solid var(--border-1); margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label style="font-size: 12px; font-weight: 600; color: var(--text-2);">Pasajes (Bs.):</label>
+          <input type="number" id="gastoPasajes" class="input-field" placeholder="0.00" inputmode="decimal" style="width: 70px; padding: 5px 8px; text-align: right; font-weight: 700; color: var(--brand-500); font-size: 12px; height: 30px;">
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <label style="font-size: 13px; font-weight: 600; color: var(--text-1);">Descontar Almuerzo (Bs. 20):</label>
-          <label class="toggle-switch">
+          <label style="font-size: 12px; font-weight: 600; color: var(--text-2);">Descontar Almuerzo (Bs. 20):</label>
+          <label class="toggle-switch" style="transform: scale(0.85); transform-origin: right center;">
             <input type="checkbox" id="toggleAlmuerzo">
             <span class="slider"></span>
           </label>
         </div>
       </div>
 
-      <div style="text-align: center; margin-bottom: 16px;">
-        <div style="font-size: 28px; font-weight: 900; color: var(--brand-500);" id="totalGlobal">Bs. 0.00</div>
-        <div style="font-size: 12px; color: var(--text-3); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Total Ingresos</div>
-      </div>
-      <div style="text-align: center; margin-bottom: 16px;">
-        <div style="font-size: 24px; font-weight: 900; color: var(--success-500);" id="gananciaGlobal">Bs. 0.00</div>
-        <div style="font-size: 12px; color: var(--success-500); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">Ganancia Libre (Efectivo)</div>
-      </div>
-      
-      <div style="text-align: center; margin-bottom: 16px;">
-        <div style="font-size: 24px; font-weight: 900; color: var(--info-500);" id="montoTransferir">Bs. 0.00</div>
-        <div style="font-size: 12px; color: var(--info-500); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">Monto a Transferir al Técnico</div>
-        <div style="font-size: 10px; color: var(--text-3); margin-top: 4px;">(Gastos + Diferencia de Efectivo)</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+        <div style="background: var(--bg-elev-2); padding: 8px; border-radius: var(--r-md); text-align: center;">
+          <div style="font-size: 16px; font-weight: 900; color: var(--brand-500);" id="totalGlobal">Bs. 0</div>
+          <div style="font-size: 9px; color: var(--text-3); text-transform: uppercase; font-weight: 700; margin-top: 2px;">Total Ingresos</div>
+        </div>
+        <div style="background: var(--bg-elev-2); padding: 8px; border-radius: var(--r-md); text-align: center;">
+          <div style="font-size: 16px; font-weight: 900; color: var(--success-500);" id="gananciaGlobal">Bs. 0</div>
+          <div style="font-size: 9px; color: var(--success-500); text-transform: uppercase; font-weight: 800; margin-top: 2px;">Ganancia Libre</div>
+        </div>
       </div>
       
-      <button class="btn btn-whatsapp" id="btnCerrarYEnviar" style="width: 100%; height: 48px; margin-bottom: 10px;">
-        <img src="/app/icons/whatsapp.png" width="20" height="20" style="margin-right: 8px;"> Cerrar Día y Enviar al Dueño
+      <div style="background: rgba(59, 130, 246, 0.1); padding: 10px; border-radius: var(--r-md); border: 1px solid var(--info-500); text-align: center; margin-bottom: 10px;">
+        <div style="font-size: 18px; font-weight: 900; color: var(--info-500);" id="montoTransferir">Bs. 0</div>
+        <div style="font-size: 9px; color: var(--info-500); text-transform: uppercase; font-weight: 800;">Monto a Transferir al Técnico</div>
+      </div>
+      
+      <button class="btn btn-whatsapp" id="btnCerrarYEnviar" style="width: 100%; height: 40px; margin-bottom: 6px; font-size: 13px; border-radius: var(--r-md);">
+        <img src="/app/icons/whatsapp.png" width="18" height="18" style="margin-right: 6px;"> Cerrar Día y Enviar al Dueño
       </button>
-      <button class="btn btn-secondary" id="btnDescargarPDF" style="width: 100%; height: 48px;">
-        <img src="/app/icons/pdf.png" width="20" height="20" style="margin-right: 8px;"> Solo Descargar PDF
+      <button class="btn btn-secondary" id="btnDescargarPDF" style="width: 100%; height: 40px; font-size: 13px; border-radius: var(--r-md);">
+        <img src="/app/icons/pdf.png" width="18" height="18" style="margin-right: 6px;"> Solo Descargar PDF
       </button>
     </div>
   </div>
