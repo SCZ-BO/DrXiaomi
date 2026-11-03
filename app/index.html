@@ -77,7 +77,7 @@
       display: grid; 
       grid-template-columns: 1fr 1fr; 
       gap: 10px;
-      max-height: 40vh; /* 🔥 Scroll interno */
+      max-height: 40vh;
       overflow-y: auto;
       padding-right: 4px;
     }
@@ -106,6 +106,13 @@
   <div class="loader-overlay" id="appLoader">
     <div class="loader-logo-container"><div class="loader-ring"></div><img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." class="loader-logo-img"></div>
     <div class="loader-text">Sincronizando...</div>
+  </div>
+
+  <!-- 🔥 INDICADOR PULL TO REFRESH (Jalar para actualizar) -->
+  <div id="pullToRefresh" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%) translateY(-60px); z-index: 9999; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); opacity: 0; pointer-events: none;">
+    <div style="background: var(--bg-elev-1); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); border: 1px solid var(--border-1);">
+      <img id="ptrIcon" src="/app/icons/estado-reparacion.png" width="24" height="24" alt="Refresh" style="transition: transform 0.3s;">
+    </div>
   </div>
 
   <main class="app-container">
@@ -160,7 +167,7 @@
     </div>
   </main>
 
-  <!-- ================= MODALES (Todos incluidos) ================= -->
+  <!-- ================= MODALES (Todos completos) ================= -->
 
   <!-- 1. MODAL VENTA RÁPIDA -->
   <div class="sheet-backdrop" id="modalVenta">
