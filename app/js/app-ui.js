@@ -1,11 +1,11 @@
 /* ============================================================
-   DR. XIAOMI · UI HELPERS (PRIME EDITION)
+   DR. XIAOMI · UI HELPERS (PRIME EDITION COMPLETA)
    Archivo: js/app-ui.js
    Descripción: Toasts, Loaders, Modales, Formateo, Tema, Haptics
    ============================================================ */
 
 /* ============================================================
-   1. SISTEMA DE TOASTS (Notificaciones flotantes)
+   1. SISTEMA DE TOASTS
    ============================================================ */
 let toastContainer = null;
 
@@ -14,7 +14,6 @@ function crearToastContainer() {
   toastContainer = document.createElement('div');
   toastContainer.className = 'toast-container';
   toastContainer.id = 'toastContainer';
-  // Estilos base por si el CSS tarda en cargar
   toastContainer.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none;';
   document.body.appendChild(toastContainer);
   return toastContainer;
@@ -30,7 +29,6 @@ export function toast(mensaje, tipo = 'info', duracion = 3000) {
   };
 
   const el = document.createElement('div');
-  // Usamos las clases de tu app-components.css
   el.className = `toast toast-${tipo}`;
   el.style.cssText = `
     display:flex; align-items:center; gap:12px; padding:12px 20px;
@@ -40,7 +38,6 @@ export function toast(mensaje, tipo = 'info', duracion = 3000) {
     transition:all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events:auto;
   `;
   
-  // Colores según el tipo
   if (tipo === 'success') el.style.borderLeftColor = 'var(--success-500)';
   if (tipo === 'error')   el.style.borderLeftColor = 'var(--danger-500)';
   if (tipo === 'warning') el.style.borderLeftColor = 'var(--warning-500)';
@@ -52,13 +49,11 @@ export function toast(mensaje, tipo = 'info', duracion = 3000) {
 
   container.appendChild(el);
 
-  // Animar entrada
   requestAnimationFrame(() => {
     el.style.transform = 'translateY(0)';
     el.style.opacity = '1';
   });
 
-  // Auto-cerrar
   setTimeout(() => {
     el.style.transform = 'translateY(-20px)';
     el.style.opacity = '0';
@@ -70,18 +65,13 @@ export function toast(mensaje, tipo = 'info', duracion = 3000) {
    2. HAPTIC FEEDBACK (Vibración)
    ============================================================ */
 export function haptic(pattern = 10) {
-  // Verificamos si el navegador soporta la vibración
   if ('vibrate' in navigator) {
     try { 
       const promesa = navigator.vibrate(pattern); 
-      // Si el navegador bloquea la vibración (ej. por falta de interacción),
-      // ignoramos el error silenciosamente para que el script no se rompa.
       if (promesa && typeof promesa.catch === 'function') {
         promesa.catch(() => {}); 
       }
-    } catch (e) {
-      // Ignorar
-    }
+    } catch (e) {}
   }
 }
 
@@ -99,13 +89,11 @@ export function aplicarTema(tema) {
   document.documentElement.setAttribute('data-theme', tema);
   localStorage.setItem(THEME_KEY, tema);
 
-  // Actualizar el meta tag de color (barra de estado del celular)
   const metaColor = document.getElementById('metaThemeColor');
   if (metaColor) {
     metaColor.setAttribute('content', tema === 'light' ? '#F8F8F9' : '#0A0A0B');
   }
 
-  // Actualizar icono si existe (usando FontAwesome por ahora, o tu PNG)
   const icono = document.querySelector('#btnTema i') || document.querySelector('#themeIcon');
   if (icono) {
     icono.className = tema === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
@@ -119,11 +107,124 @@ export function toggleTheme() {
   localStorage.setItem('drx_theme', nuevo); 
 }
 
-// Iniciar el tema automáticamente al importar este archivo
 initTheme();
 
 /* ============================================================
-   4. FORMATEO DE FECHAS Y NÚMEROS
+   4. LOADING OVERLAY (Para el Wizard)
+   ============================================================ */
+export function showLoading(texto = 'Cargando...') {
+  const loader = document.getElementById('appLoader');
+  if (loader) {
+    loader.classList.remove('hidden');
+    const txt = loader.querySelector('.loader-text');
+    if (txt) txt.textContent = texto;
+  }
+}
+
+export function hideLoading() {
+  const loader = document.getElementById('appLoader');
+  if (loader) {
+    loader.classList.add('hidden');
+  }
+}
+
+/* ============================================================
+   5. CONFIRMACIÓN (MODAL)
+   ============================================================ */
+export function confirmar(opciones = {}) {
+  const {
+    titulo = '¿Estás seguro?',
+    mensaje = '',
+    textoConfirmar = 'Confirmar',
+    textoCancelar = 'Cancelar',
+    peligro = false
+  } = opciones;
+
+  return new Promise((resolve) => {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.innerHTML = `
+      <div class="modal">
+        <h3 class="modal-title">${titulo}</h3>
+        ${mensaje ? `<p class="modal-text">${mensaje}</p>` : ''}
+        <div class="modal-actions">
+          <button class="btn btn-secondary" data-action="cancel">${textoCancelar}</button>
+          <button class="btn ${peligro ? 'btn-danger' : 'btn-primary'}" data-action="confirm">${textoConfirmar}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+    requestAnimationFrame(() => backdrop.classList.add('show'));
+
+    backdrop.addEventListener('click', (e) => {
+      const action = e.target.closest('[data-action]')?.dataset.action;
+      if (action === 'confirm') {
+        cerrar(true);
+      } else if (action === 'cancel' || e.target === backdrop) {
+        cerrar(false);
+      }
+    });
+
+    function cerrar(resultado) {
+      backdrop.classList.remove('show');
+      setTimeout(() => {
+        backdrop.remove();
+        resolve(resultado);
+      }, 250);
+    }
+  });
+}
+
+/* ============================================================
+   6. BOTTOM SHEET
+   ============================================================ */
+let currentSheet = null;
+
+export function openSheet(html) {
+  closeSheet();
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'sheet-backdrop';
+  backdrop.id = 'sheetBackdrop';
+
+  const sheet = document.createElement('div');
+  sheet.className = 'sheet';
+  sheet.id = 'sheetContent';
+  sheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    ${html}
+  `;
+
+  document.body.appendChild(backdrop);
+  document.body.appendChild(sheet);
+
+  requestAnimationFrame(() => {
+    backdrop.classList.add('show');
+    sheet.classList.add('show');
+  });
+
+  backdrop.addEventListener('click', closeSheet);
+
+  currentSheet = sheet;
+  return sheet;
+}
+
+export function closeSheet() {
+  const backdrop = document.getElementById('sheetBackdrop');
+  const sheet = document.getElementById('sheetContent');
+
+  if (backdrop) backdrop.classList.remove('show');
+  if (sheet) sheet.classList.remove('show');
+
+  setTimeout(() => {
+    if (backdrop) backdrop.remove();
+    if (sheet) sheet.remove();
+    currentSheet = null;
+  }, 400);
+}
+
+/* ============================================================
+   7. FORMATEO DE FECHAS Y NÚMEROS
    ============================================================ */
 export function formatFecha(fecha, incluirHora = true) {
   if (!fecha) return '-';
@@ -176,7 +277,7 @@ export function formatBs(monto) {
 }
 
 /* ============================================================
-   5. HELPERS DE STRINGS
+   8. HELPERS DE STRINGS
    ============================================================ */
 export function escapeHtml(texto) {
   if (!texto) return '';
@@ -203,7 +304,7 @@ export function iniciales(nombre) {
 }
 
 /* ============================================================
-   6. NAVEGACIÓN Y UTILIDADES
+   9. NAVEGACIÓN Y UTILIDADES
    ============================================================ */
 export function goTo(url) {
   window.location.href = url;
@@ -211,23 +312,4 @@ export function goTo(url) {
 
 export function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/* ============================================================
-   7. LOADING OVERLAY (Control del loader)
-   ============================================================ */
-export function showLoading(texto = 'Cargando...') {
-  const loader = document.getElementById('appLoader');
-  if (loader) {
-    loader.classList.remove('hidden');
-    const txt = loader.querySelector('.loader-text');
-    if (txt) txt.textContent = texto;
-  }
-}
-
-export function hideLoading() {
-  const loader = document.getElementById('appLoader');
-  if (loader) {
-    loader.classList.add('hidden');
-  }
 }
