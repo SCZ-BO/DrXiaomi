@@ -1,6 +1,6 @@
 // /app/cierre/cierre.js
 import { requireAuth, logout } from '../js/app-auth.js';
-import { toast, haptic, initTheme, formatBs, escapeHtml } from '../js/app-ui.js';
+import { toast, haptic, initTheme, toggleTheme, formatBs, escapeHtml } from '../js/app-ui.js';
 import { db } from '../js/firebase.js';
 import { 
   collection, query, where, getDocs, addDoc, serverTimestamp, 
@@ -17,14 +17,13 @@ let extrasId = 0;
 requireAuth(async (s) => {
   sesion = s;
   
-  // Botón de volver y tema
+  // Botón de volver
   document.getElementById('backBtn')?.addEventListener('click', () => window.location.href = '/app/');
+  
+  // 🔥 CORRECCIÓN DEL BOTÓN DE TEMA
   document.getElementById('btnTema')?.addEventListener('click', () => {
-    const act = document.documentElement.getAttribute('data-theme'), nue = act === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', nue); 
-    localStorage.setItem('theme', nue);
-    const meta = document.getElementById('metaThemeColor');
-    if(meta) meta.setAttribute('content', nue === 'light' ? '#F8F8F9' : '#0A0A0B');
+    haptic(10);
+    toggleTheme();
   });
 
   await cargarReparacionesHoy();
@@ -40,9 +39,13 @@ async function cargarReparacionesHoy() {
   if(subtitle) subtitle.textContent = `Fecha: ${hoy.toLocaleDateString('es-BO')}`;
 
   try {
+    // Buscamos todos los recibos entregados
     const q = query(collection(db, 'recibos'), where('estadoOrden', '==', 'entregado'));
     const snapshot = await getDocs(q);
+    
+    // Reiniciamos los datos
     reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0, ganancia: 0 };
+    const detalleReparaciones = [];
 
     snapshot.forEach(doc => {
       const d = doc.data();
@@ -50,6 +53,7 @@ async function cargarReparacionesHoy() {
       if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
       else if (fechaD) fechaD = new Date(fechaD);
 
+      // Filtramos solo los entregados hoy
       if (fechaD >= hoy && fechaD < manana) {
         const monto = Number(d.montoCobrado) || 0;
         const costoRepuesto = Number(d.costoRepuesto) || 0;
@@ -63,14 +67,46 @@ async function cargarReparacionesHoy() {
         if (metodo.includes('efectivo')) reparacionesData.efectivo += monto;
         else if (metodo.includes('qr')) reparacionesData.qr += monto;
         else reparacionesData.efectivo += monto;
+
+        detalleReparaciones.push({
+          concepto: `${d.marca} ${d.modelo} - ${d.cliente}`,
+          monto: monto,
+          metodo: d.metodoPago || 'Efectivo'
+        });
       }
     });
 
+    // Llenamos los IDs del HTML
     document.getElementById('cantReparaciones').textContent = reparacionesData.cantidad;
     document.getElementById('totalReparaciones').textContent = formatBs(reparacionesData.total);
     document.getElementById('totalEfectivo').textContent = formatBs(reparacionesData.efectivo);
     document.getElementById('totalQR').textContent = formatBs(reparacionesData.qr);
+
+    renderizarHistorial(detalleReparaciones);
+
   } catch (error) { console.error(error); toast('Error al cargar reparaciones', 'error'); }
+}
+
+// Renderizar el historial de reparaciones entregadas
+function renderizarHistorial(reparaciones) {
+  const contenedor = document.getElementById('listaVentasDelDia');
+  if (!contenedor) return;
+  let html = '';
+
+  reparaciones.forEach(r => {
+    html += `
+      <div class="movimiento-item">
+        <div class="movimiento-info">
+          <div class="movimiento-concepto">${r.concepto}</div>
+          <div class="movimiento-metodo">${r.metodo}</div>
+        </div>
+        <div class="movimiento-monto">Bs. ${r.monto.toFixed(2)}</div>
+      </div>
+    `;
+  });
+
+  if (html === '') html = `<p style="text-align:center; color:var(--text-3); padding:20px;">No hay movimientos registrados hoy.</p>`;
+  contenedor.innerHTML = html;
 }
 
 async function cargarInventario() {
@@ -161,111 +197,132 @@ function calcularGananciaTotal() {
 function actualizarTotales() {
   const totalExtras = calcularTotalExtras();
   const totalInventario = calcularTotalInventario();
+  
+  // Suma de todo (Reparaciones + Accesorios + Extras)
   const totalGlobal = reparacionesData.total + totalExtras + totalInventario;
-  const gananciaGlobal = calcularGananciaTotal();
+  
+  // Ganancia Bruta (sin restar gastos)
+  const gananciaBruta = calcularGananciaTotal();
 
+  // Leer gastos
   const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
   const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0;
   const totalGastos = pasajes + almuerzo;
 
-  document.getElementById('totalGlobal').textContent = formatBs(totalGlobal);
-  document.getElementById('gananciaGlobal').textContent = formatBs(gananciaGlobal - totalGastos);
+  // Ganancia Real = Ganancia Bruta - Gastos
+  const gananciaReal = gananciaBruta - totalGastos;
 
-  const efectivoFinal = reparacionesData.efectivo - totalGastos;
-  // Si tienes un elemento con id 'efectivoFinalDisplay', puedes actualizarlo aquí.
+  // Actualizar UI
+  document.getElementById('totalGlobal').textContent = formatBs(totalGlobal);
+  document.getElementById('gananciaGlobal').textContent = formatBs(gananciaReal);
+  
+  // Mostrar el total de ventas de accesorios en el resumen general
+  document.getElementById('totalVentasAccesorios').textContent = formatBs(totalInventario);
+  
+  // Mostrar el total de ventas extras manuales
+  document.getElementById('totalVentasExtras').textContent = formatBs(totalExtras);
 }
 
 document.getElementById('btnAddExtra')?.addEventListener('click', () => { haptic(10); agregarExtra(); });
-
 document.getElementById('gastoPasajes')?.addEventListener('input', actualizarTotales);
 document.getElementById('toggleAlmuerzo')?.addEventListener('change', actualizarTotales);
 
-document.getElementById('btnGuardarCierre')?.addEventListener('click', async () => {
+// 🔥 GENERADOR DE PDF
+function generarPDF() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  pdf.setFillColor(255, 105, 0); pdf.rect(0, 0, 210, 30, 'F');
+  pdf.setTextColor(255, 255, 255); pdf.setFontSize(20); pdf.text('DR. XIAOMI SCZ', 14, 15);
+  pdf.setFontSize(10); pdf.text('Cierre de Caja Diario', 14, 22);
+  pdf.setTextColor(0, 0, 0); pdf.setFontSize(12);
+  pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, 14, 45);
+  pdf.text(`Realizado por: ${sesion.nombre}`, 14, 52);
+
+  pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Reparaciones', 14, 65);
+  pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
+  pdf.text(`- Cantidad entregada: ${reparacionesData.cantidad}`, 18, 72);
+  pdf.text(`- Total Cobrado: ${formatBs(reparacionesData.total)}`, 18, 79);
+
+  let y = 90;
+  if (ventasInventario.length > 0) {
+    pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Accesorios Vendidos', 14, y); y += 7;
+    pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
+    ventasInventario.forEach(v => { pdf.text(`- ${v.cantidad}x ${v.nombre}: ${formatBs(v.precio * v.cantidad)}`, 18, y); y += 7; });
+    y += 5;
+  }
+
+  if (extras.length > 0) {
+    pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Ventas Extras', 14, y); y += 7;
+    pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
+    extras.forEach(ext => { if (ext.desc || ext.monto > 0) { pdf.text(`- ${ext.desc || 'Venta'}: ${formatBs(ext.monto)}`, 18, y); y += 7; } });
+    y += 5;
+  }
+
+  const totalGlobal = reparacionesData.total + calcularTotalExtras() + calcularTotalInventario();
+  const gananciaReal = calcularGananciaTotal() - (parseFloat(document.getElementById('gastoPasajes')?.value) || 0) - (document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0);
+
+  pdf.setFillColor(240, 240, 240); pdf.rect(14, y, 182, 20, 'F');
+  pdf.setFontSize(16); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(255, 105, 0);
+  pdf.text(`TOTAL DEL DÍA: ${formatBs(totalGlobal)}`, 105, y + 13, { align: 'center' });
+
+  pdf.setFillColor(16, 185, 129); pdf.rect(14, y + 22, 182, 20, 'F');
+  pdf.setTextColor(255, 255, 255); pdf.text(`GANANCIA NETA: ${formatBs(gananciaReal)}`, 105, y + 35, { align: 'center' });
+
+  pdf.setFontSize(8); pdf.setTextColor(120, 120, 120); pdf.text('Generado automáticamente por DR. Xiaomi', 105, 280, { align: 'center' });
+
+  pdf.save(`Cierre_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+// BOTÓN 1: Solo Descargar PDF
+document.getElementById('btnDescargarPDF')?.addEventListener('click', () => {
   haptic(15);
+  generarPDF();
+  toast('PDF Descargado', 'success');
+});
+
+// BOTÓN 2: Cerrar Día (Guarda + Genera PDF + WhatsApp)
+document.getElementById('btnCerrarDia')?.addEventListener('click', async () => {
+  haptic(20);
   const totalExtras = calcularTotalExtras();
   const totalInventario = calcularTotalInventario();
   const totalGlobal = reparacionesData.total + totalExtras + totalInventario;
   
   const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
   const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0;
-  const gananciaGlobal = calcularGananciaTotal() - pasajes - almuerzo;
+  const gananciaReal = calcularGananciaTotal() - pasajes - almuerzo;
 
-  if (totalGlobal === 0) { toast('No hay ingresos para guardar', 'warning'); return; }
+  if (totalGlobal === 0) { toast('No hay ingresos para cerrar el día', 'warning'); return; }
 
   try {
+    // 1. Guardar en Firebase
     await addDoc(collection(db, 'cierres'), {
       fecha: serverTimestamp(), realizadoPor: sesion.nombre,
       reparaciones: reparacionesData, ventasInventario: ventasInventario, extras: extras,
-      totalInventario, totalExtras, totalGlobal, gananciaGlobal,
+      totalInventario, totalExtras, totalGlobal, gananciaReal,
       gastoPasajes: pasajes, gastoAlmuerzo: almuerzo
     });
 
+    // 2. Actualizar Stock
     for (const v of ventasInventario) {
       await updateDoc(doc(db, 'productos', v.id), { stock: increment(-v.cantidad) });
     }
 
-    toast('Cierre guardado y stock actualizado', 'success');
-    setTimeout(() => window.location.href = '/app/', 1500);
-  } catch (error) { console.error(error); toast('Error al guardar cierre', 'error'); }
-});
+    // 3. Generar PDF
+    generarPDF();
 
-document.getElementById('btnEnviarWhatsApp')?.addEventListener('click', async () => {
-  haptic(15);
-  const totalExtras = calcularTotalExtras();
-  const totalInventario = calcularTotalInventario();
-  const totalGlobal = reparacionesData.total + totalExtras + totalInventario;
-  const gananciaGlobal = calcularGananciaTotal();
-
-  if (totalGlobal === 0) { toast('No hay ingresos para generar el cierre', 'warning'); return; }
-
-  try {
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-
-    pdf.setFillColor(255, 105, 0); pdf.rect(0, 0, 210, 30, 'F');
-    pdf.setTextColor(255, 255, 255); pdf.setFontSize(20); pdf.text('DR. XIAOMI SCZ', 14, 15);
-    pdf.setFontSize(10); pdf.text('Cierre de Caja Diario', 14, 22);
-    pdf.setTextColor(0, 0, 0); pdf.setFontSize(12);
-    pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, 14, 45);
-    pdf.text(`Realizado por: ${sesion.nombre}`, 14, 52);
-
-    pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Reparaciones', 14, 65);
-    pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
-    pdf.text(`- Cantidad entregada: ${reparacionesData.cantidad}`, 18, 72);
-    pdf.text(`- Total Cobrado: ${formatBs(reparacionesData.total)}`, 18, 79);
-
-    let y = 90;
-    if (ventasInventario.length > 0) {
-      pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Accesorios Vendidos', 14, y); y += 7;
-      pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
-      ventasInventario.forEach(v => { pdf.text(`- ${v.cantidad}x ${v.nombre}: ${formatBs(v.precio * v.cantidad)}`, 18, y); y += 7; });
-      y += 5;
-    }
-
-    if (extras.length > 0) {
-      pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Ventas Extras', 14, y); y += 7;
-      pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
-      extras.forEach(ext => { if (ext.desc || ext.monto > 0) { pdf.text(`- ${ext.desc || 'Venta'}: ${formatBs(ext.monto)}`, 18, y); y += 7; } });
-      y += 5;
-    }
-
-    pdf.setFillColor(240, 240, 240); pdf.rect(14, y, 182, 20, 'F');
-    pdf.setFontSize(16); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(255, 105, 0);
-    pdf.text(`TOTAL DEL DÍA: ${formatBs(totalGlobal)}`, 105, y + 13, { align: 'center' });
-
-    pdf.setFillColor(16, 185, 129); pdf.rect(14, y + 22, 182, 20, 'F');
-    pdf.setTextColor(255, 255, 255); pdf.text(`GANANCIA NETA: ${formatBs(gananciaGlobal)}`, 105, y + 35, { align: 'center' });
-
-    pdf.setFontSize(8); pdf.setTextColor(120, 120, 120); pdf.text('Generado automáticamente por DR. Xiaomi', 105, 280, { align: 'center' });
-
-    pdf.save(`Cierre_${new Date().toISOString().slice(0,10)}.pdf`);
-    toast('PDF generado. Adjúntalo en WhatsApp.', 'success');
-
+    // 4. WhatsApp
+    const mensaje = `Hola, le envío el Cierre de Caja del día ${new Date().toLocaleDateString('es-BO')}.\n\n*Total del día: ${formatBs(totalGlobal)}*\n*Ganancia Neta: ${formatBs(gananciaReal)}*\n\nLe adjunto el PDF con el detalle.`;
     setTimeout(() => {
-      const mensaje = `Hola, le envío el Cierre de Caja del día ${new Date().toLocaleDateString('es-BO')}.\n\n*Total del día: ${formatBs(totalGlobal)}*\n*Ganancia Neta: ${formatBs(gananciaGlobal)}*\n\nLe adjunto el PDF con el detalle.`;
       window.open(`https://wa.me/59175589308?text=${encodeURIComponent(mensaje)}`, '_blank');
     }, 1000);
-  } catch (error) { console.error(error); toast('Error al generar el PDF', 'error'); }
+
+    toast('Día cerrado, PDF generado y listo para enviar.', 'success');
+    setTimeout(() => window.location.href = '/app/', 2000);
+  } catch (error) { 
+    console.error(error); 
+    toast('Error al cerrar el día', 'error'); 
+  }
 });
 
 setTimeout(() => { document.getElementById('appLoader')?.classList.add('hidden'); }, 2500);
