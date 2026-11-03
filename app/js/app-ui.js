@@ -70,8 +70,18 @@ export function toast(mensaje, tipo = 'info', duracion = 3000) {
    2. HAPTIC FEEDBACK (Vibración)
    ============================================================ */
 export function haptic(pattern = 10) {
+  // Verificamos si el navegador soporta la vibración
   if ('vibrate' in navigator) {
-    try { navigator.vibrate(pattern); } catch (e) {}
+    try { 
+      const promesa = navigator.vibrate(pattern); 
+      // Si el navegador bloquea la vibración (ej. por falta de interacción),
+      // ignoramos el error silenciosamente para que el script no se rompa.
+      if (promesa && typeof promesa.catch === 'function') {
+        promesa.catch(() => {}); 
+      }
+    } catch (e) {
+      // Ignorar
+    }
   }
 }
 
@@ -108,6 +118,7 @@ export function toggleTheme() {
   document.documentElement.setAttribute('data-theme', nuevo);
   localStorage.setItem('drx_theme', nuevo); 
 }
+
 // Iniciar el tema automáticamente al importar este archivo
 initTheme();
 
@@ -197,8 +208,13 @@ export function iniciales(nombre) {
 export function goTo(url) {
   window.location.href = url;
 }
+
+export function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 /* ============================================================
-   LOADING OVERLAY (Para el Wizard)
+   7. LOADING OVERLAY (Control del loader)
    ============================================================ */
 export function showLoading(texto = 'Cargando...') {
   const loader = document.getElementById('appLoader');
@@ -214,8 +230,4 @@ export function hideLoading() {
   if (loader) {
     loader.classList.add('hidden');
   }
-}
-
-export function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
