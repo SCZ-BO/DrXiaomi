@@ -22,7 +22,7 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand-500); border-bottom-color: var(--brand-500); animation: spin 1.2s linear infinite !important; }
     
-    /* 🔥 HERO BUTTONS */
+    /* HERO BUTTONS */
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
     .btn-hero { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; padding: 10px 12px; border-radius: var(--r-lg); font-weight: 700; font-size: 12px; line-height: 1.2; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 60px; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
     .btn-hero:active { transform: scale(0.96); }
@@ -34,20 +34,20 @@
     .icon-raw { width: 28px; height: 28px; object-fit: contain; margin-right: 8px; flex-shrink: 0; z-index: 2; }
     .btn-hero span { z-index: 2; text-align: left; }
 
-    /* 🔥 STATS */
+    /* STATS */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
     .stat-card { background: var(--bg-elev-1); border-radius: var(--r-md); padding: 8px 6px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--border-1); }
     .stat-value { font-size: 18px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 2px; letter-spacing: -0.5px; }
     .stat-label { font-size: 9px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* 🔥 BOTONES PDF Y NOTA */
+    /* BOTONES PDF Y NOTA */
     .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .action-buttons .btn { padding: 8px; font-size: 12px; border-radius: var(--r-md); height: 36px; display: flex; align-items: center; justify-content: center; }
     .action-buttons .btn img { margin-right: 6px; }
 
     .section-title { font-size: 13px; font-weight: 800; color: var(--text-1); margin-bottom: 6px; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
     
-    /* 🔥 TARJETAS */
+    /* TARJETAS */
     .ingreso-card { background: var(--bg-elev-1); border-radius: var(--r-md); padding: 10px; margin-bottom: 6px; transition: var(--dur) var(--ease); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-1); border-left-width: 4px; border-left-style: solid; }
     .ingreso-card:active { transform: scale(0.98); background: var(--bg-elev-2); }
     .icon-circle { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 10px; flex-shrink: 0; }
@@ -58,47 +58,41 @@
     .monto { font-size: 15px; font-weight: 800; }
     .estado-chip { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; text-transform: uppercase; }
 
-    /* 🔥 PAGINACIÓN */
+    /* PAGINACIÓN */
     .pagination-container { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 12px; margin-bottom: 20px; }
     .page-btn { background: var(--bg-elev-1); border: 1px solid var(--border-1); color: var(--text-1); width: 32px; height: 32px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; cursor: pointer; transition: var(--dur); }
     .page-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: white; box-shadow: var(--shadow-glow); }
     .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
     .page-nav { background: var(--bg-elev-2); border: 1px solid var(--border-1); color: var(--text-1); padding: 0 12px; height: 32px; border-radius: var(--r-md); font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    /* 🔥 BUSCADOR */
+    /* BUSCADOR */
     .search-bar { margin-bottom: 8px; }
     .search-bar input { padding: 8px 12px 8px 36px; font-size: 13px; }
     .search-bar img { left: 12px; width: 16px; height: 16px; }
     .filters-row { margin-bottom: 12px; gap: 6px; }
     .chip-interactive { padding: 6px 12px; font-size: 12px; }
 
-    /* 🔥 ARREGLO DEL SCROLL PARA LA VENTA RÁPIDA */
-    #gridAccesorios {
-      display: grid; 
-      grid-template-columns: 1fr 1fr; 
-      gap: 10px;
-      max-height: 40vh;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
+    /* SCROLL VENTA RÁPIDA */
+    #gridAccesorios { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 40vh; overflow-y: auto; padding-right: 4px; }
     #gridAccesorios::-webkit-scrollbar { width: 4px; }
     #gridAccesorios::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
-    
-    .accesorio-card {
-      background: var(--bg-elev-2); border: 2px solid transparent; border-radius: var(--r-md);
-      padding: 8px; cursor: pointer; transition: 0.2s; text-align: center; position: relative;
-    }
-    .accesorio-card.seleccionado {
-      border-color: var(--brand-500); background: color-mix(in srgb, var(--brand-500) 10%, var(--bg-elev-2));
-      box-shadow: 0 0 12px var(--brand-100);
-    }
+    .accesorio-card { background: var(--bg-elev-2); border: 2px solid transparent; border-radius: var(--r-md); padding: 8px; cursor: pointer; transition: 0.2s; text-align: center; position: relative; }
+    .accesorio-card.seleccionado { border-color: var(--brand-500); background: color-mix(in srgb, var(--brand-500) 10%, var(--bg-elev-2)); box-shadow: 0 0 12px var(--brand-100); }
     .accesorio-card img { width: 100%; height: 70px; object-fit: contain; border-radius: 6px; margin-bottom: 6px; }
     .accesorio-card .nombre { font-size: 11px; font-weight: 700; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .accesorio-card .precio { font-size: 12px; font-weight: 800; color: var(--success-500); }
     .accesorio-card .stock { font-size: 10px; color: var(--text-3); }
 
-    /* 🔥 MODAL DE CIERRE DE CAJA */
+    /* CIERRE DE CAJA */
     #previewPDFContent { background: white; color: black; padding: 20px; border-radius: 4px; font-family: 'Helvetica', sans-serif; font-size: 11px; min-height: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+    /* ESTILOS ADICIONALES PARA LOS NUEVOS MODALES */
+    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-elev-3); transition: .3s; border-radius: 34px; border: 1px solid var(--border-2); }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--success-500); border-color: var(--success-500); }
+    input:checked + .slider:before { transform: translateX(22px); }
   </style>
 </head>
 <body>
@@ -108,7 +102,6 @@
     <div class="loader-text">Sincronizando...</div>
   </div>
 
-  <!-- 🔥 INDICADOR PULL TO REFRESH (Jalar para actualizar) -->
   <div id="pullToRefresh" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%) translateY(-60px); z-index: 9999; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); opacity: 0; pointer-events: none;">
     <div style="background: var(--bg-elev-1); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); border: 1px solid var(--border-1);">
       <img id="ptrIcon" src="/app/icons/estado-reparacion.png" width="24" height="24" alt="Refresh" style="transition: transform 0.3s;">
@@ -139,7 +132,7 @@
       <!-- BOTONES PDF Y NOTA -->
       <div class="action-buttons">
         <button class="btn btn-secondary" id="btnPDFDia">
-          <img src="/app/icons/pdf.png" width="16" height="16" alt="PDF"> PDF del Día
+          <img src="/app/icons/pdf.png" width="16" height="16" alt="PDF"> Cierre de Caja
         </button>
         <button class="btn btn-secondary" id="btnAbrirNotaDueno">
           <img src="/app/icons/nota.png" width="16" height="16" alt="Nota"> Nota al Dueño
@@ -257,7 +250,7 @@
 
   <!-- 5. MODAL CIERRE DE CAJA / PDF -->
   <div class="sheet-backdrop" id="modalPreviewPDF">
-    <div class="sheet" style="max-height: 90vh; display: flex; flex-direction: column;">
+    <div class="sheet" style="max-height: 95vh; display: flex; flex-direction: column;">
       <div class="sheet-handle"></div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1);"><i class="fas fa-cash-register" style="color: var(--brand-500);"></i> Cierre de Caja</h3>
@@ -268,21 +261,42 @@
         <div id="previewPDFContent"></div>
       </div>
 
-      <!-- Cuadre de caja -->
+      <!-- Gastos del Técnico -->
       <div style="background: var(--bg-elev-1); padding: 12px; border-radius: var(--r-md); border: 1px solid var(--border-1); margin-bottom: 12px;">
-        <label class="input-label" style="margin-bottom: 4px; display:block;">¿Cuánto efectivo tienes en caja?</label>
-        <input type="number" id="efectivoCaja" class="input-field" placeholder="Monto en Bs." inputmode="decimal" style="font-size: 16px; font-weight: 800; color: var(--brand-500);">
-        <div id="diferenciaCaja" style="font-size: 12px; margin-top: 6px; font-weight: 700; display: none;"></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <label style="font-size: 13px; font-weight: 600; color: var(--text-1);">Pasajes (Bs.):</label>
+          <input type="number" id="gastoPasajes" class="input-field" placeholder="0.00" inputmode="decimal" style="width: 100px; padding: 8px; text-align: right; font-weight: 700; color: var(--brand-500);">
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label style="font-size: 13px; font-weight: 600; color: var(--text-1);">Descontar Almuerzo (Bs. 20):</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleAlmuerzo">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-bottom: 16px;">
+        <div style="font-size: 28px; font-weight: 900; color: var(--brand-500);" id="totalGlobal">Bs. 0.00</div>
+        <div style="font-size: 12px; color: var(--text-3); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Total Ingresos</div>
+      </div>
+      <div style="text-align: center; margin-bottom: 16px;">
+        <div style="font-size: 24px; font-weight: 900; color: var(--success-500);" id="gananciaGlobal">Bs. 0.00</div>
+        <div style="font-size: 12px; color: var(--success-500); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">Ganancia Libre (Efectivo)</div>
       </div>
       
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <button class="btn btn-secondary" id="btnDescargarPDF" style="height: 48px;">
-          <i class="fas fa-download"></i> Descargar
-        </button>
-        <button class="btn btn-whatsapp" id="btnEnviarPDFDueno" style="height: 48px;">
-          <i class="fab fa-whatsapp"></i> Enviar al Dueño
-        </button>
+      <div style="text-align: center; margin-bottom: 16px;">
+        <div style="font-size: 24px; font-weight: 900; color: var(--info-500);" id="montoTransferir">Bs. 0.00</div>
+        <div style="font-size: 12px; color: var(--info-500); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">Monto a Transferir al Técnico</div>
+        <div style="font-size: 10px; color: var(--text-3); margin-top: 4px;">(Gastos + Diferencia de Efectivo)</div>
       </div>
+      
+      <button class="btn btn-whatsapp" id="btnCerrarYEnviar" style="width: 100%; height: 48px; margin-bottom: 10px;">
+        <img src="/app/icons/whatsapp.png" width="20" height="20" style="margin-right: 8px;"> Cerrar Día y Enviar al Dueño
+      </button>
+      <button class="btn btn-secondary" id="btnDescargarPDF" style="width: 100%; height: 48px;">
+        <img src="/app/icons/pdf.png" width="20" height="20" style="margin-right: 8px;"> Solo Descargar PDF
+      </button>
     </div>
   </div>
 
