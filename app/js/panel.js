@@ -1,5 +1,5 @@
 // /app/js/panel.js
-import { toast, haptic, tiempoRelativo, escapeHtml, initTheme } from './app-ui.js';
+import { toast, haptic, tiempoRelativo, escapeHtml, initTheme, toggleTheme } from './app-ui.js';
 import { requireAuth, logout } from './app-auth.js'; 
 import { db } from './firebase.js';
 import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -146,7 +146,25 @@ export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('s
 function configurarEventos() {
   document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
   document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
+  
+  // 🔥 CIERRE DE MODALES (Para que la "X" funcione)
   document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta.classList.remove('show'));
+  document.getElementById('btnCloseSheet')?.addEventListener('click', () => reciboSheet.classList.remove('show'));
+  document.getElementById('btnClosePago')?.addEventListener('click', () => document.getElementById('modalPago').classList.remove('show'));
+  
+  // Cerrar modales al tocar el fondo oscuro
+  document.querySelectorAll('.sheet-backdrop').forEach(backdrop => {
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) backdrop.classList.remove('show');
+    });
+  });
+
+  // 🔥 BOTÓN DE TEMA (Llamamos a la función de app-ui.js)
+  document.getElementById('btnTema')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    haptic(10);
+    toggleTheme(); // Función que cambia las variables CSS
+  });
   
   // PDF Y NOTAS
   document.getElementById('btnPDFDia')?.addEventListener('click', () => { haptic(15); generarPDFDia(); });
