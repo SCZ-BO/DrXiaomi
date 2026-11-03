@@ -41,14 +41,12 @@ function getLogo(marca) {
   if (m.includes("APPLE") || m.includes("IPHONE")) m = "APPLE";
   if (m.includes("XIAOMI") || m.includes("REDMI") || m.includes("POCO")) m = "XIAOMI";
   
-  // Lista de logos que sabemos que tienes en GitHub
   const logosExistentes = ["apple", "default", "honor", "huawei", "infinix", "realme", "motorola", "oppo", "samsung", "tecno", "vivo", "xiaomi", "zte"];
   const mLower = m.toLowerCase();
   
   if (logosExistentes.includes(mLower)) {
     return `/app/precios/logos/${mLower}.png`;
   }
-  // Si no está en la lista, usa default.png
   return '/app/precios/logos/default.png';
 }
 
