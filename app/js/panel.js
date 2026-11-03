@@ -1,8 +1,8 @@
 // /app/js/panel.js
-import { toast, haptic, tiempoRelativo, escapeHtml, initTheme, toggleTheme } from './app-ui.js';
+import { toast, haptic, tiempoRelativo, escapeHtml, initTheme, toggleTheme, formatBs } from './app-ui.js';
 import { requireAuth, logout } from './app-auth.js'; 
 import { db } from './firebase.js';
-import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy, doc, updateDoc, getDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { abrirSheetTelefono, abrirSheetVenta } from './panel-modals.js';
 import { icono } from './icons.js';
 
@@ -14,9 +14,15 @@ let unsubscribe = null, unsubscribeVentas = null, unsubscribeCierres = null, uns
 let ventasPanel = [], ventasCierre = [];
 const ITEMS_POR_PAGINA = 12;
 
+// Variables para el cierre de caja
+let reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0, ganancia: 0 };
+let ventasAccesoriosData = { total: 0, cantidad: 0, ganancia: 0 };
+let ventasExtrasData = { total: 0, cantidad: 0, ganancia: 0 };
+
 const reciboSheet = document.getElementById('reciboSheet');
 const modalVenta = document.getElementById('modalVenta');
 const modalNotaDueno = document.getElementById('modalNotaDueno');
+const modalPreviewPDF = document.getElementById('modalPreviewPDF');
 const paginationContainer = document.getElementById('paginationContainer');
 const appLoader = document.getElementById('appLoader');
 
@@ -94,8 +100,6 @@ function iniciarApp() {
   if (appState.sesion?.rol !== 'admin') {
     const btnRep = document.querySelector('.nav-item[href="/app/reportes/"]'); 
     if(btnRep) btnRep.style.display = 'none';
-    const btnPDF = document.getElementById('btnPDFDia'); 
-    if(btnPDF) btnPDF.style.display = 'none'; 
   }
   configurarEventos(); 
   cargarDatos();
@@ -157,11 +161,57 @@ function configurarEventos() {
     backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.classList.remove('show'); });
   });
 
-  // 🔥 BOTÓN DE CIERRE DE CAJA (Redirige al módulo existente)
+  // 🔥 BOTÓN DE CIERRE DE CAJA (Abre el modal, NO redirige)
   document.getElementById('btnPDFDia')?.addEventListener('click', () => { 
     haptic(15); 
-    window.location.href = '/app/cierre/'; 
+    abrirCierreDeCaja(); 
   });
+  document.getElementById('btnClosePreviewPDF')?.addEventListener('click', () => modalPreviewPDF.classList.remove('show'));
+
+  document.getElementById('btnDescargarPDF')?.addEventListener('click', () => {
+    haptic(20);
+    generarPDFCierre(); 
+    toast('PDF Descargado', 'success');
+  });
+
+  document.getElementById('btnCerrarYEnviar')?.addEventListener('click', async () => {
+    haptic(20);
+    const btn = document.getElementById('btnCerrarYEnviar');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+    btn.disabled = true;
+
+    try {
+      await guardarCierreEnFirebase();
+      generarPDFCierre();
+      
+      const totalGlobal = document.getElementById('totalGlobal').textContent;
+      const gananciaGlobal = document.getElementById('gananciaGlobal').textContent;
+      const montoTransferir = document.getElementById('montoTransferir').textContent;
+      
+      const mensaje = `*CIERRE DE CAJA - DR. XIAOMI*\n\n` +
+        `📅 *Fecha:* ${new Date().toLocaleDateString()}\n\n` +
+        `💰 *Total del Día:* ${totalGlobal}\n` +
+        `💵 *Ganancia Libre:* ${gananciaGlobal}\n\n` +
+        `💸 *Monto a Transferir al Técnico:* ${montoTransferir}\n\n` +
+        `_Adjunto el PDF con el detalle._`;
+
+      setTimeout(() => {
+        window.open(`https://wa.me/59175589308?text=${encodeURIComponent(mensaje)}`, '_blank');
+      }, 1000);
+      
+      toast('Día cerrado y guardado', 'success');
+      modalPreviewPDF.classList.remove('show');
+    } catch (e) {
+      console.error(e);
+      toast('Error al cerrar el día', 'error');
+    } finally {
+      btn.innerHTML = `<img src="/app/icons/whatsapp.png" width="20" height="20" style="margin-right: 8px;"> Cerrar Día y Enviar al Dueño`;
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('gastoPasajes')?.addEventListener('input', recalcularCierre);
+  document.getElementById('toggleAlmuerzo')?.addEventListener('change', recalcularCierre);
 
   // NOTAS
   document.getElementById('btnAbrirNotaDueno')?.addEventListener('click', () => { haptic(15); modalNotaDueno.classList.add('show'); });
@@ -417,7 +467,164 @@ function actualizarStats() {
 }
 
 // ==========================================
-// 6. LÓGICA DE PULL TO REFRESH (Jalar para actualizar)
+// 6. LÓGICA DEL CIERRE DE CAJA (MODAL)
+// ==========================================
+async function abrirCierreDeCaja() {
+  const hoy = new Date();
+  hoy.setHours(0,0,0,0);
+  const hoyStr = hoy.toDateString();
+
+  const qRecibos = query(collection(db, 'recibos'), where('estadoOrden', '==', 'entregado'));
+  const snapRecibos = await getDocs(qRecibos);
+  reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0, ganancia: 0 };
+  
+  snapRecibos.forEach(doc => {
+    const d = doc.data();
+    let fechaD = d.fechaEntrega || d.fecha;
+    if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
+    
+    if (fechaD && fechaD.toDateString() === hoyStr) {
+      const monto = Number(d.montoCobrado) || 0;
+      const costo = Number(d.costoRepuesto) || 0;
+      const metodo = (d.metodoPago || 'Efectivo').toLowerCase();
+
+      reparacionesData.total += monto;
+      reparacionesData.ganancia += (monto - costo);
+      reparacionesData.cantidad++;
+
+      if (metodo.includes('efectivo')) reparacionesData.efectivo += monto;
+      else if (metodo.includes('qr')) reparacionesData.qr += monto;
+    }
+  });
+
+  ventasAccesoriosData = { total: 0, cantidad: 0, ganancia: 0 };
+  ventasExtrasData = { total: 0, cantidad: 0, ganancia: 0 };
+
+  appState.ventasHoy.forEach(v => {
+    const f = parsearFecha(v.fecha);
+    if (f && f.toDateString() === hoyStr) {
+      const monto = Number(v.monto) || 0;
+      const costo = Number(v.costo) || 0;
+      ventasAccesoriosData.total += monto;
+      ventasAccesoriosData.ganancia += (monto - costo);
+      ventasAccesoriosData.cantidad++;
+    }
+  });
+
+  renderizarVistaPreviaCierre();
+  recalcularCierre();
+  modalPreviewPDF.classList.add('show');
+}
+
+function renderizarVistaPreviaCierre() {
+  const container = document.getElementById('previewPDFContent');
+  const hoy = new Date();
+  const fechaStr = `${String(hoy.getDate()).padStart(2,'0')}/${String(hoy.getMonth()+1).padStart(2,'0')}/${hoy.getFullYear()}`;
+
+  container.innerHTML = `
+    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
+      <h2 style="font-size: 16px; margin: 0; font-family: 'Helvetica';">DR. XIAOMI SCZ</h2>
+      <p style="margin: 0; font-size: 10px;">Cierre del ${fechaStr}</p>
+    </div>
+    <table style="width: 100%; font-size: 11px; text-align: left; margin-bottom: 12px;">
+      <tr><th>Concepto</th><th style="text-align: right;">Monto</th></tr>
+      <tr><td>Reparaciones Entregadas (${reparacionesData.cantidad})</td><td style="text-align: right; font-weight: bold;">Bs. ${reparacionesData.total.toFixed(2)}</td></tr>
+      <tr><td>Ventas de Accesorios</td><td style="text-align: right; font-weight: bold;">Bs. ${ventasAccesoriosData.total.toFixed(2)}</td></tr>
+      <tr><td>Ventas Extras</td><td style="text-align: right; font-weight: bold;">Bs. ${ventasExtrasData.total.toFixed(2)}</td></tr>
+    </table>
+    <div style="background: #f0f0f0; padding: 8px; border-radius: 4px; font-size: 11px;">
+      <div style="display: flex; justify-content: space-between;"><span>Efectivo:</span> <strong>Bs. ${reparacionesData.efectivo.toFixed(2)}</strong></div>
+      <div style="display: flex; justify-content: space-between;"><span>QR:</span> <strong>Bs. ${reparacionesData.qr.toFixed(2)}</strong></div>
+    </div>
+  `;
+}
+
+function recalcularCierre() {
+  const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
+  const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0;
+  const totalGastos = pasajes + almuerzo;
+
+  const totalGlobal = reparacionesData.total + ventasAccesoriosData.total + ventasExtrasData.total;
+  const gananciaReal = (reparacionesData.ganancia + ventasAccesoriosData.ganancia) - totalGastos;
+
+  const efectivoEnCaja = reparacionesData.efectivo;
+  let montoTransferir = 0;
+
+  if (efectivoEnCaja < gananciaReal) {
+    montoTransferir = gananciaReal - efectivoEnCaja;
+  }
+
+  document.getElementById('totalGlobal').textContent = formatBsLimpio(totalGlobal);
+  document.getElementById('gananciaGlobal').textContent = formatBsLimpio(gananciaReal);
+  
+  const elMontoTransf = document.getElementById('montoTransferir');
+  if (elMontoTransf) elMontoTransf.textContent = formatBsLimpio(montoTransferir);
+}
+
+function generarPDFCierre() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  pdf.setFillColor(255, 105, 0); pdf.rect(0, 0, 210, 30, 'F');
+  pdf.setTextColor(255, 255, 255); pdf.setFontSize(20); pdf.text('DR. XIAOMI SCZ', 14, 15);
+  pdf.setFontSize(10); pdf.text('Cierre de Caja Diario', 14, 22);
+  pdf.setTextColor(0, 0, 0); pdf.setFontSize(12);
+  pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, 14, 45);
+  pdf.text(`Realizado por: ${appState.sesion.nombre}`, 14, 52);
+
+  pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Reparaciones', 14, 65);
+  pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
+  pdf.text(`- Cantidad entregada: ${reparacionesData.cantidad}`, 18, 72);
+  pdf.text(`- Total Cobrado: ${formatBsLimpio(reparacionesData.total)}`, 18, 79);
+
+  let y = 90;
+  if (ventasAccesoriosData.cantidad > 0) {
+    pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Ventas de Accesorios', 14, y); y += 7;
+    pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
+    pdf.text(`- Total: ${formatBsLimpio(ventasAccesoriosData.total)}`, 18, y); y += 10;
+  }
+
+  const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
+  const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0;
+  const totalGastos = pasajes + almuerzo;
+  const totalGlobal = reparacionesData.total + ventasAccesoriosData.total + ventasExtrasData.total;
+  const gananciaReal = (reparacionesData.ganancia + ventasAccesoriosData.ganancia) - totalGastos;
+  const montoTransferir = Math.max(0, gananciaReal - reparacionesData.efectivo);
+
+  pdf.setFillColor(240, 240, 240); pdf.rect(14, y, 182, 20, 'F');
+  pdf.setFontSize(16); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(255, 105, 0);
+  pdf.text(`TOTAL DEL DÍA: ${formatBsLimpio(totalGlobal)}`, 105, y + 13, { align: 'center' });
+
+  pdf.setFillColor(16, 185, 129); pdf.rect(14, y + 22, 182, 20, 'F');
+  pdf.setTextColor(255, 255, 255); pdf.text(`GANANCIA NETA: ${formatBsLimpio(gananciaReal)}`, 105, y + 35, { align: 'center' });
+
+  if (montoTransferir > 0) {
+    pdf.setFillColor(59, 130, 246); pdf.rect(14, y + 44, 182, 20, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.text(`MONTO A TRANSFERIR AL TÉCNICO: ${formatBsLimpio(montoTransferir)}`, 105, y + 57, { align: 'center' });
+  }
+
+  pdf.setFontSize(8); pdf.setTextColor(120, 120, 120); pdf.text('Generado automáticamente por DR. Xiaomi', 105, 280, { align: 'center' });
+
+  pdf.save(`Cierre_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+async function guardarCierreEnFirebase() {
+  const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
+  const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0;
+  const totalGastos = pasajes + almuerzo;
+  const totalGlobal = reparacionesData.total + ventasAccesoriosData.total + ventasExtrasData.total;
+  const gananciaReal = (reparacionesData.ganancia + ventasAccesoriosData.ganancia) - totalGastos;
+  const montoTransferir = Math.max(0, gananciaReal - reparacionesData.efectivo);
+
+  await addDoc(collection(db, 'cierres'), {
+    fecha: serverTimestamp(), realizadoPor: appState.sesion.nombre,
+    reparaciones: reparacionesData, ventasAccesorios: ventasAccesoriosData, ventasExtras: ventasExtrasData,
+    totalGlobal, gananciaReal, gastoPasajes: pasajes, gastoAlmuerzo: almuerzo, montoTransferir
+  });
+}
+
+// ==========================================
+// 7. LÓGICA DE PULL TO REFRESH (Jalar para actualizar)
 // ==========================================
 let touchStartY = 0;
 let touchCurrentY = 0;
