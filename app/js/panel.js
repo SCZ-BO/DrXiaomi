@@ -14,7 +14,7 @@ let unsubscribe = null, unsubscribeVentas = null, unsubscribeCierres = null, uns
 let ventasPanel = [], ventasCierre = [];
 const ITEMS_POR_PAGINA = 12;
 
-// Variables para el cierre de caja
+// Variables para el cierre
 let reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0, ganancia: 0 };
 let ventasAccesoriosData = { total: 0, cantidad: 0, ganancia: 0 };
 let ventasExtrasData = { total: 0, cantidad: 0, ganancia: 0 };
@@ -78,7 +78,12 @@ function renderLayout() {
   container.insertAdjacentHTML('beforeend', navHTML);
   
   document.getElementById('btnSalir')?.addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
-  document.getElementById('btnNotificaciones')?.addEventListener('click', () => { haptic(10); contadorNotificaciones = 0; actualizarBadge(); toast('Notificaciones leídas', 'success'); });
+  document.getElementById('btnNotificaciones')?.addEventListener('click', () => { 
+    haptic(10); 
+    contadorNotificaciones = 0; 
+    actualizarBadge(); 
+    toast('Notificaciones leídas', 'success'); 
+  });
   document.getElementById('btnTema')?.addEventListener('click', toggleTheme);
 }
 
@@ -184,9 +189,9 @@ function configurarEventos() {
       await guardarCierreEnFirebase();
       generarPDFCierre();
       
-      const totalGlobal = document.getElementById('totalGlobal').textContent;
-      const gananciaGlobal = document.getElementById('gananciaGlobal').textContent;
-      const montoTransferir = document.getElementById('montoTransferir').textContent;
+      const totalGlobal = document.getElementById('totalGlobal')?.textContent || 'Bs. 0.00';
+      const gananciaGlobal = document.getElementById('gananciaGlobal')?.textContent || 'Bs. 0.00';
+      const montoTransferir = document.getElementById('montoTransferir')?.textContent || 'Bs. 0.00';
       
       const mensaje = `*CIERRE DE CAJA - DR. XIAOMI*\n\n` +
         `📅 *Fecha:* ${new Date().toLocaleDateString()}\n\n` +
@@ -554,10 +559,12 @@ function recalcularCierre() {
     montoTransferir = gananciaReal - efectivoEnCaja;
   }
 
-  document.getElementById('totalGlobal').textContent = formatBsLimpio(totalGlobal);
-  document.getElementById('gananciaGlobal').textContent = formatBsLimpio(gananciaReal);
-  
+  const elTotal = document.getElementById('totalGlobal');
+  const elGanancia = document.getElementById('gananciaGlobal');
   const elMontoTransf = document.getElementById('montoTransferir');
+
+  if (elTotal) elTotal.textContent = formatBsLimpio(totalGlobal);
+  if (elGanancia) elGanancia.textContent = formatBsLimpio(gananciaReal);
   if (elMontoTransf) elMontoTransf.textContent = formatBsLimpio(montoTransferir);
 }
 
