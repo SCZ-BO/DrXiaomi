@@ -104,9 +104,10 @@ export function aplicarTema(tema) {
 
 export function toggleTheme() {
   const actual = document.documentElement.getAttribute('data-theme') || 'dark';
-  aplicarTema(actual === 'dark' ? 'light' : 'dark');
+  const nuevo = actual === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', nuevo);
+  localStorage.setItem('drx_theme', nuevo); 
 }
-
 // Iniciar el tema automáticamente al importar este archivo
 initTheme();
 
