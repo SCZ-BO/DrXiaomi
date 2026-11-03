@@ -197,6 +197,24 @@ export function iniciales(nombre) {
 export function goTo(url) {
   window.location.href = url;
 }
+/* ============================================================
+   LOADING OVERLAY (Para el Wizard)
+   ============================================================ */
+export function showLoading(texto = 'Cargando...') {
+  const loader = document.getElementById('appLoader');
+  if (loader) {
+    loader.classList.remove('hidden');
+    const txt = loader.querySelector('.loader-text');
+    if (txt) txt.textContent = texto;
+  }
+}
+
+export function hideLoading() {
+  const loader = document.getElementById('appLoader');
+  if (loader) {
+    loader.classList.add('hidden');
+  }
+}
 
 export function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
