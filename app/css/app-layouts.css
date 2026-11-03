@@ -1,30 +1,33 @@
 /* ============================================================
-   DR. XIAOMI · LAYOUTS
+   DR. XIAOMI · LAYOUTS (COMPACTO PWA)
    Archivo: css/app-layouts.css
-   Descripción: Estructura principal, Header, Bottom Nav, Modales
    ============================================================ */
 
-/* ---------- APP CONTAINER ---------- */
+/* ---------- APP CONTAINER (Fijo en pantalla) ---------- */
 .app-container {
   max-width: 500px;
   margin: 0 auto;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh; /* Evita scroll en el body */
   display: flex;
   flex-direction: column;
   position: relative;
   background: var(--bg-base);
+  overflow: hidden;
 }
 
-/* ---------- CONTENIDO PRINCIPAL ---------- */
+/* ---------- CONTENIDO PRINCIPAL (Solo esto hace scroll) ---------- */
 .app-content {
   flex: 1;
-  padding: var(--sp-4);
-  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  padding: 12px 16px;
+  /* Espacio justo para que la barra flotante no tape el último elemento */
+  padding-bottom: calc(80px + env(safe-area-inset-bottom)); 
+  overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* ---------- HEADER ---------- */
+/* ---------- HEADER (Más delgado) ---------- */
 .app-header {
   position: sticky;
   top: 0;
@@ -32,10 +35,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4);
-  padding-top: calc(var(--sp-3) + env(safe-area-inset-top));
-  background: color-mix(in srgb, var(--bg-base) 85%, transparent);
+  gap: var(--sp-2);
+  padding: 10px 16px;
+  padding-top: calc(10px + env(safe-area-inset-top));
+  background: color-mix(in srgb, var(--bg-base) 90%, transparent);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--border-1);
@@ -44,15 +47,14 @@
 .app-header .brand {
   display: flex;
   align-items: center;
-  gap: var(--sp-3);
+  gap: 10px;
   min-width: 0;
   flex: 1;
 }
 
-/* 🔥 LOGO MINIMALISTA EN EL HEADER */
 .app-header .brand-logo {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   background: var(--bg-elev-2);
   border: 1px solid var(--border-1);
@@ -75,7 +77,7 @@
 }
 
 .app-header h1 {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
   color: var(--text-1);
   letter-spacing: -0.02em;
@@ -86,31 +88,30 @@
 }
 
 .app-header p {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-3);
   font-weight: 500;
   line-height: 1.2;
-  margin-top: 2px;
+  margin-top: 0px;
 }
 
 .app-header .header-actions {
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
+  gap: 6px;
   flex-shrink: 0;
 }
 
-/* Botón redondo del header */
 .app-header .icon-btn {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--r-full);
   background: var(--bg-elev-2);
   color: var(--text-1);
-  font-size: 18px;
+  font-size: 16px;
   transition: all var(--dur-fast) var(--ease);
   border: 1px solid var(--border-1);
 }
@@ -120,10 +121,10 @@
   background: var(--bg-elev-3);
 }
 
-/* ---------- BOTTOM NAV (Barra Flotante) ---------- */
+/* ---------- BOTTOM NAV (Barra Súper Compacta) ---------- */
 .bottom-nav {
   position: fixed;
-  bottom: calc(16px + env(safe-area-inset-bottom));
+  bottom: calc(12px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 32px);
@@ -131,7 +132,7 @@
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 8px;
+  padding: 4px 4px;
   background: rgba(26, 26, 29, 0.85);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
@@ -151,10 +152,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 8px 16px;
+  gap: 1px;
+  padding: 6px 12px;
   color: var(--text-3);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   text-decoration: none;
   transition: all var(--dur) var(--ease-spring);
@@ -165,9 +166,9 @@
 
 .bottom-nav .nav-item i,
 .bottom-nav .nav-item img {
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
   transition: transform var(--dur) var(--ease-spring);
   opacity: 0.7;
 }
@@ -191,12 +192,12 @@
   transform: translateY(-1px) scale(1.1);
 }
 
-/* ---------- BOTTOM SHEET (Modal desde abajo) ---------- */
+/* ---------- BOTTOM SHEET (Modal) ---------- */
 .sheet-backdrop {
   position: fixed;
   inset: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -239,47 +240,7 @@
   height: 5px;
   background: var(--border-3);
   border-radius: var(--r-full);
-  margin: 0 auto var(--sp-4);
-}
-
-/* ---------- MODAL (Centrado en pantalla) ---------- */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: var(--z-modal);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--dur) var(--ease);
-}
-
-.modal-backdrop.show {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.modal {
-  background: var(--bg-elev-1);
-  border: 1px solid var(--border-2);
-  border-radius: var(--r-2xl);
-  padding: 24px;
-  max-width: 400px;
-  width: 100%;
-  box-shadow: var(--shadow-lg);
-  transform: scale(0.95) translateY(10px);
-  transition: transform var(--dur) var(--ease-spring);
-}
-
-.modal-backdrop.show .modal {
-  transform: scale(1) translateY(0);
+  margin: 0 auto var(--sp-3);
 }
 
 /* ---------- TOASTS ---------- */
@@ -302,7 +263,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 12px 16px;
   background: var(--bg-elev-2);
   border: 1px solid var(--border-2);
   border-left: 4px solid var(--brand-500);
@@ -322,30 +283,20 @@
   opacity: 1;
 }
 
-.toast i { font-size: 18px; flex-shrink: 0; }
-.toast-success { border-left-color: var(--success-500); }
-.toast-success i { color: var(--success-500); }
-.toast-error { border-left-color: var(--danger-500); }
-.toast-error i { color: var(--danger-500); }
-.toast-warning { border-left-color: var(--warning-500); }
-.toast-warning i { color: var(--warning-500); }
-.toast-info { border-left-color: var(--info-500); }
-.toast-info i { color: var(--info-500); }
-
 /* ---------- SEARCH BAR ---------- */
 .search-bar {
   position: relative;
-  margin-bottom: var(--sp-4);
+  margin-bottom: 12px;
 }
 
 .search-bar input {
   width: 100%;
-  padding: 12px 14px 12px 42px;
+  padding: 10px 14px 10px 38px;
   background: var(--bg-elev-2);
   border: 1.5px solid var(--border-1);
   border-radius: var(--r-full);
   color: var(--text-1);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   transition: all var(--dur) var(--ease);
 }
@@ -357,11 +308,10 @@
   box-shadow: 0 0 0 3px var(--brand-100);
 }
 
-.search-bar i {
+.search-bar i, .search-bar img {
   position: absolute;
-  left: 16px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-3);
-  font-size: 15px;
+  opacity: 0.6;
 }
