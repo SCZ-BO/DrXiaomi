@@ -29,7 +29,6 @@ if (isAdmin) {
   document.getElementById('adminEditBtn').style.display = 'flex';
   document.getElementById('adminEditBtn').onclick = () => window.location.href = '/app/precios-admin/';
 } else {
-  // 🔥 Si es técnico, ocultamos el botón de Reportes de la barra inferior
   const navReportes = document.getElementById('navReportes');
   if (navReportes) navReportes.style.display = 'none';
 }
@@ -41,8 +40,6 @@ function getLogo(marca) {
   let m = marca ? marca.split(" ")[0].toUpperCase() : "GENERAL";
   if (m.includes("APPLE") || m.includes("IPHONE")) m = "APPLE";
   if (m.includes("XIAOMI") || m.includes("REDMI") || m.includes("POCO")) m = "XIAOMI";
-  
-  // 🔥 Ruta corregida a la carpeta local de logos
   return `/app/precios/logos/${m.toLowerCase()}.png`;
 }
 
@@ -89,7 +86,6 @@ function aplicarBusqueda(data, term) {
     if (score > 0) results.push({ item, score });
   }
   
-  // Los resultados se ordenan de mayor a menor puntaje
   return results.sort((a, b) => b.score - a.score).map(r => r.item);
 }
 
@@ -116,7 +112,7 @@ function buscarCompatibles(term) {
 // 5. RENDERIZADO PRINCIPAL
 // ==========================================
 function renderList() {
-  let data = [...allData]; // Copiamos sin desordenar de nuevo
+  let data = [...allData]; 
   
   if (currentFilter === "FAV") data = data.filter(i => favorites.has(i.id));
   else if (currentFilter !== "all" && currentFilter !== "COMPAT") data = data.filter(i => i.tipo === currentFilter);
@@ -185,7 +181,8 @@ function renderList() {
       <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-1); padding-top:12px;">
         <div class="card-price">${item.venta} Bs</div>
         <div style="display:flex; gap:6px;">
-          ${isAdmin ? `<button class="edit-btn" onclick="window.editPrice('${item.id}')"><i class="fas fa-pen"></i></button>` : ''}
+          <!-- 🔥 AQUÍ EL CAMBIO: El botón de editar ya NO está envuelto en isAdmin -->
+          <button class="edit-btn" onclick="window.editPrice('${item.id}')"><i class="fas fa-pen"></i></button>
           <button class="image-btn" onclick="window.openGoogle('${item.modelo}')"><i class="fab fa-google"></i></button>
           <button class="whatsapp-btn" onclick="window.shareWA('${item.id}')"><i class="fab fa-whatsapp"></i></button>
         </div>
@@ -220,40 +217,41 @@ document.getElementById('quickFilters').addEventListener('click', (e) => {
   renderList();
 });
 
-// 🔥 MODO TÉCNICO CON CONFIRMACIÓN (Añadido)
-document.getElementById('techModeBtn').addEventListener('click', () => {
-  if (techMode) {
-    techMode = false; renderList(); return;
-  }
-  
-  const modal = document.createElement('div');
-  modal.className = 'sheet-backdrop show';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="sheet" style="text-align: center; padding: 32px 20px;">
-      <div class="sheet-handle"></div>
-      <div style="font-size: 56px; margin-bottom: 16px;"><i class="fas fa-user-shield" style="color: var(--brand-500);"></i></div>
-      <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 12px;">¿Eres el técnico?</h3>
-      <p style="color: var(--text-3); font-size: 14px; margin-bottom: 24px;">Al confirmar, se mostrarán los precios de compra.</p>
-      <div style="display: flex; gap: 12px;">
-        <button id="btnCancelarTech" class="btn btn-secondary" style="flex: 1;">Cancelar</button>
-        <button id="btnConfirmarTech" class="btn btn-primary" style="flex: 1;">Sí, soy técnico</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
+// ==========================================
+// 7. MODO TÉCNICO CON CONFIRMACIÓN (CONECTADO AL MODAL DEL HTML)
+// ==========================================
+const modalTechConfirm = document.getElementById('modalTechConfirm');
+const btnConfirmTech = document.getElementById('btnConfirmTech');
+const btnCancelTech = document.getElementById('btnCancelTech');
 
-  document.getElementById('btnCancelarTech').onclick = () => modal.remove();
-  document.getElementById('btnConfirmarTech').onclick = () => {
-    techMode = true; modal.remove(); renderList();
-  };
+if (techMode) {
+  document.getElementById('techModeBtn')?.classList.add('tech-active');
+}
+
+document.getElementById('techModeBtn')?.addEventListener('click', () => {
+  if (techMode) {
+    techMode = false;
+    document.getElementById('techModeBtn')?.classList.remove('tech-active');
+    renderList();
+    return;
+  }
+  // Si no está activo, mostramos el modal
+  modalTechConfirm.classList.add('show');
 });
 
-document.getElementById('backBtn').addEventListener('click', () => window.location.href = '/app/');
-document.getElementById('receiptBtn').addEventListener('click', () => window.location.href = '/app/cliente/');
+btnCancelTech?.addEventListener('click', () => {
+  modalTechConfirm.classList.remove('show');
+});
+
+btnConfirmTech?.addEventListener('click', () => {
+  techMode = true;
+  document.getElementById('techModeBtn')?.classList.add('tech-active');
+  modalTechConfirm.classList.remove('show');
+  renderList();
+});
 
 // ==========================================
-// 7. FUNCIONES GLOBALES
+// 8. FUNCIONES GLOBALES
 // ==========================================
 window.toggleFav = (id) => {
   if (favorites.has(id)) favorites.delete(id); else favorites.add(id);
