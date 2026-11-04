@@ -69,29 +69,66 @@ if (messaging) {
     const title = payload.notification?.title || payload.data?.title || 'Notificación';
     const body = payload.notification?.body || payload.data?.body || '';
     toast(`🔔 ${title}: ${body}`, 'info', 6000);
-    contadorNotificaciones++;
-    actualizarBadge();
+    // Si estamos en el panel, actualizamos el contador
+    escucharNotificaciones(); 
   });
 }
 
 // ==========================================
-// NOTIFICACIONES (BADGE LOCAL)
+// NUEVO: BANDEJA DE NOTIFICACIONES (PARA EL DUEÑO)
 // ==========================================
-let contadorNotificaciones = parseInt(localStorage.getItem('drx_notif_count') || '0');
-function actualizarBadge() {
-  if ('setAppBadge' in navigator) {
-    if (contadorNotificaciones > 0) navigator.setAppBadge(contadorNotificaciones).catch(console.error);
-    else navigator.clearAppBadge().catch(console.error);
-  }
-  localStorage.setItem('drx_notif_count', contadorNotificaciones);
+let notificacionesList = [];
+let unsubscribeNotif = null;
+
+function actualizarBadgeNotif() {
   const badge = document.getElementById('notifBadge');
   if (badge) {
-    badge.textContent = contadorNotificaciones;
-    badge.style.display = contadorNotificaciones > 0 ? 'block' : 'none';
+    const noLeidas = notificacionesList.filter(n => !n.leido).length;
+    badge.textContent = noLeidas;
+    badge.style.display = noLeidas > 0 ? 'block' : 'none';
   }
 }
 
-// 🔥 NUEVA FUNCIÓN: Guardar la notificación en Firestore para que el robot de GitHub la envíe
+function escucharNotificaciones() {
+  if (unsubscribeNotif) unsubscribeNotif();
+  // Solo escuchamos si es admin (dueño)
+  if (appState.sesion?.rol !== 'admin') return; 
+
+  unsubscribeNotif = onSnapshot(query(collection(db, 'notificaciones'), orderBy('fecha', 'desc'), limit(50)), (snap) => {
+    notificacionesList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    actualizarBadgeNotif();
+  });
+}
+
+function renderNotificacionesModal() {
+  const container = document.getElementById('listaNotificaciones');
+  if (!container) return;
+
+  if (notificacionesList.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-3);">No hay notificaciones aún.</div>`;
+    return;
+  }
+  
+  container.innerHTML = notificacionesList.map(n => `
+    <div style="background: var(--bg-elev-2); padding: 12px; border-radius: var(--r-md); margin-bottom: 8px; border-left: 3px solid ${n.leido ? 'var(--border-1)' : 'var(--brand-500)'};">
+      <div style="font-weight: 800; font-size: 13px; color: var(--text-1);">${escapeHtml(n.titulo)}</div>
+      <div style="font-size: 12px; color: var(--text-2); margin-top: 4px;">${escapeHtml(n.mensaje)}</div>
+      <div style="font-size: 10px; color: var(--text-3); margin-top: 6px;">${tiempoRelativo(n.fecha)}</div>
+    </div>
+  `).join('');
+}
+
+async function marcarNotificacionesLeidas() {
+  const noLeidas = notificacionesList.filter(n => !n.leido);
+  if (noLeidas.length === 0) return;
+  for (const n of noLeidas) {
+    await updateDoc(doc(db, 'notificaciones', n.id), { leido: true });
+  }
+}
+
+// ==========================================
+// GUARDAR NOTIFICACIÓN EN BD
+// ==========================================
 async function enviarNotificacionDB(titulo, mensaje) {
   try {
     await addDoc(collection(db, 'notificaciones'), { 
@@ -111,7 +148,7 @@ function renderLayout() {
   if (!container) return;
 
   const esAdmin = appState.sesion?.rol === 'admin';
-  const btnMensajePopup = esAdmin ? `<button type="button" class="icon-btn" id="btnAbrirMensajePopup" title="Mensaje">${icono('campana', 20)}</button>` : '';
+  const btnMensajePopup = esAdmin ? `<button type="button" class="icon-btn" id="btnAbrirMensajePopup" title="Mensaje al técnico">${icono('nota', 20)}</button>` : '';
 
   const headerHTML = `
     <header class="app-header">
@@ -121,6 +158,7 @@ function renderLayout() {
       </div>
       <div class="header-actions">
         ${btnMensajePopup}
+        <!-- CAMPANA DE NOTIFICACIONES -->
         <button type="button" class="icon-btn" id="btnNotificaciones" style="position:relative;">
           ${icono('campana', 20)}
           <span class="notif-badge" id="notifBadge" style="position:absolute; top:-4px; right:-4px; display:none; background:var(--danger-500); color:white; font-size:10px; font-weight:800; padding:2px 5px; border-radius:10px; border:2px solid var(--bg-elev-1);">0</span>
@@ -142,9 +180,15 @@ function renderLayout() {
   container.insertAdjacentHTML('beforeend', navHTML);
   
   document.getElementById('btnSalir')?.addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
+  
+  // Al tocar la campana, abrimos la lista y marcamos como leídas
   document.getElementById('btnNotificaciones')?.addEventListener('click', () => { 
-    haptic(10); contadorNotificaciones = 0; actualizarBadge(); toast('Notificaciones leídas', 'success'); 
+    haptic(10); 
+    renderNotificacionesModal();
+    document.getElementById('modalNotificaciones')?.classList.add('show');
+    marcarNotificacionesLeidas(); 
   });
+  
   document.getElementById('btnTema')?.addEventListener('click', toggleTheme);
   document.getElementById('btnAbrirMensajePopup')?.addEventListener('click', () => {
     haptic(15);
@@ -153,7 +197,6 @@ function renderLayout() {
 }
 
 renderLayout();
-actualizarBadge();
 
 // ==========================================
 // 2. AUTENTICACIÓN Y POPUPS
@@ -164,7 +207,10 @@ requireAuth((s) => {
     iniciarApp(); 
     const sub = document.getElementById('userInfo'); if(sub) sub.textContent = s.nombre;
     verificarPopups();
-    if (s.rol === 'admin') solicitarPermisoNotificaciones();
+    if (s.rol === 'admin') {
+      solicitarPermisoNotificaciones();
+      escucharNotificaciones(); // Empezar a escuchar las notificaciones en vivo
+    }
   }, 500);
 });
 
@@ -241,6 +287,7 @@ function configurarEventos() {
   document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta?.classList.remove('show'));
   document.getElementById('btnCloseSheet')?.addEventListener('click', () => reciboSheet?.classList.remove('show'));
   document.getElementById('btnClosePago')?.addEventListener('click', () => document.getElementById('modalPago')?.classList.remove('show'));
+  document.getElementById('btnCloseNotificaciones')?.addEventListener('click', () => document.getElementById('modalNotificaciones')?.classList.remove('show'));
   
   document.querySelectorAll('.sheet-backdrop').forEach(backdrop => {
     backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.classList.remove('show'); });
@@ -306,7 +353,8 @@ function configurarEventos() {
     haptic(20);
     try {
       await addDoc(collection(db, 'notas'), { texto, autor: appState.sesion?.nombre || 'Técnico', fecha: serverTimestamp() });
-      // 🔥 GUARDAR NOTIFICACIÓN PARA EL DUEÑO
+      
+      // ENVIAR NOTIFICACIÓN
       await enviarNotificacionDB('Nota del Técnico', `${appState.sesion?.nombre || 'Técnico'}: ${texto}`);
       
       toast('Nota guardada', 'success');
@@ -330,7 +378,7 @@ function configurarEventos() {
       const fechaExpiracion = dias > 0 ? new Date().getTime() + (dias * 24 * 60 * 60 * 1000) : 9999999999999;
       await setDoc(doc(db, 'config', 'popup_mensaje'), { titulo, texto, fechaExpiracion, activo: true, leidoPorTecnico: false, fechaCreacion: serverTimestamp() });
       
-      // 🔥 GUARDAR NOTIFICACIÓN PARA EL TÉCNICO
+      // ENVIAR NOTIFICACIÓN
       await enviarNotificacionDB('Mensaje del Dueño', texto);
 
       toast('Mensaje enviado', 'success');
@@ -418,7 +466,6 @@ function configurarEventos() {
     try {
       await addDoc(collection(db, 'ventas'), { concepto, monto, costo: 0, metodoPago: metodo, fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
       
-      // 🔥 GUARDAR NOTIFICACIÓN DE VENTA
       await enviarNotificacionDB('Nueva Venta', `Se vendió ${concepto} por Bs. ${monto} (${metodo})`);
 
       toast('Venta registrada', 'success'); 
@@ -445,7 +492,6 @@ function configurarEventos() {
       await addDoc(collection(db, 'ventas'), { concepto: `${cantidad}x ${nombre}`, monto: total, costo: costo * cantidad, metodoPago: metodo, fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
       await updateDoc(doc(db, 'productos', id), { stock: stock - cantidad });
       
-      // 🔥 GUARDAR NOTIFICACIÓN DE VENTA DE ACCESORIO
       await enviarNotificacionDB('Nueva Venta (Accesorio)', `Se vendió ${cantidad}x ${nombre} por Bs. ${total} (${metodo})`);
 
       toast('Venta de accesorio registrada', 'success'); 
@@ -512,7 +558,6 @@ function cargarDatos() {
 
   if (unsubscribeCierres) unsubscribeCierres();
   unsubscribeCierres = onSnapshot(query(collection(db, 'cierres'), orderBy('fecha', 'desc'), limit(100)), (snap) => {
-    // Se mantiene activo para reglas
   });
 
   if (unsubscribeInventario) unsubscribeInventario();
