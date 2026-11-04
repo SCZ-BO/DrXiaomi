@@ -14,6 +14,9 @@
   "categories": ["business", "utilities"],
   "prefer_related_applications": false,
   "gcm_sender_id": "1033874960016",
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
   "icons": [
     {
       "src": "/imagenes/favicon-96x96.png",
