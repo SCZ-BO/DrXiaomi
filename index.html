@@ -1213,17 +1213,19 @@
     if (isStandalone) {
       document.body.classList.add('is-standalone');
     }
-  </script>
-  <script type="module">
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { auth } from "/app/js/firebase.js"; // Asegúrate de exportar 'auth'
+    <script type="module">
+    // Importamos la función que ya tienes para verificar la sesión
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { app } from "./app/js/firebase.js"; // Usamos 'app' que es lo que exporta tu archivo
 
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // Si hay un usuario logueado, lo mandamos al panel
-      window.location.href = "/app/";
-    }
-  });
-</script>
+    const auth = getAuth(app); // Inicializamos la autenticación
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // 🔥 Si el usuario ya está logueado, lo enviamos al panel automáticamente
+        window.location.replace("/app/");
+      }
+    });
+  </script>
 </body>
 </html>
