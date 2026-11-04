@@ -19,8 +19,20 @@
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand-500); border-bottom-color: var(--brand-500); animation: spin 1.2s linear infinite; }
+    /* 🔥 ANIMACIÓN FORZADA PARA EL LOADER */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .loader-ring { 
+      position: absolute; 
+      inset: 0; 
+      border-radius: 50%; 
+      border: 3px solid transparent; 
+      border-top-color: var(--brand-500); 
+      border-bottom-color: var(--brand-500); 
+      animation: spin 1.2s linear infinite;
+    }
     
     /* HERO BUTTONS */
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
@@ -98,7 +110,11 @@
 <body>
 
   <div class="loader-overlay" id="appLoader">
-    <div class="loader-logo-container"><div class="loader-ring"></div><img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." class="loader-logo-img"></div>
+    <div class="loader-logo-container">
+      <!-- 🔥 ESTE ES EL ANILLO QUE GIRA -->
+      <div class="loader-ring"></div>
+      <img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." class="loader-logo-img">
+    </div>
     <div class="loader-text">Sincronizando...</div>
   </div>
 
