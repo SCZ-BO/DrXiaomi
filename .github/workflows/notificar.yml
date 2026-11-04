@@ -1,0 +1,21 @@
+name: Enviar Notificaciones Push
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Revisa cada 5 minutos
+  workflow_dispatch: # Permite ejecutarlo manualmente
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Instalar Firebase Admin
+        run: npm install firebase-admin
+      - name: Ejecutar script
+        env:
+          FIREBASE_KEY: ${{ secrets.FIREBASE_KEY }} # Tu archivo .json
+        run: node enviar_push.js
