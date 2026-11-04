@@ -74,6 +74,9 @@ if (messaging) {
   });
 }
 
+// ==========================================
+// NOTIFICACIONES (BADGE LOCAL)
+// ==========================================
 let contadorNotificaciones = parseInt(localStorage.getItem('drx_notif_count') || '0');
 function actualizarBadge() {
   if ('setAppBadge' in navigator) {
@@ -484,9 +487,8 @@ function cargarDatos() {
 
   if (unsubscribeCierres) unsubscribeCierres();
   unsubscribeCierres = onSnapshot(query(collection(db, 'cierres'), orderBy('fecha', 'desc'), limit(100)), (snap) => {
-    // 🔥 IMPORTANTE: Ya NO cargamos las ventas de cierres antiguos a la lista principal
-    // para evitar que se dupliquen. Los cierres son solo un registro histórico.
-    // La lista principal se nutre solo de la colección 'ventas' y 'recibos'.
+    // 🔥 IMPORTANTE: Este listener se mantiene activo para no romper reglas, 
+    // pero NO se mezcla con ventasPanel para evitar duplicados.
   });
 
   if (unsubscribeInventario) unsubscribeInventario();
@@ -496,7 +498,6 @@ function cargarDatos() {
 }
 
 function procesarVentas() { 
-  // 🔥 Ahora ventasHoy contiene SOLO las ventas nuevas, sin duplicados de cierres
   appState.ventasHoy = [...ventasPanel].sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0)); 
   renderizarTodoDebounced(); 
 }
@@ -874,7 +875,7 @@ async function guardarCierreEnFirebase(gastos, resumen) {
 }
 
 // ==========================================
-// 7. PULL TO REFRESH
+// 7. PULL TO REFRESH (Jalar para actualizar)
 // ==========================================
 let touchStartY = 0;
 let touchCurrentY = 0;
