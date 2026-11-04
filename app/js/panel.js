@@ -22,7 +22,7 @@ const CONFIG_APP = {
   pullThreshold: 100,
   debounceRenderMs: 100,
   loaderFallbackMs: 3000,
-  vapidKey: 'BNCSlsvNPr7pVw5dZTtm-mrSOrXsuIMQ_9IW9KTVPS1Hm8IEJMh8DaEk1nojGJ_4ZwVgV6ZYUgVTFSymAyS-jRc' // 🔥 Reemplazar por tu VAPID real
+  vapidKey: 'BNCSlsvNPr7pVw5dZTtm-mrSOrXsuIMQ_9IW9KTVPS1Hm8IEJMh8DaEk1nojGJ_4ZwVgV6ZYUgVTFSymAyS-jRc' 
 };
 
 export let appState = { sesion: null, ordenes: [], ventasHoy: [], inventario: [] };
@@ -89,6 +89,18 @@ function actualizarBadge() {
     badge.textContent = contadorNotificaciones;
     badge.style.display = contadorNotificaciones > 0 ? 'block' : 'none';
   }
+}
+
+// 🔥 NUEVA FUNCIÓN: Guardar la notificación en Firestore para que el robot de GitHub la envíe
+async function enviarNotificacionDB(titulo, mensaje) {
+  try {
+    await addDoc(collection(db, 'notificaciones'), { 
+      titulo: titulo, 
+      mensaje: mensaje, 
+      leido: false, 
+      fecha: serverTimestamp() 
+    });
+  } catch(e) { console.error('Error al guardar notificación', e); }
 }
 
 // ==========================================
@@ -294,6 +306,9 @@ function configurarEventos() {
     haptic(20);
     try {
       await addDoc(collection(db, 'notas'), { texto, autor: appState.sesion?.nombre || 'Técnico', fecha: serverTimestamp() });
+      // 🔥 GUARDAR NOTIFICACIÓN PARA EL DUEÑO
+      await enviarNotificacionDB('Nota del Técnico', `${appState.sesion?.nombre || 'Técnico'}: ${texto}`);
+      
       toast('Nota guardada', 'success');
       modalNotaDueno?.classList.remove('show');
       document.getElementById('notaDuenoTexto').value = '';
@@ -314,6 +329,10 @@ function configurarEventos() {
     try {
       const fechaExpiracion = dias > 0 ? new Date().getTime() + (dias * 24 * 60 * 60 * 1000) : 9999999999999;
       await setDoc(doc(db, 'config', 'popup_mensaje'), { titulo, texto, fechaExpiracion, activo: true, leidoPorTecnico: false, fechaCreacion: serverTimestamp() });
+      
+      // 🔥 GUARDAR NOTIFICACIÓN PARA EL TÉCNICO
+      await enviarNotificacionDB('Mensaje del Dueño', texto);
+
       toast('Mensaje enviado', 'success');
       document.getElementById('modalMensajePopup')?.classList.remove('show');
     } catch(err) { toast('Error al enviar', 'error'); }
@@ -398,8 +417,11 @@ function configurarEventos() {
     haptic(20);
     try {
       await addDoc(collection(db, 'ventas'), { concepto, monto, costo: 0, metodoPago: metodo, fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
-      toast('Venta registrada', 'success'); 
       
+      // 🔥 GUARDAR NOTIFICACIÓN DE VENTA
+      await enviarNotificacionDB('Nueva Venta', `Se vendió ${concepto} por Bs. ${monto} (${metodo})`);
+
+      toast('Venta registrada', 'success'); 
       if (document.activeElement) document.activeElement.blur(); 
       modalVenta?.classList.remove('show');
     } catch (err) { toast('Error al guardar', 'error'); }
@@ -422,8 +444,11 @@ function configurarEventos() {
       const total = precio * cantidad;
       await addDoc(collection(db, 'ventas'), { concepto: `${cantidad}x ${nombre}`, monto: total, costo: costo * cantidad, metodoPago: metodo, fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
       await updateDoc(doc(db, 'productos', id), { stock: stock - cantidad });
-      toast('Venta de accesorio registrada', 'success'); 
       
+      // 🔥 GUARDAR NOTIFICACIÓN DE VENTA DE ACCESORIO
+      await enviarNotificacionDB('Nueva Venta (Accesorio)', `Se vendió ${cantidad}x ${nombre} por Bs. ${total} (${metodo})`);
+
+      toast('Venta de accesorio registrada', 'success'); 
       if (document.activeElement) document.activeElement.blur(); 
       modalVenta?.classList.remove('show');
     } catch (err) { console.error(err); toast('Error al guardar', 'error'); }
@@ -487,8 +512,7 @@ function cargarDatos() {
 
   if (unsubscribeCierres) unsubscribeCierres();
   unsubscribeCierres = onSnapshot(query(collection(db, 'cierres'), orderBy('fecha', 'desc'), limit(100)), (snap) => {
-    // 🔥 IMPORTANTE: Este listener se mantiene activo para no romper reglas, 
-    // pero NO se mezcla con ventasPanel para evitar duplicados.
+    // Se mantiene activo para reglas
   });
 
   if (unsubscribeInventario) unsubscribeInventario();
