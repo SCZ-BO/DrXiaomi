@@ -6,15 +6,11 @@ import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy,
 import { abrirSheetTelefono, abrirSheetVenta } from './panel-modals.js';
 import { icono } from './icons.js';
 
-// 🔥 IMPORTACIONES PARA NOTIFICACIONES PUSH (FCM)
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 import { app } from './firebase.js';
 
 initTheme();
 
-// ==========================================
-// CONFIGURACIÓN GLOBAL
-// ==========================================
 const CONFIG_APP = {
   whatsappDueno: '59175589308',
   gastoAlmuerzo: 20,
@@ -22,7 +18,7 @@ const CONFIG_APP = {
   pullThreshold: 100,
   debounceRenderMs: 100,
   loaderFallbackMs: 3000,
-  vapidKey: 'TU_VAPID_KEY_AQUI' // 🔥 Reemplazar por tu VAPID real
+  vapidKey: 'TU_VAPID_KEY_AQUI'
 };
 
 export let appState = { sesion: null, ordenes: [], ventasHoy: [], inventario: [] };
@@ -31,10 +27,10 @@ let unsubscribe = null, unsubscribeVentas = null, unsubscribeCierres = null, uns
 let ventasPanel = [], ventasCierre = [];
 const ITEMS_POR_PAGINA = CONFIG_APP.itemsPorPagina;
 
-// Variables para el cierre
-let reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0, ganancia: 0 };
-let ventasAccesoriosData = { total: 0, cantidad: 0, ganancia: 0 };
-let ventasExtrasData = { total: 0, cantidad: 0, ganancia: 0 };
+let reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
+let ventasAccesoriosData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
+let detallesReparaciones = [];
+let detallesVentas = [];
 
 const reciboSheet = document.getElementById('reciboSheet');
 const modalVenta = document.getElementById('modalVenta');
@@ -43,29 +39,21 @@ const modalPreviewPDF = document.getElementById('modalPreviewPDF');
 const paginationContainer = document.getElementById('paginationContainer');
 const appLoader = document.getElementById('appLoader');
 
-// ==========================================
-// 🔥 NOTIFICACIONES PUSH (FCM)
-// ==========================================
+// FCM
 let messaging = null;
 try { messaging = getMessaging(app); } catch(e) { console.warn('FCM no disponible', e); }
 
 async function solicitarPermisoNotificaciones() {
-  if (!('Notification' in window)) return;
-  if (!messaging) return;
+  if (!('Notification' in window) || !messaging) return;
   const permiso = await Notification.requestPermission();
   if (permiso === 'granted') {
     try {
-      if (!CONFIG_APP.vapidKey || CONFIG_APP.vapidKey === 'TU_VAPID_KEY_AQUI') {
-        console.warn('FCM: VAPID key no configurada. Saltando getToken.');
-        return;
-      }
+      if (!CONFIG_APP.vapidKey || CONFIG_APP.vapidKey === 'TU_VAPID_KEY_AQUI') return;
       const token = await getToken(messaging, { vapidKey: CONFIG_APP.vapidKey });
-      
-      if (token && appState.sesion && appState.sesion.rol === 'admin') {
+      if (token && appState.sesion?.rol === 'admin') {
         await updateDoc(doc(db, 'usuarios', appState.sesion.uid), { fcmToken: token });
-        console.log('Token FCM guardado:', token);
       }
-    } catch(e) { console.error('Error al obtener token:', e); }
+    } catch(e) { console.error(e); }
   }
 }
 
@@ -79,9 +67,6 @@ if (messaging) {
   });
 }
 
-// ==========================================
-// NOTIFICACIONES (BADGE LOCAL)
-// ==========================================
 let contadorNotificaciones = parseInt(localStorage.getItem('drx_notif_count') || '0');
 function actualizarBadge() {
   if ('setAppBadge' in navigator) {
@@ -96,17 +81,12 @@ function actualizarBadge() {
   }
 }
 
-// ==========================================
-// 1. RENDERIZADO DEL LAYOUT
-// ==========================================
 function renderLayout() {
   const container = document.querySelector('.app-container');
   if (!container) return;
 
   const esAdmin = appState.sesion?.rol === 'admin';
-  const btnMensajePopup = esAdmin
-    ? `<button class="icon-btn" id="btnAbrirMensajePopup" title="Enviar mensaje al técnico">${icono('campana', 20)}</button>`
-    : '';
+  const btnMensajePopup = esAdmin ? `<button type="button" class="icon-btn" id="btnAbrirMensajePopup" title="Mensaje">${icono('campana', 20)}</button>` : '';
 
   const headerHTML = `
     <header class="app-header">
@@ -116,12 +96,12 @@ function renderLayout() {
       </div>
       <div class="header-actions">
         ${btnMensajePopup}
-        <button class="icon-btn" id="btnNotificaciones" style="position:relative;">
+        <button type="button" class="icon-btn" id="btnNotificaciones" style="position:relative;">
           ${icono('campana', 20)}
           <span class="notif-badge" id="notifBadge" style="position:absolute; top:-4px; right:-4px; display:none; background:var(--danger-500); color:white; font-size:10px; font-weight:800; padding:2px 5px; border-radius:10px; border:2px solid var(--bg-elev-1);">0</span>
         </button>
-        <button class="icon-btn" id="btnTema">${icono('tema', 20)}</button>
-        <button class="icon-btn" id="btnSalir">${icono('salir', 20)}</button>
+        <button type="button" class="icon-btn" id="btnTema">${icono('tema', 20)}</button>
+        <button type="button" class="icon-btn" id="btnSalir">${icono('salir', 20)}</button>
       </div>
     </header>`;
     
@@ -138,10 +118,7 @@ function renderLayout() {
   
   document.getElementById('btnSalir')?.addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
   document.getElementById('btnNotificaciones')?.addEventListener('click', () => { 
-    haptic(10); 
-    contadorNotificaciones = 0; 
-    actualizarBadge(); 
-    toast('Notificaciones leídas', 'success'); 
+    haptic(10); contadorNotificaciones = 0; actualizarBadge(); toast('Notificaciones leídas', 'success'); 
   });
   document.getElementById('btnTema')?.addEventListener('click', toggleTheme);
   document.getElementById('btnAbrirMensajePopup')?.addEventListener('click', () => {
@@ -153,20 +130,13 @@ function renderLayout() {
 renderLayout();
 actualizarBadge();
 
-// ==========================================
-// 2. AUTENTICACIÓN Y POPUPS
-// ==========================================
 requireAuth((s) => {
   appState.sesion = s;
   setTimeout(() => { 
     iniciarApp(); 
     const sub = document.getElementById('userInfo'); if(sub) sub.textContent = s.nombre;
     verificarPopups();
-    
-    // 🔥 SOLICITAR PERMISO DE NOTIFICACIONES SI ES ADMIN
-    if (s.rol === 'admin') {
-      solicitarPermisoNotificaciones();
-    }
+    if (s.rol === 'admin') solicitarPermisoNotificaciones();
   }, 500);
 });
 
@@ -177,7 +147,6 @@ function iniciarApp() {
   }
   configurarEventos(); 
   cargarDatos();
-  // Fallback: si en 3s no se ocultó, ocultar igual
   setTimeout(() => { if(appLoader) appLoader.classList.add('hidden'); }, CONFIG_APP.loaderFallbackMs);
 }
 
@@ -196,11 +165,7 @@ async function verificarPopups() {
         document.getElementById('modalVerPopup')?.classList.add('show');
       }
     }
-  } catch(e) {
-    if (e?.code !== 'permission-denied' && e?.code !== 'not-found') {
-      console.warn('verificarPopups:', e?.message || e);
-    }
-  }
+  } catch(e) { /* Silencioso */ }
 }
 
 document.getElementById('btnOkPopup')?.addEventListener('click', async () => {
@@ -208,13 +173,10 @@ document.getElementById('btnOkPopup')?.addEventListener('click', async () => {
   haptic(15);
   try {
     await updateDoc(doc(db, 'config', 'popup_mensaje'), { leidoPorTecnico: true });
-    toast('Mensaje del dueño confirmado', 'success');
-  } catch(e) { console.log('Error al confirmar lectura', e); }
+    toast('Mensaje confirmado', 'success');
+  } catch(e) { console.log(e); }
 });
 
-// ==========================================
-// 3. HELPERS
-// ==========================================
 export function parsearFecha(f) {
   if (!f) return null;
   if (typeof f.toDate === 'function') return f.toDate();
@@ -233,12 +195,15 @@ function formatFechaCompleta(f) {
 
 export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
 
-// ==========================================
-// 4. EVENTOS
-// ==========================================
 function configurarEventos() {
   document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
-  document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { haptic(15); modalVenta?.classList.add('show'); });
+  
+  document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { 
+    haptic(15); 
+    resetVentaModal();
+    modalVenta?.classList.add('show'); 
+  });
+
   document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta?.classList.remove('show'));
   document.getElementById('btnCloseSheet')?.addEventListener('click', () => reciboSheet?.classList.remove('show'));
   document.getElementById('btnClosePago')?.addEventListener('click', () => document.getElementById('modalPago')?.classList.remove('show'));
@@ -266,18 +231,18 @@ function configurarEventos() {
 
     try {
       const gastos = leerGastosDelDOM();
-      await guardarCierreEnFirebase(gastos);
-      generarPDFCierre(gastos);
+      const resumen = calcularResumenCierre(gastos);
       
-      const totalGlobal = document.getElementById('totalGlobal')?.textContent || 'Bs. 0.00';
-      const gananciaGlobal = document.getElementById('gananciaGlobal')?.textContent || 'Bs. 0.00';
-      const montoTransferir = document.getElementById('montoTransferir')?.textContent || 'Bs. 0.00';
+      await guardarCierreEnFirebase(gastos, resumen);
+      generarPDFCierre(gastos);
       
       const mensaje = `*CIERRE DE CAJA - DR. XIAOMI*\n\n` +
         `📅 *Fecha:* ${new Date().toLocaleDateString()}\n\n` +
-        `💰 *Total del Día:* ${totalGlobal}\n` +
-        `💵 *Ganancia Libre:* ${gananciaGlobal}\n\n` +
-        `💸 *Monto a Transferir al Técnico:* ${montoTransferir}\n\n` +
+        `💰 *Total Cobrado:* ${formatBsLimpio(resumen.totalGlobal)}\n` +
+        `💵 *Efectivo Físico:* ${formatBsLimpio(resumen.efectivoCaja)}\n` +
+        `📱 *QR:* ${formatBsLimpio(resumen.qrCaja)}\n\n` +
+        `💸 *A Entregar al Dueño:* ${formatBsLimpio(resumen.aEntregar)}\n` +
+        `_(Se descontaron Bs. ${resumen.totalGastos} de gastos)_\n\n` +
         `_Adjunto el PDF con el detalle._`;
 
       setTimeout(() => {
@@ -307,14 +272,10 @@ function configurarEventos() {
     haptic(20);
     try {
       await addDoc(collection(db, 'notas'), { texto, autor: appState.sesion?.nombre || 'Técnico', fecha: serverTimestamp() });
-      toast('Nota guardada para el dueño', 'success');
+      toast('Nota guardada', 'success');
       modalNotaDueno?.classList.remove('show');
       document.getElementById('notaDuenoTexto').value = '';
     } catch (e) { toast('Error al guardar', 'error'); }
-  });
-
-  document.getElementById('btnAbrirMensajePopup')?.addEventListener('click', () => {
-    document.getElementById('modalMensajePopup')?.classList.add('show');
   });
 
   document.getElementById('btnCancelarMensajePopup')?.addEventListener('click', () => {
@@ -330,22 +291,18 @@ function configurarEventos() {
     haptic(20);
     try {
       const fechaExpiracion = dias > 0 ? new Date().getTime() + (dias * 24 * 60 * 60 * 1000) : 9999999999999;
-      await setDoc(doc(db, 'config', 'popup_mensaje'), {
-        titulo, texto, fechaExpiracion, activo: true, leidoPorTecnico: false, fechaCreacion: serverTimestamp()
-      });
-      toast('Mensaje enviado al técnico', 'success');
+      await setDoc(doc(db, 'config', 'popup_mensaje'), { titulo, texto, fechaExpiracion, activo: true, leidoPorTecnico: false, fechaCreacion: serverTimestamp() });
+      toast('Mensaje enviado', 'success');
       document.getElementById('modalMensajePopup')?.classList.remove('show');
     } catch(err) { toast('Error al enviar', 'error'); }
   });
 
-  // 🔥 MOSTRAR/OCULTAR "OTRO" EN VENTA SERVICIO
   const selConcepto = document.getElementById('ventaConcepto');
   const wrapOtro = document.getElementById('wrapConceptoOtro');
   selConcepto?.addEventListener('change', () => {
     if (wrapOtro) wrapOtro.style.display = selConcepto.value === 'Otro' ? 'block' : 'none';
   });
 
-  // LÓGICA DE VENTA
   const tipoStep = document.getElementById('tipoVentaStep');
   const accesorioStep = document.getElementById('ventaAccesorioStep');
   const servicioStep = document.getElementById('ventaServicioStep');
@@ -355,6 +312,9 @@ function configurarEventos() {
     if(accesorioStep) accesorioStep.style.display = 'block'; 
     if(servicioStep) servicioStep.style.display = 'none';
     
+    const metodoAccesorio = document.getElementById('accesorioMetodoPago');
+    if(metodoAccesorio) metodoAccesorio.value = 'Efectivo'; 
+
     const grid = document.getElementById('gridAccesorios');
     if (grid) {
       grid.innerHTML = appState.inventario.map(i => `
@@ -394,6 +354,10 @@ function configurarEventos() {
     if(tipoStep) tipoStep.style.display = 'none'; 
     if(accesorioStep) accesorioStep.style.display = 'none'; 
     if(servicioStep) servicioStep.style.display = 'block';
+    
+    document.getElementById('ventaConcepto').value = 'Botón';
+    if(wrapOtro) wrapOtro.style.display = 'none';
+    document.getElementById('ventaMonto').value = '';
   });
 
   document.getElementById('btnBackToTipo')?.addEventListener('click', () => { if(tipoStep) tipoStep.style.display = 'block'; if(accesorioStep) accesorioStep.style.display = 'none'; if(servicioStep) servicioStep.style.display = 'none'; });
@@ -413,6 +377,9 @@ function configurarEventos() {
     try {
       await addDoc(collection(db, 'ventas'), { concepto, monto, costo: 0, metodoPago: metodo, fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
       toast('Venta registrada', 'success'); 
+      
+      // 🔥 CIERRE AUTOMÁTICO AL REGISTRAR
+      if (document.activeElement) document.activeElement.blur(); 
       modalVenta?.classList.remove('show');
     } catch (err) { toast('Error al guardar', 'error'); }
   });
@@ -423,6 +390,7 @@ function configurarEventos() {
     const precio = parseFloat(btn.dataset.precio), costo = parseFloat(btn.dataset.costo);
     const stock = parseInt(btn.dataset.stock);
     const cantidad = parseInt(document.getElementById('accesorioCantidad').value);
+    const metodo = document.getElementById('accesorioMetodoPago').value;
 
     if (!id) return;
     if (!cantidad || cantidad < 1 || isNaN(cantidad)) { toast('Cantidad inválida', 'error'); return; }
@@ -431,12 +399,13 @@ function configurarEventos() {
     haptic(20);
     try {
       const total = precio * cantidad;
-      await addDoc(collection(db, 'ventas'), { concepto: `${cantidad}x ${nombre}`, monto: total, costo: costo * cantidad, metodoPago: 'Efectivo', fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
+      await addDoc(collection(db, 'ventas'), { concepto: `${cantidad}x ${nombre}`, monto: total, costo: costo * cantidad, metodoPago: metodo, fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
       await updateDoc(doc(db, 'productos', id), { stock: stock - cantidad });
       toast('Venta de accesorio registrada', 'success'); 
+      
+      // 🔥 CIERRE AUTOMÁTICO AL REGISTRAR
+      if (document.activeElement) document.activeElement.blur(); 
       modalVenta?.classList.remove('show');
-      document.getElementById('productoSeleccionadoInfo').style.display = 'none';
-      btn.disabled = true;
     } catch (err) { console.error(err); toast('Error al guardar', 'error'); }
   });
 
@@ -448,9 +417,32 @@ function configurarEventos() {
     filtroActual = btn.dataset.filtro;
     busquedaActual = ''; document.getElementById('buscador').value = ''; paginaActual = 1; renderizarTodo();
   });
-  document.getElementById('buscador')?.addEventListener('input', (e) => {
-    busquedaActual = e.target.value.toLowerCase().trim(); paginaActual = 1; renderizarTodoDebounced();
-  });
+
+  // 🔥 UX MÓVIL: BUSCAR CON "ENTER" Y OCULTAR TECLADO
+  const buscador = document.getElementById('buscador');
+  if (buscador) {
+    buscador.addEventListener('input', (e) => {
+      busquedaActual = e.target.value.toLowerCase().trim(); 
+      paginaActual = 1; 
+      renderizarTodoDebounced();
+    });
+    buscador.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        buscador.blur(); // Oculta el teclado del celular
+        haptic(10);
+        renderizarTodo();
+      }
+    });
+  }
+}
+
+function resetVentaModal() {
+  document.getElementById('tipoVentaStep').style.display = 'block';
+  document.getElementById('ventaAccesorioStep').style.display = 'none';
+  document.getElementById('ventaServicioStep').style.display = 'none';
+  document.getElementById('productoSeleccionadoInfo').style.display = 'none';
+  document.getElementById('btnRegistrarAccesorio').disabled = true;
 }
 
 // ==========================================
@@ -461,7 +453,6 @@ function cargarDatos() {
   unsubscribe = onSnapshot(query(collection(db, 'recibos'), orderBy('fecha', 'desc')), (snap) => {
       appState.ordenes = snap.docs.map(d => { const data = d.data(); delete data.fotos; return { id: d.id, ...data }; });
       appState.ordenes.sort((a, b) => (parsearFecha(b.fechaEditada || b.fecha) || 0) - (parsearFecha(a.fechaEditada || a.fecha) || 0));
-      // Ocultar loader al primer snapshot
       if (appLoader && !appLoader.classList.contains('hidden')) appLoader.classList.add('hidden');
       renderizarTodo();
     }, (err) => { 
@@ -484,7 +475,7 @@ function cargarDatos() {
         d.ventasInventario.forEach((v, i) => ventasCierre.push({ 
           id: docSnap.id, indexExtra: `inv_${i}`, origen: 'cierre', coleccion: 'cierres', 
           concepto: `${v.cantidad}x ${v.nombre}`, monto: Number(v.precio * v.cantidad) || 0, 
-          costo: Number(v.costo || 0), metodoPago: 'Efectivo', fecha: d.fecha 
+          costo: Number(v.costo || 0), metodoPago: v.metodoPago || 'Efectivo', fecha: d.fecha 
         }));
       }
       if (Array.isArray(d.extras)) {
@@ -492,7 +483,7 @@ function cargarDatos() {
           if (Number(e.monto) > 0) ventasCierre.push({ 
             id: docSnap.id, indexExtra: `ext_${i}`, origen: 'cierre', coleccion: 'cierres', 
             concepto: e.desc || 'Venta Extra', monto: Number(e.monto) || 0, 
-            costo: 0, metodoPago: 'Efectivo', fecha: d.fecha 
+            costo: 0, metodoPago: e.metodoPago || 'Efectivo', fecha: d.fecha 
           }); 
         });
       }
@@ -511,7 +502,6 @@ function procesarVentas() {
   renderizarTodoDebounced(); 
 }
 
-// Debounce para no renderizar 4 veces seguidas
 let renderTimer = null;
 function renderizarTodoDebounced() {
   clearTimeout(renderTimer);
@@ -578,7 +568,7 @@ function renderizarPaginacion(total) {
   paginationContainer.querySelectorAll('button[data-page]').forEach(btn => {
     btn.addEventListener('click', () => {
       const p = parseInt(btn.dataset.page);
-      if (!isNaN(p) && p >= 1) cambiarPagina(p);
+      if (!isNaN(p) && p >= 1) window.cambiarPagina(p);
     });
   });
 }
@@ -656,14 +646,12 @@ function actualizarStats() {
     } 
   });
   
-  // Dedupe: evitar doble conteo de ventas de accesorios que ya están en cierres
   const ventasHoyUnicas = dedupeVentas(appState.ventasHoy);
   const ingVent = ventasHoyUnicas.filter(v => { const f = parsearFecha(v.fecha); return f && f >= hoy; }).reduce((s, v) => s + (Number(v.monto) || 0), 0);
   
   if (hoyEl) hoyEl.textContent = formatBsLimpio(ingRep + ingVent);
 }
 
-// Dedupe simple por concepto+monto+fecha (minuto) para evitar duplicados entre ventas y cierres
 function dedupeVentas(ventas) {
   const seen = new Set();
   const result = [];
@@ -686,9 +674,10 @@ async function abrirCierreDeCaja() {
   hoy.setHours(0,0,0,0);
   const hoyStr = hoy.toDateString();
 
-  reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0, ganancia: 0 };
-  ventasAccesoriosData = { total: 0, cantidad: 0, ganancia: 0 };
-  ventasExtrasData = { total: 0, cantidad: 0, ganancia: 0 };
+  reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
+  ventasAccesoriosData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
+  detallesReparaciones = [];
+  detallesVentas = [];
 
   try {
     const qRecibos = query(collection(db, 'recibos'), where('estadoOrden', '==', 'entregado'));
@@ -701,15 +690,19 @@ async function abrirCierreDeCaja() {
       
       if (fechaD && fechaD.toDateString() === hoyStr) {
         const monto = Number(d.montoCobrado) || 0;
-        const costo = Number(d.costoRepuesto) || 0;
         const metodo = (d.metodoPago || 'Efectivo').toLowerCase();
 
         reparacionesData.total += monto;
-        reparacionesData.ganancia += (monto - costo);
         reparacionesData.cantidad++;
-
         if (metodo.includes('efectivo')) reparacionesData.efectivo += monto;
         else if (metodo.includes('qr')) reparacionesData.qr += monto;
+
+        detallesReparaciones.push({
+          cliente: d.cliente || 'Sin nombre',
+          equipo: `${d.marca || ''} ${d.modelo || ''}`.trim() || 'Equipo',
+          monto: monto,
+          metodo: metodo.includes('qr') ? 'QR' : 'Efectivo'
+        });
       }
     });
   } catch (e) {
@@ -717,18 +710,23 @@ async function abrirCierreDeCaja() {
     toast('Error al leer recibos. Se usará solo ventas.', 'error');
   }
 
-  // Ventas de accesorios del día (solo de la colección 'ventas', no de cierres)
   const ventasHoyUnicas = dedupeVentas(appState.ventasHoy);
   ventasHoyUnicas.forEach(v => {
     const f = parsearFecha(v.fecha);
-    if (f && f.toDateString() === hoyStr) {
+    if (f && f.toDateString() === hoyStr && v.origen === 'panel') {
       const monto = Number(v.monto) || 0;
-      const costo = Number(v.costo) || 0;
-      if (v.origen === 'panel') {
-        ventasAccesoriosData.total += monto;
-        ventasAccesoriosData.ganancia += (monto - costo);
-        ventasAccesoriosData.cantidad++;
-      }
+      const metodo = (v.metodoPago || 'Efectivo').toLowerCase();
+      
+      ventasAccesoriosData.total += monto;
+      ventasAccesoriosData.cantidad++;
+      if (metodo.includes('efectivo')) ventasAccesoriosData.efectivo += monto;
+      else if (metodo.includes('qr')) ventasAccesoriosData.qr += monto;
+
+      detallesVentas.push({
+        producto: v.concepto || 'Venta',
+        monto: monto,
+        metodo: metodo.includes('qr') ? 'QR' : 'Efectivo'
+      });
     }
   });
 
@@ -743,21 +741,40 @@ function renderizarVistaPreviaCierre() {
   const hoy = new Date();
   const fechaStr = `${String(hoy.getDate()).padStart(2,'0')}/${String(hoy.getMonth()+1).padStart(2,'0')}/${hoy.getFullYear()}`;
 
+  let htmlDetalles = '';
+
+  if (detallesReparaciones.length > 0) {
+    htmlDetalles += `
+      <div style="margin-top: 15px;">
+        <h4 style="font-size: 12px; font-weight: bold; border-bottom: 1px solid #ccc; margin-bottom: 5px;">Reparaciones Entregadas</h4>
+        <table style="width: 100%; font-size: 10px; text-align: left;">
+          <tr><th>Equipo / Cliente</th><th style="text-align: right;">Monto</th></tr>
+          ${detallesReparaciones.map(r => `<tr><td>${r.equipo} (${r.cliente}) - ${r.metodo}</td><td style="text-align: right;">Bs. ${r.monto.toFixed(2)}</td></tr>`).join('')}
+        </table>
+      </div>`;
+  }
+
+  if (detallesVentas.length > 0) {
+    htmlDetalles += `
+      <div style="margin-top: 15px;">
+        <h4 style="font-size: 12px; font-weight: bold; border-bottom: 1px solid #ccc; margin-bottom: 5px;">Ventas de Accesorios</h4>
+        <table style="width: 100%; font-size: 10px; text-align: left;">
+          <tr><th>Producto</th><th style="text-align: right;">Monto</th></tr>
+          ${detallesVentas.map(v => `<tr><td>${v.producto} - ${v.metodo}</td><td style="text-align: right;">Bs. ${v.monto.toFixed(2)}</td></tr>`).join('')}
+        </table>
+      </div>`;
+  }
+
   container.innerHTML = `
     <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
       <h2 style="font-size: 16px; margin: 0; font-family: 'Helvetica';">DR. XIAOMI SCZ</h2>
       <p style="margin: 0; font-size: 10px;">Cierre del ${fechaStr}</p>
     </div>
-    <table style="width: 100%; font-size: 11px; text-align: left; margin-bottom: 12px;">
-      <tr><th>Concepto</th><th style="text-align: right;">Monto</th></tr>
-      <tr><td>Reparaciones Entregadas (${reparacionesData.cantidad})</td><td style="text-align: right; font-weight: bold;">Bs. ${reparacionesData.total.toFixed(2)}</td></tr>
-      <tr><td>Ventas de Accesorios</td><td style="text-align: right; font-weight: bold;">Bs. ${ventasAccesoriosData.total.toFixed(2)}</td></tr>
-      <tr><td>Ventas Extras</td><td style="text-align: right; font-weight: bold;">Bs. ${ventasExtrasData.total.toFixed(2)}</td></tr>
-    </table>
-    <div style="background: #f0f0f0; padding: 8px; border-radius: 4px; font-size: 11px;">
-      <div style="display: flex; justify-content: space-between;"><span>Efectivo:</span> <strong>Bs. ${reparacionesData.efectivo.toFixed(2)}</strong></div>
-      <div style="display: flex; justify-content: space-between;"><span>QR:</span> <strong>Bs. ${reparacionesData.qr.toFixed(2)}</strong></div>
+    <div style="background: #f0f0f0; padding: 8px; border-radius: 4px; font-size: 11px; margin-bottom: 10px;">
+      <div style="display: flex; justify-content: space-between;"><span>Total Reparaciones:</span> <strong>Bs. ${reparacionesData.total.toFixed(2)}</strong></div>
+      <div style="display: flex; justify-content: space-between;"><span>Total Ventas:</span> <strong>Bs. ${ventasAccesoriosData.total.toFixed(2)}</strong></div>
     </div>
+    ${htmlDetalles}
   `;
 }
 
@@ -767,35 +784,37 @@ function leerGastosDelDOM() {
   return { pasajes, almuerzo, totalGastos: pasajes + almuerzo };
 }
 
+function calcularResumenCierre(gastos) {
+  const totalGlobal = reparacionesData.total + ventasAccesoriosData.total;
+  const efectivoCaja = reparacionesData.efectivo + ventasAccesoriosData.efectivo;
+  const qrCaja = reparacionesData.qr + ventasAccesoriosData.qr;
+  
+  // El técnico entrega el efectivo físico menos sus gastos. El QR va directo al dueño.
+  const aEntregar = Math.max(0, efectivoCaja - gastos.totalGastos);
+  
+  return { totalGlobal, efectivoCaja, qrCaja, aEntregar, totalGastos: gastos.totalGastos };
+}
+
 function recalcularCierre() {
-  const { totalGastos } = leerGastosDelDOM();
-
-  const totalGlobal = reparacionesData.total + ventasAccesoriosData.total + ventasExtrasData.total;
-  // Ganancia real: ganancia de reparaciones + accesorios + extras - gastos
-  const gananciaReal = (reparacionesData.ganancia + ventasAccesoriosData.ganancia + ventasExtrasData.ganancia) - totalGastos;
-
-  // Efectivo en caja = efectivo cobrado por reparaciones (las ventas de accesorios también son efectivo)
-  const efectivoEnCaja = reparacionesData.efectivo + ventasAccesoriosData.total;
-  let montoTransferir = 0;
-
-  // Si el efectivo en caja no cubre la ganancia libre, el técnico transfiere la diferencia al dueño
-  if (efectivoEnCaja < gananciaReal) {
-    montoTransferir = gananciaReal - efectivoEnCaja;
-  }
+  const gastos = leerGastosDelDOM();
+  const resumen = calcularResumenCierre(gastos);
 
   const elTotal = document.getElementById('totalGlobal');
   const elGanancia = document.getElementById('gananciaGlobal');
   const elMontoTransf = document.getElementById('montoTransferir');
 
-  if (elTotal) elTotal.textContent = formatBsLimpio(totalGlobal);
-  if (elGanancia) elGanancia.textContent = formatBsLimpio(gananciaReal);
-  if (elMontoTransf) elMontoTransf.textContent = formatBsLimpio(montoTransferir);
+  // Actualizamos los textos de la vista previa (HTML)
+  if (elTotal) elTotal.textContent = formatBsLimpio(resumen.totalGlobal);
+  if (elGanancia) elGanancia.textContent = formatBsLimpio(resumen.efectivoCaja); // Mostramos efectivo físico
+  if (elMontoTransf) elMontoTransf.textContent = formatBsLimpio(resumen.aEntregar);
 }
 
 function generarPDFCierre(gastos) {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+  const resumen = calcularResumenCierre(gastos);
 
+  // Header
   pdf.setFillColor(255, 105, 0); pdf.rect(0, 0, 210, 30, 'F');
   pdf.setTextColor(255, 255, 255); pdf.setFontSize(20); pdf.text('DR. XIAOMI SCZ', 14, 15);
   pdf.setFontSize(10); pdf.text('Cierre de Caja Diario', 14, 22);
@@ -803,86 +822,80 @@ function generarPDFCierre(gastos) {
   pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, 14, 45);
   pdf.text(`Realizado por: ${appState.sesion?.nombre || 'Técnico'}`, 14, 52);
 
-  pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Reparaciones', 14, 65);
+  // Resumen
+  pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.text('Resumen Financiero', 14, 65);
   pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
-  pdf.text(`- Cantidad entregada: ${reparacionesData.cantidad}`, 18, 72);
-  pdf.text(`- Total Cobrado: ${formatBsLimpio(reparacionesData.total)}`, 18, 79);
+  pdf.text(`- Total Cobrado: ${formatBsLimpio(resumen.totalGlobal)}`, 18, 72);
+  pdf.text(`- Efectivo Físico: ${formatBsLimpio(resumen.efectivoCaja)}`, 18, 79);
+  pdf.text(`- QR (Transferencia): ${formatBsLimpio(resumen.qrCaja)}`, 18, 86);
+  pdf.text(`- Gastos (Pasajes/Almuerzo): -${formatBsLimpio(resumen.totalGastos)}`, 18, 93);
 
-  let y = 90;
-  if (ventasAccesoriosData.cantidad > 0) {
-    pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Ventas de Accesorios', 14, y); y += 7;
-    pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
-    pdf.text(`- Total: ${formatBsLimpio(ventasAccesoriosData.total)}`, 18, y); y += 10;
+  let y = 105;
+
+  // Tabla Reparaciones
+  if (detallesReparaciones.length > 0) {
+    pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.text('Detalle de Reparaciones Entregadas', 14, y); y += 7;
+    pdf.setFontSize(10); pdf.setFont('helvetica', 'normal');
+    detallesReparaciones.forEach(r => {
+      pdf.text(`${r.equipo} (${r.cliente}) [${r.metodo}]`, 18, y);
+      pdf.text(`${formatBsLimpio(r.monto)}`, 190, y, { align: 'right' });
+      y += 6;
+    });
+    y += 5;
   }
 
-  const totalGastos = gastos?.totalGastos || 0;
-  const totalGlobal = reparacionesData.total + ventasAccesoriosData.total + ventasExtrasData.total;
-  const gananciaReal = (reparacionesData.ganancia + ventasAccesoriosData.ganancia + ventasExtrasData.ganancia) - totalGastos;
-  const efectivoEnCaja = reparacionesData.efectivo + ventasAccesoriosData.total;
-  const montoTransferir = Math.max(0, gananciaReal - efectivoEnCaja);
-
-  pdf.setFillColor(240, 240, 240); pdf.rect(14, y, 182, 20, 'F');
-  pdf.setFontSize(16); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(255, 105, 0);
-  pdf.text(`TOTAL DEL DÍA: ${formatBsLimpio(totalGlobal)}`, 105, y + 13, { align: 'center' });
-
-  pdf.setFillColor(16, 185, 129); pdf.rect(14, y + 22, 182, 20, 'F');
-  pdf.setTextColor(255, 255, 255); pdf.text(`GANANCIA NETA: ${formatBsLimpio(gananciaReal)}`, 105, y + 35, { align: 'center' });
-
-  if (montoTransferir > 0) {
-    pdf.setFillColor(59, 130, 246); pdf.rect(14, y + 44, 182, 20, 'F');
-    pdf.setTextColor(255, 255, 255); pdf.text(`MONTO A TRANSFERIR AL TÉCNICO: ${formatBsLimpio(montoTransferir)}`, 105, y + 57, { align: 'center' });
+  // Tabla Ventas
+  if (detallesVentas.length > 0) {
+    pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.text('Detalle de Ventas de Accesorios', 14, y); y += 7;
+    pdf.setFontSize(10); pdf.setFont('helvetica', 'normal');
+    detallesVentas.forEach(v => {
+      pdf.text(`${v.producto} [${v.metodo}]`, 18, y);
+      pdf.text(`${formatBsLimpio(v.monto)}`, 190, y, { align: 'right' });
+      y += 6;
+    });
+    y += 5;
   }
+
+  // Total a Entregar (Destacado)
+  pdf.setFillColor(59, 130, 246); pdf.rect(14, y, 182, 20, 'F');
+  pdf.setTextColor(255, 255, 255); pdf.setFontSize(14); pdf.setFont('helvetica', 'bold');
+  pdf.text(`A ENTREGAR AL DUEÑO (Efectivo): ${formatBsLimpio(resumen.aEntregar)}`, 105, y + 13, { align: 'center' });
 
   pdf.setFontSize(8); pdf.setTextColor(120, 120, 120); pdf.text('Generado automáticamente por DR. Xiaomi', 105, 280, { align: 'center' });
 
   pdf.save(`Cierre_${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
-async function guardarCierreEnFirebase(gastos) {
-  const { pasajes, almuerzo, totalGastos } = gastos;
-  const totalGlobal = reparacionesData.total + ventasAccesoriosData.total + ventasExtrasData.total;
-  const gananciaReal = (reparacionesData.ganancia + ventasAccesoriosData.ganancia + ventasExtrasData.ganancia) - totalGastos;
-  const efectivoEnCaja = reparacionesData.efectivo + ventasAccesoriosData.total;
-  const montoTransferir = Math.max(0, gananciaReal - efectivoEnCaja);
-
-  const fechaStr = new Date().toISOString().slice(0, 10); // idempotente por día
+async function guardarCierreEnFirebase(gastos, resumen) {
+  const fechaStr = new Date().toISOString().slice(0, 10);
   const cierreRef = doc(db, 'cierres', fechaStr);
 
-  // Ventas de accesorios del día (para que el lector pueda releerlas)
-  const hoyStr = new Date().toDateString();
-  const ventasInventario = [];
-  const extras = [];
-  const ventasHoyUnicas = dedupeVentas(appState.ventasHoy);
-  ventasHoyUnicas.forEach(v => {
-    const f = parsearFecha(v.fecha);
-    if (f && f.toDateString() === hoyStr && v.origen === 'panel') {
-      ventasInventario.push({
-        nombre: v.concepto || 'Venta',
-        cantidad: 1,
-        precio: Number(v.monto) || 0,
-        costo: Number(v.costo) || 0
-      });
-    }
-  });
+  const ventasInventario = detallesVentas.map(v => ({
+    nombre: v.producto,
+    cantidad: 1,
+    precio: v.monto,
+    costo: 0,
+    metodoPago: v.metodo
+  }));
 
   await setDoc(cierreRef, {
     fecha: serverTimestamp(),
     realizadoPor: appState.sesion?.nombre || 'Técnico',
     reparaciones: reparacionesData,
     ventasAccesorios: ventasAccesoriosData,
-    ventasExtras: ventasExtrasData,
     ventasInventario,
-    extras,
-    totalGlobal,
-    gananciaReal,
-    gastoPasajes: pasajes,
-    gastoAlmuerzo: almuerzo,
-    montoTransferir
+    extras: [],
+    totalGlobal: resumen.totalGlobal,
+    efectivoCaja: resumen.efectivoCaja,
+    qrCaja: resumen.qrCaja,
+    gastoPasajes: gastos.pasajes,
+    gastoAlmuerzo: gastos.almuerzo,
+    aEntregar: resumen.aEntregar
   }, { merge: true });
 }
 
 // ==========================================
-// 7. LÓGICA DE PULL TO REFRESH (Jalar para actualizar)
+// 7. PULL TO REFRESH
 // ==========================================
 let touchStartY = 0;
 let touchCurrentY = 0;
@@ -922,7 +935,6 @@ if (appContent && pullIndicator) {
       pullIndicator.style.transform = 'translateX(-50%) translateY(50px)';
       if (ptrIcon) ptrIcon.style.animation = 'spin 0.8s linear infinite'; 
       
-      // 🔥 NO re-suscribir: solo re-render local. Los listeners ya están activos.
       if (typeof renderizarTodo === 'function') {
         renderizarTodo();
         setTimeout(() => {
