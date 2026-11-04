@@ -25,6 +25,73 @@ const CONFIG_APP = {
   vapidKey: 'BNCSlsvNPr7pVw5dZTtm-mrSOrXsuIMQ_9IW9KTVPS1Hm8IEJMh8DaEk1nojGJ_4ZwVgV6ZYUgVTFSymAyS-jRc' 
 };
 
+// ==========================================
+// 🔥 MOTOR DE SONIDO NATIVO (UI SOUNDS)
+// ==========================================
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function playSound(type) {
+  try {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+
+    if (type === 'click') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } else if (type === 'pop') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } else if (type === 'success') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.setValueAtTime(783.99, now + 0.1);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else if (type === 'error') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+      osc.start(now);
+      osc.stop(now + 0.15);
+    }
+  } catch (e) { console.warn('Audio error', e); }
+}
+
+// Conectar sonidos de click a toda la interfaz
+document.addEventListener('click', (e) => {
+  if (e.target.closest('button') || e.target.closest('.nav-item') || e.target.closest('.chip-btn')) {
+    playSound('click');
+  }
+});
+
 export let appState = { sesion: null, ordenes: [], ventasHoy: [], inventario: [] };
 let filtroActual = 'todos', busquedaActual = '', todosLosMovimientos = [], paginaActual = 1;
 let unsubscribe = null, unsubscribeVentas = null, unsubscribeCierres = null, unsubscribeInventario = null; 
@@ -69,13 +136,12 @@ if (messaging) {
     const title = payload.notification?.title || payload.data?.title || 'Notificación';
     const body = payload.notification?.body || payload.data?.body || '';
     toast(`🔔 ${title}: ${body}`, 'info', 6000);
-    // Si estamos en el panel, actualizamos el contador
     escucharNotificaciones(); 
   });
 }
 
 // ==========================================
-// NUEVO: BANDEJA DE NOTIFICACIONES (PARA EL DUEÑO)
+// BANDEJA DE NOTIFICACIONES (PARA EL DUEÑO)
 // ==========================================
 let notificacionesList = [];
 let unsubscribeNotif = null;
@@ -91,7 +157,6 @@ function actualizarBadgeNotif() {
 
 function escucharNotificaciones() {
   if (unsubscribeNotif) unsubscribeNotif();
-  // Solo escuchamos si es admin (dueño)
   if (appState.sesion?.rol !== 'admin') return; 
 
   unsubscribeNotif = onSnapshot(query(collection(db, 'notificaciones'), orderBy('fecha', 'desc'), limit(50)), (snap) => {
@@ -158,7 +223,6 @@ function renderLayout() {
       </div>
       <div class="header-actions">
         ${btnMensajePopup}
-        <!-- CAMPANA DE NOTIFICACIONES -->
         <button type="button" class="icon-btn" id="btnNotificaciones" style="position:relative;">
           ${icono('campana', 20)}
           <span class="notif-badge" id="notifBadge" style="position:absolute; top:-4px; right:-4px; display:none; background:var(--danger-500); color:white; font-size:10px; font-weight:800; padding:2px 5px; border-radius:10px; border:2px solid var(--bg-elev-1);">0</span>
@@ -181,9 +245,9 @@ function renderLayout() {
   
   document.getElementById('btnSalir')?.addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
   
-  // Al tocar la campana, abrimos la lista y marcamos como leídas
   document.getElementById('btnNotificaciones')?.addEventListener('click', () => { 
     haptic(10); 
+    playSound('pop');
     renderNotificacionesModal();
     document.getElementById('modalNotificaciones')?.classList.add('show');
     marcarNotificacionesLeidas(); 
@@ -192,6 +256,7 @@ function renderLayout() {
   document.getElementById('btnTema')?.addEventListener('click', toggleTheme);
   document.getElementById('btnAbrirMensajePopup')?.addEventListener('click', () => {
     haptic(15);
+    playSound('pop');
     document.getElementById('modalMensajePopup')?.classList.add('show');
   });
 }
@@ -209,7 +274,7 @@ requireAuth((s) => {
     verificarPopups();
     if (s.rol === 'admin') {
       solicitarPermisoNotificaciones();
-      escucharNotificaciones(); // Empezar a escuchar las notificaciones en vivo
+      escucharNotificaciones(); 
     }
   }, 500);
 });
@@ -237,6 +302,7 @@ async function verificarPopups() {
         if (t) t.textContent = data.titulo || 'Mensaje';
         if (p) p.textContent = data.texto || '';
         document.getElementById('modalVerPopup')?.classList.add('show');
+        playSound('pop');
       }
     }
   } catch(e) { /* Silencioso */ }
@@ -248,6 +314,7 @@ document.getElementById('btnOkPopup')?.addEventListener('click', async () => {
   try {
     await updateDoc(doc(db, 'config', 'popup_mensaje'), { leidoPorTecnico: true });
     toast('Mensaje confirmado', 'success');
+    playSound('success');
   } catch(e) { console.log(e); }
 });
 
@@ -276,10 +343,15 @@ export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('s
 // 4. EVENTOS
 // ==========================================
 function configurarEventos() {
-  document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
+  document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { 
+    haptic(15); 
+    playSound('pop');
+    setTimeout(() => { window.location.href = '/app/cliente/'; }, 100);
+  });
   
   document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { 
     haptic(15); 
+    playSound('pop');
     resetVentaModal();
     modalVenta?.classList.add('show'); 
   });
@@ -293,11 +365,16 @@ function configurarEventos() {
     backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.classList.remove('show'); });
   });
 
-  document.getElementById('btnPDFDia')?.addEventListener('click', () => { haptic(15); abrirCierreDeCaja(); });
+  document.getElementById('btnPDFDia')?.addEventListener('click', () => { 
+    haptic(15); 
+    playSound('pop');
+    abrirCierreDeCaja(); 
+  });
   document.getElementById('btnClosePreviewPDF')?.addEventListener('click', () => modalPreviewPDF?.classList.remove('show'));
 
   document.getElementById('btnDescargarPDF')?.addEventListener('click', () => {
     haptic(20);
+    playSound('success');
     const gastos = leerGastosDelDOM();
     generarPDFCierre(gastos); 
     toast('PDF Descargado', 'success');
@@ -316,6 +393,7 @@ function configurarEventos() {
       
       await guardarCierreEnFirebase(gastos, resumen);
       generarPDFCierre(gastos);
+      playSound('success');
       
       const mensaje = `*CIERRE DE CAJA - DR. XIAOMI*\n\n` +
         `📅 *Fecha:* ${new Date().toLocaleDateString()}\n\n` +
@@ -334,6 +412,7 @@ function configurarEventos() {
       modalPreviewPDF?.classList.remove('show');
     } catch (e) {
       console.error(e);
+      playSound('error');
       toast('Error al cerrar el día', 'error');
     } finally {
       btn.innerHTML = `<img src="/app/icons/whatsapp.png" width="20" height="20" style="margin-right: 8px;"> Cerrar Día y Enviar al Dueño`;
@@ -344,23 +423,33 @@ function configurarEventos() {
   document.getElementById('gastoPasajes')?.addEventListener('input', recalcularCierre);
   document.getElementById('toggleAlmuerzo')?.addEventListener('change', recalcularCierre);
 
-  document.getElementById('btnAbrirNotaDueno')?.addEventListener('click', () => { haptic(15); modalNotaDueno?.classList.add('show'); });
+  document.getElementById('btnAbrirNotaDueno')?.addEventListener('click', () => { 
+    haptic(15); 
+    playSound('pop');
+    modalNotaDueno?.classList.add('show'); 
+  });
   document.getElementById('btnCancelarNotaDueno')?.addEventListener('click', () => modalNotaDueno?.classList.remove('show'));
   
   document.getElementById('btnGuardarNotaDueno')?.addEventListener('click', async () => {
     const texto = document.getElementById('notaDuenoTexto').value.trim();
-    if (!texto) { toast('Escribe algo primero', 'error'); return; }
+    if (!texto) { 
+      playSound('error');
+      toast('Escribe algo primero', 'error'); 
+      return; 
+    }
     haptic(20);
     try {
       await addDoc(collection(db, 'notas'), { texto, autor: appState.sesion?.nombre || 'Técnico', fecha: serverTimestamp() });
-      
-      // ENVIAR NOTIFICACIÓN
       await enviarNotificacionDB('Nota del Técnico', `${appState.sesion?.nombre || 'Técnico'}: ${texto}`);
       
+      playSound('success');
       toast('Nota guardada', 'success');
       modalNotaDueno?.classList.remove('show');
       document.getElementById('notaDuenoTexto').value = '';
-    } catch (e) { toast('Error al guardar', 'error'); }
+    } catch (e) { 
+      playSound('error');
+      toast('Error al guardar', 'error'); 
+    }
   });
 
   document.getElementById('btnCancelarMensajePopup')?.addEventListener('click', () => {
@@ -372,18 +461,24 @@ function configurarEventos() {
     const texto = (document.getElementById('mensajePopupTexto').value || '').trim().slice(0, 2000);
     const dias = parseInt(document.getElementById('mensajePopupDuracion').value) || 0;
     
-    if (!titulo || !texto) { toast('Completa todos los campos', 'error'); return; }
+    if (!titulo || !texto) { 
+      playSound('error');
+      toast('Completa todos los campos', 'error'); 
+      return; 
+    }
     haptic(20);
     try {
       const fechaExpiracion = dias > 0 ? new Date().getTime() + (dias * 24 * 60 * 60 * 1000) : 9999999999999;
       await setDoc(doc(db, 'config', 'popup_mensaje'), { titulo, texto, fechaExpiracion, activo: true, leidoPorTecnico: false, fechaCreacion: serverTimestamp() });
-      
-      // ENVIAR NOTIFICACIÓN
       await enviarNotificacionDB('Mensaje del Dueño', texto);
 
+      playSound('success');
       toast('Mensaje enviado', 'success');
       document.getElementById('modalMensajePopup')?.classList.remove('show');
-    } catch(err) { toast('Error al enviar', 'error'); }
+    } catch(err) { 
+      playSound('error');
+      toast('Error al enviar', 'error'); 
+    }
   });
 
   const selConcepto = document.getElementById('ventaConcepto');
@@ -397,6 +492,7 @@ function configurarEventos() {
   const servicioStep = document.getElementById('ventaServicioStep');
 
   document.getElementById('btnVentaAccesorio')?.addEventListener('click', () => {
+    playSound('click');
     if(tipoStep) tipoStep.style.display = 'none'; 
     if(accesorioStep) accesorioStep.style.display = 'block'; 
     if(servicioStep) servicioStep.style.display = 'none';
@@ -418,6 +514,7 @@ function configurarEventos() {
       grid.querySelectorAll('.accesorio-card').forEach(card => {
         card.addEventListener('click', () => {
           haptic(10);
+          playSound('click');
           grid.querySelectorAll('.accesorio-card').forEach(c => c.classList.remove('seleccionado'));
           card.classList.add('seleccionado');
           
@@ -440,6 +537,7 @@ function configurarEventos() {
   });
 
   document.getElementById('btnVentaServicio')?.addEventListener('click', () => {
+    playSound('click');
     if(tipoStep) tipoStep.style.display = 'none'; 
     if(accesorioStep) accesorioStep.style.display = 'none'; 
     if(servicioStep) servicioStep.style.display = 'block';
@@ -449,8 +547,18 @@ function configurarEventos() {
     document.getElementById('ventaMonto').value = '';
   });
 
-  document.getElementById('btnBackToTipo')?.addEventListener('click', () => { if(tipoStep) tipoStep.style.display = 'block'; if(accesorioStep) accesorioStep.style.display = 'none'; if(servicioStep) servicioStep.style.display = 'none'; });
-  document.getElementById('btnBackToTipo2')?.addEventListener('click', () => { if(tipoStep) tipoStep.style.display = 'block'; if(accesorioStep) accesorioStep.style.display = 'none'; if(servicioStep) servicioStep.style.display = 'none'; });
+  document.getElementById('btnBackToTipo')?.addEventListener('click', () => { 
+    playSound('click');
+    if(tipoStep) tipoStep.style.display = 'block'; 
+    if(accesorioStep) accesorioStep.style.display = 'none'; 
+    if(servicioStep) servicioStep.style.display = 'none'; 
+  });
+  document.getElementById('btnBackToTipo2')?.addEventListener('click', () => { 
+    playSound('click');
+    if(tipoStep) tipoStep.style.display = 'block'; 
+    if(accesorioStep) accesorioStep.style.display = 'none'; 
+    if(servicioStep) servicioStep.style.display = 'none'; 
+  });
 
   document.getElementById('btnGuardarVenta')?.addEventListener('click', async () => {
     let concepto = document.getElementById('ventaConcepto').value;
@@ -458,20 +566,31 @@ function configurarEventos() {
     let metodo = document.getElementById('ventaMetodo').value;
     if (concepto === 'Otro') {
       const c = document.getElementById('ventaConceptoOtro').value.trim();
-      if (!c) { toast('Especifica qué se vendió', 'error'); return; }
+      if (!c) { 
+        playSound('error');
+        toast('Especifica qué se vendió', 'error'); 
+        return; 
+      }
       concepto = c;
     }
-    if (!monto || monto <= 0 || isNaN(monto)) { toast('Ingresa un monto válido', 'error'); return; }
+    if (!monto || monto <= 0 || isNaN(monto)) { 
+      playSound('error');
+      toast('Ingresa un monto válido', 'error'); 
+      return; 
+    }
     haptic(20);
     try {
       await addDoc(collection(db, 'ventas'), { concepto, monto, costo: 0, metodoPago: metodo, fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
-      
       await enviarNotificacionDB('Nueva Venta', `Se vendió ${concepto} por Bs. ${monto} (${metodo})`);
 
+      playSound('success');
       toast('Venta registrada', 'success'); 
       if (document.activeElement) document.activeElement.blur(); 
       modalVenta?.classList.remove('show');
-    } catch (err) { toast('Error al guardar', 'error'); }
+    } catch (err) { 
+      playSound('error');
+      toast('Error al guardar', 'error'); 
+    }
   });
 
   document.getElementById('btnRegistrarAccesorio')?.addEventListener('click', async (e) => {
@@ -483,26 +602,39 @@ function configurarEventos() {
     const metodo = document.getElementById('accesorioMetodoPago').value;
 
     if (!id) return;
-    if (!cantidad || cantidad < 1 || isNaN(cantidad)) { toast('Cantidad inválida', 'error'); return; }
-    if (cantidad > stock) { toast('No hay suficiente stock', 'error'); return; }
+    if (!cantidad || cantidad < 1 || isNaN(cantidad)) { 
+      playSound('error');
+      toast('Cantidad inválida', 'error'); 
+      return; 
+    }
+    if (cantidad > stock) { 
+      playSound('error');
+      toast('No hay suficiente stock', 'error'); 
+      return; 
+    }
 
     haptic(20);
     try {
       const total = precio * cantidad;
       await addDoc(collection(db, 'ventas'), { concepto: `${cantidad}x ${nombre}`, monto: total, costo: costo * cantidad, metodoPago: metodo, fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
       await updateDoc(doc(db, 'productos', id), { stock: stock - cantidad });
-      
       await enviarNotificacionDB('Nueva Venta (Accesorio)', `Se vendió ${cantidad}x ${nombre} por Bs. ${total} (${metodo})`);
 
+      playSound('success');
       toast('Venta de accesorio registrada', 'success'); 
       if (document.activeElement) document.activeElement.blur(); 
       modalVenta?.classList.remove('show');
-    } catch (err) { console.error(err); toast('Error al guardar', 'error'); }
+    } catch (err) { 
+      console.error(err); 
+      playSound('error');
+      toast('Error al guardar', 'error'); 
+    }
   });
 
   document.getElementById('filtros')?.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-filtro]'); if (!btn) return;
     haptic(10); 
+    playSound('click');
     document.querySelectorAll('#filtros .chip-interactive').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
     btn.classList.add('active'); btn.setAttribute('aria-selected', 'true');
     filtroActual = btn.dataset.filtro;
@@ -521,6 +653,7 @@ function configurarEventos() {
         e.preventDefault();
         buscador.blur(); 
         haptic(10);
+        playSound('click');
         renderizarTodo();
       }
     });
@@ -616,6 +749,7 @@ function renderizarTodo() {
   lista.querySelectorAll('.ingreso-card').forEach(card => {
     card.addEventListener('click', () => { 
       haptic(10); 
+      playSound('click');
       if(card.dataset.tipo === 'telefono') abrirSheetTelefono(card.dataset.id); 
       else abrirSheetVenta(card.dataset.id, card.dataset.origen, card.dataset.extra); 
     });
@@ -647,6 +781,7 @@ function renderizarPaginacion(total) {
 
 window.cambiarPagina = (p) => { 
   haptic(8); 
+  playSound('click');
   paginaActual = p; 
   renderizarTodo(); 
   document.querySelector('.app-content')?.scrollTo({ top: 0, behavior: 'smooth' }); 
@@ -988,6 +1123,7 @@ if (appContent && pullIndicator) {
         renderizarTodo();
         setTimeout(() => {
           resetPullToRefresh();
+          playSound('success');
           toast('Datos actualizados', 'success');
         }, 600);
       } else {
