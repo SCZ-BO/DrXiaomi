@@ -6,11 +6,15 @@ import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy,
 import { abrirSheetTelefono, abrirSheetVenta } from './panel-modals.js';
 import { icono } from './icons.js';
 
+// 🔥 IMPORTACIONES PARA NOTIFICACIONES PUSH (FCM)
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 import { app } from './firebase.js';
 
 initTheme();
 
+// ==========================================
+// CONFIGURACIÓN GLOBAL
+// ==========================================
 const CONFIG_APP = {
   whatsappDueno: '59175589308',
   gastoAlmuerzo: 20,
@@ -18,15 +22,16 @@ const CONFIG_APP = {
   pullThreshold: 100,
   debounceRenderMs: 100,
   loaderFallbackMs: 3000,
-  vapidKey: 'TU_VAPID_KEY_AQUI'
+  vapidKey: 'TU_VAPID_KEY_AQUI' // 🔥 Reemplazar por tu VAPID real
 };
 
 export let appState = { sesion: null, ordenes: [], ventasHoy: [], inventario: [] };
 let filtroActual = 'todos', busquedaActual = '', todosLosMovimientos = [], paginaActual = 1;
 let unsubscribe = null, unsubscribeVentas = null, unsubscribeCierres = null, unsubscribeInventario = null; 
-let ventasPanel = [], ventasCierre = [];
+let ventasPanel = [];
 const ITEMS_POR_PAGINA = CONFIG_APP.itemsPorPagina;
 
+// Variables para el cierre
 let reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
 let ventasAccesoriosData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
 let detallesReparaciones = [];
@@ -39,7 +44,9 @@ const modalPreviewPDF = document.getElementById('modalPreviewPDF');
 const paginationContainer = document.getElementById('paginationContainer');
 const appLoader = document.getElementById('appLoader');
 
-// FCM
+// ==========================================
+// 🔥 NOTIFICACIONES PUSH (FCM)
+// ==========================================
 let messaging = null;
 try { messaging = getMessaging(app); } catch(e) { console.warn('FCM no disponible', e); }
 
@@ -81,6 +88,9 @@ function actualizarBadge() {
   }
 }
 
+// ==========================================
+// 1. RENDERIZADO DEL LAYOUT
+// ==========================================
 function renderLayout() {
   const container = document.querySelector('.app-container');
   if (!container) return;
@@ -130,6 +140,9 @@ function renderLayout() {
 renderLayout();
 actualizarBadge();
 
+// ==========================================
+// 2. AUTENTICACIÓN Y POPUPS
+// ==========================================
 requireAuth((s) => {
   appState.sesion = s;
   setTimeout(() => { 
@@ -177,6 +190,9 @@ document.getElementById('btnOkPopup')?.addEventListener('click', async () => {
   } catch(e) { console.log(e); }
 });
 
+// ==========================================
+// 3. HELPERS
+// ==========================================
 export function parsearFecha(f) {
   if (!f) return null;
   if (typeof f.toDate === 'function') return f.toDate();
@@ -195,6 +211,9 @@ function formatFechaCompleta(f) {
 
 export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
 
+// ==========================================
+// 4. EVENTOS
+// ==========================================
 function configurarEventos() {
   document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
   
@@ -378,7 +397,6 @@ function configurarEventos() {
       await addDoc(collection(db, 'ventas'), { concepto, monto, costo: 0, metodoPago: metodo, fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
       toast('Venta registrada', 'success'); 
       
-      // 🔥 CIERRE AUTOMÁTICO AL REGISTRAR
       if (document.activeElement) document.activeElement.blur(); 
       modalVenta?.classList.remove('show');
     } catch (err) { toast('Error al guardar', 'error'); }
@@ -403,7 +421,6 @@ function configurarEventos() {
       await updateDoc(doc(db, 'productos', id), { stock: stock - cantidad });
       toast('Venta de accesorio registrada', 'success'); 
       
-      // 🔥 CIERRE AUTOMÁTICO AL REGISTRAR
       if (document.activeElement) document.activeElement.blur(); 
       modalVenta?.classList.remove('show');
     } catch (err) { console.error(err); toast('Error al guardar', 'error'); }
@@ -418,7 +435,6 @@ function configurarEventos() {
     busquedaActual = ''; document.getElementById('buscador').value = ''; paginaActual = 1; renderizarTodo();
   });
 
-  // 🔥 UX MÓVIL: BUSCAR CON "ENTER" Y OCULTAR TECLADO
   const buscador = document.getElementById('buscador');
   if (buscador) {
     buscador.addEventListener('input', (e) => {
@@ -429,7 +445,7 @@ function configurarEventos() {
     buscador.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        buscador.blur(); // Oculta el teclado del celular
+        buscador.blur(); 
         haptic(10);
         renderizarTodo();
       }
@@ -468,27 +484,9 @@ function cargarDatos() {
 
   if (unsubscribeCierres) unsubscribeCierres();
   unsubscribeCierres = onSnapshot(query(collection(db, 'cierres'), orderBy('fecha', 'desc'), limit(100)), (snap) => {
-    ventasCierre = [];
-    snap.forEach(docSnap => { 
-      const d = docSnap.data();
-      if (Array.isArray(d.ventasInventario)) {
-        d.ventasInventario.forEach((v, i) => ventasCierre.push({ 
-          id: docSnap.id, indexExtra: `inv_${i}`, origen: 'cierre', coleccion: 'cierres', 
-          concepto: `${v.cantidad}x ${v.nombre}`, monto: Number(v.precio * v.cantidad) || 0, 
-          costo: Number(v.costo || 0), metodoPago: v.metodoPago || 'Efectivo', fecha: d.fecha 
-        }));
-      }
-      if (Array.isArray(d.extras)) {
-        d.extras.forEach((e, i) => { 
-          if (Number(e.monto) > 0) ventasCierre.push({ 
-            id: docSnap.id, indexExtra: `ext_${i}`, origen: 'cierre', coleccion: 'cierres', 
-            concepto: e.desc || 'Venta Extra', monto: Number(e.monto) || 0, 
-            costo: 0, metodoPago: e.metodoPago || 'Efectivo', fecha: d.fecha 
-          }); 
-        });
-      }
-    });
-    procesarVentas();
+    // 🔥 IMPORTANTE: Ya NO cargamos las ventas de cierres antiguos a la lista principal
+    // para evitar que se dupliquen. Los cierres son solo un registro histórico.
+    // La lista principal se nutre solo de la colección 'ventas' y 'recibos'.
   });
 
   if (unsubscribeInventario) unsubscribeInventario();
@@ -498,7 +496,8 @@ function cargarDatos() {
 }
 
 function procesarVentas() { 
-  appState.ventasHoy = [...ventasPanel, ...ventasCierre].sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0)); 
+  // 🔥 Ahora ventasHoy contiene SOLO las ventas nuevas, sin duplicados de cierres
+  appState.ventasHoy = [...ventasPanel].sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0)); 
   renderizarTodoDebounced(); 
 }
 
@@ -511,6 +510,7 @@ function renderizarTodoDebounced() {
 function renderizarTodo() {
   actualizarStats(); 
   todosLosMovimientos = [];
+  
   if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
     appState.ordenes.forEach(o => {
       const est = o.estadoOrden || 'recibido';
@@ -520,9 +520,11 @@ function renderizarTodo() {
       todosLosMovimientos.push({ tipo: 'telefono', data: o, fechaOrden: entregado ? (parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha)) : (parsearFecha(o.fechaEditada) || parsearFecha(o.fecha)) });
     });
   }
+  
   if (filtroActual === 'todos' || filtroActual === 'venta') {
-    appState.ventasHoy.forEach(v => { todosLosMovimientos.push({ tipo: v.origen === 'panel' ? 'venta' : 'cierre', data: v, fechaOrden: parsearFecha(v.fecha) }); });
+    appState.ventasHoy.forEach(v => { todosLosMovimientos.push({ tipo: 'venta', data: v, fechaOrden: parsearFecha(v.fecha) }); });
   }
+  
   if (busquedaActual) {
     todosLosMovimientos = todosLosMovimientos.filter(m => {
       const txt = m.tipo === 'telefono' ? [m.data.numeroRecibo, m.data.cliente, m.data.telefono, m.data.marca, m.data.modelo].filter(Boolean).join(' ').toLowerCase() : (m.data.concepto || '').toLowerCase();
@@ -613,7 +615,7 @@ function renderCardVenta(v, tipo) {
   else if (v.concepto === 'Reactivación') iconoNombre = 'estado';
   else if (v.concepto === 'Cargador') iconoNombre = 'bateria';
   
-  const cor = tipo === 'venta' ? 'var(--success-500)' : 'var(--purple-500)';
+  const cor = 'var(--success-500)';
   
   return `
     <div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}" style="border-left-color: ${cor};">
@@ -646,24 +648,9 @@ function actualizarStats() {
     } 
   });
   
-  const ventasHoyUnicas = dedupeVentas(appState.ventasHoy);
-  const ingVent = ventasHoyUnicas.filter(v => { const f = parsearFecha(v.fecha); return f && f >= hoy; }).reduce((s, v) => s + (Number(v.monto) || 0), 0);
+  const ingVent = appState.ventasHoy.filter(v => { const f = parsearFecha(v.fecha); return f && f >= hoy; }).reduce((s, v) => s + (Number(v.monto) || 0), 0);
   
   if (hoyEl) hoyEl.textContent = formatBsLimpio(ingRep + ingVent);
-}
-
-function dedupeVentas(ventas) {
-  const seen = new Set();
-  const result = [];
-  for (const v of ventas) {
-    const f = parsearFecha(v.fecha);
-    const min = f ? `${f.getFullYear()}-${f.getMonth()}-${f.getDate()}-${f.getHours()}-${f.getMinutes()}` : 'sin-fecha';
-    const key = `${v.concepto || ''}|${Number(v.monto) || 0}|${min}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    result.push(v);
-  }
-  return result;
 }
 
 // ==========================================
@@ -710,10 +697,9 @@ async function abrirCierreDeCaja() {
     toast('Error al leer recibos. Se usará solo ventas.', 'error');
   }
 
-  const ventasHoyUnicas = dedupeVentas(appState.ventasHoy);
-  ventasHoyUnicas.forEach(v => {
+  appState.ventasHoy.forEach(v => {
     const f = parsearFecha(v.fecha);
-    if (f && f.toDateString() === hoyStr && v.origen === 'panel') {
+    if (f && f.toDateString() === hoyStr) {
       const monto = Number(v.monto) || 0;
       const metodo = (v.metodoPago || 'Efectivo').toLowerCase();
       
@@ -789,7 +775,6 @@ function calcularResumenCierre(gastos) {
   const efectivoCaja = reparacionesData.efectivo + ventasAccesoriosData.efectivo;
   const qrCaja = reparacionesData.qr + ventasAccesoriosData.qr;
   
-  // El técnico entrega el efectivo físico menos sus gastos. El QR va directo al dueño.
   const aEntregar = Math.max(0, efectivoCaja - gastos.totalGastos);
   
   return { totalGlobal, efectivoCaja, qrCaja, aEntregar, totalGastos: gastos.totalGastos };
@@ -803,9 +788,8 @@ function recalcularCierre() {
   const elGanancia = document.getElementById('gananciaGlobal');
   const elMontoTransf = document.getElementById('montoTransferir');
 
-  // Actualizamos los textos de la vista previa (HTML)
   if (elTotal) elTotal.textContent = formatBsLimpio(resumen.totalGlobal);
-  if (elGanancia) elGanancia.textContent = formatBsLimpio(resumen.efectivoCaja); // Mostramos efectivo físico
+  if (elGanancia) elGanancia.textContent = formatBsLimpio(resumen.efectivoCaja);
   if (elMontoTransf) elMontoTransf.textContent = formatBsLimpio(resumen.aEntregar);
 }
 
@@ -814,7 +798,6 @@ function generarPDFCierre(gastos) {
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
   const resumen = calcularResumenCierre(gastos);
 
-  // Header
   pdf.setFillColor(255, 105, 0); pdf.rect(0, 0, 210, 30, 'F');
   pdf.setTextColor(255, 255, 255); pdf.setFontSize(20); pdf.text('DR. XIAOMI SCZ', 14, 15);
   pdf.setFontSize(10); pdf.text('Cierre de Caja Diario', 14, 22);
@@ -822,7 +805,6 @@ function generarPDFCierre(gastos) {
   pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, 14, 45);
   pdf.text(`Realizado por: ${appState.sesion?.nombre || 'Técnico'}`, 14, 52);
 
-  // Resumen
   pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.text('Resumen Financiero', 14, 65);
   pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
   pdf.text(`- Total Cobrado: ${formatBsLimpio(resumen.totalGlobal)}`, 18, 72);
@@ -832,7 +814,6 @@ function generarPDFCierre(gastos) {
 
   let y = 105;
 
-  // Tabla Reparaciones
   if (detallesReparaciones.length > 0) {
     pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.text('Detalle de Reparaciones Entregadas', 14, y); y += 7;
     pdf.setFontSize(10); pdf.setFont('helvetica', 'normal');
@@ -844,7 +825,6 @@ function generarPDFCierre(gastos) {
     y += 5;
   }
 
-  // Tabla Ventas
   if (detallesVentas.length > 0) {
     pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.text('Detalle de Ventas de Accesorios', 14, y); y += 7;
     pdf.setFontSize(10); pdf.setFont('helvetica', 'normal');
@@ -856,7 +836,6 @@ function generarPDFCierre(gastos) {
     y += 5;
   }
 
-  // Total a Entregar (Destacado)
   pdf.setFillColor(59, 130, 246); pdf.rect(14, y, 182, 20, 'F');
   pdf.setTextColor(255, 255, 255); pdf.setFontSize(14); pdf.setFont('helvetica', 'bold');
   pdf.text(`A ENTREGAR AL DUEÑO (Efectivo): ${formatBsLimpio(resumen.aEntregar)}`, 105, y + 13, { align: 'center' });
