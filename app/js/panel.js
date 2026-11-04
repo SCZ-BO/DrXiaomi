@@ -12,11 +12,24 @@ import { app } from './firebase.js';
 
 initTheme();
 
+// ==========================================
+// CONFIGURACIÓN GLOBAL
+// ==========================================
+const CONFIG_APP = {
+  whatsappDueno: '59175589308',
+  gastoAlmuerzo: 20,
+  itemsPorPagina: 12,
+  pullThreshold: 100,
+  debounceRenderMs: 100,
+  loaderFallbackMs: 3000,
+  vapidKey: 'TU_VAPID_KEY_AQUI' // 🔥 Reemplazar por tu VAPID real
+};
+
 export let appState = { sesion: null, ordenes: [], ventasHoy: [], inventario: [] };
 let filtroActual = 'todos', busquedaActual = '', todosLosMovimientos = [], paginaActual = 1;
 let unsubscribe = null, unsubscribeVentas = null, unsubscribeCierres = null, unsubscribeInventario = null; 
 let ventasPanel = [], ventasCierre = [];
-const ITEMS_POR_PAGINA = 12;
+const ITEMS_POR_PAGINA = CONFIG_APP.itemsPorPagina;
 
 // Variables para el cierre
 let reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0, ganancia: 0 };
@@ -38,11 +51,15 @@ try { messaging = getMessaging(app); } catch(e) { console.warn('FCM no disponibl
 
 async function solicitarPermisoNotificaciones() {
   if (!('Notification' in window)) return;
+  if (!messaging) return;
   const permiso = await Notification.requestPermission();
   if (permiso === 'granted') {
     try {
-      // 🔥 PEGA TU VAPID KEY AQUÍ (la que empieza con B...)
-      const token = await getToken(messaging, { vapidKey: 'TU_VAPID_KEY_AQUI' });
+      if (!CONFIG_APP.vapidKey || CONFIG_APP.vapidKey === 'TU_VAPID_KEY_AQUI') {
+        console.warn('FCM: VAPID key no configurada. Saltando getToken.');
+        return;
+      }
+      const token = await getToken(messaging, { vapidKey: CONFIG_APP.vapidKey });
       
       if (token && appState.sesion && appState.sesion.rol === 'admin') {
         await updateDoc(doc(db, 'usuarios', appState.sesion.uid), { fcmToken: token });
@@ -54,8 +71,11 @@ async function solicitarPermisoNotificaciones() {
 
 if (messaging) {
   onMessage(messaging, (payload) => {
-    const { title, body } = payload.notification;
+    const title = payload.notification?.title || payload.data?.title || 'Notificación';
+    const body = payload.notification?.body || payload.data?.body || '';
     toast(`🔔 ${title}: ${body}`, 'info', 6000);
+    contadorNotificaciones++;
+    actualizarBadge();
   });
 }
 
@@ -83,6 +103,11 @@ function renderLayout() {
   const container = document.querySelector('.app-container');
   if (!container) return;
 
+  const esAdmin = appState.sesion?.rol === 'admin';
+  const btnMensajePopup = esAdmin
+    ? `<button class="icon-btn" id="btnAbrirMensajePopup" title="Enviar mensaje al técnico">${icono('campana', 20)}</button>`
+    : '';
+
   const headerHTML = `
     <header class="app-header">
       <div class="brand">
@@ -90,6 +115,7 @@ function renderLayout() {
         <div class="brand-text"><h1>Panel</h1><p id="userInfo">Cargando...</p></div>
       </div>
       <div class="header-actions">
+        ${btnMensajePopup}
         <button class="icon-btn" id="btnNotificaciones" style="position:relative;">
           ${icono('campana', 20)}
           <span class="notif-badge" id="notifBadge" style="position:absolute; top:-4px; right:-4px; display:none; background:var(--danger-500); color:white; font-size:10px; font-weight:800; padding:2px 5px; border-radius:10px; border:2px solid var(--bg-elev-1);">0</span>
@@ -118,6 +144,10 @@ function renderLayout() {
     toast('Notificaciones leídas', 'success'); 
   });
   document.getElementById('btnTema')?.addEventListener('click', toggleTheme);
+  document.getElementById('btnAbrirMensajePopup')?.addEventListener('click', () => {
+    haptic(15);
+    document.getElementById('modalMensajePopup')?.classList.add('show');
+  });
 }
 
 renderLayout();
@@ -147,7 +177,8 @@ function iniciarApp() {
   }
   configurarEventos(); 
   cargarDatos();
-  setTimeout(() => { if(appLoader) appLoader.classList.add('hidden'); }, 800);
+  // Fallback: si en 3s no se ocultó, ocultar igual
+  setTimeout(() => { if(appLoader) appLoader.classList.add('hidden'); }, CONFIG_APP.loaderFallbackMs);
 }
 
 async function verificarPopups() {
@@ -158,12 +189,18 @@ async function verificarPopups() {
       const data = docSnap.data();
       const ahora = new Date().getTime();
       if (data.activo && data.fechaExpiracion > ahora && !data.leidoPorTecnico) {
-        document.getElementById('verPopupTitulo').textContent = data.titulo;
-        document.getElementById('verPopupTexto').textContent = data.texto;
-        document.getElementById('modalVerPopup').classList.add('show');
+        const t = document.getElementById('verPopupTitulo');
+        const p = document.getElementById('verPopupTexto');
+        if (t) t.textContent = data.titulo || 'Mensaje';
+        if (p) p.textContent = data.texto || '';
+        document.getElementById('modalVerPopup')?.classList.add('show');
       }
     }
-  } catch(e) { console.log('No hay popups configurados.'); }
+  } catch(e) {
+    if (e?.code !== 'permission-denied' && e?.code !== 'not-found') {
+      console.warn('verificarPopups:', e?.message || e);
+    }
+  }
 }
 
 document.getElementById('btnOkPopup')?.addEventListener('click', async () => {
@@ -172,7 +209,7 @@ document.getElementById('btnOkPopup')?.addEventListener('click', async () => {
   try {
     await updateDoc(doc(db, 'config', 'popup_mensaje'), { leidoPorTecnico: true });
     toast('Mensaje del dueño confirmado', 'success');
-  } catch(e) { console.log('Error al confirmar lectura'); }
+  } catch(e) { console.log('Error al confirmar lectura', e); }
 });
 
 // ==========================================
@@ -201,33 +238,36 @@ export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('s
 // ==========================================
 function configurarEventos() {
   document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/cliente/'; });
-  document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { haptic(15); modalVenta.classList.add('show'); });
-  document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta.classList.remove('show'));
-  document.getElementById('btnCloseSheet')?.addEventListener('click', () => reciboSheet.classList.remove('show'));
-  document.getElementById('btnClosePago')?.addEventListener('click', () => document.getElementById('modalPago').classList.remove('show'));
+  document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => { haptic(15); modalVenta?.classList.add('show'); });
+  document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta?.classList.remove('show'));
+  document.getElementById('btnCloseSheet')?.addEventListener('click', () => reciboSheet?.classList.remove('show'));
+  document.getElementById('btnClosePago')?.addEventListener('click', () => document.getElementById('modalPago')?.classList.remove('show'));
   
   document.querySelectorAll('.sheet-backdrop').forEach(backdrop => {
     backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.classList.remove('show'); });
   });
 
   document.getElementById('btnPDFDia')?.addEventListener('click', () => { haptic(15); abrirCierreDeCaja(); });
-  document.getElementById('btnClosePreviewPDF')?.addEventListener('click', () => modalPreviewPDF.classList.remove('show'));
+  document.getElementById('btnClosePreviewPDF')?.addEventListener('click', () => modalPreviewPDF?.classList.remove('show'));
 
   document.getElementById('btnDescargarPDF')?.addEventListener('click', () => {
     haptic(20);
-    generarPDFCierre(); 
+    const gastos = leerGastosDelDOM();
+    generarPDFCierre(gastos); 
     toast('PDF Descargado', 'success');
   });
 
   document.getElementById('btnCerrarYEnviar')?.addEventListener('click', async () => {
     haptic(20);
     const btn = document.getElementById('btnCerrarYEnviar');
+    if (!btn) return;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
     btn.disabled = true;
 
     try {
-      await guardarCierreEnFirebase();
-      generarPDFCierre();
+      const gastos = leerGastosDelDOM();
+      await guardarCierreEnFirebase(gastos);
+      generarPDFCierre(gastos);
       
       const totalGlobal = document.getElementById('totalGlobal')?.textContent || 'Bs. 0.00';
       const gananciaGlobal = document.getElementById('gananciaGlobal')?.textContent || 'Bs. 0.00';
@@ -241,11 +281,11 @@ function configurarEventos() {
         `_Adjunto el PDF con el detalle._`;
 
       setTimeout(() => {
-        window.open(`https://wa.me/59175589308?text=${encodeURIComponent(mensaje)}`, '_blank');
+        window.open(`https://wa.me/${CONFIG_APP.whatsappDueno}?text=${encodeURIComponent(mensaje)}`, '_blank');
       }, 1000);
       
       toast('Día cerrado y guardado', 'success');
-      modalPreviewPDF.classList.remove('show');
+      modalPreviewPDF?.classList.remove('show');
     } catch (e) {
       console.error(e);
       toast('Error al cerrar el día', 'error');
@@ -258,8 +298,8 @@ function configurarEventos() {
   document.getElementById('gastoPasajes')?.addEventListener('input', recalcularCierre);
   document.getElementById('toggleAlmuerzo')?.addEventListener('change', recalcularCierre);
 
-  document.getElementById('btnAbrirNotaDueno')?.addEventListener('click', () => { haptic(15); modalNotaDueno.classList.add('show'); });
-  document.getElementById('btnCancelarNotaDueno')?.addEventListener('click', () => modalNotaDueno.classList.remove('show'));
+  document.getElementById('btnAbrirNotaDueno')?.addEventListener('click', () => { haptic(15); modalNotaDueno?.classList.add('show'); });
+  document.getElementById('btnCancelarNotaDueno')?.addEventListener('click', () => modalNotaDueno?.classList.remove('show'));
   
   document.getElementById('btnGuardarNotaDueno')?.addEventListener('click', async () => {
     const texto = document.getElementById('notaDuenoTexto').value.trim();
@@ -268,18 +308,22 @@ function configurarEventos() {
     try {
       await addDoc(collection(db, 'notas'), { texto, autor: appState.sesion?.nombre || 'Técnico', fecha: serverTimestamp() });
       toast('Nota guardada para el dueño', 'success');
-      modalNotaDueno.classList.remove('show');
+      modalNotaDueno?.classList.remove('show');
       document.getElementById('notaDuenoTexto').value = '';
     } catch (e) { toast('Error al guardar', 'error'); }
   });
 
   document.getElementById('btnAbrirMensajePopup')?.addEventListener('click', () => {
-    document.getElementById('modalMensajePopup').classList.add('show');
+    document.getElementById('modalMensajePopup')?.classList.add('show');
+  });
+
+  document.getElementById('btnCancelarMensajePopup')?.addEventListener('click', () => {
+    document.getElementById('modalMensajePopup')?.classList.remove('show');
   });
 
   document.getElementById('btnGuardarMensajePopup')?.addEventListener('click', async () => {
-    const titulo = document.getElementById('mensajePopupTitulo').value.trim();
-    const texto = document.getElementById('mensajePopupTexto').value.trim();
+    const titulo = (document.getElementById('mensajePopupTitulo').value || '').trim().slice(0, 100);
+    const texto = (document.getElementById('mensajePopupTexto').value || '').trim().slice(0, 2000);
     const dias = parseInt(document.getElementById('mensajePopupDuracion').value) || 0;
     
     if (!titulo || !texto) { toast('Completa todos los campos', 'error'); return; }
@@ -290,8 +334,15 @@ function configurarEventos() {
         titulo, texto, fechaExpiracion, activo: true, leidoPorTecnico: false, fechaCreacion: serverTimestamp()
       });
       toast('Mensaje enviado al técnico', 'success');
-      document.getElementById('modalMensajePopup').classList.remove('show');
+      document.getElementById('modalMensajePopup')?.classList.remove('show');
     } catch(err) { toast('Error al enviar', 'error'); }
+  });
+
+  // 🔥 MOSTRAR/OCULTAR "OTRO" EN VENTA SERVICIO
+  const selConcepto = document.getElementById('ventaConcepto');
+  const wrapOtro = document.getElementById('wrapConceptoOtro');
+  selConcepto?.addEventListener('change', () => {
+    if (wrapOtro) wrapOtro.style.display = selConcepto.value === 'Otro' ? 'block' : 'none';
   });
 
   // LÓGICA DE VENTA
@@ -349,23 +400,32 @@ function configurarEventos() {
   document.getElementById('btnBackToTipo2')?.addEventListener('click', () => { if(tipoStep) tipoStep.style.display = 'block'; if(accesorioStep) accesorioStep.style.display = 'none'; if(servicioStep) servicioStep.style.display = 'none'; });
 
   document.getElementById('btnGuardarVenta')?.addEventListener('click', async () => {
-    let concepto = document.getElementById('ventaConcepto').value, monto = parseFloat(document.getElementById('ventaMonto').value), metodo = document.getElementById('ventaMetodo').value;
-    if (concepto === 'Otro') { const c = document.getElementById('ventaConceptoOtro').value.trim(); if (!c) { toast('Especifica qué se vendió', 'error'); return; } concepto = c; }
-    if (!monto || monto <= 0) { toast('Ingresa un monto válido', 'error'); return; }
+    let concepto = document.getElementById('ventaConcepto').value;
+    let monto = parseFloat(document.getElementById('ventaMonto').value);
+    let metodo = document.getElementById('ventaMetodo').value;
+    if (concepto === 'Otro') {
+      const c = document.getElementById('ventaConceptoOtro').value.trim();
+      if (!c) { toast('Especifica qué se vendió', 'error'); return; }
+      concepto = c;
+    }
+    if (!monto || monto <= 0 || isNaN(monto)) { toast('Ingresa un monto válido', 'error'); return; }
     haptic(20);
     try {
       await addDoc(collection(db, 'ventas'), { concepto, monto, costo: 0, metodoPago: metodo, fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
-      toast('Venta registrada', 'success'); modalVenta.classList.remove('show');
+      toast('Venta registrada', 'success'); 
+      modalVenta?.classList.remove('show');
     } catch (err) { toast('Error al guardar', 'error'); }
   });
 
   document.getElementById('btnRegistrarAccesorio')?.addEventListener('click', async (e) => {
-    const btn = e.target;
+    const btn = e.currentTarget;
     const id = btn.dataset.id, nombre = btn.dataset.nombre;
     const precio = parseFloat(btn.dataset.precio), costo = parseFloat(btn.dataset.costo);
-    const stock = parseInt(btn.dataset.stock), cantidad = parseInt(document.getElementById('accesorioCantidad').value);
+    const stock = parseInt(btn.dataset.stock);
+    const cantidad = parseInt(document.getElementById('accesorioCantidad').value);
 
     if (!id) return;
+    if (!cantidad || cantidad < 1 || isNaN(cantidad)) { toast('Cantidad inválida', 'error'); return; }
     if (cantidad > stock) { toast('No hay suficiente stock', 'error'); return; }
 
     haptic(20);
@@ -374,7 +434,7 @@ function configurarEventos() {
       await addDoc(collection(db, 'ventas'), { concepto: `${cantidad}x ${nombre}`, monto: total, costo: costo * cantidad, metodoPago: 'Efectivo', fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
       await updateDoc(doc(db, 'productos', id), { stock: stock - cantidad });
       toast('Venta de accesorio registrada', 'success'); 
-      modalVenta.classList.remove('show');
+      modalVenta?.classList.remove('show');
       document.getElementById('productoSeleccionadoInfo').style.display = 'none';
       btn.disabled = true;
     } catch (err) { console.error(err); toast('Error al guardar', 'error'); }
@@ -382,12 +442,14 @@ function configurarEventos() {
 
   document.getElementById('filtros')?.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-filtro]'); if (!btn) return;
-    haptic(10); document.querySelectorAll('#filtros .chip-interactive').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active'); filtroActual = btn.dataset.filtro;
+    haptic(10); 
+    document.querySelectorAll('#filtros .chip-interactive').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+    btn.classList.add('active'); btn.setAttribute('aria-selected', 'true');
+    filtroActual = btn.dataset.filtro;
     busquedaActual = ''; document.getElementById('buscador').value = ''; paginaActual = 1; renderizarTodo();
   });
   document.getElementById('buscador')?.addEventListener('input', (e) => {
-    busquedaActual = e.target.value.toLowerCase().trim(); paginaActual = 1; renderizarTodo();
+    busquedaActual = e.target.value.toLowerCase().trim(); paginaActual = 1; renderizarTodoDebounced();
   });
 }
 
@@ -399,20 +461,41 @@ function cargarDatos() {
   unsubscribe = onSnapshot(query(collection(db, 'recibos'), orderBy('fecha', 'desc')), (snap) => {
       appState.ordenes = snap.docs.map(d => { const data = d.data(); delete data.fotos; return { id: d.id, ...data }; });
       appState.ordenes.sort((a, b) => (parsearFecha(b.fechaEditada || b.fecha) || 0) - (parsearFecha(a.fechaEditada || a.fecha) || 0));
+      // Ocultar loader al primer snapshot
+      if (appLoader && !appLoader.classList.contains('hidden')) appLoader.classList.add('hidden');
       renderizarTodo();
-    }, (err) => { console.error(err); });
+    }, (err) => { 
+      console.error(err); 
+      if (appLoader) appLoader.classList.add('hidden');
+    });
 
   if (unsubscribeVentas) unsubscribeVentas();
-  unsubscribeVentas = onSnapshot(query(collection(db, 'ventas'), limit(100)), (snap) => {
-    ventasPanel = snap.docs.map(d => ({ id: d.id, origen: 'panel', coleccion: 'ventas', ...d.data() })); procesarVentas();
+  unsubscribeVentas = onSnapshot(query(collection(db, 'ventas'), orderBy('fecha', 'desc'), limit(100)), (snap) => {
+    ventasPanel = snap.docs.map(d => ({ id: d.id, origen: 'panel', coleccion: 'ventas', ...d.data() })); 
+    procesarVentas();
   });
 
   if (unsubscribeCierres) unsubscribeCierres();
-  unsubscribeCierres = onSnapshot(query(collection(db, 'cierres'), limit(100)), (snap) => {
+  unsubscribeCierres = onSnapshot(query(collection(db, 'cierres'), orderBy('fecha', 'desc'), limit(100)), (snap) => {
     ventasCierre = [];
-    snap.forEach(doc => { const d = doc.data();
-      if (d.ventasInventario) d.ventasInventario.forEach((v, i) => ventasCierre.push({ id: doc.id, indexExtra: `inv_${i}`, origen: 'cierre', coleccion: 'cierres', concepto: `${v.cantidad}x ${v.nombre}`, monto: Number(v.precio * v.cantidad) || 0, metodoPago: 'Efectivo', fecha: d.fecha }));
-      if (d.extras) d.extras.forEach((e, i) => { if (e.monto > 0) ventasCierre.push({ id: doc.id, indexExtra: `ext_${i}`, origen: 'cierre', coleccion: 'cierres', concepto: e.desc || 'Venta Extra', monto: Number(e.monto) || 0, metodoPago: 'Efectivo', fecha: d.fecha }); });
+    snap.forEach(docSnap => { 
+      const d = docSnap.data();
+      if (Array.isArray(d.ventasInventario)) {
+        d.ventasInventario.forEach((v, i) => ventasCierre.push({ 
+          id: docSnap.id, indexExtra: `inv_${i}`, origen: 'cierre', coleccion: 'cierres', 
+          concepto: `${v.cantidad}x ${v.nombre}`, monto: Number(v.precio * v.cantidad) || 0, 
+          costo: Number(v.costo || 0), metodoPago: 'Efectivo', fecha: d.fecha 
+        }));
+      }
+      if (Array.isArray(d.extras)) {
+        d.extras.forEach((e, i) => { 
+          if (Number(e.monto) > 0) ventasCierre.push({ 
+            id: docSnap.id, indexExtra: `ext_${i}`, origen: 'cierre', coleccion: 'cierres', 
+            concepto: e.desc || 'Venta Extra', monto: Number(e.monto) || 0, 
+            costo: 0, metodoPago: 'Efectivo', fecha: d.fecha 
+          }); 
+        });
+      }
     });
     procesarVentas();
   });
@@ -423,10 +506,21 @@ function cargarDatos() {
   });
 }
 
-function procesarVentas() { appState.ventasHoy = [...ventasPanel, ...ventasCierre].sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0)); renderizarTodo(); }
+function procesarVentas() { 
+  appState.ventasHoy = [...ventasPanel, ...ventasCierre].sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0)); 
+  renderizarTodoDebounced(); 
+}
+
+// Debounce para no renderizar 4 veces seguidas
+let renderTimer = null;
+function renderizarTodoDebounced() {
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(renderizarTodo, CONFIG_APP.debounceRenderMs);
+}
 
 function renderizarTodo() {
-  actualizarStats(); todosLosMovimientos = [];
+  actualizarStats(); 
+  todosLosMovimientos = [];
   if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
     appState.ordenes.forEach(o => {
       const est = o.estadoOrden || 'recibido';
@@ -441,7 +535,7 @@ function renderizarTodo() {
   }
   if (busquedaActual) {
     todosLosMovimientos = todosLosMovimientos.filter(m => {
-      const txt = m.tipo === 'telefono' ? [m.data.numeroRecibo, m.data.cliente, m.data.telefono, m.data.marca, m.data.modelo].filter(Boolean).join(' ').toLowerCase() : m.data.concepto.toLowerCase();
+      const txt = m.tipo === 'telefono' ? [m.data.numeroRecibo, m.data.cliente, m.data.telefono, m.data.marca, m.data.modelo].filter(Boolean).join(' ').toLowerCase() : (m.data.concepto || '').toLowerCase();
       return txt.includes(busquedaActual);
     });
   }
@@ -450,28 +544,51 @@ function renderizarTodo() {
   if (paginaActual > totalPag) paginaActual = totalPag || 1;
   const pagItems = todosLosMovimientos.slice((paginaActual - 1) * ITEMS_POR_PAGINA, paginaActual * ITEMS_POR_PAGINA);
   const lista = document.getElementById('listaOrdenes');
+  if (!lista) return;
   if (todosLosMovimientos.length === 0) {
-    lista.innerHTML = `<div class="empty-state"><h3>Sin movimientos</h3><p>No hay resultados.</p></div>`; paginationContainer.innerHTML = ''; return;
+    lista.innerHTML = `<div class="empty-state"><h3>Sin movimientos</h3><p>No hay resultados.</p></div>`; 
+    if (paginationContainer) paginationContainer.innerHTML = ''; 
+    return;
   }
   lista.innerHTML = pagItems.map(m => m.tipo === 'telefono' ? renderCardTelefono(m.data) : renderCardVenta(m.data, m.tipo)).join('');
   lista.querySelectorAll('.ingreso-card').forEach(card => {
-    card.addEventListener('click', () => { haptic(10); if(card.dataset.tipo === 'telefono') abrirSheetTelefono(card.dataset.id); else abrirSheetVenta(card.dataset.id, card.dataset.origen, card.dataset.extra); });
+    card.addEventListener('click', () => { 
+      haptic(10); 
+      if(card.dataset.tipo === 'telefono') abrirSheetTelefono(card.dataset.id); 
+      else abrirSheetVenta(card.dataset.id, card.dataset.origen, card.dataset.extra); 
+    });
   });
   renderizarPaginacion(totalPag);
 }
 
 function renderizarPaginacion(total) {
+  if (!paginationContainer) return;
   if (total <= 1) { paginationContainer.innerHTML = ''; return; }
-  let html = `<button class="page-nav" ${paginaActual === 1 ? 'disabled' : ''} onclick="cambiarPagina(${paginaActual - 1})">Ant</button>`;
+  let html = `<button type="button" class="page-nav" data-page="${paginaActual - 1}" ${paginaActual === 1 ? 'disabled' : ''}>Ant</button>`;
   for (let i = 1; i <= total; i++) {
-    if (i === 1 || i === total || (i >= paginaActual - 1 && i <= paginaActual + 1)) html += `<button class="page-btn ${i === paginaActual ? 'active' : ''}" onclick="cambiarPagina(${i})">${i}</button>`;
-    else if (i === paginaActual - 2 || i === paginaActual + 2) html += `<span>...</span>`;
+    if (i === 1 || i === total || (i >= paginaActual - 1 && i <= paginaActual + 1)) {
+      html += `<button type="button" class="page-btn ${i === paginaActual ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    } else if (i === paginaActual - 2 || i === paginaActual + 2) {
+      html += `<span>...</span>`;
+    }
   }
-  html += `<button class="page-nav" ${paginaActual === total ? 'disabled' : ''} onclick="cambiarPagina(${paginaActual + 1})">Sig</button>`;
+  html += `<button type="button" class="page-nav" data-page="${paginaActual + 1}" ${paginaActual === total ? 'disabled' : ''}>Sig</button>`;
   paginationContainer.innerHTML = html;
+  
+  paginationContainer.querySelectorAll('button[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = parseInt(btn.dataset.page);
+      if (!isNaN(p) && p >= 1) cambiarPagina(p);
+    });
+  });
 }
 
-window.cambiarPagina = (p) => { haptic(8); paginaActual = p; renderizarTodo(); document.querySelector('.app-content').scrollTo({ top: 0, behavior: 'smooth' }); };
+window.cambiarPagina = (p) => { 
+  haptic(8); 
+  paginaActual = p; 
+  renderizarTodo(); 
+  document.querySelector('.app-content')?.scrollTo({ top: 0, behavior: 'smooth' }); 
+};
 
 function renderCardTelefono(o) {
   const est = o.estadoOrden || 'recibido';
@@ -497,7 +614,8 @@ function renderCardTelefono(o) {
 }
 
 function renderCardVenta(v, tipo) {
-  const f = parsearFecha(v.fecha); const hora = f ? `${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')}` : '';
+  const f = parsearFecha(v.fecha); 
+  const hora = f ? `${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')}` : '';
   
   let iconoNombre = 'venta';
   if (v.concepto === 'Botón') iconoNombre = 'bateria'; 
@@ -513,8 +631,8 @@ function renderCardVenta(v, tipo) {
         ${icono(iconoNombre, 24)}
       </div>
       <div class="info-col">
-        <div class="info-title">${escapeHtml(v.concepto)}</div>
-        <div class="info-sub">${hora} · ${escapeHtml(v.metodoPago)}</div>
+        <div class="info-title">${escapeHtml(v.concepto || '')}</div>
+        <div class="info-sub">${hora} · ${escapeHtml(v.metodoPago || '')}</div>
       </div>
       <div class="monto-col">
         <div class="monto" style="color: ${cor};">${formatBsLimpio(v.monto)}</div>
@@ -523,12 +641,41 @@ function renderCardVenta(v, tipo) {
 }
 
 function actualizarStats() {
-  document.getElementById('statActivas').textContent = appState.ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
-  document.getElementById('statListas').textContent = appState.ordenes.filter(o => o.estadoOrden === 'listo').length;
+  const activas = document.getElementById('statActivas');
+  const listas = document.getElementById('statListas');
+  const hoyEl = document.getElementById('statHoy');
+  if (activas) activas.textContent = appState.ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
+  if (listas) listas.textContent = appState.ordenes.filter(o => o.estadoOrden === 'listo').length;
+  
   const hoy = new Date(); hoy.setHours(0,0,0,0);
-  let ingRep = 0; appState.ordenes.forEach(o => { if (o.estadoOrden === 'entregado') { const f = parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha); if (f && f >= hoy) ingRep += Number(o.montoCobrado) || Number(o.total) || 0; } });
-  const ingVent = appState.ventasHoy.filter(v => { const f = parsearFecha(v.fecha); return f && f >= hoy; }).reduce((s, v) => s + (Number(v.monto) || 0), 0);
-  document.getElementById('statHoy').textContent = formatBsLimpio(ingRep + ingVent);
+  let ingRep = 0; 
+  appState.ordenes.forEach(o => { 
+    if (o.estadoOrden === 'entregado') { 
+      const f = parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha); 
+      if (f && f >= hoy) ingRep += Number(o.montoCobrado) || Number(o.total) || 0; 
+    } 
+  });
+  
+  // Dedupe: evitar doble conteo de ventas de accesorios que ya están en cierres
+  const ventasHoyUnicas = dedupeVentas(appState.ventasHoy);
+  const ingVent = ventasHoyUnicas.filter(v => { const f = parsearFecha(v.fecha); return f && f >= hoy; }).reduce((s, v) => s + (Number(v.monto) || 0), 0);
+  
+  if (hoyEl) hoyEl.textContent = formatBsLimpio(ingRep + ingVent);
+}
+
+// Dedupe simple por concepto+monto+fecha (minuto) para evitar duplicados entre ventas y cierres
+function dedupeVentas(ventas) {
+  const seen = new Set();
+  const result = [];
+  for (const v of ventas) {
+    const f = parsearFecha(v.fecha);
+    const min = f ? `${f.getFullYear()}-${f.getMonth()}-${f.getDate()}-${f.getHours()}-${f.getMinutes()}` : 'sin-fecha';
+    const key = `${v.concepto || ''}|${Number(v.monto) || 0}|${min}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(v);
+  }
+  return result;
 }
 
 // ==========================================
@@ -539,50 +686,60 @@ async function abrirCierreDeCaja() {
   hoy.setHours(0,0,0,0);
   const hoyStr = hoy.toDateString();
 
-  const qRecibos = query(collection(db, 'recibos'), where('estadoOrden', '==', 'entregado'));
-  const snapRecibos = await getDocs(qRecibos);
   reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0, ganancia: 0 };
-  
-  snapRecibos.forEach(doc => {
-    const d = doc.data();
-    let fechaD = d.fechaEntrega || d.fecha;
-    if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
-    
-    if (fechaD && fechaD.toDateString() === hoyStr) {
-      const monto = Number(d.montoCobrado) || 0;
-      const costo = Number(d.costoRepuesto) || 0;
-      const metodo = (d.metodoPago || 'Efectivo').toLowerCase();
-
-      reparacionesData.total += monto;
-      reparacionesData.ganancia += (monto - costo);
-      reparacionesData.cantidad++;
-
-      if (metodo.includes('efectivo')) reparacionesData.efectivo += monto;
-      else if (metodo.includes('qr')) reparacionesData.qr += monto;
-    }
-  });
-
   ventasAccesoriosData = { total: 0, cantidad: 0, ganancia: 0 };
   ventasExtrasData = { total: 0, cantidad: 0, ganancia: 0 };
 
-  appState.ventasHoy.forEach(v => {
+  try {
+    const qRecibos = query(collection(db, 'recibos'), where('estadoOrden', '==', 'entregado'));
+    const snapRecibos = await getDocs(qRecibos);
+    
+    snapRecibos.forEach(docSnap => {
+      const d = docSnap.data();
+      let fechaD = d.fechaEntrega || d.fecha;
+      if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
+      
+      if (fechaD && fechaD.toDateString() === hoyStr) {
+        const monto = Number(d.montoCobrado) || 0;
+        const costo = Number(d.costoRepuesto) || 0;
+        const metodo = (d.metodoPago || 'Efectivo').toLowerCase();
+
+        reparacionesData.total += monto;
+        reparacionesData.ganancia += (monto - costo);
+        reparacionesData.cantidad++;
+
+        if (metodo.includes('efectivo')) reparacionesData.efectivo += monto;
+        else if (metodo.includes('qr')) reparacionesData.qr += monto;
+      }
+    });
+  } catch (e) {
+    console.error('Error al leer recibos para cierre:', e);
+    toast('Error al leer recibos. Se usará solo ventas.', 'error');
+  }
+
+  // Ventas de accesorios del día (solo de la colección 'ventas', no de cierres)
+  const ventasHoyUnicas = dedupeVentas(appState.ventasHoy);
+  ventasHoyUnicas.forEach(v => {
     const f = parsearFecha(v.fecha);
     if (f && f.toDateString() === hoyStr) {
       const monto = Number(v.monto) || 0;
       const costo = Number(v.costo) || 0;
-      ventasAccesoriosData.total += monto;
-      ventasAccesoriosData.ganancia += (monto - costo);
-      ventasAccesoriosData.cantidad++;
+      if (v.origen === 'panel') {
+        ventasAccesoriosData.total += monto;
+        ventasAccesoriosData.ganancia += (monto - costo);
+        ventasAccesoriosData.cantidad++;
+      }
     }
   });
 
   renderizarVistaPreviaCierre();
   recalcularCierre();
-  modalPreviewPDF.classList.add('show');
+  modalPreviewPDF?.classList.add('show');
 }
 
 function renderizarVistaPreviaCierre() {
   const container = document.getElementById('previewPDFContent');
+  if (!container) return;
   const hoy = new Date();
   const fechaStr = `${String(hoy.getDate()).padStart(2,'0')}/${String(hoy.getMonth()+1).padStart(2,'0')}/${hoy.getFullYear()}`;
 
@@ -604,17 +761,24 @@ function renderizarVistaPreviaCierre() {
   `;
 }
 
-function recalcularCierre() {
+function leerGastosDelDOM() {
   const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
-  const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0;
-  const totalGastos = pasajes + almuerzo;
+  const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? CONFIG_APP.gastoAlmuerzo : 0;
+  return { pasajes, almuerzo, totalGastos: pasajes + almuerzo };
+}
+
+function recalcularCierre() {
+  const { totalGastos } = leerGastosDelDOM();
 
   const totalGlobal = reparacionesData.total + ventasAccesoriosData.total + ventasExtrasData.total;
-  const gananciaReal = (reparacionesData.ganancia + ventasAccesoriosData.ganancia) - totalGastos;
+  // Ganancia real: ganancia de reparaciones + accesorios + extras - gastos
+  const gananciaReal = (reparacionesData.ganancia + ventasAccesoriosData.ganancia + ventasExtrasData.ganancia) - totalGastos;
 
-  const efectivoEnCaja = reparacionesData.efectivo;
+  // Efectivo en caja = efectivo cobrado por reparaciones (las ventas de accesorios también son efectivo)
+  const efectivoEnCaja = reparacionesData.efectivo + ventasAccesoriosData.total;
   let montoTransferir = 0;
 
+  // Si el efectivo en caja no cubre la ganancia libre, el técnico transfiere la diferencia al dueño
   if (efectivoEnCaja < gananciaReal) {
     montoTransferir = gananciaReal - efectivoEnCaja;
   }
@@ -628,7 +792,7 @@ function recalcularCierre() {
   if (elMontoTransf) elMontoTransf.textContent = formatBsLimpio(montoTransferir);
 }
 
-function generarPDFCierre() {
+function generarPDFCierre(gastos) {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
 
@@ -637,7 +801,7 @@ function generarPDFCierre() {
   pdf.setFontSize(10); pdf.text('Cierre de Caja Diario', 14, 22);
   pdf.setTextColor(0, 0, 0); pdf.setFontSize(12);
   pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, 14, 45);
-  pdf.text(`Realizado por: ${appState.sesion.nombre}`, 14, 52);
+  pdf.text(`Realizado por: ${appState.sesion?.nombre || 'Técnico'}`, 14, 52);
 
   pdf.setFontSize(14); pdf.setFont('helvetica', 'bold'); pdf.text('Reparaciones', 14, 65);
   pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
@@ -651,12 +815,11 @@ function generarPDFCierre() {
     pdf.text(`- Total: ${formatBsLimpio(ventasAccesoriosData.total)}`, 18, y); y += 10;
   }
 
-  const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
-  const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0;
-  const totalGastos = pasajes + almuerzo;
+  const totalGastos = gastos?.totalGastos || 0;
   const totalGlobal = reparacionesData.total + ventasAccesoriosData.total + ventasExtrasData.total;
-  const gananciaReal = (reparacionesData.ganancia + ventasAccesoriosData.ganancia) - totalGastos;
-  const montoTransferir = Math.max(0, gananciaReal - reparacionesData.efectivo);
+  const gananciaReal = (reparacionesData.ganancia + ventasAccesoriosData.ganancia + ventasExtrasData.ganancia) - totalGastos;
+  const efectivoEnCaja = reparacionesData.efectivo + ventasAccesoriosData.total;
+  const montoTransferir = Math.max(0, gananciaReal - efectivoEnCaja);
 
   pdf.setFillColor(240, 240, 240); pdf.rect(14, y, 182, 20, 'F');
   pdf.setFontSize(16); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(255, 105, 0);
@@ -675,19 +838,47 @@ function generarPDFCierre() {
   pdf.save(`Cierre_${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
-async function guardarCierreEnFirebase() {
-  const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
-  const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? 20 : 0;
-  const totalGastos = pasajes + almuerzo;
+async function guardarCierreEnFirebase(gastos) {
+  const { pasajes, almuerzo, totalGastos } = gastos;
   const totalGlobal = reparacionesData.total + ventasAccesoriosData.total + ventasExtrasData.total;
-  const gananciaReal = (reparacionesData.ganancia + ventasAccesoriosData.ganancia) - totalGastos;
-  const montoTransferir = Math.max(0, gananciaReal - reparacionesData.efectivo);
+  const gananciaReal = (reparacionesData.ganancia + ventasAccesoriosData.ganancia + ventasExtrasData.ganancia) - totalGastos;
+  const efectivoEnCaja = reparacionesData.efectivo + ventasAccesoriosData.total;
+  const montoTransferir = Math.max(0, gananciaReal - efectivoEnCaja);
 
-  await addDoc(collection(db, 'cierres'), {
-    fecha: serverTimestamp(), realizadoPor: appState.sesion.nombre,
-    reparaciones: reparacionesData, ventasAccesorios: ventasAccesoriosData, ventasExtras: ventasExtrasData,
-    totalGlobal, gananciaReal, gastoPasajes: pasajes, gastoAlmuerzo: almuerzo, montoTransferir
+  const fechaStr = new Date().toISOString().slice(0, 10); // idempotente por día
+  const cierreRef = doc(db, 'cierres', fechaStr);
+
+  // Ventas de accesorios del día (para que el lector pueda releerlas)
+  const hoyStr = new Date().toDateString();
+  const ventasInventario = [];
+  const extras = [];
+  const ventasHoyUnicas = dedupeVentas(appState.ventasHoy);
+  ventasHoyUnicas.forEach(v => {
+    const f = parsearFecha(v.fecha);
+    if (f && f.toDateString() === hoyStr && v.origen === 'panel') {
+      ventasInventario.push({
+        nombre: v.concepto || 'Venta',
+        cantidad: 1,
+        precio: Number(v.monto) || 0,
+        costo: Number(v.costo) || 0
+      });
+    }
   });
+
+  await setDoc(cierreRef, {
+    fecha: serverTimestamp(),
+    realizadoPor: appState.sesion?.nombre || 'Técnico',
+    reparaciones: reparacionesData,
+    ventasAccesorios: ventasAccesoriosData,
+    ventasExtras: ventasExtrasData,
+    ventasInventario,
+    extras,
+    totalGlobal,
+    gananciaReal,
+    gastoPasajes: pasajes,
+    gastoAlmuerzo: almuerzo,
+    montoTransferir
+  }, { merge: true });
 }
 
 // ==========================================
@@ -696,7 +887,7 @@ async function guardarCierreEnFirebase() {
 let touchStartY = 0;
 let touchCurrentY = 0;
 let isPulling = false;
-const pullThreshold = 100; 
+const pullThreshold = CONFIG_APP.pullThreshold;
 const appContent = document.querySelector('.app-content');
 const pullIndicator = document.getElementById('pullToRefresh');
 const ptrIcon = document.getElementById('ptrIcon');
@@ -719,7 +910,7 @@ if (appContent && pullIndicator) {
       const progress = Math.min(distance / pullThreshold, 1);
       pullIndicator.style.transform = `translateX(-50%) translateY(${progress * 60}px)`;
       pullIndicator.style.opacity = progress;
-      ptrIcon.style.transform = `rotate(${progress * 360}deg)`;
+      if (ptrIcon) ptrIcon.style.transform = `rotate(${progress * 360}deg)`;
     }
   }, { passive: false });
 
@@ -729,14 +920,15 @@ if (appContent && pullIndicator) {
 
     if (distance > pullThreshold && appContent.scrollTop === 0) {
       pullIndicator.style.transform = 'translateX(-50%) translateY(50px)';
-      ptrIcon.style.animation = 'spin 0.8s linear infinite'; 
+      if (ptrIcon) ptrIcon.style.animation = 'spin 0.8s linear infinite'; 
       
-      if (typeof cargarDatos === 'function') {
-        cargarDatos(); 
+      // 🔥 NO re-suscribir: solo re-render local. Los listeners ya están activos.
+      if (typeof renderizarTodo === 'function') {
+        renderizarTodo();
         setTimeout(() => {
           resetPullToRefresh();
           toast('Datos actualizados', 'success');
-        }, 1000);
+        }, 600);
       } else {
         window.location.reload();
       }
@@ -752,7 +944,9 @@ if (appContent && pullIndicator) {
   function resetPullToRefresh() {
     pullIndicator.style.transform = 'translateX(-50%) translateY(-60px)';
     pullIndicator.style.opacity = '0';
-    ptrIcon.style.animation = 'none';
-    ptrIcon.style.transform = 'rotate(0deg)';
+    if (ptrIcon) {
+      ptrIcon.style.animation = 'none';
+      ptrIcon.style.transform = 'rotate(0deg)';
+    }
   }
 }
