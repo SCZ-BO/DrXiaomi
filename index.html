@@ -1214,5 +1214,16 @@
       document.body.classList.add('is-standalone');
     }
   </script>
+  <script type="module">
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { auth } from "/app/js/firebase.js"; // Asegúrate de exportar 'auth'
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // Si hay un usuario logueado, lo mandamos al panel
+      window.location.href = "/app/";
+    }
+  });
+</script>
 </body>
 </html>
