@@ -22,7 +22,7 @@ const CONFIG_APP = {
   pullThreshold: 100,
   debounceRenderMs: 100,
   loaderFallbackMs: 3000,
-  vapidKey: 'TU_VAPID_KEY_AQUI' // 🔥 Reemplazar por tu VAPID real
+  vapidKey: 'BNCSlsvNPr7pVw5dZTtm-mrSOrXsuIMQ_9IW9KTVPS1Hm8IEJMh8DaEk1nojGJ_4ZwVgV6ZYUgVTFSymAyS-jRc' // 🔥 Reemplazar por tu VAPID real
 };
 
 export let appState = { sesion: null, ordenes: [], ventasHoy: [], inventario: [] };
