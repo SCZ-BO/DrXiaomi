@@ -1,3 +1,6 @@
+Entendido. Aquí tienes el `cliente.js` completo y arreglado con las nuevas funciones (puntitos navegables, botón físico atrás, Enter inteligente) y sin tocar la lógica del wizard.
+
+```javascript
 /* ============================================================
    DR. XIAOMI · CLIENTE (Wizard PRO - Conectado a Firestore)
    Archivo: js/cliente.js
@@ -29,6 +32,7 @@ const CONFIG = {
    ============================================================ */
 let sesion = null;
 let pasoActual = 1;
+let pasoMaximoAlcanzado = 1; // 🔥 NUEVO: Para controlar los puntitos
 const TOTAL_PASOS = 7;
 
 const datos = {
@@ -71,6 +75,8 @@ function iniciar() {
   configurarFotos();
   configurarServicios();
   configurarBotonGenerar();
+  configurarTeclado(); // 🔥 NUEVO: Enter inteligente
+  configurarBotonAtrasFisico(); // 🔥 NUEVO: Botón físico Android
 
   const content = document.getElementById('wizardContent');
   if (content) {
@@ -164,12 +170,34 @@ function configurarHeader() {
 function configurarWizard() {
   document.getElementById('btnPrev')?.addEventListener('click', irPasoAnterior);
   document.getElementById('btnNext')?.addEventListener('click', irPasoSiguiente);
+  
+  // 🔥 PUNTITOS CLICKEABLES (Solo retroceder y avanzar al siguiente)
+  document.getElementById('wizardProgress')?.addEventListener('click', (e) => {
+    const dot = e.target.closest('.wizard-dot');
+    if (!dot) return;
+    const step = parseInt(dot.dataset.step);
+    if (isNaN(step)) return;
+    
+    // Solo permitir ir a pasos ya visitados o al siguiente inmediato
+    if (step < pasoActual) {
+      haptic(10);
+      guardarDatosPaso(pasoActual);
+      irAPaso(step);
+    } else if (step === pasoActual + 1) {
+      haptic(10);
+      irPasoSiguiente();
+    }
+  });
 }
 
 function irPasoSiguiente() {
   if (!validarPaso(pasoActual)) return;
   guardarDatosPaso(pasoActual);
-  if (pasoActual < TOTAL_PASOS) irAPaso(pasoActual + 1);
+  if (pasoActual < TOTAL_PASOS) {
+    const nuevoPaso = pasoActual + 1;
+    if (nuevoPaso > pasoMaximoAlcanzado) pasoMaximoAlcanzado = nuevoPaso;
+    irAPaso(nuevoPaso);
+  }
 }
 
 function irPasoAnterior() {
@@ -180,6 +208,7 @@ function irPasoAnterior() {
 function irAPaso(nuevoPaso) {
   haptic(10);
   pasoActual = nuevoPaso;
+  if (pasoActual > pasoMaximoAlcanzado) pasoMaximoAlcanzado = pasoActual;
 
   document.querySelectorAll('.wizard-panel').forEach(p => {
     p.classList.add('hidden');
@@ -225,6 +254,15 @@ function actualizarBarraProgreso() {
     dot.classList.remove('active', 'done');
     if (step < pasoActual) dot.classList.add('done');
     else if (step === pasoActual) dot.classList.add('active');
+    
+    // Actualizar cursor y opacidad según si es clickeable
+    if (step < pasoActual || step === pasoActual + 1) {
+      dot.style.cursor = 'pointer';
+      dot.style.opacity = '1';
+    } else {
+      dot.style.cursor = 'default';
+      dot.style.opacity = step > pasoActual ? '0.4' : '1';
+    }
   });
 }
 
@@ -245,7 +283,59 @@ function actualizarBotones() {
 }
 
 /* ============================================================
-   VALIDACIONES
+   🔥 BOTÓN FÍSICO ATRÁS (Android)
+   ============================================================ */
+function configurarBotonAtrasFisico() {
+  window.addEventListener('popstate', (e) => {
+    if (pasoActual > 1) {
+      e.preventDefault();
+      // Empujar estado de nuevo para mantener el historial
+      history.pushState({ paso: pasoActual }, '');
+      irPasoAnterior();
+    }
+    // Si está en el paso 1, deja que salga al panel
+  });
+  
+  // Reemplazar el estado inicial para tener control
+  history.replaceState({ paso: 1 }, '');
+}
+
+/* ============================================================
+   🔥 ENTER INTELIGENTE (Salto de campos)
+   ============================================================ */
+function configurarTeclado() {
+  document.getElementById('wizardContent')?.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    
+    const target = e.target;
+    if (target.tagName === 'TEXTAREA') return; // En textarea, Enter hace salto de línea
+    
+    e.preventDefault(); // Evitar submit o comportamientos por defecto
+    
+    const panelActual = document.querySelector(`[data-panel="${pasoActual}"]`);
+    if (!panelActual) return;
+    
+    // Obtener todos los inputs válidos dentro del panel actual (excluyendo hidden y botones)
+    const inputs = Array.from(panelActual.querySelectorAll('input:not([type="hidden"]), select, textarea')).filter(el => {
+      return el.offsetParent !== null && !el.disabled && !el.readOnly;
+    });
+    
+    const idx = inputs.indexOf(target);
+    
+    if (idx > -1 && idx < inputs.length - 1) {
+      // Mover al siguiente input dentro del mismo paso
+      inputs[idx + 1].focus();
+      haptic(5);
+    } else {
+      // Es el último input del paso: intentar avanzar al siguiente paso
+      haptic(15);
+      irPasoSiguiente();
+    }
+  });
+}
+
+/* ============================================================
+   VALIDACIONES (Sin cambios)
    ============================================================ */
 function validarPaso(paso) {
   if (paso === 1) {
@@ -309,7 +399,7 @@ function guardarDatosPaso(paso) {
 }
 
 /* ============================================================
-   MARCAS Y RADIOS
+   MARCAS Y RADIOS (Sin cambios)
    ============================================================ */
 function configurarMarca() {
   const grid = document.getElementById('marcasGrid');
@@ -354,7 +444,7 @@ function configurarRadioGroups() {
 }
 
 /* ============================================================
-   LÓGICA INTELIGENTE (CHIPS Y CHECKLIST)
+   LÓGICA INTELIGENTE (CHIPS Y CHECKLIST) (Sin cambios)
    ============================================================ */
 function configurarLogicaInteligente() {
   const motivoGroup = document.getElementById('motivoIngresoGroup');
@@ -405,7 +495,7 @@ function configurarLogicaInteligente() {
 }
 
 /* ============================================================
-   PATTERN LOCK
+   PATTERN LOCK (Sin cambios)
    ============================================================ */
 function configurarPattern() {
   const bgCanvas = document.getElementById('bgCanvas');
@@ -485,7 +575,7 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS
+   FOTOS (Sin cambios)
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
@@ -581,7 +671,7 @@ async function comprimirImagen(file) {
 }
 
 /* ============================================================
-   SERVICIOS Y COSTOS
+   SERVICIOS Y COSTOS (Sin cambios)
    ============================================================ */
 function configurarServicios() {
   const list = document.getElementById('serviciosList');
@@ -681,7 +771,7 @@ function recolectarServicios() {
 }
 
 /* ============================================================
-   VISTA PREVIA (PASO 7)
+   VISTA PREVIA (PASO 7) (Sin cambios)
    ============================================================ */
 function generarVistaPrevia() {
   guardarDatosPaso(6);
@@ -748,7 +838,7 @@ function generarVistaPrevia() {
 }
 
 /* ============================================================
-   GUARDADO EN FIRESTORE (Y ENVÍO DE LINK)
+   GUARDADO EN FIRESTORE (Y ENVÍO DE LINK) (Sin cambios)
    ============================================================ */
 function configurarBotonGenerar() {
   const btn = document.getElementById('btnGenerate');
@@ -848,3 +938,4 @@ function generarNumeroRecibo() {
   const f = new Date();
   return `REC-${String(f.getDate()).padStart(2, '0')}${String(f.getMonth() + 1).padStart(2, '0')}${String(f.getFullYear()).slice(-2)}-${String(f.getHours()).padStart(2, '0')}${String(f.getMinutes()).padStart(2, '0')}${String(f.getSeconds()).padStart(2, '0')}`;
 }
+```
