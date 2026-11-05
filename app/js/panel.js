@@ -123,13 +123,11 @@ let unsubscribe = null, unsubscribeVentas = null, unsubscribeCierres = null, uns
 let ventasPanel = [];
 const ITEMS_POR_PAGINA = CONFIG_APP.itemsPorPagina;
 
-// Variables para el cierre
 let reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
 let ventasAccesoriosData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
 let detallesReparaciones = [];
 let detallesVentas = [];
 
-// Variable para editar venta
 let ventaActualEditando = null;
 
 const reciboSheet = document.getElementById('reciboSheet');
@@ -866,22 +864,25 @@ window.cambiarPagina = (p) => {
   document.querySelector('.app-content')?.scrollTo({ top: 0, behavior: 'smooth' }); 
 };
 
+// 🔥 NUEVA LÓGICA DE TARJETAS CON ESTILOS EN LÍNEA
 function renderCardTelefono(o) {
   const est = o.estadoOrden || 'recibido';
   
-  // 🔥 COLORES VIBRANTES PARA TELÉFONOS
   const info = { 
     recibido: { t: 'Recibido', c: '#F59E0B' }, 
-    reparacion: { t: 'Reparación', c: '#EF4444' }, // 🔴 ROJO
-    'espera-repuesto': { t: 'Repuesto', c: '#8B5CF6' }, // Morado
-    listo: { t: 'Listo', c: '#3B82F6' }, // Azul
-    entregado: { t: 'Entregado', c: '#10B981' }, // 🟢 VERDE
-    devuelto: { t: 'Devuelto', c: '#6B7280' } // ⚪ PLOMO
+    reparacion: { t: 'Reparación', c: '#EF4444' }, 
+    'espera-repuesto': { t: 'Repuesto', c: '#8B5CF6' }, 
+    listo: { t: 'Listo', c: '#3B82F6' }, 
+    entregado: { t: 'Entregado', c: '#10B981' }, 
+    devuelto: { t: 'Devuelto', c: '#6B7280' } 
   }[est] || { t: est, c: 'var(--text-3)' };
-  
+
+  const bgColor = `color-mix(in srgb, ${info.c} 10%, var(--bg-elev-1))`;
+
   return `
-    <div class="ingreso-card" data-tipo="telefono" data-id="${o.id}" style="border-left-color: ${info.c};">
-      <div class="icon-circle" style="color: ${info.c}; background: color-mix(in srgb, ${info.c} 15%, transparent);">
+    <div class="ingreso-card" data-tipo="telefono" data-id="${o.id}" 
+         style="background: ${bgColor}; border-left: 6px solid ${info.c}; display: flex; justify-content: space-between; align-items: center; padding: 10px; margin-bottom: 6px; border-radius: var(--r-md); cursor: pointer; border-top: 1px solid var(--border-1); border-right: 1px solid var(--border-1); border-bottom: 1px solid var(--border-1);">
+      <div class="icon-circle" style="color: ${info.c}; background: color-mix(in srgb, ${info.c} 20%, transparent);">
         ${icono('telefono', 24)}
       </div>
       <div class="info-col">
@@ -890,7 +891,7 @@ function renderCardTelefono(o) {
         <div class="info-sub" style="font-size: 11px;">
           ${est === 'entregado' ? `Entregado: ${formatFechaCompleta(o.fechaEntrega)}` : `Ingreso: ${tiempoRelativo(o.fechaEditada || o.fecha)}`}
         </div>
-        <span class="estado-chip" style="background: color-mix(in srgb, ${info.c} 15%, transparent); color: ${info.c};">${info.t}</span>
+        <span class="estado-chip" style="background: color-mix(in srgb, ${info.c} 20%, transparent); color: ${info.c};">${info.t}</span>
       </div>
       <div class="monto-col">
         <div class="monto" style="color: var(--text-1);">${formatBsLimpio(Number(o.montoCobrado) || Number(o.total) || 0)}</div>
@@ -903,15 +904,11 @@ function renderCardVenta(v, tipo) {
   const hora = f ? `${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')}` : '';
   
   let iconoNombre = 'venta';
-  let cor = '#FFFFFF'; // ⚪ Blanco puro por defecto
+  let cor = '#FFFFFF'; // Blanco puro por defecto
 
-  // 🔥 DETECCIÓN CLAVE: 
-  // Si el concepto NO empieza con un número seguido de 'x' (ej: "1x Cargador"), 
-  // significa que es un servicio escrito a mano o elegido de la lista.
   const esAccesorio = /^\d+x\s/.test(v.concepto);
 
   if (!esAccesorio) {
-    // 🟠 ES SERVICIO
     cor = '#FF6900'; // Naranja brillante de la marca
     if (v.concepto.includes('Botón')) iconoNombre = 'bateria'; 
     else if (v.concepto.includes('Limpieza')) iconoNombre = 'servicios';
@@ -919,12 +916,12 @@ function renderCardVenta(v, tipo) {
     else if (v.concepto.includes('Cargador')) iconoNombre = 'bateria';
     else iconoNombre = 'servicios';
   } else {
-    // ⚪ ES ACCESORIO
     cor = '#FFFFFF'; // Blanco puro
     iconoNombre = 'venta';
   }
-  
-  // 🔥 CALCULAR GANANCIA
+
+  const bgColor = `color-mix(in srgb, ${cor} 10%, var(--bg-elev-1))`;
+
   const esAdmin = appState.sesion?.rol === 'admin';
   const monto = Number(v.monto) || 0;
   const costo = Number(v.costo) || 0;
@@ -936,8 +933,9 @@ function renderCardVenta(v, tipo) {
   }
 
   return `
-    <div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}" style="border-left-color: ${cor};">
-      <div class="icon-circle" style="color: ${cor}; background: color-mix(in srgb, ${cor} 15%, transparent);">
+    <div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}" 
+         style="background: ${bgColor}; border-left: 6px solid ${cor}; display: flex; justify-content: space-between; align-items: center; padding: 10px; margin-bottom: 6px; border-radius: var(--r-md); cursor: pointer; border-top: 1px solid var(--border-1); border-right: 1px solid var(--border-1); border-bottom: 1px solid var(--border-1);">
+      <div class="icon-circle" style="color: ${cor}; background: color-mix(in srgb, ${cor} 20%, transparent);">
         ${icono(iconoNombre, 24)}
       </div>
       <div class="info-col">
