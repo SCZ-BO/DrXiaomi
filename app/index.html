@@ -34,6 +34,56 @@
       animation: spin 1.2s linear infinite !important;
     }
     
+    /* 🔥 SKELETON LOADER (Esqueletos de carga) */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton-card {
+      background: var(--bg-elev-1);
+      border-radius: var(--r-md);
+      padding: 10px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--border-1);
+      border-left-width: 5px;
+      border-left-color: var(--border-2);
+    }
+    .skeleton-circle {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(90deg, var(--bg-elev-2) 25%, var(--bg-elev-3) 50%, var(--bg-elev-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .skeleton-lines { flex: 1; }
+    .skeleton-line {
+      height: 10px; border-radius: 4px; margin-bottom: 6px;
+      background: linear-gradient(90deg, var(--bg-elev-2) 25%, var(--bg-elev-3) 50%, var(--bg-elev-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .skeleton-line.short { width: 40%; }
+    .skeleton-line.medium { width: 70%; }
+
+    /* 🔥 EFECTO RIPPLE (Onda al tocar botones) */
+    .btn-ripple {
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-ripple .ripple-effect {
+      position: absolute;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.4);
+      transform: scale(0);
+      animation: ripple-anim 0.6s linear;
+      pointer-events: none;
+    }
+    @keyframes ripple-anim {
+      to { transform: scale(4); opacity: 0; }
+    }
+    
     /* HERO BUTTONS */
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
     .btn-hero { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; padding: 10px 12px; border-radius: var(--r-lg); font-weight: 700; font-size: 12px; line-height: 1.2; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 60px; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
@@ -145,11 +195,11 @@
     <div class="app-content">
       <!-- HERO -->
       <div class="hero-actions">
-        <button type="button" class="btn-hero btn-hero-nuevo" id="nuevoReciboBtn">
+        <button type="button" class="btn-hero btn-hero-nuevo btn-ripple" id="nuevoReciboBtn">
           <div class="icon-box"><img src="/app/icons/agregar.png" alt="Nuevo Equipo"></div>
           <span>Nuevo Equipo</span>
         </button>
-        <button type="button" class="btn-hero btn-hero-venta" id="ventaRapidaBtn">
+        <button type="button" class="btn-hero btn-hero-venta btn-ripple" id="ventaRapidaBtn">
           <img src="/app/icons/venta.png" alt="Venta Rápida" class="icon-raw">
           <span>Venta Rápida</span>
         </button>
@@ -164,10 +214,10 @@
 
       <!-- BOTONES PDF Y NOTA -->
       <div class="action-buttons">
-        <button type="button" class="btn btn-secondary" id="btnPDFDia">
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnPDFDia">
           <img src="/app/icons/pdf.png" width="16" height="16" alt="PDF"> Cierre de Caja
         </button>
-        <button type="button" class="btn btn-secondary" id="btnAbrirNotaDueno">
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnAbrirNotaDueno">
           <img src="/app/icons/nota.png" width="16" height="16" alt="Nota"> Nota al Dueño
         </button>
       </div>
@@ -180,15 +230,38 @@
       </div>
 
       <div class="filters-row" id="filtros" role="tablist" aria-label="Filtros de movimientos">
-        <button type="button" class="chip-interactive active" data-filtro="todos" role="tab" aria-selected="true">Todos</button>
-        <button type="button" class="chip-interactive" data-filtro="reparacion" role="tab" aria-selected="false">Reparación</button>
-        <button type="button" class="chip-interactive" data-filtro="listo" role="tab" aria-selected="false">Listos</button>
-        <button type="button" class="chip-interactive" data-filtro="entregado" role="tab" aria-selected="false">Entregados</button>
-        <button type="button" class="chip-interactive" data-filtro="devuelto" role="tab" aria-selected="false">Devueltos</button>
-        <button type="button" class="chip-interactive" data-filtro="venta" role="tab" aria-selected="false">Ventas</button>
+        <button type="button" class="chip-interactive active btn-ripple" data-filtro="todos" role="tab" aria-selected="true">Todos</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="reparacion" role="tab" aria-selected="false">Reparación</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="listo" role="tab" aria-selected="false">Listos</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="entregado" role="tab" aria-selected="false">Entregados</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="devuelto" role="tab" aria-selected="false">Devueltos</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="venta" role="tab" aria-selected="false">Ventas</button>
       </div>
 
-      <div class="cards-list" id="listaOrdenes"></div>
+      <div class="cards-list" id="listaOrdenes">
+        <!-- 🔥 ESQUELETOS INICIALES (Se borran cuando cargan los datos) -->
+        <div class="skeleton-card">
+          <div class="skeleton-circle"></div>
+          <div class="skeleton-lines">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-circle"></div>
+          <div class="skeleton-lines">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-circle"></div>
+          <div class="skeleton-lines">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+        </div>
+      </div>
       <div class="pagination-container" id="paginationContainer"></div>
     </div>
   </main>
@@ -206,18 +279,18 @@
       <div id="tipoVentaStep">
         <p style="font-size: 14px; color: var(--text-3); margin-bottom: 16px; text-align: center;">¿Qué vas a registrar?</p>
         <div style="display: flex; flex-direction: column; gap: 12px;">
-          <button type="button" class="btn btn-secondary" id="btnVentaAccesorio" style="padding: 20px; font-size: 16px; justify-content: flex-start;">
+          <button type="button" class="btn btn-secondary btn-ripple" id="btnVentaAccesorio" style="padding: 20px; font-size: 16px; justify-content: flex-start;">
             <i class="fas fa-box" style="color: var(--brand-500); font-size: 24px; margin-right: 12px;"></i>
             <div style="text-align: left;"><div style="font-weight: 800;">Venta de Accesorio</div><div style="font-size: 12px; color: var(--text-3);">Elegir producto del inventario</div></div>
           </button>
-          <button type="button" class="btn btn-secondary" id="btnVentaServicio" style="padding: 20px; font-size: 16px; justify-content: flex-start;">
+          <button type="button" class="btn btn-secondary btn-ripple" id="btnVentaServicio" style="padding: 20px; font-size: 16px; justify-content: flex-start;">
             <i class="fas fa-tools" style="color: var(--success-500); font-size: 24px; margin-right: 12px;"></i>
             <div style="text-align: left;"><div style="font-weight: 800;">Venta de Servicio</div><div style="font-size: 12px; color: var(--text-3);">Limpieza, botón, reactivación...</div></div>
           </button>
         </div>
       </div>
       <div id="ventaAccesorioStep" style="display: none;">
-        <button type="button" class="btn btn-secondary" id="btnBackToTipo" style="margin-bottom: 16px; width: auto; padding: 8px 16px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnBackToTipo" style="margin-bottom: 16px; width: auto; padding: 8px 16px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
         <label class="input-label" style="margin-bottom: 8px; display:block;">Selecciona un producto:</label>
         <div id="gridAccesorios"></div>
         <div id="productoSeleccionadoInfo" style="display: none; background: var(--bg-elev-2); padding: 12px; border-radius: 8px; margin-top: 12px; margin-bottom: 12px; border: 1px solid var(--border-1);">
@@ -229,15 +302,15 @@
             <select id="accesorioMetodoPago" class="input-field"><option value="Efectivo">💵 Efectivo</option><option value="QR">📱 QR</option></select>
           </div>
         </div>
-        <button type="button" class="btn btn-primary" id="btnRegistrarAccesorio" style="width: 100%;" disabled>Registrar Venta</button>
+        <button type="button" class="btn btn-primary btn-ripple" id="btnRegistrarAccesorio" style="width: 100%;" disabled>Registrar Venta</button>
       </div>
       <div id="ventaServicioStep" style="display: none;">
-        <button type="button" class="btn btn-secondary" id="btnBackToTipo2" style="margin-bottom: 16px; width: auto; padding: 8px 16px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnBackToTipo2" style="margin-bottom: 16px; width: auto; padding: 8px 16px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
         <div class="field"><select id="ventaConcepto" class="input-field"><option value="Botón">Botón</option><option value="Limpieza">Limpieza</option><option value="Reactivación">Reactivación</option><option value="Cargador">Cargador</option><option value="Otro">Otro</option></select></div>
         <div class="field" id="wrapConceptoOtro" style="display: none;"><input type="text" id="ventaConceptoOtro" class="input-field" placeholder="Especifique qué se vendió"></div>
         <div class="field"><input type="number" id="ventaMonto" class="input-field" placeholder="Monto (Bs.)" inputmode="decimal"></div>
         <div class="field"><select id="ventaMetodo" class="input-field"><option value="Efectivo">💵 Efectivo</option><option value="QR">📱 QR</option></select></div>
-        <button type="button" class="btn btn-primary" id="btnGuardarVenta" style="width: 100%; margin-top: 10px;">Registrar Venta</button>
+        <button type="button" class="btn btn-primary btn-ripple" id="btnGuardarVenta" style="width: 100%; margin-top: 10px;">Registrar Venta</button>
       </div>
     </div>
   </div>
@@ -265,10 +338,10 @@
       <div class="field"><input type="number" id="pagoMonto" class="input-field" placeholder="Monto Cobrado (Bs.)" inputmode="decimal"></div>
       <label class="input-label" style="padding-left:0; margin-bottom: 8px; display:block;">Método de Pago</label>
       <div id="metodosPagoGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
-          <button type="button" class="btn btn-secondary" data-metodo="Efectivo">💵 Efectivo</button>
-          <button type="button" class="btn btn-secondary" data-metodo="QR">📱 QR</button>
+          <button type="button" class="btn btn-secondary btn-ripple" data-metodo="Efectivo">💵 Efectivo</button>
+          <button type="button" class="btn btn-secondary btn-ripple" data-metodo="QR">📱 QR</button>
       </div>
-      <button type="button" class="btn btn-primary" id="btnConfirmarPago" style="width: 100%;">Confirmar y Entregar</button>
+      <button type="button" class="btn btn-primary btn-ripple" id="btnConfirmarPago" style="width: 100%;">Confirmar y Entregar</button>
     </div>
   </div>
 
@@ -280,8 +353,8 @@
       <p style="font-size: 14px; color: var(--text-3); margin-bottom: 16px;">Escribe una constancia que el dueño verá en su panel.</p>
       <div class="field"><textarea id="notaDuenoTexto" class="input-field" rows="4" placeholder="Ej: Faltó cambiar el flex del modelo X..."></textarea></div>
       <div style="display: flex; gap: 10px; margin-top: 16px;">
-        <button type="button" class="btn btn-secondary" id="btnCancelarNotaDueno" style="flex: 1;">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="btnGuardarNotaDueno" style="flex: 1;">Guardar Nota</button>
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnCancelarNotaDueno" style="flex: 1;">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-ripple" id="btnGuardarNotaDueno" style="flex: 1;">Guardar Nota</button>
       </div>
     </div>
   </div>
@@ -330,10 +403,10 @@
         <div style="font-size: 9px; color: var(--info-500); text-transform: uppercase; font-weight: 800;">Monto a Entregar al Dueño</div>
       </div>
       
-      <button type="button" class="btn btn-whatsapp" id="btnCerrarYEnviar" style="width: 100%; height: 40px; margin-bottom: 6px; font-size: 13px; border-radius: var(--r-md);">
+      <button type="button" class="btn btn-whatsapp btn-ripple" id="btnCerrarYEnviar" style="width: 100%; height: 40px; margin-bottom: 6px; font-size: 13px; border-radius: var(--r-md);">
         <img src="/app/icons/whatsapp.png" width="18" height="18" style="margin-right: 6px;" alt=""> Cerrar Día y Enviar al Dueño
       </button>
-      <button type="button" class="btn btn-secondary" id="btnDescargarPDF" style="width: 100%; height: 40px; font-size: 13px; border-radius: var(--r-md);">
+      <button type="button" class="btn btn-secondary btn-ripple" id="btnDescargarPDF" style="width: 100%; height: 40px; font-size: 13px; border-radius: var(--r-md);">
         <img src="/app/icons/pdf.png" width="18" height="18" style="margin-right: 6px;" alt=""> Solo Descargar PDF
       </button>
     </div>
@@ -352,8 +425,8 @@
         <select id="mensajePopupDuracion" class="input-field"><option value="1">1 día</option><option value="3">3 días</option><option value="7">1 semana</option><option value="0">Hasta que el técnico lo cierre</option></select>
       </div>
       <div style="display: flex; gap: 10px; margin-top: 16px;">
-        <button type="button" class="btn btn-secondary" id="btnCancelarMensajePopup" style="flex: 1;">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="btnGuardarMensajePopup" style="flex: 1;">Enviar Mensaje</button>
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnCancelarMensajePopup" style="flex: 1;">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-ripple" id="btnGuardarMensajePopup" style="flex: 1;">Enviar Mensaje</button>
       </div>
     </div>
   </div>
@@ -365,7 +438,7 @@
       <div style="font-size: 56px; color: var(--brand-500); margin-bottom: 16px;"><i class="fas fa-bullhorn"></i></div>
       <h3 id="verPopupTitulo" style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Mensaje del Dueño</h3>
       <p id="verPopupTexto" style="font-size: 16px; color: var(--text-3); margin-bottom: 24px;">...</p>
-      <button type="button" class="btn btn-primary" id="btnOkPopup" style="width: 100%;">Entendido</button>
+      <button type="button" class="btn btn-primary btn-ripple" id="btnOkPopup" style="width: 100%;">Entendido</button>
     </div>
   </div>
 
@@ -396,8 +469,8 @@
       </div>
       
       <div style="display: flex; gap: 10px; margin-top: 16px;">
-        <button type="button" class="btn btn-secondary" id="btnCancelarEditarVenta" style="flex: 1;">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="btnGuardarEditarVenta" style="flex: 1;">Guardar Costo</button>
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnCancelarEditarVenta" style="flex: 1;">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-ripple" id="btnGuardarEditarVenta" style="flex: 1;">Guardar Costo</button>
       </div>
     </div>
   </div>
