@@ -809,7 +809,6 @@ function renderizarTodo() {
       
       const esAdmin = appState.sesion?.rol === 'admin';
       
-      // 🔥 SI ES ADMIN Y TOCA UNA VENTA, ABRE EL MODAL DE COSTO
       if (esAdmin && card.dataset.tipo === 'venta') {
         abrirEditarVenta(card.dataset.id);
       } else {
@@ -854,14 +853,13 @@ window.cambiarPagina = (p) => {
 function renderCardTelefono(o) {
   const est = o.estadoOrden || 'recibido';
   
-  // 🔥 PALETA DE COLORES PARA TELÉFONOS
   const info = { 
     recibido: { t: 'Recibido', c: 'var(--warning-500)' }, 
     reparacion: { t: 'Reparación', c: 'var(--brand-500)' }, 
     'espera-repuesto': { t: 'Repuesto', c: 'var(--purple-500)' }, 
     listo: { t: 'Listo', c: 'var(--yellow-500)' }, 
     entregado: { t: 'Entregado', c: 'var(--success-500)' }, 
-    devuelto: { t: 'Devuelto', c: 'var(--danger-500)' } // 🔥 ROJO para devoluciones
+    devuelto: { t: 'Devuelto', c: 'var(--danger-500)' }
   }[est] || { t: est, c: 'var(--text-3)' };
   
   return `
@@ -890,7 +888,6 @@ function renderCardVenta(v, tipo) {
   let iconoNombre = 'venta';
   let cor = 'var(--warning-500)'; // 🔥 AMARILLO por defecto (Accesorios)
 
-  // 🔥 DISTINGUIR SERVICIOS DE ACCESORIOS POR COLOR
   if (v.concepto === 'Botón' || v.concepto === 'Limpieza' || v.concepto === 'Reactivación' || v.concepto === 'Cargador' || v.concepto === 'Otro') {
     cor = 'var(--purple-500)'; // Morado para servicios
     if (v.concepto === 'Botón') iconoNombre = 'bateria'; 
@@ -902,7 +899,6 @@ function renderCardVenta(v, tipo) {
     iconoNombre = 'venta';
   }
   
-  // 🔥 CALCULAR GANANCIA
   const esAdmin = appState.sesion?.rol === 'admin';
   const monto = Number(v.monto) || 0;
   const costo = Number(v.costo) || 0;
