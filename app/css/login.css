@@ -1,233 +1,352 @@
-<!DOCTYPE html>
-<html lang="es" data-theme="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0A0A0B">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>DR. Xiaomi · Ingresar</title>
+/* ============================================================
+   DR. XIAOMI · LOGIN PREMIUM (Glassmorphism & Neon)
+   Archivo: /app/css/login.css
+   ============================================================ */
 
-  <!-- Favicons -->
-  <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32x32.png">
-  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
-  <link rel="icon" type="image/x-icon" href="/imagenes/favicon.ico">
-  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-  <!-- Iconos -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+/* Aislamiento total */
+#login-screen {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #050505;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 999999;
+}
 
-  <!-- PWA -->
-  <link rel="manifest" href="/app/manifest.json">
-  <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
+/* Luces de fondo (Neon Glow) */
+#login-screen::before,
+#login-screen::after {
+  content: '';
+  position: absolute;
+  width: 50vw;
+  height: 50vw;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: 0;
+  opacity: 0.35;
+  animation: lgFloatLight 10s infinite alternate ease-in-out;
+}
 
-  <!-- 🔥 AQUÍ ESTÁ LA CORRECCIÓN DE LA RUTA -->
-  <link rel="stylesheet" href="../css/login.css">
-  
-  <style>
-    /* Estilos base ultra-básicos solo para asegurar el fondo negro */
-    html, body { margin: 0; padding: 0; height: 100%; background: #050505; overflow: hidden; }
-  </style>
-</head>
-<body>
+#login-screen::before {
+  background: #FF6900;
+  top: -20%;
+  left: -10%;
+}
 
-  <div id="login-screen">
-    <!-- VISTA 1: SELECCIÓN DE PERFIL -->
-    <div class="login-card" id="viewPerfiles">
-      <div class="login-logo">
-        <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi"
-             onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:#FFF; font-size:36px; display:flex; align-items:center; justify-content:center; height:100%;&quot;></i>';">
-      </div>
+#login-screen::after {
+  background: #3B82F6;
+  bottom: -20%;
+  right: -10%;
+  animation-delay: -5s;
+}
 
-      <h1 class="login-title">DR. XIAOMI</h1>
-      <p class="login-subtitle">Servicio Técnico Especializado</p>
+@keyframes lgFloatLight {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(10%, 10%) scale(1.2); }
+}
 
-      <p class="login-section-title">¿Quién está ingresando?</p>
+/* Tarjeta Principal (Glassmorphism) */
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 380px;
+  padding: 40px 30px;
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 32px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: cardAppear 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
+  box-sizing: border-box;
+}
 
-      <div class="perfiles-list" id="perfilesList"></div>
+@keyframes cardAppear {
+  to { opacity: 1; transform: translateY(0); }
+}
 
-      <button id="themeToggle" class="btn-icon-floating right" aria-label="Cambiar tema">
-        <i class="fas fa-sun"></i>
-      </button>
-    </div>
+/* Logo */
+.login-logo {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF6900, #FF8C00);
+  padding: 4px;
+  margin-bottom: 24px;
+  box-shadow: 0 0 30px rgba(255, 105, 0, 0.4);
+  position: relative;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
 
-    <!-- VISTA 2: INGRESAR CLAVE -->
-    <div class="login-card hidden" id="viewPin">
-      <button id="backBtn" class="btn-icon-floating left" aria-label="Volver">
-        <i class="fas fa-arrow-left"></i>
-      </button>
+.login-logo img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #111;
+  border: 2px solid #000;
+  display: block;
+}
 
-      <div class="login-logo" id="profileIconView" style="box-shadow: none; background: rgba(255,255,255,0.05); padding: 0; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-        <span style="font-size: 36px;">👑</span>
-      </div>
+/* Textos */
+.login-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #FFF;
+  letter-spacing: -0.5px;
+  margin: 0 0 4px 0;
+  text-align: center;
+}
 
-      <h1 class="login-title" id="profileNameView" style="font-size: 22px;">Admin</h1>
-      <p class="login-subtitle" id="profileRoleView" style="margin-bottom: 32px;">Dueño</p>
+.login-subtitle {
+  font-size: 13px;
+  color: #888;
+  font-weight: 500;
+  margin: 0 0 32px 0;
+  text-align: center;
+}
 
-      <form style="width: 100%; display: flex; flex-direction: column;" id="pinForm">
-        <div class="input-container">
-          <input type="password" 
-                 id="pinInput" 
-                 placeholder="Ingresa tu clave"
-                 autocomplete="current-password"
-                 autofocus>
-          <button type="button" id="togglePin" class="eye-btn" aria-label="Mostrar clave">
-            <i class="fas fa-eye"></i>
-          </button>
-        </div>
+.login-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #FF6900;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin: 0 0 16px 0;
+  width: 100%;
+  text-align: left;
+}
 
-        <div id="pinError" class="text-error"></div>
+/* Lista de Perfiles */
+.perfiles-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
 
-        <button type="submit" class="btn-primary" id="submitBtn">
-          <i class="fas fa-sign-in-alt"></i>
-          Ingresar
-        </button>
-      </form>
+.profile-card {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+  color: #FFF;
+  font-family: inherit;
+  margin: 0;
+  box-sizing: border-box;
+}
 
-      <button id="themeToggle2" class="btn-icon-floating right" aria-label="Cambiar tema">
-        <i class="fas fa-sun"></i>
-      </button>
-    </div>
-  </div>
+.profile-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 105, 0, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
 
-  <!-- SCRIPTS -->
-  <script type="module">
-    import { getPerfiles, login, getSesion, redirigirSegunRol } from '/js/app-auth.js';
-    import { toast, haptic, initTheme, toggleTheme } from '/js/app-ui.js';
+.profile-card:active {
+  transform: scale(0.97);
+}
 
-    let perfilActual = null;
+.profile-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-right: 14px;
+  flex-shrink: 0;
+}
 
-    const viewPerfiles    = document.getElementById('viewPerfiles');
-    const viewPin         = document.getElementById('viewPin');
-    const perfilesList    = document.getElementById('perfilesList');
-    const profileIconView = document.getElementById('profileIconView');
-    const profileNameView = document.getElementById('profileNameView');
-    const profileRoleView = document.getElementById('profileRoleView');
-    const pinForm         = document.getElementById('pinForm');
-    const pinInput        = document.getElementById('pinInput');
-    const pinError        = document.getElementById('pinError');
-    const submitBtn       = document.getElementById('submitBtn');
-    const togglePin       = document.getElementById('togglePin');
-    const backBtn         = document.getElementById('backBtn');
-    const themeToggle     = document.getElementById('themeToggle');
-    const themeToggle2    = document.getElementById('themeToggle2');
+.profile-info {
+  flex: 1;
+}
 
-    initTheme();
+.profile-name {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
 
-    const sesionExistente = getSesion();
-    if (sesionExistente) {
-      console.log('✅ Ya hay sesión activa, redirigiendo...');
-      redirigirSegunRol();
-    }
+.profile-role {
+  font-size: 12px;
+  color: #888;
+  font-weight: 500;
+}
 
-    themeToggle.addEventListener('click', () => { haptic(10); toggleTheme(); });
-    themeToggle2.addEventListener('click', () => { haptic(10); toggleTheme(); });
+.profile-arrow {
+  color: #555;
+  font-size: 14px;
+  transition: transform 0.2s;
+}
 
-    function cargarPerfiles() {
-      const perfiles = getPerfiles();
+.profile-card:hover .profile-arrow {
+  transform: translateX(4px);
+  color: #FF6900;
+}
 
-      perfilesList.innerHTML = perfiles.map(p => `
-        <button class="profile-card" data-perfil-id="${p.id}" type="button">
-          <div class="profile-icon">${p.icono}</div>
-          <div class="profile-info">
-            <div class="profile-name">${p.nombre}</div>
-            <div class="profile-role">${p.subtitulo}</div>
-          </div>
-          <i class="fas fa-chevron-right profile-arrow"></i>
-        </button>
-      `).join('');
+/* Formulario PIN (Vista 2) */
+.input-container {
+  width: 100%;
+  position: relative;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
 
-      perfilesList.querySelectorAll('.profile-card').forEach(card => {
-        card.addEventListener('click', () => {
-          const perfilId = card.dataset.perfilId;
-          const perfil = perfiles.find(p => p.id === perfilId);
-          if (perfil) seleccionarPerfil(perfil);
-        });
-      });
-    }
+.input-container input {
+  width: 100%;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  color: #FFF;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 4px;
+  transition: all 0.3s ease;
+  outline: none;
+  box-sizing: border-box;
+}
 
-    function seleccionarPerfil(perfil) {
-      perfilActual = perfil;
-      haptic(15);
+.input-container input:focus {
+  border-color: #FF6900;
+  box-shadow: 0 0 0 3px rgba(255, 105, 0, 0.2);
+  background: rgba(0, 0, 0, 0.6);
+}
 
-      profileIconView.innerHTML = `<span style="font-size: 36px;">${perfil.icono}</span>`;
-      profileNameView.textContent = perfil.nombre;
-      profileRoleView.textContent = perfil.subtitulo;
+.input-container input::placeholder {
+  letter-spacing: 0;
+  font-weight: 400;
+  color: #555;
+}
 
-      pinForm.reset();
-      pinError.textContent = '';
-      pinInput.type = 'password';
-      togglePin.innerHTML = '<i class="fas fa-eye"></i>';
+.eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: color 0.2s;
+}
 
-      viewPerfiles.classList.add('hidden');
-      viewPin.classList.remove('hidden');
+.eye-btn:hover {
+  color: #FFF;
+}
 
-      setTimeout(() => pinInput.focus(), 100);
-    }
+.btn-primary {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #FF6900, #FF4500);
+  color: #FFF;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 20px -5px rgba(255, 105, 0, 0.4);
+  box-sizing: border-box;
+  margin: 0;
+}
 
-    backBtn.addEventListener('click', () => {
-      haptic(10);
-      perfilActual = null;
-      pinInput.value = '';
-      pinError.textContent = '';
-      viewPin.classList.add('hidden');
-      viewPerfiles.classList.remove('hidden');
-    });
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 25px -5px rgba(255, 105, 0, 0.5);
+}
 
-    togglePin.addEventListener('click', () => {
-      haptic(8);
-      if (pinInput.type === 'password') {
-        pinInput.type = 'text';
-        togglePin.innerHTML = '<i class="fas fa-eye-slash"></i>';
-      } else {
-        pinInput.type = 'password';
-        togglePin.innerHTML = '<i class="fas fa-eye"></i>';
-      }
-      pinInput.focus();
-    });
+.btn-primary:active {
+  transform: scale(0.96);
+}
 
-    pinForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      verificarPin();
-    });
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
 
-    function verificarPin() {
-      if (!perfilActual) return;
+/* Botones flotantes (Tema y Atrás) */
+.btn-icon-floating {
+  position: absolute;
+  top: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
 
-      const pin = pinInput.value;
-      if (!pin) {
-        pinError.textContent = 'Ingresa tu clave';
-        return;
-      }
+.btn-icon-floating:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
 
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<div class="spinner"></div> Verificando...';
-      pinError.textContent = '';
+.btn-icon-floating.left { left: 24px; }
+.btn-icon-floating.right { right: 24px; }
 
-      const resultado = login(perfilActual.id, pin);
+/* Utilidades */
+.hidden { display: none !important; }
+.text-error { color: #EF4444; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 12px; min-height: 20px; }
 
-      if (resultado.success) {
-        haptic([15, 50, 15]);
-        toast(`¡Bienvenido, ${perfilActual.nombre}!`, 'success', 1200);
+/* Animaciones */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
 
-        setTimeout(() => {
-          redirigirSegunRol();
-        }, 800);
-      } else {
-        haptic([50, 30, 50]);
-        pinError.textContent = resultado.error || 'Clave incorrecta';
+.shake { animation: shake 0.4s ease; }
 
-        pinForm.classList.add('shake');
-        setTimeout(() => pinForm.classList.remove('shake'), 400);
+/* Spinner */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #FFF;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
 
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Ingresar';
-
-        pinInput.select();
-      }
-    }
-
-    cargarPerfiles();
-  </script>
-
-</body>
-</html>
+@keyframes spin { to { transform: rotate(360deg); } }
