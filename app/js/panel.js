@@ -888,14 +888,25 @@ function renderCardVenta(v, tipo) {
   
   let iconoNombre = 'venta';
   let cor = '#FFFFFF'; // ⚪ BLANCO por defecto (Accesorios)
+  let esServicio = false;
 
-  // 🔥 DISTINGUIR SERVICIOS (Naranja) DE ACCESORIOS (Blanco)
-  if (v.concepto === 'Botón' || v.concepto === 'Limpieza' || v.concepto === 'Reactivación' || v.concepto === 'Cargador' || v.concepto === 'Otro') {
+  // 🔥 DETECTAR SI ES SERVICIO:
+  // Si el concepto NO empieza con un número y una 'x' (ej: "1x Cargador"), es un servicio.
+  const conceptosServicio = ['Botón', 'Limpieza', 'Reactivación', 'Cargador', 'Otro'];
+  const esConceptoEspecifico = conceptosServicio.some(c => v.concepto.includes(c));
+  const esAccesorio = /^\d+x\s/.test(v.concepto);
+
+  if (!esAccesorio || esConceptoEspecifico) {
+    esServicio = true;
+  }
+
+  if (esServicio) {
     cor = 'var(--brand-500)'; // 🟠 NARANJA para servicios
-    if (v.concepto === 'Botón') iconoNombre = 'bateria'; 
-    else if (v.concepto === 'Limpieza') iconoNombre = 'servicios';
-    else if (v.concepto === 'Reactivación') iconoNombre = 'estado';
-    else if (v.concepto === 'Cargador') iconoNombre = 'bateria';
+    if (v.concepto.includes('Botón')) iconoNombre = 'bateria'; 
+    else if (v.concepto.includes('Limpieza')) iconoNombre = 'servicios';
+    else if (v.concepto.includes('Reactivación')) iconoNombre = 'estado';
+    else if (v.concepto.includes('Cargador')) iconoNombre = 'bateria';
+    else iconoNombre = 'servicios';
   } else {
     cor = '#FFFFFF'; // ⚪ BLANCO para accesorios
     iconoNombre = 'venta';
