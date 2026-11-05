@@ -124,6 +124,9 @@ let ventasAccesoriosData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
 let detallesReparaciones = [];
 let detallesVentas = [];
 
+// Variable para editar venta
+let ventaActualEditando = null;
+
 const reciboSheet = document.getElementById('reciboSheet');
 const modalVenta = document.getElementById('modalVenta');
 const modalNotaDueno = document.getElementById('modalNotaDueno');
@@ -360,6 +363,22 @@ function formatFechaCompleta(f) {
 export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
 
 // ==========================================
+// FUNCIÓN PARA EDITAR VENTA (SOLO ADMIN)
+// ==========================================
+async function abrirEditarVenta(id) {
+  const venta = appState.ventasHoy.find(v => v.id === id);
+  if (!venta) return;
+  
+  ventaActualEditando = venta;
+  
+  const inputCosto = document.getElementById('editCostoVenta');
+  if (inputCosto) inputCosto.value = venta.costo || 0;
+  
+  document.getElementById('modalEditarVenta')?.classList.add('show');
+  playSound('pop');
+}
+
+// ==========================================
 // 4. EVENTOS
 // ==========================================
 function configurarEventos() {
@@ -498,6 +517,31 @@ function configurarEventos() {
     } catch(err) { 
       playSound('error');
       toast('Error al enviar', 'error'); 
+    }
+  });
+
+  // 🔥 EVENTOS DEL MODAL DE EDITAR COSTO
+  document.getElementById('btnCancelarEditarVenta')?.addEventListener('click', () => {
+    document.getElementById('modalEditarVenta')?.classList.remove('show');
+  });
+
+  document.getElementById('btnGuardarEditarVenta')?.addEventListener('click', async () => {
+    if (!ventaActualEditando) return;
+    
+    const nuevoCosto = parseFloat(document.getElementById('editCostoVenta').value) || 0;
+    
+    try {
+      await updateDoc(doc(db, 'ventas', ventaActualEditando.id), { costo: nuevoCosto });
+      ventaActualEditando.costo = nuevoCosto;
+      
+      playSound('success');
+      toast('Costo actualizado', 'success');
+      document.getElementById('modalEditarVenta')?.classList.remove('show');
+      renderizarTodo();
+    } catch (error) {
+      console.error(error);
+      playSound('error');
+      toast('Error al guardar', 'error');
     }
   });
 
@@ -772,12 +816,21 @@ function renderizarTodo() {
     return;
   }
   lista.innerHTML = pagItems.map(m => m.tipo === 'telefono' ? renderCardTelefono(m.data) : renderCardVenta(m.data, m.tipo)).join('');
+  
   lista.querySelectorAll('.ingreso-card').forEach(card => {
     card.addEventListener('click', () => { 
       haptic(10); 
       playSound('click');
-      if(card.dataset.tipo === 'telefono') abrirSheetTelefono(card.dataset.id); 
-      else abrirSheetVenta(card.dataset.id, card.dataset.origen, card.dataset.extra); 
+      
+      const esAdmin = appState.sesion?.rol === 'admin';
+      
+      // 🔥 SI ES ADMIN Y TOCA UNA VENTA, ABRE EL MODAL DE COSTO
+      if (esAdmin && card.dataset.tipo === 'venta') {
+        abrirEditarVenta(card.dataset.id);
+      } else {
+        if(card.dataset.tipo === 'telefono') abrirSheetTelefono(card.dataset.id); 
+        else abrirSheetVenta(card.dataset.id, card.dataset.origen, card.dataset.extra); 
+      }
     });
   });
   renderizarPaginacion(totalPag);
@@ -848,6 +901,17 @@ function renderCardVenta(v, tipo) {
   
   const cor = 'var(--success-500)';
   
+  // 🔥 CALCULAR GANANCIA
+  const esAdmin = appState.sesion?.rol === 'admin';
+  const monto = Number(v.monto) || 0;
+  const costo = Number(v.costo) || 0;
+  const ganancia = monto - costo;
+  
+  let htmlGanancia = '';
+  if (esAdmin && tipo === 'venta') {
+    htmlGanancia = `<div class="ganancia-text">Ganancia: ${formatBsLimpio(ganancia)}</div>`;
+  }
+
   return `
     <div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}" style="border-left-color: ${cor};">
       <div class="icon-circle" style="color: ${cor}; background: color-mix(in srgb, ${cor} 15%, transparent);">
@@ -856,6 +920,7 @@ function renderCardVenta(v, tipo) {
       <div class="info-col">
         <div class="info-title">${escapeHtml(v.concepto || '')}</div>
         <div class="info-sub">${hora} · ${escapeHtml(v.metodoPago || '')}</div>
+        ${htmlGanancia}
       </div>
       <div class="monto-col">
         <div class="monto" style="color: ${cor};">${formatBsLimpio(v.monto)}</div>
