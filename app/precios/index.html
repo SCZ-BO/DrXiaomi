@@ -12,16 +12,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- CSS Globales -->
   <link rel="stylesheet" href="../css/app-theme.css">
   <link rel="stylesheet" href="../css/app-layouts.css">
   <link rel="stylesheet" href="../css/app-components.css">
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    /* ============================================================ */
-    /* CSS AISLADO Y PREMIUM PARA EL CATÁLOGO                       */
-    /* ============================================================ */
     :root {
       --bg-app: #0A0A0B;
       --bg-card: #141416;
@@ -55,9 +51,9 @@
       min-height: 100vh;
     }
 
-    .app-content { padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 80px; }
+    .app-content { padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 110px; }
 
-    /* ================= LOADER ================= */
+    /* LOADER */
     .loader-overlay { position: fixed; inset: 0; background: var(--bg-app); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.3s; }
     .loader-overlay.hidden { opacity: 0; pointer-events: none; }
     .loader-logo-container { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
@@ -66,83 +62,71 @@
     .loader-text { font-size: 14px; font-weight: 600; color: var(--text-mute); }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    /* ================= 🔥 NUEVA BARRA DE HERRAMIENTAS (ICONOS Y SONIDO) ================= */
-    .toolbar-container {
+    /* DOCK INFERIOR */
+    .bottom-dock {
+      position: fixed;
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(28, 28, 30, 0.6);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      gap: 12px;
+      padding: 8px 12px;
+      background: rgba(28, 28, 30, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border-color);
-      padding: 8px;
-      border-radius: 20px;
-      margin-bottom: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      border-radius: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+      z-index: 100;
     }
 
-    .toolbar-title {
-      font-size: 12px;
-      font-weight: 800;
-      color: var(--text-mute);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      padding-left: 12px;
-    }
-
-    .toolbar-actions {
+    .btn-dock {
       display: flex;
+      align-items: center;
       gap: 8px;
-    }
-
-    /* Estilos de los botones cuadrados */
-    .btn-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 46px;
-      height: 46px;
-      border-radius: 14px;
-      border: 1px solid var(--border-color);
+      padding: 12px 20px;
+      border-radius: 20px;
+      border: 1px solid transparent;
       background: var(--bg-elev);
       color: var(--text-main);
-      font-size: 20px; /* Iconos más grandes */
+      font-size: 13px;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      font-family: inherit;
     }
 
-    .btn-toolbar:active { transform: scale(0.85); }
+    .btn-dock:active { transform: scale(0.92); }
 
-    /* Botón de Admin */
-    .btn-toolbar#adminEditBtn {
+    .btn-dock#adminEditBtn {
       color: var(--blue);
       border-color: rgba(59, 130, 246, 0.3);
       background: var(--blue-light);
-      box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
     }
 
-    /* Botón de Modo Técnico */
-    .btn-toolbar#techModeBtn {
-      color: var(--text-mute);
-    }
-    
-    .btn-toolbar#techModeBtn i {
-      transition: transform 0.3s ease;
+    .btn-dock#techModeBtn {
+      color: var(--text-main);
     }
 
-    /* 🔥 ESTADO ACTIVO DEL MODO TÉCNICO (Neon Glow) */
-    .btn-toolbar#techModeBtn.tech-active {
-      background: var(--brand-light) !important;
+    .btn-dock#techModeBtn.tech-active {
+      background: var(--brand) !important;
       border-color: var(--brand) !important;
-      color: var(--brand) !important;
-      box-shadow: 0 0 20px rgba(255, 105, 0, 0.4);
-    }
-    
-    .btn-toolbar#techModeBtn.tech-active i {
-      transform: scale(1.15); /* El ojo se hace más grande */
+      color: white !important;
+      box-shadow: 0 0 20px rgba(255, 105, 0, 0.5);
     }
 
-    /* ================= BUSCADOR ================= */
+    /* OCULTAR PRECIOS POR DEFECTO */
+    .precio-compra, .costo-compra, .ganancia-venta { 
+      display: none !important; 
+    }
+    
+    body:has(#techModeBtn.tech-active) .precio-compra,
+    body:has(#techModeBtn.tech-active) .costo-compra,
+    body:has(#techModeBtn.tech-active) .ganancia-venta {
+      display: block !important;
+    }
+
+    /* BUSCADOR */
     .search-bar { position: relative; }
     .search-bar input {
       width: 100%; padding: 16px 16px 16px 48px;
@@ -166,7 +150,6 @@
     }
     .search-bar .clear-btn.visible { display: block; }
 
-    /* Panel de sugerencias */
     .suggestions-panel {
       position: absolute; top: 100%; left: 0; right: 0; margin-top: 8px;
       background: var(--bg-card); border: 1px solid var(--border-color);
@@ -182,7 +165,7 @@
     .suggestion-item:hover { background: var(--bg-elev); }
     .suggestion-item:last-child { border-bottom: none; }
 
-    /* ================= FILTROS ================= */
+    /* FILTROS */
     .filters-row { 
       display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; 
       scrollbar-width: none; -ms-overflow-style: none;
@@ -200,10 +183,9 @@
       box-shadow: 0 4px 14px var(--brand-light);
     }
 
-    /* ================= RESULTADOS ================= */
     #resultsCount { font-size: 13px; color: var(--text-mute); font-weight: 500; margin-bottom: 4px; }
 
-    /* ================= TARJETAS DE PRODUCTO ================= */
+    /* TARJETAS DE PRODUCTO */
     .product-card {
       background: var(--bg-card); border: 1px solid var(--border-color);
       border-radius: 16px; padding: 16px; margin-bottom: 12px;
@@ -214,30 +196,43 @@
       gap: 8px;
     }
     .product-card:active { transform: scale(0.98); }
+    
+    /* 🔥 LÍNEA DECORATIVA SIN BLOQUEAR CLICS */
     .product-card::before {
       content: ''; position: absolute; left: 0; top: 16px; bottom: 16px;
       width: 4px; background: var(--brand); border-radius: 0 4px 4px 0;
+      pointer-events: none; /* Esto deja pasar los clics al texto */
+      z-index: 0;
     }
     .product-card.is-orig::before { background: linear-gradient(180deg, #FFD700, #FFA500); }
 
-    .card-brand { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; }
-    .card-model { font-size: 16px; font-weight: 700; color: var(--text-main); line-height: 1.3; }
+    .card-brand { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1; }
+    .card-model { font-size: 16px; font-weight: 700; color: var(--text-main); line-height: 1.3; position: relative; z-index: 1; }
     
     .card-type { 
       padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; 
       background: var(--bg-elev); color: var(--text-mute); width: fit-content;
+      position: relative; z-index: 1;
     }
     .card-type.oled { background: var(--brand-light); color: var(--brand); }
     .card-type.orig { background: linear-gradient(135deg, #FFD700, #FFA500); color: #4A2800; }
 
-    .card-price { font-size: 22px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+    /* 🔥 EL PRECIO AHORA ES CLICKEABLE Y ESTÁ POR ENCIMA */
+    .card-price { 
+      font-size: 22px; font-weight: 800; color: var(--text-main); 
+      letter-spacing: -0.5px; 
+      cursor: pointer; 
+      position: relative; 
+      z-index: 10; /* Asegura que esté por encima del ::before */
+      display: inline-block;
+    }
 
-    /* Botones dentro de la tarjeta */
     .image-btn, .whatsapp-btn, .edit-btn {
       border: none; padding: 8px 12px; border-radius: 8px;
       font-size: 12px; font-weight: 700; cursor: pointer; 
       display: flex; align-items: center; justify-content: center; gap: 6px;
       font-family: inherit; transition: 0.2s;
+      position: relative; z-index: 1;
     }
     .image-btn:active, .whatsapp-btn:active, .edit-btn:active { transform: scale(0.95); }
     
@@ -245,7 +240,7 @@
     .whatsapp-btn { background: rgba(37, 211, 102, 0.15); color: #25D366; border: 1px solid rgba(37, 211, 102, 0.3); }
     .edit-btn { background: rgba(59, 130, 246, 0.15); color: var(--blue); border: 1px solid rgba(59, 130, 246, 0.3); }
 
-    /* ================= MODALES ================= */
+    /* MODALES */
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); padding: 20px; }
     .modal-backdrop.show { display: flex; }
     .modal { background: var(--bg-card); padding: 24px; border-radius: 20px; width: 100%; max-width: 400px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; }
@@ -253,7 +248,6 @@
 </head>
 <body>
 
-  <!-- LOADER -->
   <div class="loader-overlay" id="splash">
     <div class="loader-logo-container">
       <div class="loader-ring"></div>
@@ -264,7 +258,6 @@
 
   <main class="app-container" id="appRoot" style="opacity:0;">
     
-    <!-- HEADER Y NAV (Inyectados por layout.js) -->
     <script type="module">
       import { montarLayout } from '../js/layout.js';
       montarLayout({
@@ -274,28 +267,8 @@
       });
     </script>
 
-    <!-- CONTENIDO PRINCIPAL -->
     <div class="app-content" id="mainScrollContainer">
       
-      <!-- 🔥 BARRA DE ACCIONES CON ICONOS 🔥 -->
-      <div class="toolbar-container">
-        <div class="toolbar-title">Filtros Rápidos</div>
-        <div class="toolbar-actions">
-          
-          <!-- Botón de Admin -->
-          <button class="btn-toolbar" id="adminEditBtn" style="display: none;" title="Gestionar Catálogo">
-            <i class="fas fa-list-ul"></i>
-          </button>
-          
-          <!-- Botón de Modo Técnico -->
-          <button class="btn-toolbar" id="techModeBtn" title="Ver Costos de Compra">
-            <i class="fas fa-eye"></i>
-          </button>
-
-        </div>
-      </div>
-
-      <!-- BUSCADOR PRO -->
       <div class="search-bar">
         <i class="fas fa-search search-icon"></i>
         <input type="text" id="searchInput" placeholder="Buscar modelo, marca o compatibilidad..." autocomplete="off">
@@ -303,7 +276,6 @@
         <div class="suggestions-panel" id="suggestionsPanel"></div>
       </div>
 
-      <!-- FILTROS -->
       <div class="filters-row" id="quickFilters">
         <button class="filter-chip active" data-filter="all">Todos</button>
         <button class="filter-chip" data-filter="ORIG">ORIG</button>
@@ -313,15 +285,24 @@
         <button class="filter-chip" data-filter="COMPAT">🔄 Compatibles</button>
       </div>
 
-      <!-- RESULTADOS -->
       <div id="resultsCount" style="display: flex; justify-content: space-between;"></div>
       
-      <!-- AQUÍ SE INYECTAN LAS TARJETAS -->
       <div id="resultsContainer"></div>
     </div>
   </main>
 
-  <!-- MODAL DE CONFIRMACIÓN PARA MODO TÉCNICO -->
+  <div class="bottom-dock">
+    <button class="btn-dock" id="adminEditBtn" style="display: none;" title="Gestionar Catálogo">
+      <i class="fas fa-list-ul"></i>
+      <span>Editar</span>
+    </button>
+    
+    <button class="btn-dock" id="techModeBtn" title="Ver Costos de Compra">
+      <i class="fas fa-eye"></i>
+      <span>Costos</span>
+    </button>
+  </div>
+
   <div class="modal-backdrop" id="modalTechConfirm">
     <div class="modal">
       <div style="font-size: 56px; color: var(--brand); margin-bottom: 16px;"><i class="fas fa-eye"></i></div>
@@ -334,12 +315,9 @@
     </div>
   </div>
 
-  <!-- SCRIPT PRINCIPAL DE PRECIOS (No modificado) -->
   <script type="module" src="./precios.js"></script>
   
-  <!-- 🔥 SCRIPT DE SONIDO Y RED DE SEGURIDAD 🔥 -->
   <script>
-    // 1. MOTOR DE SONIDO NATIVO (Web Audio API)
     let audioCtx = null;
 
     function playClickSound() {
@@ -351,12 +329,12 @@
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         
-        osc.type = 'sine'; // Tono suave
+        osc.type = 'sine'; 
         osc.frequency.setValueAtTime(800, now);
-        osc.frequency.exponentialRampToValueAtTime(300, now + 0.08); // Caída de tono
+        osc.frequency.exponentialRampToValueAtTime(300, now + 0.08); 
         
         gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08); // Desvanecimiento
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08); 
         
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -366,26 +344,36 @@
       } catch (e) { console.warn('Audio no soportado', e); }
     }
 
-    // 2. ASIGNAR SONIDO A LOS BOTONES
     document.addEventListener('DOMContentLoaded', () => {
-      // Botones superiores
-      document.getElementById('techModeBtn')?.addEventListener('click', playClickSound);
-      document.getElementById('adminEditBtn')?.addEventListener('click', playClickSound);
       
-      // Botones de filtro
+      const techBtn = document.getElementById('techModeBtn');
+      const adminBtn = document.getElementById('adminEditBtn');
+      
+      techBtn?.addEventListener('click', playClickSound);
+      adminBtn?.addEventListener('click', playClickSound);
+
+      techBtn?.addEventListener('click', () => {
+        setTimeout(() => {
+          if (techBtn.classList.contains('tech-active')) {
+            document.body.classList.add('show-costs');
+          } else {
+            document.body.classList.remove('show-costs');
+          }
+        }, 100);
+      });
+
       document.querySelectorAll('.filter-chip').forEach(chip => {
         chip.addEventListener('click', playClickSound);
       });
 
-      // Botones dentro de las tarjetas (delegación de eventos)
+      // Escuchar clics en las tarjetas generadas
       document.getElementById('resultsContainer')?.addEventListener('click', (e) => {
-        if (e.target.closest('.whatsapp-btn') || e.target.closest('.image-btn') || e.target.closest('.edit-btn')) {
+        if (e.target.closest('.whatsapp-btn') || e.target.closest('.image-btn') || e.target.closest('.edit-btn') || e.target.closest('.card-price')) {
           playClickSound();
         }
       });
     });
 
-    // 3. RED DE SEGURIDAD PARA EL LOADER
     setTimeout(() => {
       const splash = document.getElementById('splash');
       const appRoot = document.getElementById('appRoot');
