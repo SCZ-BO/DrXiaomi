@@ -20,10 +20,15 @@
   <link rel="manifest" href="/app/manifest.json">
   <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
 
-  <!-- 🔥 ENLACE AL NUEVO CSS DEL LOGIN -->
-  <link rel="stylesheet" href="/app/css/login.css">
+  <!-- 🔥 AQUÍ ESTÁ LA CORRECCIÓN DE LA RUTA -->
+  <link rel="stylesheet" href="../css/login.css">
+  
+  <style>
+    /* Estilos base ultra-básicos solo para asegurar el fondo negro */
+    html, body { margin: 0; padding: 0; height: 100%; background: #050505; overflow: hidden; }
+  </style>
 </head>
-<body style="margin:0; padding:0; background:#050505;">
+<body>
 
   <div id="login-screen">
     <!-- VISTA 1: SELECCIÓN DE PERFIL -->
