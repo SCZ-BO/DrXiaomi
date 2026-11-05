@@ -60,7 +60,10 @@ function cargarProductos() {
   
   unsubscribe = onSnapshot(q, (snapshot) => {
     productos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    productos.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+    
+    // 🔥 CAMBIO AQUÍ: Ordenar por stock de menor a mayor (los que se acaban primero)
+    productos.sort((a, b) => (Number(a.stock) || 0) - (Number(b.stock) || 0));
+    
     renderProductos();
     actualizarKPIs();
     document.getElementById('appLoader')?.classList.add('hidden');
