@@ -12,26 +12,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- Librerías PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- 🔥 RUTAS RELATIVAS CORREGIDAS (Asumiendo que estás en /app/) -->
+  <!-- RUTAS CORREGIDAS (Relativas a /app/) -->
   <link rel="stylesheet" href="./css/app-theme.css">
   <link rel="stylesheet" href="./css/app-layouts.css">
   <link rel="stylesheet" href="./css/app-components.css">
   <link rel="manifest" href="./manifest.json">
 
-  <!-- ESTILOS ESPECÍFICOS DE ESTA PÁGINA -->
   <style>
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .loader-ring {
-      position: absolute; inset: 0; border-radius: 50%; 
-      border: 3px solid transparent; 
-      border-top-color: #FF6900; border-bottom-color: #FF6900;
-      animation: spin 1.2s linear infinite !important; 
-    }
-
+    /* Estilos específicos de esta página */
     .recibo-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
     .recibo-row span:first-child { color: var(--text-3); font-weight: 500; }
     .recibo-row span:last-child { font-weight: 600; color: var(--text-1); text-align: right; }
@@ -63,14 +54,7 @@
 </head>
 <body>
 
-  <!-- LOADER (Se oculta a los 2s pase lo que pase) -->
-  <div class="loading-overlay" id="appLoader">
-    <div class="loading-card" style="position: relative; text-align: center;">
-      <div class="loader-ring" style="position: relative; width: 60px; height: 60px; margin: 0 auto 16px;"></div>
-      <img src="./imagenes/web-app-manifest-192x192.png" alt="Cargando..." onerror="this.style.display='none';" style="width: 40px; height: 40px; border-radius: 50%; position: absolute; top: 0; left: 50%; transform: translateX(-50%);">
-      <p style="position: relative; margin-top: 10px; color: white; font-weight: 600;">Cargando orden...</p>
-    </div>
-  </div>
+  <!-- EL LOADER MANUAL FUE ELIMINADO. app-ui.js LO CREARÁ Y LO QUITARÁ AUTOMÁTICAMENTE -->
 
   <main class="app-container">
     <header class="app-header">
@@ -93,7 +77,6 @@
       </div>
     </header>
 
-    <!-- 🔥 ESTE ES EL CONTENEDOR QUE ORDEN.JS DEBE LLENAR -->
     <div class="app-content" id="contenido">
       <!-- Aquí se inyecta todo desde orden.js -->
     </div>
@@ -129,17 +112,5 @@
 
   <!-- SCRIPT PRINCIPAL -->
   <script type="module" src="./orden.js"></script>
-  
-  <script>
-    // 🔥 RED DE SEGURIDAD
-    setTimeout(() => {
-      const loader = document.getElementById('appLoader');
-      if (loader) {
-        loader.style.opacity = '0';
-        loader.style.transition = 'opacity 0.3s';
-        setTimeout(() => loader.style.display = 'none', 300);
-      }
-    }, 2000);
-  </script>
 </body>
 </html>
