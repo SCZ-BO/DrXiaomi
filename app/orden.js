@@ -1,419 +1,1063 @@
 /* ============================================================
-   DR. XIAOMI · UI HELPERS
-   Archivo: js/app-ui.js
-   Descripción: Toasts, loaders, formateo, helpers de UI
+   DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL - v8)
+   Archivo: app/orden.js
+   Cambios v8:
+     - Integración con el nuevo orden.html (modal de servicio en HTML,
+       toast del HTML, iconos con gradiente, theme del HTML).
+     - Se eliminó listener duplicado de themeToggle (lo maneja el HTML).
+     - Se mantiene todo lo de v7: agregar/editar/eliminar servicios.
    ============================================================ */
+
+import { requireAuth } from '/js/app-auth.js';
+import {
+  toast as toastUI, haptic, initTheme, escapeHtml,
+  formatBs, tiempoRelativo, showLoading, hideLoading
+} from '/js/app-ui.js';
+import { db } from '/js/firebase.js';
+import {
+  doc, updateDoc, deleteDoc,
+  serverTimestamp, arrayUnion, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+import '/js/dictado.js';
 
 /* ============================================================
-   TOASTS
+   CONFIGURACIÓN Y ESTILOS GLOBALES
    ============================================================ */
+const styleGlobal = document.createElement('style');
+styleGlobal.textContent = `
+  .metodo-btn.activo {
+    background: rgba(255, 105, 0, 0.12) !important;
+    border-color: #FF6900 !important;
+    color: #FF6900 !important;
+    transform: scale(0.98);
+  }
+  .modal-backdrop .modal h3 { margin-bottom: 8px; }
+  .modal-backdrop .modal label {
+    display: block; font-size: 12px; font-weight: 700;
+    color: #888; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px;
+  }
+  .modal-backdrop .modal input[type="number"],
+  .modal-backdrop .modal input[type="text"],
+  .modal-backdrop .modal input[type="date"] {
+    width: 100%; padding: 14px; font-size: 16px; background: #242424;
+    color: #F5F5F5; border: 1px solid #2C2C2C; border-radius: 8px;
+    font-family: inherit; outline: none; transition: border-color 0.2s;
+  }
+  .modal-backdrop .modal input:focus { border-color: #FF6900; }
+  .modal-backdrop .modal .btn-modal-cancel {
+    flex: 1; padding: 14px; border-radius: 8px; border: 1px solid #2C2C2C;
+    background: #242424; color: #F5F5F5; font-weight: 700; cursor: pointer;
+    font-family: inherit; transition: 0.2s;
+  }
+  .modal-backdrop .modal .btn-modal-cancel:active { transform: scale(0.98); }
+  .modal-backdrop .modal .btn-modal-confirm {
+    flex: 1; padding: 14px; border-radius: 8px; border: none;
+    background: #FF6900; color: white; font-weight: 700; cursor: pointer;
+    font-family: inherit; transition: 0.2s;
+  }
+  .modal-backdrop .modal .btn-modal-confirm:active { transform: scale(0.98); }
 
-let toastContainer = null;
+  /* 🔥 NUEVO: estilos para servicios */
+  .servicio-row-acciones { display:flex; gap:6px; justify-content:flex-end; }
+  .btn-servicio-mini {
+    width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg-elev); color: var(--text-main); cursor: pointer;
+    display:inline-flex; align-items:center; justify-content:center; font-size: 11px;
+  }
+  .btn-servicio-mini.danger { color:#EF4444; border-color:rgba(239,68,68,0.4); }
+  .btn-servicio-mini:active { transform: scale(0.92); }
+  .tabla-servicios td.servicio-acciones { text-align:right; width: 70px; }
+`;
+document.head.appendChild(styleGlobal);
 
-function crearToastContainer() {
-  if (toastContainer) return toastContainer;
-  toastContainer = document.createElement('div');
-  toastContainer.className = 'toast-container';
-  toastContainer.id = 'toastContainer';
-  document.body.appendChild(toastContainer);
-  return toastContainer;
-}
+const CONFIG = {
+  nombreTienda: 'DR. XIAOMI SCZ',
+  direccion: 'Centro Comercial Cañoto #K1, Santa Cruz',
+  telefono: '75959450',
+  web: 'xiaomi.scz.red',
+  urlApp: 'https://xiaomi.scz.red'
+};
 
-/**
- * Muestra un toast
- * @param {string} mensaje - texto del toast
- * @param {string} tipo - 'success' | 'error' | 'warning' | 'info'
- * @param {number} duracion - ms antes de desaparecer (default 3000)
- */
-export function toast(mensaje, tipo = 'info', duracion = 3000) {
-  const container = crearToastContainer();
-  const iconos = {
-    success: 'fa-circle-check',
-    error:   'fa-circle-xmark',
-    warning: 'fa-triangle-exclamation',
-    info:    'fa-circle-info'
-  };
+const ESTADOS = {
+  recibido:          { texto: 'Recibido',            icono: 'fa-box',                clase: 'recibido' },
+  reparacion:        { texto: 'En reparación',       icono: 'fa-screwdriver-wrench', clase: 'reparacion' },
+  'espera-repuesto': { texto: 'Esperando repuesto',  icono: 'fa-clock',              clase: 'espera' },
+  listo:             { texto: 'Listo para entregar', icono: 'fa-check-circle',       clase: 'listo' },
+  entregado:         { texto: 'Entregado',           icono: 'fa-handshake',          clase: 'entregado' },
+  devuelto:          { texto: 'Devuelto',            icono: 'fa-rotate-left',        clase: 'devuelto' }
+};
 
-  const el = document.createElement('div');
-  el.className = `toast toast-${tipo}`;
-  el.innerHTML = `
-    <i class="fas ${iconos[tipo] || iconos.info}"></i>
-    <span>${mensaje}</span>
-  `;
+const ESTADO_COLORES = {
+  'recibido': '#FFFFFF', 'reparacion': '#FF6900', 'espera-repuesto': '#3B82F6',
+  'listo': '#FBBF24', 'entregado': '#10B981', 'devuelto': '#EF4444'
+};
 
-  container.appendChild(el);
+let sesion = null;
+let ordenId = null;
+let orden = null;
+let fotosNuevas = [];
+let unsubscribe = null;
 
-  // Animar entrada
-  requestAnimationFrame(() => el.classList.add('show'));
+/* ============================================================
+   TOAST ADAPTADO AL HTML NUEVO (usa #toast con icono colorido)
+   ============================================================ */
+function toast(msg, tipo = 'success', duracion = 2500) {
+  // Si el HTML tiene el #toast nuevo, lo usamos.
+  const toastEl = document.getElementById('toast');
+  const toastText = document.getElementById('toastText');
+  const toastIcon = document.getElementById('toastIcon');
 
-  // Auto-cerrar
-  setTimeout(() => {
-    el.classList.remove('show');
-    setTimeout(() => el.remove(), 300);
-  }, duracion);
+  if (toastEl && toastText && toastIcon) {
+    toastText.textContent = msg;
+    // Icono y color según tipo
+    let iconClass = 'fas fa-check-circle';
+    let color = '#34C759'; // verde
+    if (tipo === 'error') { iconClass = 'fas fa-times-circle'; color = '#FF3B30'; }
+    else if (tipo === 'info') { iconClass = 'fas fa-info-circle'; color = '#0A84FF'; }
+    else if (tipo === 'warning') { iconClass = 'fas fa-exclamation-triangle'; color = '#FFB800'; }
+    toastIcon.className = iconClass;
+    toastIcon.style.color = color;
+    toastEl.classList.add('show');
+    clearTimeout(toastEl._timer);
+    toastEl._timer = setTimeout(() => toastEl.classList.remove('show'), duracion);
+    return;
+  }
+
+  // Fallback: usar el toast de app-ui.js
+  toastUI(msg, tipo, duracion);
 }
 
 /* ============================================================
-   LOADING OVERLAY
+   INICIALIZACIÓN
    ============================================================ */
+// 🔥 CAMBIO: NO llamamos initTheme() aquí porque el HTML ya maneja
+// el tema con su propio script (theme-color dinámico + prefers-color-scheme).
+// Si lo dejamos, se cambia dos veces y vuelve al original.
+// initTheme();
 
-let loadingEl = null;
+requireAuth(async (s) => {
+  sesion = s;
+  await iniciar();
+});
 
-function crearLoading() {
-  if (loadingEl) return loadingEl;
-  loadingEl = document.createElement('div');
-  loadingEl.className = 'loading-overlay';
-  loadingEl.id = 'loadingOverlay';
-  loadingEl.innerHTML = `
-    <div class="loading-card">
-      <div class="spinner"></div>
-      <p id="loadingText">Cargando...</p>
-    </div>
-  `;
-  document.body.appendChild(loadingEl);
-  return loadingEl;
-}
+async function iniciar() {
+  const loader = document.getElementById('appLoader');
+  if (loader) loader.classList.add('hidden');
 
-/**
- * Muestra el overlay de carga
- */
-export function showLoading(texto = 'Cargando...') {
-  const el = crearLoading();
-  const txt = el.querySelector('#loadingText');
-  if (txt) txt.textContent = texto;
-  el.classList.add('show');
-}
+  const params = new URLSearchParams(window.location.search);
+  ordenId = params.get('id');
 
-/**
- * Oculta el overlay de carga
- */
-export function hideLoading() {
-  if (loadingEl) loadingEl.classList.remove('show');
+  if (!ordenId) {
+    toast('Orden no encontrada', 'error');
+    setTimeout(() => window.location.href = '/app/', 1500);
+    return;
+  }
+
+  // Back button
+  document.getElementById('backBtn')?.addEventListener('click', () => {
+    haptic(10); window.location.href = '/app/';
+  });
+
+  // 🔥 CAMBIO: Eliminado el listener de themeToggle.
+  // El HTML ya lo maneja con localStorage + prefers-color-scheme.
+  // Si lo dejamos aquí, el tema cambia dos veces (se anula).
+  // document.getElementById('themeToggle')?.addEventListener('click', () => { ... });
+
+  await cargarOrden();
 }
 
 /* ============================================================
-   CONFIRMACIÓN (modal)
+   CARGAR ORDEN
    ============================================================ */
-
-/**
- * Muestra un modal de confirmación
- * @param {Object} opciones - { titulo, mensaje, textoConfirmar, textoCancelar, peligro }
- * @returns {Promise<boolean>}
- */
-export function confirmar(opciones = {}) {
-  const {
-    titulo = '¿Estás seguro?',
-    mensaje = '',
-    textoConfirmar = 'Confirmar',
-    textoCancelar = 'Cancelar',
-    peligro = false
-  } = opciones;
-
-  return new Promise((resolve) => {
-    const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop';
-    backdrop.innerHTML = `
-      <div class="modal">
-        <h3 class="modal-title">${titulo}</h3>
-        ${mensaje ? `<p class="modal-text">${mensaje}</p>` : ''}
-        <div class="modal-actions">
-          <button class="btn btn-secondary" data-action="cancel">${textoCancelar}</button>
-          <button class="btn ${peligro ? 'btn-danger' : 'btn-primary'}" data-action="confirm">${textoConfirmar}</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(backdrop);
-    requestAnimationFrame(() => backdrop.classList.add('show'));
-
-    backdrop.addEventListener('click', (e) => {
-      const action = e.target.closest('[data-action]')?.dataset.action;
-      if (action === 'confirm') {
-        cerrar(true);
-      } else if (action === 'cancel' || e.target === backdrop) {
-        cerrar(false);
+async function cargarOrden() {
+  showLoading('Cargando orden...');
+  try {
+    const ref = doc(db, 'recibos', ordenId);
+    unsubscribe = onSnapshot(ref, (snap) => {
+      if (!snap.exists()) {
+        toast('Esta orden no existe o fue eliminada', 'error', 3000);
+        setTimeout(() => window.location.href = '/app/', 2000);
+        return;
       }
+      orden = { id: snap.id, ...snap.data() };
+      renderOrden();
+      hideLoading();
+      document.getElementById('appLoader')?.classList.add('hidden');
+    }, (error) => {
+      console.error('Error en snapshot:', error);
+      toast('Error al cargar la orden: ' + error.message, 'error', 4000);
+      hideLoading();
+      setTimeout(() => window.location.href = '/app/', 2500);
+    });
+  } catch (err) {
+    console.error('Error cargando orden:', err);
+    toast('Error al cargar la orden: ' + err.message, 'error', 4000);
+    hideLoading();
+    setTimeout(() => window.location.href = '/app/', 2500);
+  }
+}
+
+/* ============================================================
+   CÁLCULOS
+   ============================================================ */
+function calcularTotalesDesdeServicios(servicios, adelanto) {
+  const total = (Array.isArray(servicios) ? servicios : [])
+    .reduce((acc, s) => acc + (Number(s.costo) || 0), 0);
+  const saldo = total - (Number(adelanto) || 0);
+  return { total, saldo };
+}
+
+/* ============================================================
+   RENDER PRINCIPAL
+   ============================================================ */
+function renderOrden() {
+  const estadoActual = orden.estadoOrden || 'recibido';
+  const estadoInfo = ESTADOS[estadoActual] || ESTADOS.recibido;
+
+  const titleEl = document.getElementById('headerTitle');
+  const subtitleEl = document.getElementById('headerSubtitle');
+  if (titleEl) titleEl.textContent = orden.numeroRecibo || 'ORDEN';
+  if (subtitleEl) subtitleEl.textContent = `${estadoInfo.texto} · ${tiempoRelativo(orden.fechaEditada || orden.fecha)}`;
+
+  const cont = document.getElementById('contenido');
+  if (!cont) return;
+
+  let patronTexto = '';
+  if (orden.tipoSeguridad === 'patron' && orden.patron) {
+    patronTexto = orden.patron.split(',').join(' → ');
+  }
+
+  const serviciosArr = Array.isArray(orden.servicios) ? orden.servicios : [];
+  const serviciosHtml = serviciosArr.length > 0
+    ? serviciosArr.map((s, idx) => `
+        <tr>
+          <td>${escapeHtml(s.desc)}</td>
+          <td>${formatBs(s.costo)}</td>
+          <td class="servicio-acciones">
+            <div class="servicio-row-acciones">
+              ${sesion.rol === 'admin' ? `
+                <button class="btn-servicio-mini" data-edit-serv="${idx}" title="Editar">
+                  <i class="fas fa-pen icon-gradiente-ambar"></i>
+                </button>
+                <button class="btn-servicio-mini danger" data-del-serv="${idx}" title="Eliminar">
+                  <i class="fas fa-trash icon-gradiente-rojo"></i>
+                </button>
+              ` : ''}
+            </div>
+          </td>
+        </tr>
+      `).join('')
+    : '<tr><td colspan="3" style="text-align:center;color:var(--text-mute);padding:12px;">Sin servicios registrados</td></tr>';
+
+  const fotosValidas = Array.isArray(orden.fotos) ? orden.fotos : [];
+  const fotosHtml = fotosValidas.length > 0
+    ? `<div class="card"><div class="card-title">📸 Fotos del ingreso</div><div class="bitacora-fotos">${fotosValidas.map(f => `<img src="${f}" alt="foto" data-ver-img="${f}">`).join('')}</div></div>`
+    : '';
+
+  const colorEstado = ESTADO_COLORES[estadoActual] || '#FF6900';
+  const ganancia = (Number(orden.montoCobrado) || 0) - (Number(orden.costoRepuesto) || 0);
+
+  const estadosBotones = Object.entries(ESTADOS).map(([key, info]) => `
+    <button class="estado-btn ${key === estadoActual ? 'activo' : ''}" data-estado="${key}">
+      <i class="fas ${info.icono}"></i><span>${info.texto}</span>
+    </button>
+  `).join('');
+
+  cont.innerHTML = `
+    <!-- 1. RECIBO -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Detalle del Recibo</div>
+        <span class="chip-estado" style="background:${colorEstado}25; color:${colorEstado}; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:700;">
+          <i class="fas ${estadoInfo.icono}"></i> ${estadoInfo.texto}
+        </span>
+      </div>
+      <div class="recibo-row"><span>Cliente</span><span>${escapeHtml(orden.cliente || '-')}</span></div>
+      <div class="recibo-row"><span>Teléfono</span><span style="color:var(--brand); font-weight:700;">${escapeHtml(orden.telefono || '-')}</span></div>
+      <div class="recibo-row"><span>Equipo</span><span>${escapeHtml(orden.marca || '')} ${escapeHtml(orden.modelo || '')}</span></div>
+      ${orden.imei ? `<div class="recibo-row"><span>IMEI</span><span style="font-family:monospace; font-size:12px;">${escapeHtml(orden.imei)}</span></div>` : ''}
+      <div class="recibo-row"><span>Enciende</span><span>${escapeHtml(orden.enciende || '-')}</span></div>
+      ${orden.estadoEquipo || orden.falla ? `<div class="recibo-row"><span>Estado / Falla</span><span style="text-align:right;">${escapeHtml(orden.estadoEquipo || '')} ${escapeHtml(orden.falla || '')}</span></div>` : ''}
+      ${orden.tipoSeguridad === 'pin' && orden.pin ? `<div class="recibo-row"><span>Clave PIN</span><span style="font-family:monospace; font-weight:800; color:var(--brand);">${escapeHtml(orden.pin)}</span></div>` : ''}
+      ${patronTexto ? `<div class="recibo-row"><span>Patrón</span><span style="font-family:monospace; font-weight:800; color:var(--brand);">${escapeHtml(patronTexto)}</span></div>` : ''}
+      <div class="recibo-row"><span>Fecha de ingreso</span><span>${formatFecha(orden.fechaEditada || orden.fecha)}</span></div>
+      <div class="recibo-row"><span>Por</span><span>${escapeHtml(orden.creadoPor || '-')}</span></div>
+
+      <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px;">
+        <table class="tabla-servicios">
+          <thead><tr><th>Servicio</th><th style="text-align:right;">Costo</th><th></th></tr></thead>
+          <tbody>${serviciosHtml}</tbody>
+        </table>
+
+        <!-- 🔥 NUEVO: botón para agregar servicio (visible para técnico y admin) -->
+        <button id="btnAgregarServicio" class="btn-grande" style="margin-top:12px; background:var(--bg-elev); color:var(--brand); border:1px dashed var(--brand);">
+          <i class="fas fa-plus icon-gradiente-verde"></i> Agregar servicio
+        </button>
+
+        <div class="total-box"><span style="font-size:12px; color:var(--text-mute);">Total</span><strong>${formatBs(orden.total || 0)}</strong></div>
+        ${Number(orden.adelanto) > 0 ? `<div style="display:flex; justify-content:space-between; margin-top:8px; font-size:13px;"><span style="color:var(--text-mute);">Adelanto</span><span>${formatBs(orden.adelanto)}</span></div>` : ''}
+        <div class="total-box" style="background:var(--brand-light); margin-top:8px;"><span style="font-size:12px; color:var(--brand); font-weight:700;">SALDO A PAGAR</span><strong style="color:var(--brand); font-size:18px;">${formatBs(orden.saldo || 0)}</strong></div>
+      </div>
+    </div>
+
+    ${fotosHtml}
+
+    <!-- 2. ACCIONES -->
+    <div class="card">
+      <div class="card-title">📱 Acciones</div>
+      <div style="display:flex; gap:12px; margin-top:8px;">
+        <button class="btn-grande btn-whatsapp" id="btnContactar" style="flex:1;">
+          <i class="fab fa-whatsapp"></i> Contactar
+        </button>
+        <button class="btn-grande btn-pdf" id="btnRegenerarPDF" style="flex:1;">
+          <i class="fas fa-file-pdf"></i> Enviar PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. CAMBIAR ESTADO -->
+    <div class="card">
+      <div class="card-title">🔄 Cambiar estado</div>
+      <div class="estados-grid" style="margin-top:12px;">${estadosBotones}</div>
+    </div>
+
+    <!-- 4. COSTOS (admin) -->
+    ${sesion.rol === 'admin' ? `
+      <div class="card" style="border-color:rgba(16,185,129,0.3);">
+        <div class="card-title" style="color:#10B981;">💰 Costos y ganancia</div>
+        ${Number(orden.montoCobrado) > 0 ? `
+          <div class="recibo-row"><span>Cobrado al cliente</span><span style="color:var(--brand); font-weight:700;">${formatBs(orden.montoCobrado || 0)}</span></div>
+          <div class="recibo-row"><span>Costo del repuesto</span><span style="color:#FF9500; font-weight:700;">${Number(orden.costoRepuesto) > 0 ? formatBs(orden.costoRepuesto) : 'Sin asignar'}</span></div>
+          <div class="recibo-row" style="background:rgba(16,185,129,0.1); padding:8px; border-radius:8px; margin-top:8px;"><span style="color:#10B981; font-weight:700;">Ganancia neta</span><span style="color:#10B981; font-weight:800; font-size:16px;">${formatBs(ganancia)}</span></div>
+        ` : `<p style="font-size:12px; color:var(--text-mute); text-align:center; margin-bottom:12px;">Esta orden aún no tiene cobro registrado.</p>`}
+        <button id="btnRegistrarCosto" class="btn-grande btn-pdf" style="margin-top:12px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border);"><i class="fas fa-calculator icon-gradiente-ambar"></i> ${Number(orden.costoRepuesto) > 0 ? 'Editar costo' : 'Registrar costo'}</button>
+        <button id="btnEditarFecha" class="btn-grande" style="margin-top:8px; background:var(--bg-elev); color:var(--brand); border:1px solid var(--brand);"><i class="fas fa-calendar-alt icon-gradiente-azul"></i> Editar fecha</button>
+      </div>
+    ` : ''}
+
+    <!-- 5. BITÁCORA -->
+    <div class="card">
+      <div class="card-title">📋 Bitácora</div>
+      <div style="margin-bottom:16px;">
+        <div class="dictado-wrap textarea">
+          <textarea id="nuevaNota" placeholder="Escribe una nota..." maxlength="500" style="width:100%; padding:12px; background:var(--bg-elev); color:var(--text-main); border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical; min-height:70px;"></textarea>
+        </div>
+        <div class="foto-uploader" id="fotoUploader"><button type="button" class="btn-add-foto" id="btnAddFoto"><i class="fas fa-camera"></i><span>Añadir</span></button></div>
+        <input type="file" id="fotoInput" accept="image/*" capture="environment" hidden>
+        <button id="btnGuardarNota" class="btn-grande btn-pdf" style="margin-top:12px; padding:10px; font-size:13px; width:auto;"><i class="fas fa-plus"></i> Añadir</button>
+      </div>
+      <div id="historialBitacora">${renderBitacora()}</div>
+    </div>
+
+    <!-- 6. ADMIN -->
+    ${sesion.rol === 'admin' ? `
+      <div class="card" style="border-color: rgba(239,68,68,0.3);">
+        <div class="card-title" style="color:#EF4444;">⚙️ Admin</div>
+        <button id="btnEliminar" class="btn-grande" style="background:rgba(239,68,68,0.1); color:#EF4444; border:1px solid #EF4444; margin-top:8px;"><i class="fas fa-trash"></i> Eliminar orden</button>
+      </div>
+    ` : ''}
+
+    <!-- 7. VOLVER -->
+    <button id="btnVolverPanelFinal" class="btn-grande btn-pdf" style="margin-top:8px; margin-bottom:24px; padding:16px; font-size:15px;"><i class="fas fa-home"></i> VOLVER AL PANEL</button>
+  `;
+
+  configurarEventosOrden();
+}
+
+/* ============================================================
+   BITÁCORA
+   ============================================================ */
+function renderBitacora() {
+  const bitacora = Array.isArray(orden.bitacora) ? orden.bitacora : [];
+  const ordenada = [...bitacora].sort((a, b) => {
+    const fa = a.fecha ? new Date(a.fecha) : 0;
+    const fb = b.fecha ? new Date(b.fecha) : 0;
+    return fb - fa;
+  });
+
+  if (ordenada.length === 0) return `<div style="text-align:center; padding:20px; color:var(--text-mute); font-size:13px;"><i class="fas fa-clipboard-list" style="font-size:24px; opacity:0.4; margin-bottom:8px; display:block;"></i>No hay entradas en la bitácora aún</div>`;
+
+  return ordenada.map(entry => {
+    let clase = 'nota', icono = 'fa-sticky-note', color = '';
+    if (entry.tipo === 'estado') { clase = 'estado'; icono = 'fa-exchange-alt'; color = 'icon-gradiente-azul'; }
+    else if (entry.tipo === 'foto') { clase = 'foto'; icono = 'fa-camera'; color = 'icon-gradiente-morado'; }
+    else if (entry.tipo === 'whatsapp') { clase = 'whatsapp'; icono = 'fa-brands fa-whatsapp'; color = 'icon-gradiente-verde'; }
+    else if (entry.tipo === 'cobro') { clase = 'estado'; icono = 'fa-money-bill-wave'; color = 'icon-gradiente-verde'; }
+    else if (entry.tipo === 'servicio') { clase = 'estado'; icono = 'fa-screwdriver-wrench'; color = 'icon-gradiente-ambar'; }
+
+    return `<div class="bitacora-item">
+      <div class="bitacora-icono ${clase}"><i class="fas ${icono} ${color}"></i></div>
+      <div class="bitacora-content">
+        <div class="bitacora-header"><span class="bitacora-autor">${escapeHtml(entry.autor || 'Sistema')}</span><span class="bitacora-fecha">${tiempoRelativo(entry.fecha)}</span></div>
+        <div class="bitacora-texto">${escapeHtml(entry.texto || '')}</div>
+        ${Array.isArray(entry.fotos) && entry.fotos.length > 0 ? `<div class="bitacora-fotos">${entry.fotos.map(f => `<img src="${f}" alt="foto" data-ver-img="${f}">`).join('')}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   EVENTOS
+   ============================================================ */
+function configurarEventosOrden() {
+  document.querySelectorAll('.estado-btn').forEach(btn => {
+    btn.addEventListener('click', () => cambiarEstado(btn.dataset.estado));
+  });
+
+  const btnAddFoto = document.getElementById('btnAddFoto');
+  const fotoInput = document.getElementById('fotoInput');
+  if (btnAddFoto && fotoInput) btnAddFoto.addEventListener('click', () => { haptic(10); fotoInput.click(); });
+
+  if (fotoInput) {
+    fotoInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      haptic(10);
+      try { const dataUrl = await comprimirImagen(file, 1000, 0.75); fotosNuevas.push(dataUrl); renderFotosNuevas(); } catch (err) { toast('Error procesando imagen', 'error'); }
+      fotoInput.value = '';
+    });
+  }
+
+  document.getElementById('btnGuardarNota')?.addEventListener('click', guardarNota);
+  document.getElementById('btnContactar')?.addEventListener('click', contactarCliente);
+  document.getElementById('btnEliminar')?.addEventListener('click', eliminarOrden);
+  document.getElementById('btnRegistrarCosto')?.addEventListener('click', abrirModalCosto);
+  document.getElementById('btnEditarFecha')?.addEventListener('click', abrirModalFecha);
+  document.getElementById('btnRegenerarPDF')?.addEventListener('click', () => { haptic(15); regenerarYEnviarPDF(); });
+  document.getElementById('btnVolverPanelFinal')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/'; });
+
+  // Botón agregar servicio
+  document.getElementById('btnAgregarServicio')?.addEventListener('click', () => abrirModalServicio());
+
+  // Botones editar/eliminar servicio
+  document.querySelectorAll('[data-edit-serv]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.editServ, 10);
+      abrirModalServicio(idx);
+    });
+  });
+  document.querySelectorAll('[data-del-serv]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.delServ, 10);
+      eliminarServicio(idx);
+    });
+  });
+
+  document.querySelectorAll('[data-ver-img]').forEach(img => {
+    img.addEventListener('click', () => {
+      haptic(10);
+      const viewer = document.getElementById('imgViewer');
+      const viewerImg = document.getElementById('imgViewerImg');
+      if (!viewer || !viewerImg) return;
+      viewerImg.src = img.dataset.verImg;
+      viewer.classList.add('show');
+    });
+  });
+
+  const viewer = document.getElementById('imgViewer');
+  const viewerCerrar = document.getElementById('imgViewerCerrar');
+  if (viewer && viewerCerrar && !viewer.dataset.listenersAdded) {
+    viewer.dataset.listenersAdded = 'true';
+    viewerCerrar.addEventListener('click', () => { viewer.classList.remove('show'); document.getElementById('imgViewerImg').src = ''; });
+    viewer.addEventListener('click', (e) => { if (e.target === viewer) { viewer.classList.remove('show'); document.getElementById('imgViewerImg').src = ''; } });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && viewer.classList.contains('show')) { viewer.classList.remove('show'); document.getElementById('imgViewerImg').src = ''; } });
+  }
+}
+
+/* ============================================================
+   🔥 NUEVO: MODAL DE SERVICIO (usa el del HTML nuevo)
+   ============================================================ */
+function abrirModalServicio(idxEditar = null) {
+  haptic(15);
+  const esEdicion = idxEditar !== null && idxEditar !== undefined;
+  const servicios = Array.isArray(orden.servicios) ? orden.servicios : [];
+  const actual = esEdicion ? servicios[idxEditar] : null;
+
+  const backdrop = document.getElementById('modalServicioBackdrop');
+  if (!backdrop) {
+    // Fallback: si el HTML no tiene el modal, inyectarlo (por si acaso)
+    console.warn('modalServicioBackdrop no encontrado en HTML, inyectando.');
+    return abrirModalServicioFallback(idxEditar);
+  }
+
+  const tituloEl = document.getElementById('modalServicioTitulo');
+  const descEl = document.getElementById('servicioDescripcion');
+  const costoEl = document.getElementById('servicioCosto');
+
+  if (tituloEl) tituloEl.textContent = esEdicion ? 'Editar servicio' : 'Agregar servicio';
+  if (descEl) descEl.value = actual ? actual.desc : '';
+  if (costoEl) costoEl.value = actual ? Number(actual.costo).toFixed(2) : '';
+
+  backdrop.classList.add('show');
+
+  // Limpiar listeners anteriores clonando botones
+  const btnCancelar = document.getElementById('modalServicioCancelar');
+  const btnGuardar = document.getElementById('modalServicioGuardar');
+
+  const nuevoCancelar = btnCancelar.cloneNode(true);
+  const nuevoGuardar = btnGuardar.cloneNode(true);
+  btnCancelar.parentNode.replaceChild(nuevoCancelar, btnCancelar);
+  btnGuardar.parentNode.replaceChild(nuevoGuardar, btnGuardar);
+
+  function cerrarModal() {
+    backdrop.classList.remove('show');
+  }
+
+  nuevoCancelar.addEventListener('click', cerrarModal);
+
+  nuevoGuardar.addEventListener('click', async () => {
+    const desc = (document.getElementById('servicioDescripcion').value || '').trim();
+    const costo = parseFloat(document.getElementById('servicioCosto').value) || 0;
+    if (!desc) { toast('Escribe una descripción', 'error'); return; }
+    if (costo < 0) { toast('El costo no puede ser negativo', 'error'); return; }
+
+    await guardarServicio(idxEditar, { desc, costo });
+    cerrarModal();
+  });
+
+  // Cerrar al tocar el backdrop
+  backdrop.onclick = (e) => { if (e.target === backdrop) cerrarModal(); };
+
+  // Focus en descripción
+  setTimeout(() => descEl?.focus(), 100);
+}
+
+// Fallback por si el HTML no tiene el modal (no debería pasar con el nuevo HTML)
+function abrirModalServicioFallback(idxEditar = null) {
+  const esEdicion = idxEditar !== null && idxEditar !== undefined;
+  const servicios = Array.isArray(orden.servicios) ? orden.servicios : [];
+  const actual = esEdicion ? servicios[idxEditar] : null;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop';
+  modal.id = 'modalServicio';
+  modal.innerHTML = `
+    <div class="modal">
+      <h3 style="color:var(--brand); font-weight:800; font-size:18px; margin-bottom:8px;">
+        <i class="fas fa-screwdriver-wrench"></i> ${esEdicion ? 'Editar servicio' : 'Agregar servicio'}
+      </h3>
+      <p style="font-size:12px; color:var(--text-mute); margin-bottom:16px;">El total y el saldo se recalculan automáticamente.</p>
+      <div style="margin-bottom:14px;">
+        <label>Descripción</label>
+        <input type="text" id="servDesc" maxlength="120" placeholder="Ej: Cambio de pantalla" value="${actual ? escapeHtml(actual.desc) : ''}">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label>Costo (Bs)</label>
+        <input type="number" id="servCosto" step="0.01" min="0" inputmode="decimal" placeholder="0.00" value="${actual ? Number(actual.costo).toFixed(2) : ''}">
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="btnCancelarServicio" class="btn-modal-cancel">Cancelar</button>
+        <button type="button" id="btnGuardarServicio" class="btn-modal-confirm"><i class="fas fa-check"></i> Guardar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('show'), 10);
+
+  document.getElementById('btnCancelarServicio').addEventListener('click', () => {
+    modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
+  });
+
+  document.getElementById('btnGuardarServicio').addEventListener('click', async () => {
+    const desc = (document.getElementById('servDesc').value || '').trim();
+    const costo = parseFloat(document.getElementById('servCosto').value) || 0;
+    if (!desc) { toast('Escribe una descripción', 'error'); return; }
+    if (costo < 0) { toast('El costo no puede ser negativo', 'error'); return; }
+    await guardarServicio(idxEditar, { desc, costo });
+    modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
+  });
+
+  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); } });
+}
+
+async function guardarServicio(idxEditar, { desc, costo }) {
+  haptic(20); showLoading('Guardando servicio...');
+  try {
+    const servicios = Array.isArray(orden.servicios) ? [...orden.servicios] : [];
+    let textoBitacora = '';
+
+    if (idxEditar !== null && idxEditar !== undefined) {
+      const anterior = servicios[idxEditar];
+      servicios[idxEditar] = { desc, costo };
+      textoBitacora = `Servicio editado: "${anterior?.desc || '-'}" (${formatBs(anterior?.costo || 0)}) → "${desc}" (${formatBs(costo)})`;
+    } else {
+      servicios.push({ desc, costo });
+      textoBitacora = `Servicio agregado: "${desc}" (${formatBs(costo)})`;
+    }
+
+    const { total, saldo } = calcularTotalesDesdeServicios(servicios, orden.adelanto);
+    const entrada = { tipo: 'servicio', texto: textoBitacora, autor: sesion.nombre, fecha: new Date().toISOString() };
+
+    await updateDoc(doc(db, 'recibos', ordenId), {
+      servicios,
+      total,
+      saldo,
+      bitacora: arrayUnion(entrada),
+      actualizadoEn: serverTimestamp()
     });
 
-    function cerrar(resultado) {
-      backdrop.classList.remove('show');
-      setTimeout(() => {
-        backdrop.remove();
-        resolve(resultado);
-      }, 250);
+    toast(idxEditar !== null ? 'Servicio actualizado' : 'Servicio agregado', 'success', 2000);
+  } catch (err) {
+    console.error('Error guardando servicio:', err);
+    toast('Error al guardar el servicio', 'error');
+  } finally { hideLoading(); }
+}
+
+async function eliminarServicio(idx) {
+  if (sesion.rol !== 'admin') { toast('Solo el admin puede eliminar servicios', 'error'); return; }
+  haptic(15);
+  const servicios = Array.isArray(orden.servicios) ? [...orden.servicios] : [];
+  const servicio = servicios[idx];
+  if (!servicio) return;
+
+  const ok = confirm(`¿Eliminar el servicio "${servicio.desc}" (${formatBs(servicio.costo)})?\n\nEl total y el saldo se recalcularán.`);
+  if (!ok) return;
+
+  showLoading('Eliminando servicio...');
+  try {
+    servicios.splice(idx, 1);
+    const { total, saldo } = calcularTotalesDesdeServicios(servicios, orden.adelanto);
+    const entrada = { tipo: 'servicio', texto: `Servicio eliminado: "${servicio.desc}" (${formatBs(servicio.costo)})`, autor: sesion.nombre, fecha: new Date().toISOString() };
+
+    await updateDoc(doc(db, 'recibos', ordenId), {
+      servicios,
+      total,
+      saldo,
+      bitacora: arrayUnion(entrada),
+      actualizadoEn: serverTimestamp()
+    });
+    toast('Servicio eliminado', 'success', 2000);
+  } catch (err) {
+    console.error('Error eliminando servicio:', err);
+    toast('Error al eliminar el servicio', 'error');
+  } finally { hideLoading(); }
+}
+
+/* ============================================================
+   CAMBIAR ESTADO
+   ============================================================ */
+async function cambiarEstado(nuevoEstado) {
+  if (!nuevoEstado || !ESTADOS[nuevoEstado]) return;
+  const estadoActual = orden.estadoOrden || 'recibido';
+  if (nuevoEstado === estadoActual) { toast('Ya está en ese estado', 'info', 1500); return; }
+  if (nuevoEstado === 'entregado') { abrirModalCobro(); return; }
+
+  haptic(20); showLoading('Actualizando estado...');
+  try {
+    const entrada = { tipo: 'estado', texto: `Estado cambiado a: ${ESTADOS[nuevoEstado].texto}`, autor: sesion.nombre, fecha: new Date().toISOString() };
+    await updateDoc(doc(db, 'recibos', ordenId), { estadoOrden: nuevoEstado, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
+    toast(`Estado: ${ESTADOS[nuevoEstado].texto}`, 'success', 2000);
+  } catch (err) { toast('Error al cambiar estado', 'error'); }
+  finally { hideLoading(); }
+}
+
+/* ============================================================
+   MODAL DE COBRO
+   ============================================================ */
+function abrirModalCobro() {
+  haptic(15);
+  const total = Number(orden.total) || 0;
+  const saldo = Number(orden.saldo) || 0;
+  const montoSugerido = saldo > 0 ? saldo : total;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop';
+  modal.id = 'modalCobro';
+
+  modal.innerHTML = `
+    <div class="modal">
+      <h3 style="color:var(--brand); font-weight:800; font-size:18px; margin-bottom:8px;">✅ Confirmar entrega</h3>
+      <p style="margin-bottom:20px; font-size:14px;"><strong>${escapeHtml(orden.cliente)}</strong><br><span style="font-size:12px; color:var(--text-mute);">Total: ${formatBs(total)}${saldo > 0 && saldo !== total ? ` · Saldo: ${formatBs(saldo)}` : ''}</span></p>
+      <div style="margin-bottom:16px;">
+        <label>Monto cobrado</label>
+        <input type="number" id="inputMonto" step="0.01" min="0" value="${montoSugerido.toFixed(2)}" inputmode="decimal" style="text-align:center; font-size:18px; font-weight:700;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label>Método de pago</label>
+        <div id="metodosPago" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <button type="button" class="metodo-btn" data-metodo="Efectivo" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;"><i class="fas fa-money-bill-wave" style="font-size:22px; color:#10B981;"></i><span>Efectivo</span></button>
+          <button type="button" class="metodo-btn" data-metodo="QR" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;"><i class="fas fa-qrcode" style="font-size:22px; color:#3B82F6;"></i><span>QR</span></button>
+          <button type="button" class="metodo-btn" data-metodo="Transferencia" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;"><i class="fas fa-building-columns" style="font-size:22px; color:#8B5CF6;"></i><span>Transferencia</span></button>
+          <button type="button" class="metodo-btn" data-metodo="Mixto" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:10px; color:var(--text-main); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s ease;"><i class="fas fa-shuffle" style="font-size:22px; color:#F59E0B;"></i><span>Mixto</span></button>
+        </div>
+        <div id="detalleMixtoContainer" style="display:none; margin-top:10px;">
+          <input type="text" id="detalleMixto" placeholder="Ej: 200 efectivo + 150 QR" maxlength="100">
+        </div>
+        <div id="errorMetodo" style="color:#EF4444; font-size:12px; margin-top:8px; display:none;"></div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="btnCancelarCobro" class="btn-modal-cancel">Cancelar</button>
+        <button type="button" id="btnConfirmarCobro" class="btn-modal-confirm"><i class="fas fa-check"></i> Confirmar</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('show'), 10);
+
+  let metodoSeleccionado = null;
+  modal.querySelectorAll('.metodo-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      haptic(8);
+      modal.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('activo'));
+      btn.classList.add('activo');
+      metodoSeleccionado = btn.dataset.metodo;
+      document.getElementById('detalleMixtoContainer').style.display = metodoSeleccionado === 'Mixto' ? 'block' : 'none';
+      document.getElementById('errorMetodo').style.display = 'none';
+    });
+  });
+
+  document.getElementById('btnCancelarCobro').addEventListener('click', () => { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); });
+
+  document.getElementById('btnConfirmarCobro').addEventListener('click', async () => {
+    const monto = parseFloat(document.getElementById('inputMonto').value) || 0;
+    if (!metodoSeleccionado) { document.getElementById('errorMetodo').textContent = 'Selecciona un método de pago'; document.getElementById('errorMetodo').style.display = 'block'; return; }
+    if (monto <= 0) { document.getElementById('errorMetodo').textContent = 'Ingresa un monto válido'; document.getElementById('errorMetodo').style.display = 'block'; return; }
+    let metodoFinal = metodoSeleccionado;
+    if (metodoSeleccionado === 'Mixto') {
+      const detalle = document.getElementById('detalleMixto').value.trim();
+      if (!detalle) { document.getElementById('errorMetodo').textContent = 'Especifica el detalle'; document.getElementById('errorMetodo').style.display = 'block'; return; }
+      metodoFinal = `Mixto (${detalle})`;
     }
+    await confirmarCobro(monto, metodoFinal);
   });
+
+  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); } });
+}
+
+async function confirmarCobro(monto, metodo) {
+  document.getElementById('modalCobro')?.remove();
+  haptic(20);
+  showLoading('Registrando entrega...');
+  try {
+    const entrada = { tipo: 'estado', texto: `Estado cambiado a: Entregado · Cobrado: ${formatBs(monto)} (${metodo})`, autor: sesion.nombre, fecha: new Date().toISOString() };
+    await updateDoc(doc(db, 'recibos', ordenId), { estadoOrden: 'entregado', fechaEntrega: serverTimestamp(), montoCobrado: monto, metodoPago: metodo, bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
+    toast(`Entregado · ${formatBs(monto)} (${metodo})`, 'success', 2500);
+  } catch (err) { toast('Error al registrar entrega', 'error'); }
+  finally { hideLoading(); }
 }
 
 /* ============================================================
-   BOTTOM SHEET
+   MODAL DE COSTO
    ============================================================ */
+function abrirModalCosto() {
+  if (sesion.rol !== 'admin') return;
+  haptic(15);
+  const monto = Number(orden.montoCobrado) || 0;
+  const costoActual = Number(orden.costoRepuesto) || 0;
+  const gananciaInicial = monto - costoActual;
 
-let currentSheet = null;
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop';
+  modal.id = 'modalCosto';
 
-/**
- * Abre un bottom sheet con HTML personalizado
- * @param {string} html - contenido HTML del sheet
- * @returns {HTMLElement} el elemento del sheet (para listeners)
- */
-export function openSheet(html) {
-  closeSheet(); // cerrar si ya hay uno abierto
+  modal.innerHTML = `
+    <div class="modal">
+      <h3 style="color:#10B981; font-weight:800; font-size:18px; margin-bottom:16px;"><i class="fas fa-calculator"></i> Registrar presupuesto</h3>
+      <div style="background:var(--bg-elev); border-radius:8px; padding:12px; margin-bottom:1rem; border:1px solid var(--border);">
+        <div style="font-size:11px; color:var(--text-mute); margin-bottom:4px;">RECIBO</div>
+        <div style="font-weight:700; font-size:13px;">${escapeHtml(orden.numeroRecibo || '-')}</div>
+        <div style="font-size:12px; color:var(--text-main); margin-top:4px;">${escapeHtml(orden.cliente || '-')}</div>
+        <div style="font-size:11px; color:var(--text-mute); margin-top:2px;">${escapeHtml(orden.marca || '')} ${escapeHtml(orden.modelo || '')}</div>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label>Monto cobrado al cliente</label>
+        <div style="background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; padding:14px; font-size:18px; font-weight:800; text-align:center; color:var(--brand);">${formatBs(monto)}</div>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label>Costo del repuesto</label>
+        <input type="number" id="costoInput" step="0.01" min="0" value="${costoActual > 0 ? costoActual.toFixed(2) : ''}" inputmode="decimal" placeholder="0.00" style="color:#F59E0B; font-weight:800; text-align:center;">
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button type="button" class="costo-preset" data-pct="0.7" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">70%</button>
+          <button type="button" class="costo-preset" data-pct="0.5" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">50%</button>
+          <button type="button" class="costo-preset" data-pct="0.4" style="flex:1; padding:8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:8px; color:var(--text-main); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">40%</button>
+        </div>
+      </div>
+      <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:16px; margin-bottom:1.2rem; text-align:center;">
+        <div style="font-size:11px; color:var(--text-mute); text-transform:uppercase; font-weight:700; letter-spacing:0.6px; margin-bottom:4px;">Ganancia neta</div>
+        <div id="gananciaPreview" style="font-size:26px; font-weight:900; color:#10B981; line-height:1;">${formatBs(gananciaInicial)}</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="btnCancelarCosto" class="btn-modal-cancel">Cancelar</button>
+        <button type="button" id="btnGuardarCosto" class="btn-modal-confirm"><i class="fas fa-check"></i> Guardar</button>
+      </div>
+    </div>`;
 
-  const backdrop = document.createElement('div');
-  backdrop.className = 'sheet-backdrop';
-  backdrop.id = 'sheetBackdrop';
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('show'), 10);
 
-  const sheet = document.createElement('div');
-  sheet.className = 'sheet';
-  sheet.id = 'sheetContent';
-  sheet.innerHTML = `
-    <div class="sheet-handle"></div>
-    ${html}
-  `;
+  const costoInput = modal.querySelector('#costoInput');
+  const gananciaPreview = modal.querySelector('#gananciaPreview');
 
-  document.body.appendChild(backdrop);
-  document.body.appendChild(sheet);
+  function actualizarPreview() {
+    const costo = parseFloat(costoInput.value) || 0;
+    const ganancia = monto - costo;
+    gananciaPreview.textContent = formatBs(ganancia);
+    gananciaPreview.style.color = ganancia >= 0 ? '#10B981' : '#EF4444';
+  }
 
-  requestAnimationFrame(() => {
-    backdrop.classList.add('show');
-    sheet.classList.add('show');
+  costoInput.addEventListener('input', actualizarPreview);
+  costoInput.focus();
+
+  modal.querySelectorAll('.costo-preset').forEach(btn => {
+    btn.addEventListener('click', () => { const pct = parseFloat(btn.dataset.pct); costoInput.value = (monto * pct).toFixed(2); actualizarPreview(); haptic(8); });
   });
 
-  backdrop.addEventListener('click', closeSheet);
+  document.getElementById('btnCancelarCosto').addEventListener('click', () => { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); });
 
-  currentSheet = sheet;
-  return sheet;
-}
-
-/**
- * Cierra el bottom sheet
- */
-export function closeSheet() {
-  const backdrop = document.getElementById('sheetBackdrop');
-  const sheet = document.getElementById('sheetContent');
-
-  if (backdrop) backdrop.classList.remove('show');
-  if (sheet) sheet.classList.remove('show');
-
-  setTimeout(() => {
-    if (backdrop) backdrop.remove();
-    if (sheet) sheet.remove();
-    currentSheet = null;
-  }, 400);
-}
-
-/* ============================================================
-   HAPTIC FEEDBACK (vibración)
-   ============================================================ */
-
-/**
- * Vibración háptica corta
- * @param {number|Array} pattern - duración o patrón
- */
-export function haptic(pattern = 10) {
-  if ('vibrate' in navigator) {
+  document.getElementById('btnGuardarCosto').addEventListener('click', async () => {
+    const costo = parseFloat(costoInput.value) || 0;
+    haptic(20); showLoading('Guardando costo...');
     try {
-      navigator.vibrate(pattern);
-    } catch (e) {
-      // silencioso
-    }
+      const ganancia = monto - costo;
+      const entrada = { tipo: 'cobro', texto: `Costo registrado: ${formatBs(costo)} · Ganancia: ${formatBs(ganancia)}`, autor: sesion.nombre, fecha: new Date().toISOString() };
+      await updateDoc(doc(db, 'recibos', ordenId), { costoRepuesto: costo, gananciaNeta: ganancia, costoActualizadoEn: serverTimestamp(), costoActualizadoPor: sesion.nombre, bitacora: arrayUnion(entrada) });
+      toast(`Costo guardado · Ganancia: ${formatBs(ganancia)}`, 'success', 2500);
+      modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
+    } catch (err) { toast('Error al guardar el costo', 'error'); }
+    finally { hideLoading(); }
+  });
+
+  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); } });
+}
+
+/* ============================================================
+   MODAL DE FECHA
+   ============================================================ */
+function abrirModalFecha() {
+  if (sesion.rol !== 'admin') return;
+  haptic(15);
+  let fechaActualStr = '';
+  const fechaParaMostrar = orden.fechaEditada || orden.fecha;
+  if (fechaParaMostrar) {
+    const d = fechaParaMostrar.toDate ? fechaParaMostrar.toDate() : new Date(fechaParaMostrar);
+    if (!isNaN(d.getTime())) fechaActualStr = d.toISOString().split('T')[0];
+  }
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop';
+  modal.id = 'modalFecha';
+
+  modal.innerHTML = `
+    <div class="modal">
+      <h3 style="color:var(--brand); font-weight:800; font-size:18px; margin-bottom:8px;"><i class="fas fa-calendar-alt"></i> Editar Fecha</h3>
+      <p style="font-size:12px; color:var(--text-mute); margin-bottom:16px;">Esta acción cambiará la fecha en el panel y en los reportes.</p>
+      <div style="margin-bottom:20px;">
+        <label>Nueva Fecha</label>
+        <input type="date" id="inputFechaOrden" value="${fechaActualStr}">
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="btnCancelarFecha" class="btn-modal-cancel">Cancelar</button>
+        <button type="button" id="btnGuardarFecha" class="btn-modal-confirm"><i class="fas fa-save"></i> Guardar</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('show'), 10);
+
+  document.getElementById('btnCancelarFecha').addEventListener('click', () => { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); });
+
+  document.getElementById('btnGuardarFecha').addEventListener('click', async () => {
+    const nuevaFechaStr = document.getElementById('inputFechaOrden').value;
+    if (!nuevaFechaStr) { toast('Selecciona una fecha válida', 'error'); return; }
+    haptic(20); showLoading('Actualizando fecha...');
+    try {
+      const nuevaFecha = new Date(nuevaFechaStr + 'T12:00:00');
+      const entrada = { tipo: 'nota', texto: `Fecha de ingreso editada a: ${nuevaFecha.toLocaleDateString('es-BO')}`, autor: sesion.nombre, fecha: new Date().toISOString() };
+      await updateDoc(doc(db, 'recibos', ordenId), {
+        fecha: nuevaFecha,
+        fechaEditada: nuevaFecha,
+        bitacora: arrayUnion(entrada),
+        actualizadoEn: serverTimestamp()
+      });
+      toast('Fecha actualizada correctamente', 'success', 2500);
+      modal.classList.remove('show'); setTimeout(() => modal.remove(), 300);
+    } catch (err) { toast('Error al actualizar la fecha', 'error'); }
+    finally { hideLoading(); }
+  });
+
+  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); } });
+}
+
+/* ============================================================
+   WHATSAPP
+   ============================================================ */
+function contactarCliente() {
+  if (!orden.telefono) { toast('La orden no tiene teléfono', 'error'); return; }
+  haptic(15);
+  const nombreCliente = (orden.cliente || '').split(' ')[0] || 'cliente';
+  const equipo = `${orden.marca || ''} ${orden.modelo || ''}`.trim();
+  const mensaje = `Hola ${nombreCliente}, le escribimos de ${CONFIG.nombreTienda} en relación a su ${equipo} (Recibo ${orden.numeroRecibo || '-'}).`;
+  const tel = orden.telefono.replace(/\D/g, '');
+  window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank', 'noopener,noreferrer');
+}
+
+/* ============================================================
+   REGENERAR PDF
+   ============================================================ */
+async function regenerarYEnviarPDF() {
+  if (!orden.telefono) { toast('La orden no tiene teléfono', 'error'); return; }
+  showLoading('Generando PDF...');
+  haptic(20);
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+    const W = 210, H = 297, M = 15, CW = W - M * 2;
+    let y = 0;
+
+    pdf.setFillColor(230, 81, 0); pdf.rect(0, 0, W, 40, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(22); pdf.text('DR. XIAOMI SCZ', M + 10, 16);
+    pdf.setFontSize(9); pdf.setFont('helvetica', 'normal'); pdf.text('Servicio Técnico Especializado', M + 10, 22);
+    pdf.setFontSize(8); pdf.text(`Centro Comercial Cañoto #K1 · Tel: 75959450`, M + 10, 28);
+
+    pdf.setFillColor(255, 255, 255); pdf.roundedRect(W - M - 60, 8, 60, 24, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text('RECIBO N°', W - M - 4, 14, { align: 'right' });
+    pdf.setFontSize(11); pdf.text(orden.numeroRecibo || '-', W - M - 4, 20, { align: 'right' });
+    pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8);
+    const fechaPdf = orden.fechaEditada || orden.fecha;
+    const fechaPdfStr = fechaPdf ? (fechaPdf.toDate ? fechaPdf.toDate() : new Date(fechaPdf)).toLocaleDateString('es-BO') : new Date().toLocaleDateString('es-BO');
+    pdf.text(`Fecha: ${fechaPdfStr}`, W - M - 4, 26, { align: 'right' });
+
+    y = 50;
+    const colW = (CW - 6) / 2;
+    pdf.setFillColor(248, 248, 248); pdf.roundedRect(M, y, colW, 30, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.text('CLIENTE', M + 5, y + 7);
+    pdf.setTextColor(30, 30, 30); pdf.setFontSize(12); pdf.text((orden.cliente || '').slice(0, 25), M + 5, y + 15);
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(100, 100, 100); pdf.text(`Tel: ${orden.telefono || ''}`, M + 5, y + 23);
+
+    pdf.setFillColor(248, 248, 248); pdf.roundedRect(M + colW + 6, y, colW, 30, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.text('EQUIPO', M + colW + 11, y + 7);
+    pdf.setTextColor(30, 30, 30); pdf.setFontSize(12); pdf.text(`${orden.marca || ''} ${orden.modelo || ''}`.slice(0, 25), M + colW + 11, y + 15);
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(100, 100, 100); pdf.text(`Enciende: ${orden.enciende || ''}`, M + colW + 11, y + 23);
+
+    y += 36;
+    pdf.setFillColor(248, 248, 248); pdf.roundedRect(M, y, colW, 30, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.text('ESTADO / FALLA', M + 5, y + 7);
+    pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.text(pdf.splitTextToSize(orden.falla || '-', colW - 10), M + 5, y + 14);
+
+    pdf.setFillColor(248, 248, 248); pdf.roundedRect(M + colW + 6, y, colW, 30, 3, 3, 'F');
+    pdf.setTextColor(230, 81, 0); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.text('CLAVE DE ACCESO', M + colW + 11, y + 7);
+    pdf.setTextColor(30, 30, 30); pdf.setFontSize(12); let segInfo = orden.tipoSeguridad === 'pin' ? `PIN: ${orden.pin}` : (orden.patron ? `Patrón: ${orden.patron.split(',').join('-')}` : 'Sin clave'); pdf.text(segInfo.slice(0, 25), M + colW + 11, y + 17);
+
+    y += 36;
+    pdf.setFillColor(230, 81, 0); pdf.roundedRect(M, y, CW, 10, 3, 3, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10); pdf.text('SERVICIOS Y COSTOS', M + 5, y + 6.5); y += 14;
+
+    pdf.autoTable({ startY: y, head: [['Descripción', 'Costo']], body: (orden.servicios || []).map(s => [s.desc, formatBs(s.costo)]), styles: { fontSize: 10, cellPadding: 4 }, headStyles: { fillColor: [230, 81, 0] }, columnStyles: { 1: { halign: 'right' } }, margin: { left: M, right: M } });
+
+    y = pdf.lastAutoTable.finalY + 8;
+    const boxW = 80; const boxX = M + CW - boxW;
+    pdf.setFillColor(248, 248, 248); pdf.roundedRect(boxX, y, boxW, 20, 3, 3, 'F');
+    pdf.setTextColor(100, 100, 100); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10); pdf.text('Total:', boxX + 5, y + 8);
+    pdf.setTextColor(30, 30, 30); pdf.setFont('helvetica', 'bold'); pdf.text(formatBs(orden.total || 0), boxX + boxW - 5, y + 8, { align: 'right' });
+    pdf.setTextColor(230, 81, 0); pdf.setFontSize(10); pdf.text('SALDO:', boxX + 5, y + 16);
+    pdf.setFontSize(14); pdf.text(formatBs(orden.saldo || 0), boxX + boxW - 5, y + 16, { align: 'right' });
+
+    const nombreArchivo = `Recibo_${orden.numeroRecibo || 'orden'}.pdf`;
+    pdf.save(nombreArchivo);
+
+    setTimeout(() => {
+      const nombreCliente = (orden.cliente || '').split(' ')[0] || 'cliente';
+      const equipo = `${orden.marca || ''} ${orden.modelo || ''}`.trim();
+      const mensaje = `Hola ${nombreCliente}, le adjuntamos el recibo de ingreso de su equipo.\n\nN° Recibo: ${orden.numeroRecibo || '-'}\nEquipo: ${equipo}\nTotal: ${formatBs(orden.total || 0)}\n${Number(orden.saldo) > 0 ? `Saldo pendiente: ${formatBs(orden.saldo)}` : ''}\n\nLe adjuntamos el PDF del recibo.`;
+      const tel = (orden.telefono || '').replace(/\D/g, '');
+      window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank');
+      toast('PDF descargado · Adjúntalo en WhatsApp', 'success', 4000);
+    }, 600);
+
+  } catch (err) {
+    console.error('Error regenerando PDF:', err);
+    toast('Error al generar el PDF: ' + err.message, 'error', 4000);
+  } finally {
+    hideLoading();
   }
 }
 
 /* ============================================================
-   FORMATEO DE FECHAS Y NÚMEROS
+   GUARDAR NOTA
    ============================================================ */
+async function guardarNota() {
+  const notaInput = document.getElementById('nuevaNota');
+  const texto = (notaInput.value || '').trim();
+  if (!texto && fotosNuevas.length === 0) { toast('Escribe una nota o añade una foto', 'error'); return; }
 
-/**
- * Formatea un Timestamp de Firestore o fecha a "DD/MM/YYYY HH:MM"
- */
-export function formatFecha(fecha, incluirHora = true) {
-  if (!fecha) return '-';
-
-  let d;
-  if (fecha.toDate) {
-    d = fecha.toDate(); // Timestamp de Firestore
-  } else if (fecha instanceof Date) {
-    d = fecha;
-  } else if (typeof fecha === 'number') {
-    d = new Date(fecha);
-  } else {
-    d = new Date(fecha);
-  }
-
-  if (isNaN(d.getTime())) return '-';
-
-  const dia = String(d.getDate()).padStart(2, '0');
-  const mes = String(d.getMonth() + 1).padStart(2, '0');
-  const anio = d.getFullYear();
-
-  const base = `${dia}/${mes}/${anio}`;
-
-  if (!incluirHora) return base;
-
-  const horas = String(d.getHours()).padStart(2, '0');
-  const minutos = String(d.getMinutes()).padStart(2, '0');
-  return `${base} ${horas}:${minutos}`;
+  haptic(15); showLoading('Guardando...');
+  try {
+    const entrada = { tipo: fotosNuevas.length > 0 && !texto ? 'foto' : 'nota', texto: texto || 'Foto añadida', fotos: fotosNuevas.slice(), autor: sesion.nombre, fecha: new Date().toISOString() };
+    await updateDoc(doc(db, 'recibos', ordenId), { bitacora: arrayUnion(entrada), actualizadoEn: serverTimestamp() });
+    fotosNuevas = [];
+    toast('Añadido a la bitácora', 'success', 2000);
+  } catch (err) { toast('Error al guardar', 'error'); }
+  finally { hideLoading(); }
 }
 
-/**
- * Formatea fecha relativa: "hace 2h", "hace 3 días", etc.
- */
-export function tiempoRelativo(fecha) {
-  if (!fecha) return '';
+/* ============================================================
+   FOTOS
+   ============================================================ */
+function renderFotosNuevas() {
+  const cont = document.getElementById('fotoUploader');
+  if (!cont) return;
+  const btnAdd = cont.querySelector('#btnAddFoto');
+  cont.querySelectorAll('.foto-preview').forEach(el => el.remove());
 
+  fotosNuevas.forEach((dataUrl, i) => {
+    const div = document.createElement('div');
+    div.className = 'foto-preview';
+    div.innerHTML = `<img src="${dataUrl}" alt="preview"><button type="button" class="btn-remove" data-idx="${i}"><i class="fas fa-times"></i></button>`;
+    cont.insertBefore(div, btnAdd);
+  });
+
+  cont.querySelectorAll('.btn-remove').forEach(btn => {
+    btn.addEventListener('click', () => { const idx = parseInt(btn.dataset.idx); fotosNuevas.splice(idx, 1); renderFotosNuevas(); haptic(10); });
+  });
+}
+
+/* ============================================================
+   ELIMINAR
+   ============================================================ */
+async function eliminarOrden() {
+  if (sesion.rol !== 'admin') return;
+  const confirmar = confirm('¿Eliminar esta orden?\n\nEsta acción NO se puede deshacer.');
+  if (!confirmar) return;
+
+  haptic([50, 30, 50]); showLoading('Eliminando...');
+  try {
+    await deleteDoc(doc(db, 'recibos', ordenId));
+    toast('Orden eliminada', 'success', 2000);
+    setTimeout(() => window.location.href = '/app/', 1000);
+  } catch (err) { toast('Error al eliminar', 'error'); hideLoading(); }
+}
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+function formatFecha(fecha) {
+  if (!fecha) return '-';
   let d;
   if (fecha.toDate) d = fecha.toDate();
   else if (fecha instanceof Date) d = fecha;
   else d = new Date(fecha);
-
-  if (isNaN(d.getTime())) return '';
-
-  const ahora = new Date();
-  const diffSeg = Math.floor((ahora - d) / 1000);
-
-  if (diffSeg < 60) return 'ahora mismo';
-
-  const diffMin = Math.floor(diffSeg / 60);
-  if (diffMin < 60) return `hace ${diffMin} min`;
-
-  const diffHoras = Math.floor(diffMin / 60);
-  if (diffHoras < 24) return `hace ${diffHoras}h`;
-
-  const diffDias = Math.floor(diffHoras / 24);
-  if (diffDias < 30) return `hace ${diffDias} día${diffDias > 1 ? 's' : ''}`;
-
-  const diffMeses = Math.floor(diffDias / 30);
-  if (diffMeses < 12) return `hace ${diffMeses} mes${diffMeses > 1 ? 'es' : ''}`;
-
-  const diffAnios = Math.floor(diffMeses / 12);
-  return `hace ${diffAnios} año${diffAnios > 1 ? 's' : ''}`;
+  if (isNaN(d.getTime())) return '-';
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
-/**
- * Formatea número como moneda boliviana
- */
-export function formatBs(monto) {
-  const num = Number(monto) || 0;
-  return `Bs. ${num.toFixed(2)}`;
+async function comprimirImagen(file, maxSize = 1000, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxSize) { height = (height * maxSize) / width; width = maxSize; }
+        else if (height > maxSize) { width = (width * maxSize) / height; height = maxSize; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject; img.src = e.target.result;
+    };
+    reader.onerror = reject; reader.readAsDataURL(file);
+  });
 }
-
-/* ============================================================
-   HELPERS DE STRINGS
-   ============================================================ */
-
-/**
- * Escapa HTML para prevenir XSS al insertar texto del usuario
- */
-export function escapeHtml(texto) {
-  if (!texto) return '';
-  const div = document.createElement('div');
-  div.textContent = String(texto);
-  return div.innerHTML;
-}
-
-/**
- * Normaliza un string para búsqueda (minúsculas, sin tildes)
- */
-export function normalizar(texto) {
-  if (!texto) return '';
-  return String(texto)
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s]/g, '')
-    .trim();
-}
-
-/**
- * Obtiene las iniciales de un nombre
- */
-export function iniciales(nombre) {
-  if (!nombre) return '?';
-  const partes = String(nombre).trim().split(/\s+/);
-  if (partes.length === 1) return partes[0].charAt(0).toUpperCase();
-  return (partes[0].charAt(0) + partes[partes.length - 1].charAt(0)).toUpperCase();
-}
-
-/* ============================================================
-   THEME (modo claro/oscuro)
-   ============================================================ */
-
-const THEME_KEY = 'drx_theme';
-
-/**
- * Inicializa el tema guardado (o el oscuro por defecto)
- */
-export function initTheme() {
-  const guardado = localStorage.getItem(THEME_KEY) || 'dark';
-  aplicarTema(guardado);
-}
-
-/**
- * Aplica un tema
- */
-export function aplicarTema(tema) {
-  document.documentElement.setAttribute('data-theme', tema);
-  localStorage.setItem(THEME_KEY, tema);
-
-  const icono = document.querySelector('#themeToggle i');
-  if (icono) {
-    icono.className = tema === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-  }
-}
-
-/**
- * Alterna entre claro y oscuro
- */
-export function toggleTheme() {
-  const actual = document.documentElement.getAttribute('data-theme') || 'dark';
-  aplicarTema(actual === 'dark' ? 'light' : 'dark');
-}
-
-/* ============================================================
-   NAVEGACIÓN / ROUTER BÁSICO
-   ============================================================ */
-
-/**
- * Redirige a una URL
- */
-export function goTo(url) {
-  window.location.href = url;
-}
-
-/**
- * Espera X milisegundos
- */
-export function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-// ============================================================
-// CONTROL GLOBAL DEL TEMA (MODO CLARO / OSCURO)
-// ============================================================
-
-// 1. Iniciar el tema guardado al cargar cualquier página
-const temaGuardado = localStorage.getItem('theme') || 'dark';
-document.documentElement.setAttribute('data-theme', temaGuardado);
-
-// 2. Función para aplicar el tema
-window.aplicarTema = function(tema) {
-  document.documentElement.setAttribute('data-theme', tema);
-  localStorage.setItem('theme', tema);
-  
-  // Actualizar el meta tag de color (para la barra de estado del celular)
-  const metaColor = document.getElementById('metaThemeColor');
-  if (metaColor) {
-    metaColor.setAttribute('content', tema === 'light' ? '#F8F8F9' : '#0A0A0B');
-  }
-};
-
-// 3. Escuchar el clic en el botón de tema
-document.addEventListener('click', (e) => {
-  const btnTema = e.target.closest('#btnTema') || e.target.closest('#themeToggleBtn');
-  if (btnTema) {
-    e.preventDefault();
-    const actual = document.documentElement.getAttribute('data-theme');
-    const nuevo = actual === 'dark' ? 'light' : 'dark';
-    window.aplicarTema(nuevo);
-  }
-});
