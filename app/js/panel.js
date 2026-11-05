@@ -712,4 +712,545 @@ function configurarEventos() {
       paginaActual = 1; 
       renderizarTodoDebounced();
     });
-    buscador.addEventListener
+    buscador.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        buscador.blur(); 
+        haptic(10);
+        playSound('click');
+        renderizarTodo();
+      }
+    });
+  }
+}
+
+function resetVentaModal() {
+  document.getElementById('tipoVentaStep').style.display = 'block';
+  document.getElementById('ventaAccesorioStep').style.display = 'none';
+  document.getElementById('ventaServicioStep').style.display = 'none';
+  document.getElementById('productoSeleccionadoInfo').style.display = 'none';
+  document.getElementById('btnRegistrarAccesorio').disabled = true;
+  
+  // 🔥 LIMPIAR CAMPOS DE SERVICIO
+  const ventaMonto = document.getElementById('ventaMonto');
+  if (ventaMonto) ventaMonto.value = '';
+  const ventaConceptoOtro = document.getElementById('ventaConceptoOtro');
+  if (ventaConceptoOtro) ventaConceptoOtro.value = '';
+}
+
+// ==========================================
+// 5. CARGA DE DATOS Y RENDERIZADO
+// ==========================================
+function cargarDatos() {
+  if (unsubscribe) unsubscribe();
+  unsubscribe = onSnapshot(query(collection(db, 'recibos'), orderBy('fecha', 'desc')), (snap) => {
+      appState.ordenes = snap.docs.map(d => { const data = d.data(); delete data.fotos; return { id: d.id, ...data }; });
+      appState.ordenes.sort((a, b) => (parsearFecha(b.fechaEditada || b.fecha) || 0) - (parsearFecha(a.fechaEditada || a.fecha) || 0));
+      if (appLoader && !appLoader.classList.contains('hidden')) appLoader.classList.add('hidden');
+      renderizarTodo();
+    }, (err) => { 
+      console.error(err); 
+      if (appLoader) appLoader.classList.add('hidden');
+    });
+
+  if (unsubscribeVentas) unsubscribeVentas();
+  unsubscribeVentas = onSnapshot(query(collection(db, 'ventas'), orderBy('fecha', 'desc'), limit(100)), (snap) => {
+    ventasPanel = snap.docs.map(d => ({ id: d.id, origen: 'panel', coleccion: 'ventas', ...d.data() })); 
+    procesarVentas();
+  });
+
+  if (unsubscribeCierres) unsubscribeCierres();
+  unsubscribeCierres = onSnapshot(query(collection(db, 'cierres'), orderBy('fecha', 'desc'), limit(100)), (snap) => {
+  });
+
+  if (unsubscribeInventario) unsubscribeInventario();
+  unsubscribeInventario = onSnapshot(query(collection(db, 'productos')), (snap) => {
+    appState.inventario = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  });
+}
+
+function procesarVentas() { 
+  appState.ventasHoy = [...ventasPanel].sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0)); 
+  renderizarTodoDebounced(); 
+}
+
+let renderTimer = null;
+function renderizarTodoDebounced() {
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(renderizarTodo, CONFIG_APP.debounceRenderMs);
+}
+
+function renderizarTodo() {
+  actualizarStats(); 
+  todosLosMovimientos = [];
+  
+  if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
+    appState.ordenes.forEach(o => {
+      const est = o.estadoOrden || 'recibido';
+      if (filtroActual === 'reparacion' && est !== 'reparacion' && est !== 'espera-repuesto' && est !== 'recibido') return;
+      else if (filtroActual !== 'todos' && filtroActual !== 'reparacion' && filtroActual !== est) return;
+      const entregado = est === 'entregado';
+      todosLosMovimientos.push({ tipo: 'telefono', data: o, fechaOrden: entregado ? (parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha)) : (parsearFecha(o.fechaEditada) || parsearFecha(o.fecha)) });
+    });
+  }
+  
+  if (filtroActual === 'todos' || filtroActual === 'venta') {
+    appState.ventasHoy.forEach(v => { todosLosMovimientos.push({ tipo: 'venta', data: v, fechaOrden: parsearFecha(v.fecha) }); });
+  }
+  
+  if (busquedaActual) {
+    todosLosMovimientos = todosLosMovimientos.filter(m => {
+      const txt = m.tipo === 'telefono' ? [m.data.numeroRecibo, m.data.cliente, m.data.telefono, m.data.marca, m.data.modelo].filter(Boolean).join(' ').toLowerCase() : (m.data.concepto || '').toLowerCase();
+      return txt.includes(busquedaActual);
+    });
+  }
+  todosLosMovimientos.sort((a, b) => b.fechaOrden - a.fechaOrden);
+  const totalPag = Math.ceil(todosLosMovimientos.length / ITEMS_POR_PAGINA);
+  if (paginaActual > totalPag) paginaActual = totalPag || 1;
+  const pagItems = todosLosMovimientos.slice((paginaActual - 1) * ITEMS_POR_PAGINA, paginaActual * ITEMS_POR_PAGINA);
+  const lista = document.getElementById('listaOrdenes');
+  if (!lista) return;
+  if (todosLosMovimientos.length === 0) {
+    lista.innerHTML = `<div class="empty-state"><h3>Sin movimientos</h3><p>No hay resultados.</p></div>`; 
+    if (paginationContainer) paginationContainer.innerHTML = ''; 
+    return;
+  }
+  lista.innerHTML = pagItems.map(m => m.tipo === 'telefono' ? renderCardTelefono(m.data) : renderCardVenta(m.data, m.tipo)).join('');
+  
+  lista.querySelectorAll('.ingreso-card').forEach(card => {
+    card.addEventListener('click', () => { 
+      haptic(10); 
+      playSound('click');
+      
+      const esAdmin = appState.sesion?.rol === 'admin';
+      
+      // 🔥 SI ES ADMIN Y TOCA UNA VENTA, ABRE EL MODAL DE COSTO
+      if (esAdmin && card.dataset.tipo === 'venta') {
+        abrirEditarVenta(card.dataset.id);
+      } else {
+        if(card.dataset.tipo === 'telefono') abrirSheetTelefono(card.dataset.id); 
+        else abrirSheetVenta(card.dataset.id, card.dataset.origen, card.dataset.extra); 
+      }
+    });
+  });
+  renderizarPaginacion(totalPag);
+}
+
+function renderizarPaginacion(total) {
+  if (!paginationContainer) return;
+  if (total <= 1) { paginationContainer.innerHTML = ''; return; }
+  let html = `<button type="button" class="page-nav" data-page="${paginaActual - 1}" ${paginaActual === 1 ? 'disabled' : ''}>Ant</button>`;
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || (i >= paginaActual - 1 && i <= paginaActual + 1)) {
+      html += `<button type="button" class="page-btn ${i === paginaActual ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    } else if (i === paginaActual - 2 || i === paginaActual + 2) {
+      html += `<span>...</span>`;
+    }
+  }
+  html += `<button type="button" class="page-nav" data-page="${paginaActual + 1}" ${paginaActual === total ? 'disabled' : ''}>Sig</button>`;
+  paginationContainer.innerHTML = html;
+  
+  paginationContainer.querySelectorAll('button[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = parseInt(btn.dataset.page);
+      if (!isNaN(p) && p >= 1) window.cambiarPagina(p);
+    });
+  });
+}
+
+window.cambiarPagina = (p) => { 
+  haptic(8); 
+  playSound('click');
+  paginaActual = p; 
+  renderizarTodo(); 
+  document.querySelector('.app-content')?.scrollTo({ top: 0, behavior: 'smooth' }); 
+};
+
+function renderCardTelefono(o) {
+  const est = o.estadoOrden || 'recibido';
+  
+  // 🔥 PALETA DE COLORES PARA TELÉFONOS
+  const info = { 
+    recibido: { t: 'Recibido', c: 'var(--warning-500)' }, 
+    reparacion: { t: 'Reparación', c: 'var(--brand-500)' }, 
+    'espera-repuesto': { t: 'Repuesto', c: 'var(--purple-500)' }, 
+    listo: { t: 'Listo', c: 'var(--yellow-500)' }, 
+    entregado: { t: 'Entregado', c: 'var(--success-500)' }, 
+    devuelto: { t: 'Devuelto', c: 'var(--danger-500)' } // 🔥 ROJO para devoluciones
+  }[est] || { t: est, c: 'var(--text-3)' };
+  
+  return `
+    <div class="ingreso-card" data-tipo="telefono" data-id="${o.id}" style="border-left-color: ${info.c};">
+      <div class="icon-circle" style="color: ${info.c}; background: color-mix(in srgb, ${info.c} 15%, transparent);">
+        ${icono('telefono', 24)}
+      </div>
+      <div class="info-col">
+        <div class="info-title">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
+        <div class="info-sub">${escapeHtml(o.cliente || '')}</div>
+        <div class="info-sub" style="font-size: 11px;">
+          ${est === 'entregado' ? `Entregado: ${formatFechaCompleta(o.fechaEntrega)}` : `Ingreso: ${tiempoRelativo(o.fechaEditada || o.fecha)}`}
+        </div>
+        <span class="estado-chip" style="background: color-mix(in srgb, ${info.c} 15%, transparent); color: ${info.c};">${info.t}</span>
+      </div>
+      <div class="monto-col">
+        <div class="monto" style="color: var(--text-1);">${formatBsLimpio(Number(o.montoCobrado) || Number(o.total) || 0)}</div>
+      </div>
+    </div>`;
+}
+
+function renderCardVenta(v, tipo) {
+  const f = parsearFecha(v.fecha); 
+  const hora = f ? `${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')}` : '';
+  
+  let iconoNombre = 'venta';
+  let cor = 'var(--success-500)'; // Verde por defecto (Accesorios)
+
+  // 🔥 DISTINGUIR SERVICIOS DE ACCESORIOS POR COLOR
+  if (v.concepto === 'Botón' || v.concepto === 'Limpieza' || v.concepto === 'Reactivación' || v.concepto === 'Cargador' || v.concepto === 'Otro') {
+    cor = 'var(--purple-500)'; // Morado para servicios
+    if (v.concepto === 'Botón') iconoNombre = 'bateria'; 
+    else if (v.concepto === 'Limpieza') iconoNombre = 'servicios';
+    else if (v.concepto === 'Reactivación') iconoNombre = 'estado';
+    else if (v.concepto === 'Cargador') iconoNombre = 'bateria';
+  } else {
+    cor = 'var(--success-500)'; // Verde para accesorios
+    iconoNombre = 'venta';
+  }
+  
+  // 🔥 CALCULAR GANANCIA
+  const esAdmin = appState.sesion?.rol === 'admin';
+  const monto = Number(v.monto) || 0;
+  const costo = Number(v.costo) || 0;
+  const ganancia = monto - costo;
+  
+  let htmlGanancia = '';
+  if (esAdmin && tipo === 'venta') {
+    htmlGanancia = `<div class="ganancia-text" style="font-size: 10px; color: var(--success-500); font-weight: 700; margin-top: 2px;">Ganancia: ${formatBsLimpio(ganancia)}</div>`;
+  }
+
+  return `
+    <div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}" style="border-left-color: ${cor};">
+      <div class="icon-circle" style="color: ${cor}; background: color-mix(in srgb, ${cor} 15%, transparent);">
+        ${icono(iconoNombre, 24)}
+      </div>
+      <div class="info-col">
+        <div class="info-title">${escapeHtml(v.concepto || '')}</div>
+        <div class="info-sub">${hora} · ${escapeHtml(v.metodoPago || '')}</div>
+        ${htmlGanancia}
+      </div>
+      <div class="monto-col">
+        <div class="monto" style="color: ${cor};">${formatBsLimpio(v.monto)}</div>
+      </div>
+    </div>`;
+}
+
+function actualizarStats() {
+  const activas = document.getElementById('statActivas');
+  const listas = document.getElementById('statListas');
+  const hoyEl = document.getElementById('statHoy');
+  if (activas) activas.textContent = appState.ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
+  if (listas) listas.textContent = appState.ordenes.filter(o => o.estadoOrden === 'listo').length;
+  
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  let ingRep = 0; 
+  appState.ordenes.forEach(o => { 
+    if (o.estadoOrden === 'entregado') { 
+      const f = parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha); 
+      if (f && f >= hoy) ingRep += Number(o.montoCobrado) || Number(o.total) || 0; 
+    } 
+  });
+  
+  const ingVent = appState.ventasHoy.filter(v => { const f = parsearFecha(v.fecha); return f && f >= hoy; }).reduce((s, v) => s + (Number(v.monto) || 0), 0);
+  
+  if (hoyEl) hoyEl.textContent = formatBsLimpio(ingRep + ingVent);
+}
+
+// ==========================================
+// 6. LÓGICA DEL CIERRE DE CAJA (MODAL)
+// ==========================================
+async function abrirCierreDeCaja() {
+  const hoy = new Date();
+  hoy.setHours(0,0,0,0);
+  const hoyStr = hoy.toDateString();
+
+  reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
+  ventasAccesoriosData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
+  detallesReparaciones = [];
+  detallesVentas = [];
+
+  try {
+    const qRecibos = query(collection(db, 'recibos'), where('estadoOrden', '==', 'entregado'));
+    const snapRecibos = await getDocs(qRecibos);
+    
+    snapRecibos.forEach(docSnap => {
+      const d = docSnap.data();
+      let fechaD = d.fechaEntrega || d.fecha;
+      if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
+      
+      if (fechaD && fechaD.toDateString() === hoyStr) {
+        const monto = Number(d.montoCobrado) || 0;
+        const metodo = (d.metodoPago || 'Efectivo').toLowerCase();
+
+        reparacionesData.total += monto;
+        reparacionesData.cantidad++;
+        if (metodo.includes('efectivo')) reparacionesData.efectivo += monto;
+        else if (metodo.includes('qr')) reparacionesData.qr += monto;
+
+        detallesReparaciones.push({
+          cliente: d.cliente || 'Sin nombre',
+          equipo: `${d.marca || ''} ${d.modelo || ''}`.trim() || 'Equipo',
+          monto: monto,
+          metodo: metodo.includes('qr') ? 'QR' : 'Efectivo'
+        });
+      }
+    });
+  } catch (e) {
+    console.error('Error al leer recibos para cierre:', e);
+    toast('Error al leer recibos. Se usará solo ventas.', 'error');
+  }
+
+  appState.ventasHoy.forEach(v => {
+    const f = parsearFecha(v.fecha);
+    if (f && f.toDateString() === hoyStr) {
+      const monto = Number(v.monto) || 0;
+      const metodo = (v.metodoPago || 'Efectivo').toLowerCase();
+      
+      ventasAccesoriosData.total += monto;
+      ventasAccesoriosData.cantidad++;
+      if (metodo.includes('efectivo')) ventasAccesoriosData.efectivo += monto;
+      else if (metodo.includes('qr')) ventasAccesoriosData.qr += monto;
+
+      detallesVentas.push({
+        producto: v.concepto || 'Venta',
+        monto: monto,
+        metodo: metodo.includes('qr') ? 'QR' : 'Efectivo'
+      });
+    }
+  });
+
+  renderizarVistaPreviaCierre();
+  recalcularCierre();
+  modalPreviewPDF?.classList.add('show');
+}
+
+function renderizarVistaPreviaCierre() {
+  const container = document.getElementById('previewPDFContent');
+  if (!container) return;
+  const hoy = new Date();
+  const fechaStr = `${String(hoy.getDate()).padStart(2,'0')}/${String(hoy.getMonth()+1).padStart(2,'0')}/${hoy.getFullYear()}`;
+
+  let htmlDetalles = '';
+
+  if (detallesReparaciones.length > 0) {
+    htmlDetalles += `
+      <div style="margin-top: 15px;">
+        <h4 style="font-size: 12px; font-weight: bold; border-bottom: 1px solid #ccc; margin-bottom: 5px;">Reparaciones Entregadas</h4>
+        <table style="width: 100%; font-size: 10px; text-align: left;">
+          <tr><th>Equipo / Cliente</th><th style="text-align: right;">Monto</th></tr>
+          ${detallesReparaciones.map(r => `<tr><td>${r.equipo} (${r.cliente}) - ${r.metodo}</td><td style="text-align: right;">Bs. ${r.monto.toFixed(2)}</td></tr>`).join('')}
+        </table>
+      </div>`;
+  }
+
+  if (detallesVentas.length > 0) {
+    htmlDetalles += `
+      <div style="margin-top: 15px;">
+        <h4 style="font-size: 12px; font-weight: bold; border-bottom: 1px solid #ccc; margin-bottom: 5px;">Ventas de Accesorios</h4>
+        <table style="width: 100%; font-size: 10px; text-align: left;">
+          <tr><th>Producto</th><th style="text-align: right;">Monto</th></tr>
+          ${detallesVentas.map(v => `<tr><td>${v.producto} - ${v.metodo}</td><td style="text-align: right;">Bs. ${v.monto.toFixed(2)}</td></tr>`).join('')}
+        </table>
+      </div>`;
+  }
+
+  container.innerHTML = `
+    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
+      <h2 style="font-size: 16px; margin: 0; font-family: 'Helvetica';">DR. XIAOMI SCZ</h2>
+      <p style="margin: 0; font-size: 10px;">Cierre del ${fechaStr}</p>
+    </div>
+    <div style="background: #f0f0f0; padding: 8px; border-radius: 4px; font-size: 11px; margin-bottom: 10px;">
+      <div style="display: flex; justify-content: space-between;"><span>Total Reparaciones:</span> <strong>Bs. ${reparacionesData.total.toFixed(2)}</strong></div>
+      <div style="display: flex; justify-content: space-between;"><span>Total Ventas:</span> <strong>Bs. ${ventasAccesoriosData.total.toFixed(2)}</strong></div>
+    </div>
+    ${htmlDetalles}
+  `;
+}
+
+function leerGastosDelDOM() {
+  const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
+  const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? CONFIG_APP.gastoAlmuerzo : 0;
+  return { pasajes, almuerzo, totalGastos: pasajes + almuerzo };
+}
+
+function calcularResumenCierre(gastos) {
+  const totalGlobal = reparacionesData.total + ventasAccesoriosData.total;
+  const efectivoCaja = reparacionesData.efectivo + ventasAccesoriosData.efectivo;
+  const qrCaja = reparacionesData.qr + ventasAccesoriosData.qr;
+  
+  const aEntregar = Math.max(0, efectivoCaja - gastos.totalGastos);
+  
+  return { totalGlobal, efectivoCaja, qrCaja, aEntregar, totalGastos: gastos.totalGastos };
+}
+
+function recalcularCierre() {
+  const gastos = leerGastosDelDOM();
+  const resumen = calcularResumenCierre(gastos);
+
+  const elTotal = document.getElementById('totalGlobal');
+  const elGanancia = document.getElementById('gananciaGlobal');
+  const elMontoTransf = document.getElementById('montoTransferir');
+
+  if (elTotal) elTotal.textContent = formatBsLimpio(resumen.totalGlobal);
+  if (elGanancia) elGanancia.textContent = formatBsLimpio(resumen.efectivoCaja);
+  if (elMontoTransf) elMontoTransf.textContent = formatBsLimpio(resumen.aEntregar);
+}
+
+function generarPDFCierre(gastos) {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+  const resumen = calcularResumenCierre(gastos);
+
+  pdf.setFillColor(255, 105, 0); pdf.rect(0, 0, 210, 30, 'F');
+  pdf.setTextColor(255, 255, 255); pdf.setFontSize(20); pdf.text('DR. XIAOMI SCZ', 14, 15);
+  pdf.setFontSize(10); pdf.text('Cierre de Caja Diario', 14, 22);
+  pdf.setTextColor(0, 0, 0); pdf.setFontSize(12);
+  pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, 14, 45);
+  pdf.text(`Realizado por: ${appState.sesion?.nombre || 'Técnico'}`, 14, 52);
+
+  pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.text('Resumen Financiero', 14, 65);
+  pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
+  pdf.text(`- Total Cobrado: ${formatBsLimpio(resumen.totalGlobal)}`, 18, 72);
+  pdf.text(`- Efectivo Físico: ${formatBsLimpio(resumen.efectivoCaja)}`, 18, 79);
+  pdf.text(`- QR (Transferencia): ${formatBsLimpio(resumen.qrCaja)}`, 18, 86);
+  pdf.text(`- Gastos (Pasajes/Almuerzo): -${formatBsLimpio(resumen.totalGastos)}`, 18, 93);
+
+  let y = 105;
+
+  if (detallesReparaciones.length > 0) {
+    pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.text('Detalle de Reparaciones Entregadas', 14, y); y += 7;
+    pdf.setFontSize(10); pdf.setFont('helvetica', 'normal');
+    detallesReparaciones.forEach(r => {
+      pdf.text(`${r.equipo} (${r.cliente}) [${r.metodo}]`, 18, y);
+      pdf.text(`${formatBsLimpio(r.monto)}`, 190, y, { align: 'right' });
+      y += 6;
+    });
+    y += 5;
+  }
+
+  if (detallesVentas.length > 0) {
+    pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.text('Detalle de Ventas de Accesorios', 14, y); y += 7;
+    pdf.setFontSize(10); pdf.setFont('helvetica', 'normal');
+    detallesVentas.forEach(v => {
+      pdf.text(`${v.producto} [${v.metodo}]`, 18, y);
+      pdf.text(`${formatBsLimpio(v.monto)}`, 190, y, { align: 'right' });
+      y += 6;
+    });
+    y += 5;
+  }
+
+  pdf.setFillColor(59, 130, 246); pdf.rect(14, y, 182, 20, 'F');
+  pdf.setTextColor(255, 255, 255); pdf.setFontSize(14); pdf.setFont('helvetica', 'bold');
+  pdf.text(`A ENTREGAR AL DUEÑO (Efectivo): ${formatBsLimpio(resumen.aEntregar)}`, 105, y + 13, { align: 'center' });
+
+  pdf.setFontSize(8); pdf.setTextColor(120, 120, 120); pdf.text('Generado automáticamente por DR. Xiaomi', 105, 280, { align: 'center' });
+
+  pdf.save(`Cierre_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+async function guardarCierreEnFirebase(gastos, resumen) {
+  const fechaStr = new Date().toISOString().slice(0, 10);
+  const cierreRef = doc(db, 'cierres', fechaStr);
+
+  const ventasInventario = detallesVentas.map(v => ({
+    nombre: v.producto,
+    cantidad: 1,
+    precio: v.monto,
+    costo: 0,
+    metodoPago: v.metodo
+  }));
+
+  await setDoc(cierreRef, {
+    fecha: serverTimestamp(),
+    realizadoPor: appState.sesion?.nombre || 'Técnico',
+    reparaciones: reparacionesData,
+    ventasAccesorios: ventasAccesoriosData,
+    ventasInventario,
+    extras: [],
+    totalGlobal: resumen.totalGlobal,
+    efectivoCaja: resumen.efectivoCaja,
+    qrCaja: resumen.qrCaja,
+    gastoPasajes: gastos.pasajes,
+    gastoAlmuerzo: gastos.almuerzo,
+    aEntregar: resumen.aEntregar
+  }, { merge: true });
+}
+
+// ==========================================
+// 7. PULL TO REFRESH (Jalar para actualizar)
+// ==========================================
+let touchStartY = 0;
+let touchCurrentY = 0;
+let isPulling = false;
+const pullThreshold = CONFIG_APP.pullThreshold;
+const appContent = document.querySelector('.app-content');
+const pullIndicator = document.getElementById('pullToRefresh');
+const ptrIcon = document.getElementById('ptrIcon');
+
+if (appContent && pullIndicator) {
+  appContent.addEventListener('touchstart', (e) => {
+    if (appContent.scrollTop === 0) {
+      touchStartY = e.touches[0].clientY;
+      isPulling = true;
+    }
+  }, { passive: true });
+
+  appContent.addEventListener('touchmove', (e) => {
+    if (!isPulling) return;
+    touchCurrentY = e.touches[0].clientY;
+    const distance = touchCurrentY - touchStartY;
+
+    if (distance > 0 && appContent.scrollTop === 0) {
+      e.preventDefault(); 
+      const progress = Math.min(distance / pullThreshold, 1);
+      pullIndicator.style.transform = `translateX(-50%) translateY(${progress * 60}px)`;
+      pullIndicator.style.opacity = progress;
+      if (ptrIcon) ptrIcon.style.transform = `rotate(${progress * 360}deg)`;
+    }
+  }, { passive: false });
+
+  appContent.addEventListener('touchend', () => {
+    if (!isPulling) return;
+    const distance = touchCurrentY - touchStartY;
+
+    if (distance > pullThreshold && appContent.scrollTop === 0) {
+      pullIndicator.style.transform = 'translateX(-50%) translateY(50px)';
+      if (ptrIcon) ptrIcon.style.animation = 'spin 0.8s linear infinite'; 
+      
+      if (typeof renderizarTodo === 'function') {
+        renderizarTodo();
+        setTimeout(() => {
+          resetPullToRefresh();
+          playSound('success');
+          toast('Datos actualizados', 'success');
+        }, 600);
+      } else {
+        window.location.reload();
+      }
+    } else {
+      resetPullToRefresh();
+    }
+    
+    isPulling = false;
+    touchStartY = 0;
+    touchCurrentY = 0;
+  });
+
+  function resetPullToRefresh() {
+    pullIndicator.style.transform = 'translateX(-50%) translateY(-60px)';
+    pullIndicator.style.opacity = '0';
+    if (ptrIcon) {
+      ptrIcon.style.animation = 'none';
+      ptrIcon.style.transform = 'rotate(0deg)';
+    }
+  }
+}
