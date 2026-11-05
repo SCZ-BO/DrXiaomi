@@ -26,7 +26,7 @@ const CONFIG_APP = {
 };
 
 // ==========================================
-// 🔥 MOTOR DE SONIDO NATIVO (UI SOUNDS)
+// 🔥 MOTOR DE SONIDO NATIVO MODERNO (UI SOUNDS)
 // ==========================================
 let audioCtx = null;
 
@@ -42,45 +42,65 @@ function initAudio() {
 function playSound(type) {
   try {
     initAudio();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-
     const now = audioCtx.currentTime;
+    
+    // Función auxiliar para crear un oscilador
+    const createOsc = (freqStart, freqEnd, duration, gainVal, waveType) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = waveType;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(freqStart, now);
+      osc.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
+      gain.gain.setValueAtTime(gainVal, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      osc.start(now);
+      osc.stop(now + duration);
+    };
+
+    // Función auxiliar para crear un "ruido" (sonidos modernos)
+    const createNoise = (duration, filterFreq, gainVal) => {
+      const bufferSize = audioCtx.sampleRate * duration;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = filterFreq;
+      
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(gainVal, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      noise.start(now);
+    };
 
     if (type === 'click') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(600, now);
-      osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-      osc.start(now);
-      osc.stop(now + 0.05);
-    } else if (type === 'pop') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(400, now);
-      osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
-      gain.gain.setValueAtTime(0.4, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-      osc.start(now);
-      osc.stop(now + 0.08);
-    } else if (type === 'success') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(523.25, now);
-      osc.frequency.setValueAtTime(783.99, now + 0.1);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-      osc.start(now);
-      osc.stop(now + 0.3);
-    } else if (type === 'error') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(150, now);
-      osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-      osc.start(now);
-      osc.stop(now + 0.15);
+      // Un "Tick" seco y agudo (Estilo iOS)
+      createOsc(1500, 500, 0.04, 0.2, 'triangle');
+      createNoise(0.02, 5000, 0.1);
+    } 
+    else if (type === 'pop') {
+      // Un "Bloop" rápido (Estilo Material Design)
+      createOsc(800, 200, 0.1, 0.3, 'sine');
+    } 
+    else if (type === 'success') {
+      // Dos notas cristalinas rápidas (Do agudo y Sol)
+      createOsc(1046.50, 1046.50, 0.1, 0.2, 'sine'); // C6
+      setTimeout(() => createOsc(1567.98, 1567.98, 0.2, 0.2, 'sine'), 80); // G6
+    } 
+    else if (type === 'error') {
+      // Un zumbido moderno y opaco
+      createOsc(200, 150, 0.15, 0.3, 'square');
+      createNoise(0.1, 1000, 0.05);
     }
   } catch (e) { console.warn('Audio error', e); }
 }
@@ -666,6 +686,12 @@ function resetVentaModal() {
   document.getElementById('ventaServicioStep').style.display = 'none';
   document.getElementById('productoSeleccionadoInfo').style.display = 'none';
   document.getElementById('btnRegistrarAccesorio').disabled = true;
+  
+  // 🔥 LIMPIAR CAMPOS DE SERVICIO
+  const ventaMonto = document.getElementById('ventaMonto');
+  if (ventaMonto) ventaMonto.value = '';
+  const ventaConceptoOtro = document.getElementById('ventaConceptoOtro');
+  if (ventaConceptoOtro) ventaConceptoOtro.value = '';
 }
 
 // ==========================================
