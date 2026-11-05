@@ -853,13 +853,14 @@ window.cambiarPagina = (p) => {
 function renderCardTelefono(o) {
   const est = o.estadoOrden || 'recibido';
   
+  // 🔥 PALETA DE COLORES PARA TELÉFONOS
   const info = { 
     recibido: { t: 'Recibido', c: 'var(--warning-500)' }, 
-    reparacion: { t: 'Reparación', c: 'var(--brand-500)' }, 
-    'espera-repuesto': { t: 'Repuesto', c: 'var(--purple-500)' }, 
-    listo: { t: 'Listo', c: 'var(--yellow-500)' }, 
-    entregado: { t: 'Entregado', c: 'var(--success-500)' }, 
-    devuelto: { t: 'Devuelto', c: 'var(--danger-500)' }
+    reparacion: { t: 'Reparación', c: 'var(--danger-500)' }, // 🔴 ROJO
+    'espera-repuesto': { t: 'Repuesto', c: 'var(--purple-500)' }, // Morado
+    listo: { t: 'Listo', c: 'var(--yellow-500)' }, // Amarillo
+    entregado: { t: 'Entregado', c: 'var(--success-500)' }, // 🟢 VERDE
+    devuelto: { t: 'Devuelto', c: '#6B7280' } // ⚪ PLOMO/GRIS
   }[est] || { t: est, c: 'var(--text-3)' };
   
   return `
@@ -886,19 +887,21 @@ function renderCardVenta(v, tipo) {
   const hora = f ? `${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')}` : '';
   
   let iconoNombre = 'venta';
-  let cor = 'var(--warning-500)'; // 🔥 AMARILLO por defecto (Accesorios)
+  let cor = '#FFFFFF'; // ⚪ BLANCO por defecto (Accesorios)
 
+  // 🔥 DISTINGUIR SERVICIOS (Naranja) DE ACCESORIOS (Blanco)
   if (v.concepto === 'Botón' || v.concepto === 'Limpieza' || v.concepto === 'Reactivación' || v.concepto === 'Cargador' || v.concepto === 'Otro') {
-    cor = 'var(--purple-500)'; // Morado para servicios
+    cor = 'var(--brand-500)'; // 🟠 NARANJA para servicios
     if (v.concepto === 'Botón') iconoNombre = 'bateria'; 
     else if (v.concepto === 'Limpieza') iconoNombre = 'servicios';
     else if (v.concepto === 'Reactivación') iconoNombre = 'estado';
     else if (v.concepto === 'Cargador') iconoNombre = 'bateria';
   } else {
-    cor = 'var(--warning-500)'; // 🔥 AMARILLO para accesorios
+    cor = '#FFFFFF'; // ⚪ BLANCO para accesorios
     iconoNombre = 'venta';
   }
   
+  // 🔥 CALCULAR GANANCIA
   const esAdmin = appState.sesion?.rol === 'admin';
   const monto = Number(v.monto) || 0;
   const costo = Number(v.costo) || 0;
