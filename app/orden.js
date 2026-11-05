@@ -1,25 +1,21 @@
 /* ============================================================
    DR. XIAOMI · ORDEN (VERSIÓN PRO FINAL - v8)
    Archivo: app/orden.js
-   Cambios v8:
-     - Integración con el nuevo orden.html (modal de servicio en HTML,
-       toast del HTML, iconos con gradiente, theme del HTML).
-     - Se eliminó listener duplicado de themeToggle (lo maneja el HTML).
-     - Se mantiene todo lo de v7: agregar/editar/eliminar servicios.
    ============================================================ */
 
-import { requireAuth } from '/js/app-auth.js';
+// 🔥 AQUÍ ESTABA EL ERROR: Rutas relativas corregidas (./js/ en lugar de /js/)
+import { requireAuth } from './js/app-auth.js';
 import {
   toast as toastUI, haptic, initTheme, escapeHtml,
   formatBs, tiempoRelativo, showLoading, hideLoading
-} from '/js/app-ui.js';
-import { db } from '/js/firebase.js';
+} from './js/app-ui.js';
+import { db } from './js/firebase.js';
 import {
   doc, updateDoc, deleteDoc,
   serverTimestamp, arrayUnion, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-import '/js/dictado.js';
+import './js/dictado.js';
 
 /* ============================================================
    CONFIGURACIÓN Y ESTILOS GLOBALES
@@ -58,7 +54,6 @@ styleGlobal.textContent = `
   }
   .modal-backdrop .modal .btn-modal-confirm:active { transform: scale(0.98); }
 
-  /* 🔥 NUEVO: estilos para servicios */
   .servicio-row-acciones { display:flex; gap:6px; justify-content:flex-end; }
   .btn-servicio-mini {
     width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
@@ -100,19 +95,17 @@ let fotosNuevas = [];
 let unsubscribe = null;
 
 /* ============================================================
-   TOAST ADAPTADO AL HTML NUEVO (usa #toast con icono colorido)
+   TOAST ADAPTADO AL HTML NUEVO
    ============================================================ */
 function toast(msg, tipo = 'success', duracion = 2500) {
-  // Si el HTML tiene el #toast nuevo, lo usamos.
   const toastEl = document.getElementById('toast');
   const toastText = document.getElementById('toastText');
   const toastIcon = document.getElementById('toastIcon');
 
   if (toastEl && toastText && toastIcon) {
     toastText.textContent = msg;
-    // Icono y color según tipo
     let iconClass = 'fas fa-check-circle';
-    let color = '#34C759'; // verde
+    let color = '#34C759';
     if (tipo === 'error') { iconClass = 'fas fa-times-circle'; color = '#FF3B30'; }
     else if (tipo === 'info') { iconClass = 'fas fa-info-circle'; color = '#0A84FF'; }
     else if (tipo === 'warning') { iconClass = 'fas fa-exclamation-triangle'; color = '#FFB800'; }
@@ -124,18 +117,12 @@ function toast(msg, tipo = 'success', duracion = 2500) {
     return;
   }
 
-  // Fallback: usar el toast de app-ui.js
   toastUI(msg, tipo, duracion);
 }
 
 /* ============================================================
    INICIALIZACIÓN
    ============================================================ */
-// 🔥 CAMBIO: NO llamamos initTheme() aquí porque el HTML ya maneja
-// el tema con su propio script (theme-color dinámico + prefers-color-scheme).
-// Si lo dejamos, se cambia dos veces y vuelve al original.
-// initTheme();
-
 requireAuth(async (s) => {
   sesion = s;
   await iniciar();
@@ -154,15 +141,9 @@ async function iniciar() {
     return;
   }
 
-  // Back button
   document.getElementById('backBtn')?.addEventListener('click', () => {
     haptic(10); window.location.href = '/app/';
   });
-
-  // 🔥 CAMBIO: Eliminado el listener de themeToggle.
-  // El HTML ya lo maneja con localStorage + prefers-color-scheme.
-  // Si lo dejamos aquí, el tema cambia dos veces (se anula).
-  // document.getElementById('themeToggle')?.addEventListener('click', () => { ... });
 
   await cargarOrden();
 }
@@ -265,7 +246,6 @@ function renderOrden() {
   `).join('');
 
   cont.innerHTML = `
-    <!-- 1. RECIBO -->
     <div class="card">
       <div class="card-header">
         <div class="card-title">📋 Detalle del Recibo</div>
@@ -290,7 +270,6 @@ function renderOrden() {
           <tbody>${serviciosHtml}</tbody>
         </table>
 
-        <!-- 🔥 NUEVO: botón para agregar servicio (visible para técnico y admin) -->
         <button id="btnAgregarServicio" class="btn-grande" style="margin-top:12px; background:var(--bg-elev); color:var(--brand); border:1px dashed var(--brand);">
           <i class="fas fa-plus icon-gradiente-verde"></i> Agregar servicio
         </button>
@@ -303,7 +282,6 @@ function renderOrden() {
 
     ${fotosHtml}
 
-    <!-- 2. ACCIONES -->
     <div class="card">
       <div class="card-title">📱 Acciones</div>
       <div style="display:flex; gap:12px; margin-top:8px;">
@@ -316,13 +294,11 @@ function renderOrden() {
       </div>
     </div>
 
-    <!-- 3. CAMBIAR ESTADO -->
     <div class="card">
       <div class="card-title">🔄 Cambiar estado</div>
       <div class="estados-grid" style="margin-top:12px;">${estadosBotones}</div>
     </div>
 
-    <!-- 4. COSTOS (admin) -->
     ${sesion.rol === 'admin' ? `
       <div class="card" style="border-color:rgba(16,185,129,0.3);">
         <div class="card-title" style="color:#10B981;">💰 Costos y ganancia</div>
@@ -336,7 +312,6 @@ function renderOrden() {
       </div>
     ` : ''}
 
-    <!-- 5. BITÁCORA -->
     <div class="card">
       <div class="card-title">📋 Bitácora</div>
       <div style="margin-bottom:16px;">
@@ -350,7 +325,6 @@ function renderOrden() {
       <div id="historialBitacora">${renderBitacora()}</div>
     </div>
 
-    <!-- 6. ADMIN -->
     ${sesion.rol === 'admin' ? `
       <div class="card" style="border-color: rgba(239,68,68,0.3);">
         <div class="card-title" style="color:#EF4444;">⚙️ Admin</div>
@@ -358,16 +332,12 @@ function renderOrden() {
       </div>
     ` : ''}
 
-    <!-- 7. VOLVER -->
     <button id="btnVolverPanelFinal" class="btn-grande btn-pdf" style="margin-top:8px; margin-bottom:24px; padding:16px; font-size:15px;"><i class="fas fa-home"></i> VOLVER AL PANEL</button>
   `;
 
   configurarEventosOrden();
 }
 
-/* ============================================================
-   BITÁCORA
-   ============================================================ */
 function renderBitacora() {
   const bitacora = Array.isArray(orden.bitacora) ? orden.bitacora : [];
   const ordenada = [...bitacora].sort((a, b) => {
@@ -397,9 +367,6 @@ function renderBitacora() {
   }).join('');
 }
 
-/* ============================================================
-   EVENTOS
-   ============================================================ */
 function configurarEventosOrden() {
   document.querySelectorAll('.estado-btn').forEach(btn => {
     btn.addEventListener('click', () => cambiarEstado(btn.dataset.estado));
@@ -427,10 +394,8 @@ function configurarEventosOrden() {
   document.getElementById('btnRegenerarPDF')?.addEventListener('click', () => { haptic(15); regenerarYEnviarPDF(); });
   document.getElementById('btnVolverPanelFinal')?.addEventListener('click', () => { haptic(15); window.location.href = '/app/'; });
 
-  // Botón agregar servicio
   document.getElementById('btnAgregarServicio')?.addEventListener('click', () => abrirModalServicio());
 
-  // Botones editar/eliminar servicio
   document.querySelectorAll('[data-edit-serv]').forEach(btn => {
     btn.addEventListener('click', () => {
       const idx = parseInt(btn.dataset.editServ, 10);
@@ -465,9 +430,6 @@ function configurarEventosOrden() {
   }
 }
 
-/* ============================================================
-   🔥 NUEVO: MODAL DE SERVICIO (usa el del HTML nuevo)
-   ============================================================ */
 function abrirModalServicio(idxEditar = null) {
   haptic(15);
   const esEdicion = idxEditar !== null && idxEditar !== undefined;
@@ -476,7 +438,6 @@ function abrirModalServicio(idxEditar = null) {
 
   const backdrop = document.getElementById('modalServicioBackdrop');
   if (!backdrop) {
-    // Fallback: si el HTML no tiene el modal, inyectarlo (por si acaso)
     console.warn('modalServicioBackdrop no encontrado en HTML, inyectando.');
     return abrirModalServicioFallback(idxEditar);
   }
@@ -491,7 +452,6 @@ function abrirModalServicio(idxEditar = null) {
 
   backdrop.classList.add('show');
 
-  // Limpiar listeners anteriores clonando botones
   const btnCancelar = document.getElementById('modalServicioCancelar');
   const btnGuardar = document.getElementById('modalServicioGuardar');
 
@@ -516,14 +476,11 @@ function abrirModalServicio(idxEditar = null) {
     cerrarModal();
   });
 
-  // Cerrar al tocar el backdrop
   backdrop.onclick = (e) => { if (e.target === backdrop) cerrarModal(); };
 
-  // Focus en descripción
   setTimeout(() => descEl?.focus(), 100);
 }
 
-// Fallback por si el HTML no tiene el modal (no debería pasar con el nuevo HTML)
 function abrirModalServicioFallback(idxEditar = null) {
   const esEdicion = idxEditar !== null && idxEditar !== undefined;
   const servicios = Array.isArray(orden.servicios) ? orden.servicios : [];
@@ -633,9 +590,6 @@ async function eliminarServicio(idx) {
   } finally { hideLoading(); }
 }
 
-/* ============================================================
-   CAMBIAR ESTADO
-   ============================================================ */
 async function cambiarEstado(nuevoEstado) {
   if (!nuevoEstado || !ESTADOS[nuevoEstado]) return;
   const estadoActual = orden.estadoOrden || 'recibido';
@@ -651,9 +605,6 @@ async function cambiarEstado(nuevoEstado) {
   finally { hideLoading(); }
 }
 
-/* ============================================================
-   MODAL DE COBRO
-   ============================================================ */
 function abrirModalCobro() {
   haptic(15);
   const total = Number(orden.total) || 0;
@@ -736,9 +687,6 @@ async function confirmarCobro(monto, metodo) {
   finally { hideLoading(); }
 }
 
-/* ============================================================
-   MODAL DE COSTO
-   ============================================================ */
 function abrirModalCosto() {
   if (sesion.rol !== 'admin') return;
   haptic(15);
@@ -820,9 +768,6 @@ function abrirModalCosto() {
   modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); } });
 }
 
-/* ============================================================
-   MODAL DE FECHA
-   ============================================================ */
 function abrirModalFecha() {
   if (sesion.rol !== 'admin') return;
   haptic(15);
@@ -878,9 +823,6 @@ function abrirModalFecha() {
   modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); } });
 }
 
-/* ============================================================
-   WHATSAPP
-   ============================================================ */
 function contactarCliente() {
   if (!orden.telefono) { toast('La orden no tiene teléfono', 'error'); return; }
   haptic(15);
@@ -891,9 +833,6 @@ function contactarCliente() {
   window.open(`https://wa.me/591${tel}?text=${encodeURIComponent(mensaje)}`, '_blank', 'noopener,noreferrer');
 }
 
-/* ============================================================
-   REGENERAR PDF
-   ============================================================ */
 async function regenerarYEnviarPDF() {
   if (!orden.telefono) { toast('La orden no tiene teléfono', 'error'); return; }
   showLoading('Generando PDF...');
@@ -973,9 +912,6 @@ async function regenerarYEnviarPDF() {
   }
 }
 
-/* ============================================================
-   GUARDAR NOTA
-   ============================================================ */
 async function guardarNota() {
   const notaInput = document.getElementById('nuevaNota');
   const texto = (notaInput.value || '').trim();
@@ -991,9 +927,6 @@ async function guardarNota() {
   finally { hideLoading(); }
 }
 
-/* ============================================================
-   FOTOS
-   ============================================================ */
 function renderFotosNuevas() {
   const cont = document.getElementById('fotoUploader');
   if (!cont) return;
@@ -1012,9 +945,6 @@ function renderFotosNuevas() {
   });
 }
 
-/* ============================================================
-   ELIMINAR
-   ============================================================ */
 async function eliminarOrden() {
   if (sesion.rol !== 'admin') return;
   const confirmar = confirm('¿Eliminar esta orden?\n\nEsta acción NO se puede deshacer.');
@@ -1028,9 +958,6 @@ async function eliminarOrden() {
   } catch (err) { toast('Error al eliminar', 'error'); hideLoading(); }
 }
 
-/* ============================================================
-   UTILIDADES
-   ============================================================ */
 function formatFecha(fecha) {
   if (!fecha) return '-';
   let d;
