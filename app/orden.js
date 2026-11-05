@@ -15,7 +15,7 @@ import {
   serverTimestamp, arrayUnion, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-import './js/dictado.js';
+// 🔥 ELIMINADO (404): import './js/dictado.js'; (Causaba error y rompía todo)
 
 /* ============================================================
    CONFIGURACIÓN Y ESTILOS GLOBALES
