@@ -16,15 +16,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- NUESTROS CSS UNIFICADOS -->
-  <link rel="stylesheet" href="./css/app-theme.css">
-  <link rel="stylesheet" href="./css/app-layouts.css">
-  <link rel="stylesheet" href="./css/app-components.css">
-  <link rel="manifest" href="/manifest.json">
+  <!-- 🔥 AQUÍ ESTÁ LA CORRECCIÓN DE RUTAS A CSS Y MANIFEST -->
+  <link rel="stylesheet" href="/app/css/app-theme.css">
+  <link rel="stylesheet" href="/app/css/app-layouts.css">
+  <link rel="stylesheet" href="/app/css/app-components.css">
+  <link rel="manifest" href="/app/manifest.json">
 
   <!-- ESTILOS ESPECÍFICOS DE ESTA PÁGINA -->
   <style>
-    /* 🔥 FORZAR ANIMACIÓN DEL LOADER */
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loader-ring {
       position: absolute; inset: 0; border-radius: 50%; 
@@ -64,7 +63,6 @@
 </head>
 <body>
 
-  <!-- LOADER CON LOGO Y ANILLO GIRATORIO -->
   <div class="loading-overlay" id="appLoader">
     <div class="loading-card">
       <div class="loader-ring" style="width:60px; height:60px; margin: 0 auto 16px;"></div>
@@ -74,7 +72,6 @@
   </div>
 
   <main class="app-container">
-    <!-- HEADER CON TUS ICONOS -->
     <header class="app-header">
       <div class="brand">
         <button class="icon-btn" id="backBtn" aria-label="Volver">
@@ -95,13 +92,9 @@
       </div>
     </header>
 
-    <!-- CONTENIDO INYECTADO POR JS -->
-    <div class="app-content" id="contenido">
-      <!-- Aquí se inyecta todo desde orden.js -->
-    </div>
+    <div class="app-content" id="contenido"></div>
   </main>
 
-  <!-- VISOR DE IMÁGENES -->
   <div class="sheet-backdrop" id="imgViewer" style="align-items: center; background: rgba(0,0,0,0.95);">
     <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px;">
       <button class="icon-btn" id="imgViewerCerrar" style="position: absolute; top: 20px; right: 20px;"><i class="fas fa-times"></i></button>
@@ -109,7 +102,6 @@
     </div>
   </div>
 
-  <!-- MODAL: AGREGAR/EDITAR SERVICIO -->
   <div class="sheet-backdrop" id="modalServicioBackdrop">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -129,14 +121,14 @@
     </div>
   </div>
 
-  <!-- SCRIPT PRINCIPAL -->
-  <script type="module" src="./orden.js"></script>
+  <!-- 🔥 AQUÍ ESTÁ LA CORRECCIÓN DE RUTA DEL SCRIPT -->
+  <script type="module" src="/app/orden.js"></script>
   
   <script>
     setTimeout(() => {
       const loader = document.getElementById('appLoader');
       if (loader) loader.style.display = 'none';
-    }, 1500);
+    }, 3000);
   </script>
 </body>
 </html>
