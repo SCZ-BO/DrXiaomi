@@ -21,7 +21,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- 🔥 TUS ESTILOS GLOBALES DE LA APP 🔥 -->
+  <!-- TUS ESTILOS GLOBALES DE LA APP -->
   <link rel="stylesheet" href="/app/css/app-theme.css">
   <link rel="stylesheet" href="/app/css/app-layouts.css">
   <link rel="stylesheet" href="/app/css/app-components.css">
@@ -32,16 +32,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
-    /* ============================================================
-       ADAPTACIÓN DEL TEMA GLOBAL
-    ============================================================ */
     :root {
       --radius-sm: var(--r-sm, 4px);
       --radius-md: var(--r-md, 8px);
       --radius-lg: var(--r-lg, 12px);
       --brand: var(--brand-500, #FF6900); 
       --brand-hover: var(--brand-600, #E65100); 
-      --brand-light: rgba(255, 105, 0, 0.1); 
+      --brand-light: rgba(255, 105, 0, 0.15); 
     }
     
     [data-theme="dark"] { 
@@ -67,7 +64,7 @@
     body { background-color: var(--bg-main); color: var(--text-main); font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
     
     .app-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-main); border-bottom: 1px solid var(--border); z-index: 100; }
-    .app-body { flex: 1; overflow-y: auto; padding: 12px 12px 12px 12px; -webkit-overflow-scrolling: touch; }
+    .app-body { flex: 1; overflow-y: auto; padding: 12px; -webkit-overflow-scrolling: touch; }
     
     .brand { display: flex; align-items: center; gap: 10px; }
     .brand-logo { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -79,87 +76,212 @@
     .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
     .icon-btn:active { transform: scale(0.95); }
 
+    /* BOTONES DEL HEADER COLORIDOS */
+    .header-actions .icon-btn#homeBtn { color: #3B82F6; border-color: rgba(59, 130, 246, 0.3); }
+    .header-actions .icon-btn#themeToggleBtn { color: #F59E0B; border-color: rgba(245, 158, 11, 0.3); }
+    .header-actions .icon-btn#clearDraftBtn { color: #EF4444; border-color: rgba(239, 68, 68, 0.3); }
+    .header-actions .icon-btn#preciosBtn { color: #10B981; border-color: rgba(16, 185, 129, 0.3); }
+    .header-actions .icon-btn#reportesBtn { color: #8B5CF6; border-color: rgba(139, 92, 246, 0.3); }
+    .header-actions .icon-btn#logoutBtn { color: #EF4444; border-color: rgba(239, 68, 68, 0.3); }
+
     .wizard-progress { padding: 4px 0 16px 0; display: flex; justify-content: center; gap: 8px; }
     .wizard-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg-elev); transition: 0.3s; }
     .wizard-dot.active { background: var(--brand); transform: scale(1.2); }
     .wizard-dot.done { background: var(--brand); opacity: 0.5; }
 
-    .step-indicator { font-size: 11px; font-weight: 600; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; }
+    .step-indicator { font-size: 11px; font-weight: 700; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     
-    /* 🔥 INPUTS CORREGIDOS: Fondo oscuro forzado */
-    .field { position: relative; margin-bottom: 10px; }
+    /* INPUTS */
+    .field { position: relative; margin-bottom: 12px; }
     .field input, .field textarea { 
       width: 100%; 
-      padding: 12px 12px; 
-      background: var(--bg-elev-2) !important; 
-      border: 1px solid var(--border-1) !important; 
+      padding: 14px 12px; 
+      background: var(--bg-elev) !important; 
+      border: 1.5px solid var(--border) !important; 
       border-radius: var(--radius-sm); 
-      color: var(--text-1) !important; 
+      color: var(--text-main) !important; 
       font-size: 14px; 
       font-family: inherit; 
       transition: 0.2s; 
       outline: none; 
     }
-    .field input:focus, .field textarea:focus { border-color: var(--brand) !important; background: var(--bg-card) !important; }
-    .field label { position: absolute; left: 12px; top: 12px; font-size: 13px; color: var(--text-mute); transition: 0.2s; pointer-events: none; }
+    .field input:focus, .field textarea:focus { border-color: var(--brand) !important; background: var(--bg-card) !important; box-shadow: 0 0 0 3px var(--brand-light); }
+    .field label { position: absolute; left: 12px; top: 14px; font-size: 13px; color: var(--text-mute); transition: 0.2s; pointer-events: none; }
     .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label, .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label { top: 4px; font-size: 9px; font-weight: 700; color: var(--brand); }
 
-    .field-title { font-size: 11px; font-weight: 700; margin-bottom: 8px; display: block; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
-    .marcas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
-    .marca-btn { padding: 10px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; font-size: 11px; cursor: pointer; transition: 0.2s; }
-    .marca-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
+    .field-title { font-size: 11px; font-weight: 700; margin-bottom: 10px; display: block; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
     
-    .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .radio-option { padding: 12px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: 0.2s; }
-    .radio-option.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
-    .radio-option i { font-size: 14px; }
+    /* MARCAS */
+    .marcas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+    .marca-btn { 
+      padding: 12px 6px; 
+      border-radius: var(--radius-sm); 
+      border: 2px solid transparent; 
+      background: var(--bg-elev); 
+      color: var(--text-main); 
+      font-weight: 700; 
+      font-size: 11px; 
+      cursor: pointer; 
+      transition: 0.3s; 
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    /* 🔥 EFECTO FOCUS PARA MARCAS */
+    .marcas-grid:has(.marca-btn.active) .marca-btn:not(.active) {
+      opacity: 0.3;
+      filter: grayscale(1);
+      transform: scale(0.95);
+    }
+    .marca-btn.active { 
+      border-color: var(--brand) !important; 
+      color: #fff !important; 
+      transform: scale(1.05);
+      box-shadow: 0 0 15px var(--brand-light);
+      background: var(--brand) !important;
+      opacity: 1 !important;
+      filter: none !important;
+    }
+    
+    /* RADIO OPTIONS */
+    .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .radio-option { 
+      padding: 14px 6px; 
+      border-radius: var(--radius-sm); 
+      border: 2px solid transparent; 
+      background: var(--bg-elev); 
+      color: var(--text-main); 
+      font-weight: 600; 
+      font-size: 12px; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 6px; 
+      cursor: pointer; 
+      transition: 0.3s; 
+    }
+    .radio-option i { font-size: 18px; }
+    
+    /* 🔥 EFECTO FOCUS PARA ENCIENDE */
+    #enciendeGroup:has(.radio-option.active) .radio-option:not(.active),
+    #tipoSeguridadGroup:has(.radio-option.active) .radio-option:not(.active) {
+      opacity: 0.3;
+      filter: grayscale(1);
+      transform: scale(0.95);
+    }
 
-    .chips-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-    .chip-btn { padding: 10px 14px; border-radius: var(--radius-sm); background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-    .chip-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 700; }
+    .radio-option[data-value="Sí"] { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); }
+    .radio-option[data-value="Sí"] i { color: #22C55E; }
+    .radio-option[data-value="No"] { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
+    .radio-option[data-value="No"] i { color: #EF4444; }
+    .radio-option[data-value="A veces"] { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); }
+    .radio-option[data-value="A veces"] i { color: #F59E0B; }
 
-    .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
-    .check-item { padding: 10px 4px; background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); font-size: 10px; font-weight: 500; cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; text-align: center; white-space: nowrap; }
-    .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 11px; }
-    .check-item.ok { background: rgba(34, 197, 94, 0.1); border-color: #22C55E; color: #22C55E; }
+    .radio-option[data-value="patron"] { background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3); }
+    .radio-option[data-value="patron"] i { color: #8B5CF6; }
+    .radio-option[data-value="pin"] { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); }
+    .radio-option[data-value="pin"] i { color: #3B82F6; }
+    .radio-option[data-value="ninguno"] { background: rgba(156, 163, 175, 0.1); border-color: rgba(156, 163, 175, 0.3); }
+    .radio-option[data-value="ninguno"] i { color: #9CA3AF; }
+
+    .radio-option.active { 
+      border-color: var(--brand) !important; 
+      color: #fff !important; 
+      transform: scale(1.05);
+      box-shadow: 0 0 15px var(--brand-light);
+      background: var(--brand) !important;
+      opacity: 1 !important;
+      filter: none !important;
+    }
+    .radio-option.active i { color: #fff !important; }
+
+    /* CHIPS */
+    .chips-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .chip-btn { 
+      padding: 10px 16px; 
+      border-radius: 2rem; 
+      background: var(--bg-elev); 
+      border: 2px solid transparent; 
+      color: var(--text-main); 
+      font-size: 12px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      gap: 6px; 
+      transition: 0.3s; 
+    }
+    
+    /* 🔥 EFECTO FOCUS PARA MOTIVOS */
+    .chips-group:has(.chip-btn.active) .chip-btn:not(.active) {
+      opacity: 0.3;
+      filter: grayscale(1);
+      transform: scale(0.95);
+    }
+
+    .chip-btn[data-value="Cambio de pantalla"] { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); }
+    .chip-btn[data-value="Cambio de batería"] { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); }
+    .chip-btn[data-value="Módulo de carga"] { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); }
+    .chip-btn[data-value="Cambio de tapa"] { background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3); }
+    .chip-btn[data-value="Cambio de visor cámara"] { background: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.3); }
+    .chip-btn[data-value="Problema de placa"] { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
+    .chip-btn[data-value="Otro"] { background: rgba(156, 163, 175, 0.1); border-color: rgba(156, 163, 175, 0.3); }
+
+    .chip-btn.active { 
+      background: var(--brand) !important; 
+      border-color: var(--brand) !important; 
+      color: #fff !important; 
+      transform: scale(1.05); 
+      box-shadow: 0 0 15px var(--brand-light); 
+      opacity: 1 !important;
+      filter: none !important;
+    }
+
+    /* CHECKLIST */
+    .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
+    .check-item { padding: 12px 4px; background: var(--bg-elev); border: 2px solid transparent; border-radius: var(--radius-sm); color: var(--text-main); font-size: 10px; font-weight: 600; cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; text-align: center; white-space: nowrap; }
+    .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 12px; }
+    .check-item.ok { background: rgba(34, 197, 94, 0.15); border-color: #22C55E; color: #22C55E; transform: scale(0.95); }
     .check-item.ok::before { content: '✓'; color: #22C55E; }
-    .check-item.falla { background: rgba(239, 68, 68, 0.1); border-color: #EF4444; color: #EF4444; }
+    .check-item.falla { background: rgba(239, 68, 68, 0.15); border-color: #EF4444; color: #EF4444; transform: scale(0.95); }
     .check-item.falla::before { content: '✕'; color: #EF4444; }
 
-    .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .foto-slot { aspect-ratio: 4/3; border-radius: var(--radius-sm); border: 1px dashed var(--border); background: var(--bg-elev); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-mute); font-size: 11px; cursor: pointer; position: relative; overflow: hidden; }
+    /* FOTOS */
+    .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .foto-slot { aspect-ratio: 4/3; border-radius: var(--radius-sm); border: 2px dashed var(--border); background: var(--bg-elev); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-mute); font-size: 12px; font-weight: 600; cursor: pointer; position: relative; overflow: hidden; transition: 0.2s; }
+    .foto-slot:active { border-color: var(--brand); color: var(--brand); }
     .foto-slot img { width: 100%; height: 100%; object-fit: cover; }
-    .foto-remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: var(--radius-sm); background: rgba(0,0,0,0.7); color: white; border: none; display: flex; align-items: center; justify-content: center; }
+    .foto-remove { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.8); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-    .servicio-item { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
-    .servicio-item input.servicio-desc { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-main); }
-    .servicio-item input.servicio-costo { width: 80px; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); color: var(--brand); font-weight: 700; text-align: right; }
-    .removeServicio { width: 38px; height: 38px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.2); cursor: pointer; }
+    /* SERVICIOS */
+    .servicio-item { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+    .servicio-item input.servicio-desc { flex: 1; padding: 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; }
+    .servicio-item input.servicio-costo { width: 90px; padding: 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-elev); color: var(--brand); font-weight: 700; text-align: right; }
+    .removeServicio { width: 42px; height: 42px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1.5px solid rgba(239, 68, 68, 0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    .resumen-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 500; margin-bottom: 10px; }
-    .resumen-saldo { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; color: var(--brand); font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+    /* RESUMEN */
+    .resumen-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+    .resumen-saldo { border-top: 2px dashed var(--border); padding-top: 12px; margin-top: 12px; color: var(--brand); font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
 
-    .wizard-footer { 
-      padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); 
-      background: var(--bg-main); border-top: 1px solid var(--border); 
-      display: flex; gap: 8px; z-index: 100; 
-    }
-    .btn { padding: 14px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
-    .btn-primary { background: var(--brand); color: white; }
-    .btn-primary:active { background: var(--brand-hover); transform: scale(0.98); }
-    .btn-secondary { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border); }
+    /* FOOTER */
+    .wizard-footer { padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); background: var(--bg-main); border-top: 1px solid var(--border); display: flex; gap: 10px; z-index: 100; }
+    .btn { padding: 16px; border-radius: var(--radius-md); font-size: 15px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+    .btn-primary { background: linear-gradient(135deg, var(--brand), #FF8C00); color: white; box-shadow: 0 4px 16px -4px rgba(255, 105, 0, 0.5); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-secondary { background: var(--bg-elev); color: var(--text-main); border: 1.5px solid var(--border); }
     #btnPrev { flex: 0 0 50px; padding: 14px 0; }
     #btnNext, #btnGenerate { flex: 1; }
 
-    .sheet-backdrop, .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 9999; }
+    /* MODALES */
+    .sheet-backdrop, .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 9999; backdrop-filter: blur(4px); }
     .sheet-backdrop { align-items: flex-end; }
     .sheet-backdrop.show, .modal-backdrop.show { opacity: 1; pointer-events: auto; }
-    .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 20px; width: 100%; max-width: 550px; border-top: 1px solid var(--border); }
-    .modal { background: var(--bg-card); padding: 20px; border-radius: var(--radius-md); width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
+    .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 24px; width: 100%; max-width: 550px; border-top: 2px solid var(--brand); }
+    .modal { background: var(--bg-card); padding: 24px; border-radius: var(--radius-lg); width: 90%; max-width: 400px; text-align: center; border: 2px solid var(--border); }
     .hidden { display: none !important; }
 
-    .preview-recibo { background: white; color: #1a1a1a; border-radius: var(--radius-sm); padding: 16px; font-size: 12px; }
+    /* PREVIEW RECIBO */
+    .preview-recibo { background: white; color: #1a1a1a; border-radius: var(--radius-md); padding: 16px; font-size: 12px; }
     .preview-header { border-bottom: 2px solid var(--brand); margin: -16px -16px 12px; padding: 12px 16px; display: flex; align-items: center; gap: 8px; background: #f9fafb;}
     .preview-header img { width: 32px; height: 32px; object-fit: contain; }
     .preview-section { background: #f9fafb; border-radius: var(--radius-sm); padding: 10px; margin-bottom: 10px; border: 1px solid #eee; }
@@ -171,7 +293,6 @@
 <body>
 
   <header class="app-header">
-    <!-- 🔥 HEADER CORREGIDO: Flecha alineada a la izquierda -->
     <div class="brand">
       <button class="icon-btn" id="backToPanelBtn" style="margin-right: 8px;"><i class="fas fa-arrow-left"></i></button>
       <div class="brand-logo" style="width: 32px; height: 32px;"><img src="/imagenes/web-app-manifest-192x192.png" onerror="this.style.display='none'"></div>
@@ -179,7 +300,7 @@
     </div>
     
     <div class="header-actions">
-      <button class="icon-btn" id="homeBtn" title="Ir al Panel Principal"><i class="fas fa-home"></i></button>
+      <button class="icon-btn" id="homeBtn" title="Ir al Panel Principal" onclick="window.location.href='/app/'"><i class="fas fa-home"></i></button>
       <button class="icon-btn" id="themeToggleBtn" title="Cambiar Tema"><i class="fas fa-sun"></i></button>
       <button class="icon-btn" id="clearDraftBtn" title="Limpiar Borrador"><i class="fas fa-trash-alt"></i></button>
       <button class="icon-btn" id="preciosBtn" title="Buscar precio">
