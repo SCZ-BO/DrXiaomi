@@ -18,18 +18,66 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <link rel="stylesheet" href="/css/app-theme.css">
-  <link rel="stylesheet" href="/css/app-components.css">
-  <link rel="stylesheet" href="/css/app-layouts.css">
-
   <!-- PWA -->
   <link rel="manifest" href="/app/manifest.json">
   <meta name="apple-mobile-web-app-title" content="DR. Xiaomi Panel">
 
   <style>
     /* ============================================================ */
-    /* 🟠 LOGO REDONDO GRANDE EN EL LOGIN                          */
+    /* RESET Y BASE PARA EL LOGIN (Aislado del tema global)         */
     /* ============================================================ */
+    :root {
+      --bg-app: #0A0A0B;
+      --bg-card: #181818;
+      --bg-elev: #242424;
+      --text-main: #F5F5F5;
+      --text-mute: #888888;
+      --border: #2A2A2A;
+      --brand: #FF6900;
+      --brand-glow: rgba(255, 105, 0, 0.3);
+      --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Fondo con gradiente sutil y desenfoque */
+    body::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle at 50% 30%, rgba(255, 105, 0, 0.08) 0%, transparent 60%);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Contenedor principal */
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      animation: fadeIn 0.4s var(--ease-spring);
+    }
+
+    .hidden { display: none !important; }
+
+    /* Logo */
     .login-logo-limpio {
       width: 88px;
       height: 88px;
@@ -39,29 +87,229 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      margin-bottom: 16px;
-      box-shadow: 0 12px 32px rgba(255, 105, 0, 0.45);
-      animation: logoPulse 3s ease-in-out infinite;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px var(--brand-glow);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
     }
-    .login-logo-limpio img {
+    .login-logo-limpio img { width: 100%; height: 100%; object-fit: cover; }
+    .login-logo-limpio.small { width: 76px; height: 76px; margin-bottom: 16px; }
+
+    /* Títulos */
+    .login-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #FFF, #AAA);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .login-subtitle {
+      font-size: 13px;
+      color: var(--text-mute);
+      font-weight: 500;
+      margin-bottom: 32px;
+    }
+    .login-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    /* Lista de perfiles */
+    #perfilesList {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-      display: block;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    @keyframes logoPulse {
-      0%, 100% { box-shadow: 0 12px 32px rgba(255, 105, 0, 0.45); }
-      50%      { box-shadow: 0 16px 44px rgba(255, 105, 0, 0.7); }
+    .profile-card {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-spring);
+      text-align: left;
+      color: var(--text-main);
+      font-family: inherit;
     }
 
-    /* Para la vista del PIN (más chico) */
-    .login-logo-limpio.small {
-      width: 76px;
-      height: 76px;
+    .profile-card:active {
+      transform: scale(0.97);
+      background: var(--bg-elev);
+    }
+
+    .profile-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--bg-elev);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-right: 16px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .profile-info {
+      flex: 1;
+    }
+
+    .profile-name {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .profile-role {
+      font-size: 12px;
+      color: var(--text-mute);
+      font-weight: 500;
+    }
+
+    .profile-arrow {
+      color: var(--text-mute);
+      font-size: 14px;
+    }
+
+    /* Botones flotantes (Tema y Atrás) */
+    .icon-btn-floating {
+      position: fixed;
+      top: 20px;
+      width: 44px;
+      height: 44px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-main);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+      transition: all 0.2s var(--ease-spring);
+    }
+    .icon-btn-floating:active { transform: scale(0.9); }
+    .icon-btn-floating.left { left: 20px; }
+    .icon-btn-floating.right { right: 20px; }
+
+    /* Formulario PIN */
+    #pinForm {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .input-group {
+      position: relative;
+      width: 100%;
       margin-bottom: 16px;
     }
+
+    #pinInput {
+      width: 100%;
+      padding: 18px 50px 18px 18px;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      color: var(--text-main);
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      letter-spacing: 2px;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      outline: none;
+    }
+
+    #pinInput:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 4px var(--brand-glow);
+    }
+
+    #togglePin {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--text-mute);
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 12px;
+      transition: color 0.2s;
+    }
+    #togglePin:hover { color: var(--text-main); }
+
+    #pinError {
+      text-align: center;
+      color: #EF4444;
+      font-size: 13px;
+      font-weight: 600;
+      min-height: 20px;
+      margin-bottom: 12px;
+    }
+
+    /* Botón Principal */
+    .btn-login {
+      width: 100%;
+      padding: 16px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--brand), #FF8C00);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s var(--ease-spring);
+      box-shadow: 0 4px 16px -4px var(--brand-glow);
+      font-family: inherit;
+    }
+
+    .btn-login:active { transform: scale(0.96); }
+    .btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    /* Spinner */
+    .spinner {
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+
   </style>
 </head>
 <body>
@@ -72,7 +320,7 @@
   <div class="login-container" id="viewPerfiles">
     <div class="login-logo-limpio">
       <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi"
-           onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:white; font-size:36px;&quot;></i>';">
+           onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand); font-size:36px;&quot;></i>';">
     </div>
 
     <h1 class="login-title">DR. XIAOMI</h1>
@@ -80,11 +328,9 @@
 
     <p class="login-section-title">¿Quién está ingresando?</p>
 
-    <div id="perfilesList" style="width: 100%; max-width: 340px;"></div>
+    <div id="perfilesList"></div>
 
-    <button id="themeToggle" class="icon-btn" 
-            style="position: fixed; top: 20px; right: 20px; width: 44px; height: 44px; background: var(--bg-elev-1); border: 1px solid var(--border-2); border-radius: 12px; color: var(--text-2); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;"
-            aria-label="Cambiar tema">
+    <button id="themeToggle" class="icon-btn-floating right" aria-label="Cambiar tema">
       <i class="fas fa-sun"></i>
     </button>
   </div>
@@ -93,45 +339,38 @@
   <!-- VISTA 2: INGRESAR CLAVE                                      -->
   <!-- ============================================================ -->
   <div class="login-container hidden" id="viewPin">
-    <button id="backBtn" 
-            style="position: fixed; top: 20px; left: 20px; width: 44px; height: 44px; background: var(--bg-elev-1); border: 1px solid var(--border-2); border-radius: 12px; color: var(--text-2); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;"
-            aria-label="Volver">
+    <button id="backBtn" class="icon-btn-floating left" aria-label="Volver">
       <i class="fas fa-arrow-left"></i>
     </button>
 
     <div class="login-logo-limpio small" id="profileIconView">
-      <span style="font-size: 40px;">👑</span>
+      <span style="font-size: 36px;">👑</span>
     </div>
 
     <h1 class="login-title" id="profileNameView" style="font-size: 22px;">Admin</h1>
     <p class="login-subtitle" id="profileRoleView" style="margin-bottom: 32px;">Dueño</p>
 
-    <form style="width: 100%; max-width: 340px;" id="pinForm">
-      <div style="position: relative; margin-bottom: 16px;">
+    <form id="pinForm">
+      <div class="input-group">
         <input type="password" 
                id="pinInput" 
                placeholder="Ingresa tu clave"
                autocomplete="current-password"
-               style="width: 100%; padding: 18px 50px 18px 18px; background: var(--bg-elev-1); border: 1.5px solid var(--border-2); border-radius: 16px; color: var(--text-1); font-size: 16px; font-weight: 600; text-align: center; letter-spacing: 1px; transition: all 0.2s ease; font-family: inherit;"
                autofocus>
-        <button type="button" id="togglePin" 
-                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--text-3); font-size: 16px; cursor: pointer; border-radius: 12px;"
-                aria-label="Mostrar clave">
+        <button type="button" id="togglePin" aria-label="Mostrar clave">
           <i class="fas fa-eye"></i>
         </button>
       </div>
 
-      <div id="pinError" style="text-align: center; color: #EF4444; font-size: 14px; font-weight: 600; min-height: 20px; margin-bottom: 12px;"></div>
+      <div id="pinError"></div>
 
-      <button type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn">
+      <button type="submit" class="btn-login" id="submitBtn">
         <i class="fas fa-sign-in-alt"></i>
         Ingresar
       </button>
     </form>
 
-    <button id="themeToggle2" class="icon-btn" 
-            style="position: fixed; top: 20px; right: 20px; width: 44px; height: 44px; background: var(--bg-elev-1); border: 1px solid var(--border-2); border-radius: 12px; color: var(--text-2); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;"
-            aria-label="Cambiar tema">
+    <button id="themeToggle2" class="icon-btn-floating right" aria-label="Cambiar tema">
       <i class="fas fa-sun"></i>
     </button>
   </div>
@@ -198,7 +437,7 @@
       perfilActual = perfil;
       haptic(15);
 
-      profileIconView.innerHTML = `<span style="font-size: 40px;">${perfil.icono}</span>`;
+      profileIconView.innerHTML = `<span style="font-size: 36px;">${perfil.icono}</span>`;
       profileNameView.textContent = perfil.nombre;
       profileRoleView.textContent = perfil.subtitulo;
 
@@ -274,24 +513,6 @@
         pinInput.select();
       }
     }
-
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        20%      { transform: translateX(-8px); }
-        40%      { transform: translateX(8px); }
-        60%      { transform: translateX(-6px); }
-        80%      { transform: translateX(6px); }
-      }
-      #pinInput:focus {
-        outline: none;
-        border-color: var(--brand-500) !important;
-        box-shadow: 0 0 0 3px rgba(255, 105, 0, 0.15);
-      }
-      #togglePin:hover { color: var(--text-1); background: var(--bg-elev-2); }
-    `;
-    document.head.appendChild(style);
 
     cargarPerfiles();
   </script>
