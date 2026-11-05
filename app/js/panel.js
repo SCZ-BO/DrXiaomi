@@ -44,7 +44,6 @@ function playSound(type) {
     initAudio();
     const now = audioCtx.currentTime;
     
-    // Función auxiliar para crear un oscilador
     const createOsc = (freqStart, freqEnd, duration, gainVal, waveType) => {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -59,24 +58,19 @@ function playSound(type) {
       osc.stop(now + duration);
     };
 
-    // Función auxiliar para crear un "ruido" (sonidos modernos)
     const createNoise = (duration, filterFreq, gainVal) => {
       const bufferSize = audioCtx.sampleRate * duration;
       const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-      
       const noise = audioCtx.createBufferSource();
       noise.buffer = buffer;
-      
       const filter = audioCtx.createBiquadFilter();
       filter.type = 'highpass';
       filter.frequency.value = filterFreq;
-      
       const gain = audioCtx.createGain();
       gain.gain.setValueAtTime(gainVal, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-      
       noise.connect(filter);
       filter.connect(gain);
       gain.connect(audioCtx.destination);
@@ -84,28 +78,23 @@ function playSound(type) {
     };
 
     if (type === 'click') {
-      // Un "Tick" seco y agudo (Estilo iOS)
       createOsc(1500, 500, 0.04, 0.2, 'triangle');
       createNoise(0.02, 5000, 0.1);
     } 
     else if (type === 'pop') {
-      // Un "Bloop" rápido (Estilo Material Design)
       createOsc(800, 200, 0.1, 0.3, 'sine');
     } 
     else if (type === 'success') {
-      // Dos notas cristalinas rápidas (Do agudo y Sol)
-      createOsc(1046.50, 1046.50, 0.1, 0.2, 'sine'); // C6
-      setTimeout(() => createOsc(1567.98, 1567.98, 0.2, 0.2, 'sine'), 80); // G6
+      createOsc(1046.50, 1046.50, 0.1, 0.2, 'sine');
+      setTimeout(() => createOsc(1567.98, 1567.98, 0.2, 0.2, 'sine'), 80);
     } 
     else if (type === 'error') {
-      // Un zumbido moderno y opaco
       createOsc(200, 150, 0.15, 0.3, 'square');
       createNoise(0.1, 1000, 0.05);
     }
   } catch (e) { console.warn('Audio error', e); }
 }
 
-// Conectar sonidos de click a toda la interfaz
 document.addEventListener('click', (e) => {
   if (e.target.closest('button') || e.target.closest('.nav-item') || e.target.closest('.chip-btn')) {
     playSound('click');
@@ -214,9 +203,6 @@ async function marcarNotificacionesLeidas() {
   }
 }
 
-// ==========================================
-// GUARDAR NOTIFICACIÓN EN BD
-// ==========================================
 async function enviarNotificacionDB(titulo, mensaje) {
   try {
     await addDoc(collection(db, 'notificaciones'), { 
@@ -731,7 +717,6 @@ function resetVentaModal() {
   document.getElementById('productoSeleccionadoInfo').style.display = 'none';
   document.getElementById('btnRegistrarAccesorio').disabled = true;
   
-  // 🔥 LIMPIAR CAMPOS DE SERVICIO
   const ventaMonto = document.getElementById('ventaMonto');
   if (ventaMonto) ventaMonto.value = '';
   const ventaConceptoOtro = document.getElementById('ventaConceptoOtro');
@@ -903,7 +888,7 @@ function renderCardVenta(v, tipo) {
   const hora = f ? `${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')}` : '';
   
   let iconoNombre = 'venta';
-  let cor = 'var(--success-500)'; // Verde por defecto (Accesorios)
+  let cor = 'var(--warning-500)'; // 🔥 AMARILLO por defecto (Accesorios)
 
   // 🔥 DISTINGUIR SERVICIOS DE ACCESORIOS POR COLOR
   if (v.concepto === 'Botón' || v.concepto === 'Limpieza' || v.concepto === 'Reactivación' || v.concepto === 'Cargador' || v.concepto === 'Otro') {
@@ -913,7 +898,7 @@ function renderCardVenta(v, tipo) {
     else if (v.concepto === 'Reactivación') iconoNombre = 'estado';
     else if (v.concepto === 'Cargador') iconoNombre = 'bateria';
   } else {
-    cor = 'var(--success-500)'; // Verde para accesorios
+    cor = 'var(--warning-500)'; // 🔥 AMARILLO para accesorios
     iconoNombre = 'venta';
   }
   
