@@ -16,13 +16,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- 🔥 AQUÍ ESTÁ LA CORRECCIÓN DE RUTAS A CSS Y MANIFEST -->
+  <!-- 🔥 RUTAS CORREGIDAS A LOS CSS -->
   <link rel="stylesheet" href="/app/css/app-theme.css">
   <link rel="stylesheet" href="/app/css/app-layouts.css">
   <link rel="stylesheet" href="/app/css/app-components.css">
   <link rel="manifest" href="/app/manifest.json">
 
-  <!-- ESTILOS ESPECÍFICOS DE ESTA PÁGINA -->
   <style>
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loader-ring {
@@ -63,11 +62,12 @@
 </head>
 <body>
 
+  <!-- LOADER (Se oculta automáticamente a los 2.5s pase lo que pase) -->
   <div class="loading-overlay" id="appLoader">
-    <div class="loading-card">
-      <div class="loader-ring" style="width:60px; height:60px; margin: 0 auto 16px;"></div>
-      <img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." style="width: 40px; height: 40px; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-      <p style="position: relative; margin-top: 80px;">Cargando orden...</p>
+    <div class="loading-card" style="position: relative; text-align: center;">
+      <div class="loader-ring" style="position: relative; width: 60px; height: 60px; margin: 0 auto 16px;"></div>
+      <img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." onerror="this.style.display='none';" style="width: 40px; height: 40px; border-radius: 50%; position: absolute; top: 0; left: 50%; transform: translateX(-50%);">
+      <p style="position: relative; margin-top: 10px; color: white; font-weight: 600;">Cargando orden...</p>
     </div>
   </div>
 
@@ -75,7 +75,7 @@
     <header class="app-header">
       <div class="brand">
         <button class="icon-btn" id="backBtn" aria-label="Volver">
-          <img src="/app/icons/volver.png" width="20" height="20" alt="Volver">
+          <img src="/app/icons/volver.png" width="20" height="20" alt="Volver" onerror="this.style.display='none'">
         </button>
         <div class="brand-text">
           <h1 id="headerTitle">ORDEN</h1>
@@ -84,17 +84,19 @@
       </div>
       <div class="header-actions">
         <button class="icon-btn" id="btnSalir" aria-label="Cerrar sesión">
-          <img src="/app/icons/salir.png" width="20" height="20" alt="Salir">
+          <img src="/app/icons/salir.png" width="20" height="20" alt="Salir" onerror="this.style.display='none'">
         </button>
         <button class="icon-btn" id="themeToggle" aria-label="Cambiar tema">
-          <img src="/app/icons/tema.png" width="20" height="20" alt="Tema">
+          <img src="/app/icons/tema.png" width="20" height="20" alt="Tema" onerror="this.style.display='none'">
         </button>
       </div>
     </header>
 
+    <!-- 🔥 CONTENEDOR CLAVE PARA QUE ORDEN.JS INYECTE LA VISTA -->
     <div class="app-content" id="contenido"></div>
   </main>
 
+  <!-- VISOR DE IMÁGENES -->
   <div class="sheet-backdrop" id="imgViewer" style="align-items: center; background: rgba(0,0,0,0.95);">
     <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px;">
       <button class="icon-btn" id="imgViewerCerrar" style="position: absolute; top: 20px; right: 20px;"><i class="fas fa-times"></i></button>
@@ -102,6 +104,7 @@
     </div>
   </div>
 
+  <!-- MODAL: AGREGAR/EDITAR SERVICIO -->
   <div class="sheet-backdrop" id="modalServicioBackdrop">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -121,14 +124,19 @@
     </div>
   </div>
 
-  <!-- 🔥 AQUÍ ESTÁ LA CORRECCIÓN DE RUTA DEL SCRIPT -->
+  <!-- SCRIPT PRINCIPAL (Ruta corregida a /app/orden.js) -->
   <script type="module" src="/app/orden.js"></script>
   
   <script>
+    // 🔥 RED DE SEGURIDAD: Oculta el loader a los 2.5 segundos, incluso si orden.js falla.
     setTimeout(() => {
       const loader = document.getElementById('appLoader');
-      if (loader) loader.style.display = 'none';
-    }, 3000);
+      if (loader) {
+        loader.style.opacity = '0';
+        loader.style.transition = 'opacity 0.3s';
+        setTimeout(() => loader.style.display = 'none', 300);
+      }
+    }, 2500);
   </script>
 </body>
 </html>
