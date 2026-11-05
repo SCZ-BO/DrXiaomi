@@ -12,38 +12,40 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+  <!-- Librerías PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- Mantenemos tus CSS globales por si acaso, pero el diseño de abajo mandará -->
-  <link rel="stylesheet" href="/app/css/app-theme.css">
-  <link rel="stylesheet" href="/app/css/app-layouts.css">
-  <link rel="stylesheet" href="/app/css/app-components.css">
+  <!-- 
+    NOTA: No cargamos los CSS globales aquí para evitar que rompan esta vista.
+    Todo el diseño está aislado en el <style> de abajo.
+  -->
   <link rel="manifest" href="/app/manifest.json">
 
   <style>
     /* ============================================================ */
-    /* CSS BLINDADO PARA LA PÁGINA DE ORDEN                         */
+    /* CSS AISLADO Y PREMIUM PARA LA VISTA DE ORDEN                 */
     /* ============================================================ */
     :root {
       --bg-app: #0A0A0B;
-      --bg-elev-1: #181818;
-      --bg-elev-2: #242424;
-      --text-1: #F5F5F5;
-      --text-3: #888888;
-      --border-1: #2A2A2A;
-      --brand-500: #FF6900;
+      --bg-card: #141416;
+      --bg-elev: #1C1C1E;
+      --text-main: #F5F5F5;
+      --text-mute: #888888;
+      --border-color: #2A2A2D;
+      --brand: #FF6900;
       --brand-light: rgba(255, 105, 0, 0.15);
-      --success-500: #10B981;
-      --danger-500: #EF4444;
-      --warning-500: #F59E0B;
+      --success: #10B981;
+      --danger: #EF4444;
+      --warning: #F59E0B;
+      --blue: #3B82F6;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
     body { 
       background-color: var(--bg-app); 
-      color: var(--text-1); 
+      color: var(--text-main); 
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
       -webkit-font-smoothing: antialiased;
       display: flex;
@@ -59,116 +61,127 @@
       min-height: 100vh;
     }
 
-    /* HEADER */
+    /* ================= HEADER ================= */
     .app-header { 
       display: flex; align-items: center; justify-content: space-between; 
-      padding: 16px 20px; background: rgba(10, 10, 11, 0.85); 
-      border-bottom: 1px solid var(--border-1); backdrop-filter: blur(12px);
+      padding: 16px 20px; background: rgba(10, 10, 11, 0.95); 
+      border-bottom: 1px solid var(--border-color); backdrop-filter: blur(12px);
       position: sticky; top: 0; z-index: 100;
     }
     .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-text h1 { font-size: 16px; font-weight: 800; letter-spacing: -0.5px; }
-    .brand-text p { font-size: 12px; color: var(--text-3); font-weight: 500; }
+    .brand-text h1 { font-size: 16px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 2px; }
+    .brand-text p { font-size: 12px; color: var(--text-mute); font-weight: 500; }
     
     .icon-btn { 
-      width: 40px; height: 40px; border-radius: 50%; background: var(--bg-elev-2); 
-      border: 1px solid var(--border-1); color: var(--text-1); 
+      width: 40px; height: 40px; border-radius: 12px; background: var(--bg-elev); 
+      border: 1px solid var(--border-color); color: var(--text-main); 
       display: flex; align-items: center; justify-content: center; cursor: pointer; 
-      transition: 0.2s; 
+      transition: 0.2s; font-size: 16px;
     }
     .icon-btn:active { transform: scale(0.9); }
     .header-actions { display: flex; gap: 8px; }
 
-    /* CONTENIDO */
+    /* ================= CONTENIDO ================= */
     .app-content { padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px; }
 
-    /* TARJETAS */
+    /* ================= TARJETAS ================= */
     .card { 
-      background: var(--bg-elev-1); border: 1px solid var(--border-1); 
-      border-radius: 16px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      background: var(--bg-card); border: 1px solid var(--border-color); 
+      border-radius: 20px; padding: 20px; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
     }
-    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .card-title { font-size: 14px; font-weight: 800; color: var(--text-1); display: flex; align-items: center; gap: 8px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .card-title { font-size: 15px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
 
-    /* DETALLES DEL RECIBO */
-    .recibo-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; font-size: 13px; }
-    .recibo-row span:first-child { color: var(--text-3); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
-    .recibo-row span:last-child { font-weight: 600; color: var(--text-1); text-align: right; max-width: 60%; word-break: break-word; }
+    /* ================= DETALLE RECIBO ================= */
+    .recibo-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .recibo-row:last-child { margin-bottom: 0; }
+    .recibo-row span:first-child { color: var(--text-mute); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding-top: 2px; }
+    .recibo-row span:last-child { font-weight: 600; color: var(--text-main); text-align: right; font-size: 14px; max-width: 65%; word-break: break-word; }
 
-    /* TABLA SERVICIOS */
-    .tabla-servicios { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    .tabla-servicios th { text-align: left; font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; padding-bottom: 8px; border-bottom: 1px solid var(--border-1); }
-    .tabla-servicios td { padding: 12px 0; font-size: 13px; color: var(--text-1); border-bottom: 1px dashed var(--border-1); }
-    .tabla-servicios td:last-child { text-align: right; font-weight: 700; color: var(--brand-500); }
-    .tabla-servicios td.servicio-acciones { text-align: right; width: 80px; }
+    /* ================= TABLA SERVICIOS ================= */
+    .tabla-servicios { width: 100%; border-collapse: collapse; margin-top: 16px; margin-bottom: 16px; }
+    .tabla-servicios th { text-align: left; font-size: 11px; color: var(--text-mute); text-transform: uppercase; letter-spacing: 1px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+    .tabla-servicios th:last-child { text-align: right; }
+    .tabla-servicios td { padding: 12px 0; font-size: 14px; color: var(--text-main); border-bottom: 1px dashed var(--border-color); }
+    .tabla-servicios td:last-child { text-align: right; font-weight: 700; color: var(--brand); }
+    .tabla-servicios td.servicio-acciones { text-align: right; width: 80px; padding-right: 0; }
 
-    /* BOTONES GENERALES */
+    /* ================= TOTALES ================= */
+    .total-box { background: var(--bg-elev); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+    .total-box strong { font-size: 20px; font-weight: 800; color: var(--text-main); }
+    .total-box.saldo { background: var(--brand-light); border: 1px solid rgba(255, 105, 0, 0.3); }
+    .total-box.saldo span { color: var(--brand); font-weight: 800; font-size: 13px; }
+    .total-box.saldo strong { color: var(--brand); }
+
+    /* ================= BOTONES ================= */
     .btn-grande {
-      width: 100%; padding: 16px; border-radius: 12px; font-size: 14px; font-weight: 700;
+      width: 100%; padding: 16px; border-radius: 14px; font-size: 14px; font-weight: 700;
       border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); font-family: inherit;
     }
     .btn-grande:active { transform: scale(0.96); }
-    .btn-pdf { background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-1); }
-    .btn-whatsapp { background: rgba(37, 211, 102, 0.15); color: #25D366; border: 1px solid #25D366; }
     
+    .btn-outline { background: transparent; color: var(--brand); border: 1.5px dashed var(--brand); }
+    .btn-pdf { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border-color); }
+    .btn-whatsapp { background: rgba(37, 211, 102, 0.1); color: #25D366; border: 1px solid rgba(37, 211, 102, 0.3); }
+    .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+
     .btn-servicio-mini {
-      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border-1);
-      background: var(--bg-elev-2); color: var(--text-1); cursor: pointer;
+      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border-color);
+      background: var(--bg-elev); color: var(--text-main); cursor: pointer;
       display: inline-flex; align-items: center; justify-content: center; font-size: 12px;
       transition: 0.2s;
     }
-    .btn-servicio-mini.danger { color: var(--danger-500); border-color: rgba(239, 68, 68, 0.4); }
+    .btn-servicio-mini.danger { color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
     .btn-servicio-mini:active { transform: scale(0.9); }
 
-    /* TOTALES */
-    .total-box { background: var(--bg-elev-2); border-radius: 12px; padding: 16px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center; }
-    .total-box strong { font-size: 20px; font-weight: 800; color: var(--text-1); }
-
-    /* BOTONES DE ESTADO */
-    .estados-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    /* ================= ESTADOS GRID ================= */
+    .estados-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
     .estado-btn { 
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; 
-      padding: 16px 10px; background: var(--bg-elev-2); border: 1.5px solid var(--border-1); 
-      border-radius: 12px; color: var(--text-1); font-size: 11px; font-weight: 700; 
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; 
+      padding: 16px 10px; background: var(--bg-elev); border: 1.5px solid transparent; 
+      border-radius: 14px; color: var(--text-mute); font-size: 12px; font-weight: 600; 
       cursor: pointer; transition: all 0.2s ease; text-align: center; font-family: inherit;
     }
-    .estado-btn i { font-size: 20px; margin-bottom: 4px; color: var(--text-3); transition: 0.2s; }
-    .estado-btn.activo { background: var(--brand-light); border-color: var(--brand-500); color: var(--brand-500); }
-    .estado-btn.activo i { color: var(--brand-500); }
+    .estado-btn i { font-size: 22px; }
+    .estado-btn.activo { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 800; }
     .estado-btn:active { transform: scale(0.95); }
 
-    /* INPUTS Y TEXTAREAS */
+    /* ================= FORMULARIOS ================= */
     input[type="text"], input[type="number"], textarea, select {
-      width: 100%; padding: 14px; background: var(--bg-elev-2); color: var(--text-1);
-      border: 1px solid var(--border-1); border-radius: 10px; font-family: inherit;
-      font-size: 14px; outline: none; transition: 0.2s;
+      width: 100%; padding: 16px; background: var(--bg-elev); color: var(--text-main);
+      border: 1px solid var(--border-color); border-radius: 14px; font-family: inherit;
+      font-size: 15px; outline: none; transition: 0.2s;
     }
-    input:focus, textarea:focus { border-color: var(--brand-500); box-shadow: 0 0 0 3px var(--brand-light); }
+    input:focus, textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-light); }
+    textarea { resize: vertical; min-height: 100px; }
 
-    /* BITÁCORA */
-    .bitacora-item { display: flex; gap: 12px; margin-bottom: 16px; }
-    .bitacora-icono { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--brand-500); font-size: 14px; border: 1px solid var(--border-1); }
+    /* ================= BITÁCORA ================= */
+    .bitacora-item { display: flex; gap: 14px; margin-bottom: 20px; }
+    .bitacora-icono { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--brand); font-size: 14px; border: 1px solid var(--border-color); }
     .bitacora-content { flex: 1; }
-    .bitacora-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
-    .bitacora-autor { font-size: 12px; font-weight: 700; color: var(--text-1); }
-    .bitacora-fecha { font-size: 10px; color: var(--text-3); font-weight: 500; }
-    .bitacora-texto { font-size: 13px; color: var(--text-3); line-height: 1.5; background: var(--bg-elev-2); padding: 10px 14px; border-radius: 0 12px 12px 12px; }
-    .bitacora-fotos { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-    .bitacora-fotos img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: zoom-in; border: 1px solid var(--border-1); }
+    .bitacora-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .bitacora-autor { font-size: 13px; font-weight: 700; color: var(--text-main); }
+    .bitacora-fecha { font-size: 11px; color: var(--text-mute); font-weight: 500; }
+    .bitacora-texto { font-size: 13px; color: var(--text-mute); line-height: 1.5; background: var(--bg-elev); padding: 12px 16px; border-radius: 0 14px 14px 14px; }
+    .bitacora-fotos { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .bitacora-fotos img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; cursor: zoom-in; border: 1px solid var(--border-color); }
 
-    /* UTILIDADES */
-    .hidden { display: none !important; }
+    /* ================= MODALES ================= */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); padding: 20px; }
+    .modal-backdrop.show { display: flex; }
+    .modal { background: var(--bg-card); padding: 24px; border-radius: 20px; width: 100%; max-width: 400px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
   </style>
 </head>
 <body>
 
-  <!-- CONTENEDOR PRINCIPAL -->
   <main class="app-container">
+    <!-- HEADER -->
     <header class="app-header">
       <div class="brand">
         <button class="icon-btn" id="backBtn" aria-label="Volver">
-          <img src="/app/icons/volver.png" width="20" height="20" alt="Volver" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-arrow-left&quot;></i>';">
+          <i class="fas fa-arrow-left"></i>
         </button>
         <div class="brand-text">
           <h1 id="headerTitle">ORDEN</h1>
@@ -177,48 +190,48 @@
       </div>
       <div class="header-actions">
         <button class="icon-btn" id="btnSalir" aria-label="Cerrar sesión">
-          <img src="/app/icons/salir.png" width="20" height="20" alt="Salir" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
+          <i class="fas fa-sign-out-alt"></i>
         </button>
         <button class="icon-btn" id="themeToggle" aria-label="Cambiar tema">
-          <img src="/app/icons/tema.png" width="20" height="20" alt="Tema" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sun&quot;></i>';">
+          <i class="fas fa-sun"></i>
         </button>
       </div>
     </header>
 
-    <!-- INYECCIÓN DE ORDEN.JS -->
+    <!-- CONTENIDO INYECTADO POR JS -->
     <div class="app-content" id="contenido">
       <!-- Aquí se inyecta todo desde orden.js -->
     </div>
   </main>
 
   <!-- MODAL DE IMAGEN -->
-  <div class="modal-backdrop" id="imgViewer" style="align-items: center; background: rgba(0,0,0,0.95); z-index: 9999; display: none;">
-    <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px;">
-      <button class="icon-btn" id="imgViewerCerrar" style="position: absolute; top: 20px; right: 20px; background: #242424;"><i class="fas fa-times"></i></button>
+  <div class="modal-backdrop" id="imgViewer">
+    <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+      <button class="icon-btn" id="imgViewerCerrar" style="position: absolute; top: 0; right: 0; background: #fff; color: #000;"><i class="fas fa-times"></i></button>
       <img src="" alt="Vista previa" id="imgViewerImg" style="max-width: 100%; max-height: 90vh; object-fit: contain; border-radius: 8px;">
     </div>
   </div>
 
   <!-- MODAL DE SERVICIO (Para agregar/editar) -->
-  <div class="modal-backdrop" id="modalServicioBackdrop" style="z-index: 9999; display: none; align-items: flex-end;">
-    <div class="sheet" style="background: var(--bg-elev-1); border-radius: 24px 24px 0 0; padding: 24px; width: 100%; max-width: 600px; border-top: 2px solid var(--brand-500);">
-      <div style="width: 40px; height: 4px; background: var(--border-1); border-radius: 2px; margin: 0 auto 20px;"></div>
-      <h3 id="modalServicioTitulo" style="font-size: 18px; font-weight: 800; color: var(--text-1); margin-bottom: 20px;">Agregar servicio</h3>
+  <div class="modal-backdrop" id="modalServicioBackdrop">
+    <div class="modal">
+      <h3 id="modalServicioTitulo" style="font-size: 20px; font-weight: 800; color: var(--text-main); margin-bottom: 20px;">Agregar servicio</h3>
       <div style="margin-bottom: 16px;">
-        <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;">Descripción</label>
+        <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-mute); text-transform: uppercase; margin-bottom: 8px;">Descripción</label>
         <input type="text" id="servicioDescripcion" placeholder="Ej: Cambio de pantalla OLED">
       </div>
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;">Costo (Bs)</label>
+      <div style="margin-bottom: 24px;">
+        <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-mute); text-transform: uppercase; margin-bottom: 8px;">Costo (Bs)</label>
         <input type="number" id="servicioCosto" placeholder="0.00" min="0" step="0.01" inputmode="decimal">
       </div>
       <div style="display: flex; gap: 12px;">
         <button class="btn-grande btn-pdf" id="modalServicioCancelar" style="flex: 1;">Cancelar</button>
-        <button class="btn-grande" id="modalServicioGuardar" style="flex: 1; background: var(--brand-500); color: white;">Guardar</button>
+        <button class="btn-grande" id="modalServicioGuardar" style="flex: 1; background: var(--brand); color: white;">Guardar</button>
       </div>
     </div>
   </div>
 
+  <!-- SCRIPT PRINCIPAL -->
   <script type="module" src="/app/orden.js"></script>
 </body>
 </html>
