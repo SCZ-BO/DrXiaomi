@@ -95,9 +95,25 @@ function playSound(type) {
   } catch (e) { console.warn('Audio error', e); }
 }
 
+// 🔥 RIPPLE EFFECT
 document.addEventListener('click', (e) => {
-  if (e.target.closest('button') || e.target.closest('.nav-item') || e.target.closest('.chip-btn')) {
+  const target = e.target.closest('button, .nav-item, .chip-btn');
+  if (target) {
     playSound('click');
+
+    const btn = target.closest('.btn-ripple');
+    if (btn) {
+      const circle = document.createElement('span');
+      const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+      const radius = diameter / 2;
+      circle.style.width = circle.style.height = `${diameter}px`;
+      circle.style.left = `${e.clientX - btn.getBoundingClientRect().left - radius}px`;
+      circle.style.top = `${e.clientY - btn.getBoundingClientRect().top - radius}px`;
+      circle.classList.add('ripple-effect');
+      const ripple = btn.getElementsByClassName('ripple-effect')[0];
+      if (ripple) ripple.remove();
+      btn.appendChild(circle);
+    }
   }
 });
 
@@ -853,14 +869,14 @@ window.cambiarPagina = (p) => {
 function renderCardTelefono(o) {
   const est = o.estadoOrden || 'recibido';
   
-  // 🔥 PALETA DE COLORES PARA TELÉFONOS
+  // 🔥 COLORES VIBRANTES PARA TELÉFONOS
   const info = { 
-    recibido: { t: 'Recibido', c: 'var(--warning-500)' }, 
-    reparacion: { t: 'Reparación', c: 'var(--danger-500)' }, // 🔴 ROJO
-    'espera-repuesto': { t: 'Repuesto', c: 'var(--purple-500)' }, // Morado
-    listo: { t: 'Listo', c: 'var(--yellow-500)' }, // Amarillo
-    entregado: { t: 'Entregado', c: 'var(--success-500)' }, // 🟢 VERDE
-    devuelto: { t: 'Devuelto', c: '#6B7280' } // ⚪ PLOMO/GRIS
+    recibido: { t: 'Recibido', c: '#F59E0B' }, 
+    reparacion: { t: 'Reparación', c: '#EF4444' }, // 🔴 ROJO
+    'espera-repuesto': { t: 'Repuesto', c: '#8B5CF6' }, // Morado
+    listo: { t: 'Listo', c: '#3B82F6' }, // Azul
+    entregado: { t: 'Entregado', c: '#10B981' }, // 🟢 VERDE
+    devuelto: { t: 'Devuelto', c: '#6B7280' } // ⚪ PLOMO
   }[est] || { t: est, c: 'var(--text-3)' };
   
   return `
@@ -887,28 +903,24 @@ function renderCardVenta(v, tipo) {
   const hora = f ? `${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')}` : '';
   
   let iconoNombre = 'venta';
-  let cor = '#FFFFFF'; // ⚪ BLANCO por defecto (Accesorios)
-  let esServicio = false;
+  let cor = '#FFFFFF'; // ⚪ Blanco puro por defecto
 
-  // 🔥 DETECTAR SI ES SERVICIO:
-  // Si el concepto NO empieza con un número y una 'x' (ej: "1x Cargador"), es un servicio.
-  const conceptosServicio = ['Botón', 'Limpieza', 'Reactivación', 'Cargador', 'Otro'];
-  const esConceptoEspecifico = conceptosServicio.some(c => v.concepto.includes(c));
+  // 🔥 DETECCIÓN CLAVE: 
+  // Si el concepto NO empieza con un número seguido de 'x' (ej: "1x Cargador"), 
+  // significa que es un servicio escrito a mano o elegido de la lista.
   const esAccesorio = /^\d+x\s/.test(v.concepto);
 
-  if (!esAccesorio || esConceptoEspecifico) {
-    esServicio = true;
-  }
-
-  if (esServicio) {
-    cor = 'var(--brand-500)'; // 🟠 NARANJA para servicios
+  if (!esAccesorio) {
+    // 🟠 ES SERVICIO
+    cor = '#FF6900'; // Naranja brillante de la marca
     if (v.concepto.includes('Botón')) iconoNombre = 'bateria'; 
     else if (v.concepto.includes('Limpieza')) iconoNombre = 'servicios';
     else if (v.concepto.includes('Reactivación')) iconoNombre = 'estado';
     else if (v.concepto.includes('Cargador')) iconoNombre = 'bateria';
     else iconoNombre = 'servicios';
   } else {
-    cor = '#FFFFFF'; // ⚪ BLANCO para accesorios
+    // ⚪ ES ACCESORIO
+    cor = '#FFFFFF'; // Blanco puro
     iconoNombre = 'venta';
   }
   
@@ -920,7 +932,7 @@ function renderCardVenta(v, tipo) {
   
   let htmlGanancia = '';
   if (esAdmin && tipo === 'venta') {
-    htmlGanancia = `<div class="ganancia-text" style="font-size: 10px; color: var(--success-500); font-weight: 700; margin-top: 2px;">Ganancia: ${formatBsLimpio(ganancia)}</div>`;
+    htmlGanancia = `<div style="font-size: 10px; color: var(--success-500); font-weight: 700; margin-top: 2px;">Ganancia: ${formatBsLimpio(ganancia)}</div>`;
   }
 
   return `
