@@ -12,119 +12,259 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- CSS UNIFICADOS -->
+  <!-- CSS Globales -->
   <link rel="stylesheet" href="../css/app-theme.css">
   <link rel="stylesheet" href="../css/app-layouts.css">
   <link rel="stylesheet" href="../css/app-components.css">
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    /* 🔥 ANIMACIÓN DE CARGA SUAVE */
-    .fade-in {
-      animation: fadeIn 0.4s ease-in-out forwards;
-      opacity: 0;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    /* ============================================================ */
+    /* CSS AISLADO Y PREMIUM PARA EL CATÁLOGO                       */
+    /* ============================================================ */
+    :root {
+      --bg-app: #0A0A0B;
+      --bg-card: #141416;
+      --bg-elev: #1C1C1E;
+      --text-main: #F5F5F5;
+      --text-mute: #888888;
+      --border-color: #2A2A2D;
+      --brand: #FF6900;
+      --brand-light: rgba(255, 105, 0, 0.15);
+      --blue: #3B82F6;
+      --blue-light: rgba(59, 130, 246, 0.15);
     }
 
-    /* 🔥 BUSCADOR PRO */
-    .search-bar { position: relative; margin-bottom: 16px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+      background-color: var(--bg-app); 
+      color: var(--text-main); 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .app-content { padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 80px; }
+
+    /* ================= LOADER ================= */
+    .loader-overlay { position: fixed; inset: 0; background: var(--bg-app); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.3s; }
+    .loader-overlay.hidden { opacity: 0; pointer-events: none; }
+    .loader-logo-container { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); animation: spin 1s linear infinite; }
+    .loader-logo-img { width: 48px; height: 48px; border-radius: 50%; }
+    .loader-text { font-size: 14px; font-weight: 600; color: var(--text-mute); }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* ================= 🔥 NUEVA BARRA DE HERRAMIENTAS (ICONOS Y SONIDO) ================= */
+    .toolbar-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(28, 28, 30, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      padding: 8px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .toolbar-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding-left: 12px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Estilos de los botones cuadrados */
+    .btn-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-elev);
+      color: var(--text-main);
+      font-size: 20px; /* Iconos más grandes */
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-toolbar:active { transform: scale(0.85); }
+
+    /* Botón de Admin */
+    .btn-toolbar#adminEditBtn {
+      color: var(--blue);
+      border-color: rgba(59, 130, 246, 0.3);
+      background: var(--blue-light);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Botón de Modo Técnico */
+    .btn-toolbar#techModeBtn {
+      color: var(--text-mute);
+    }
+    
+    .btn-toolbar#techModeBtn i {
+      transition: transform 0.3s ease;
+    }
+
+    /* 🔥 ESTADO ACTIVO DEL MODO TÉCNICO (Neon Glow) */
+    .btn-toolbar#techModeBtn.tech-active {
+      background: var(--brand-light) !important;
+      border-color: var(--brand) !important;
+      color: var(--brand) !important;
+      box-shadow: 0 0 20px rgba(255, 105, 0, 0.4);
+    }
+    
+    .btn-toolbar#techModeBtn.tech-active i {
+      transform: scale(1.15); /* El ojo se hace más grande */
+    }
+
+    /* ================= BUSCADOR ================= */
+    .search-bar { position: relative; }
     .search-bar input {
-      width: 100%; padding: 14px 16px 14px 48px;
-      border-radius: var(--r-lg); background: var(--bg-elev-2);
-      border: 1.5px solid var(--border-2); color: var(--text-1);
+      width: 100%; padding: 16px 16px 16px 48px;
+      border-radius: 16px; background: var(--bg-elev);
+      border: 1px solid var(--border-color); color: var(--text-main);
       font-size: 15px; font-weight: 500; transition: all 0.2s ease;
+      outline: none;
     }
     .search-bar input:focus {
-      border-color: var(--brand-500); background: var(--bg-elev-1);
-      box-shadow: 0 0 0 4px var(--brand-100);
+      border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-light);
     }
     .search-bar .search-icon {
       position: absolute; left: 16px; top: 50%;
       transform: translateY(-50%); opacity: 0.5; pointer-events: none;
+      color: var(--text-main);
     }
     .search-bar .clear-btn {
       position: absolute; right: 16px; top: 50%;
       transform: translateY(-50%); background: none; border: none;
-      color: var(--text-3); cursor: pointer; display: none; font-size: 16px;
+      color: var(--text-mute); cursor: pointer; display: none; font-size: 16px;
     }
     .search-bar .clear-btn.visible { display: block; }
 
-    /* 🔥 PANEL DE SUGERENCIAS */
+    /* Panel de sugerencias */
     .suggestions-panel {
       position: absolute; top: 100%; left: 0; right: 0; margin-top: 8px;
-      background: var(--bg-elev-1); border: 1px solid var(--border-1);
-      border-radius: var(--r-lg); box-shadow: var(--shadow-lg);
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       max-height: 300px; overflow-y: auto; display: none; z-index: 60;
     }
     .suggestions-panel.active { display: block; }
     .suggestion-item {
-      padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-1);
+      padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-color);
       display: flex; align-items: center; gap: 12px; transition: background 0.2s;
+      color: var(--text-main); font-size: 14px;
     }
-    .suggestion-item:hover { background: var(--bg-elev-2); }
+    .suggestion-item:hover { background: var(--bg-elev); }
     .suggestion-item:last-child { border-bottom: none; }
 
-    /* 🔥 FILTROS */
+    /* ================= FILTROS ================= */
+    .filters-row { 
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; 
+      scrollbar-width: none; -ms-overflow-style: none;
+    }
+    .filters-row::-webkit-scrollbar { display: none; }
+    
     .filter-chip {
-      padding: 8px 16px; border-radius: var(--r-full); font-size: 12px; font-weight: 600;
-      background: var(--bg-elev-1); color: var(--text-1); border: 1px solid var(--border-1);
-      cursor: pointer; white-space: nowrap; transition: 0.2s;
+      padding: 10px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      background: var(--bg-elev); color: var(--text-mute); border: 1px solid var(--border-color);
+      cursor: pointer; white-space: nowrap; transition: all 0.2s ease;
+      font-family: inherit;
     }
     .filter-chip.active {
-      background: var(--brand-500); color: white; border-color: var(--brand-500);
-      box-shadow: 0 4px 14px var(--brand-100);
+      background: var(--brand); color: white; border-color: var(--brand);
+      box-shadow: 0 4px 14px var(--brand-light);
     }
 
-    /* 🔥 TARJETAS DE PRODUCTO */
+    /* ================= RESULTADOS ================= */
+    #resultsCount { font-size: 13px; color: var(--text-mute); font-weight: 500; margin-bottom: 4px; }
+
+    /* ================= TARJETAS DE PRODUCTO ================= */
     .product-card {
-      background: var(--bg-elev-1); border: 1px solid var(--border-1);
-      border-radius: var(--r-lg); padding: 16px; margin-bottom: 12px;
-      position: relative; box-shadow: var(--shadow-sm); transition: all 0.2s ease;
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 16px; margin-bottom: 12px;
+      position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+      transition: transform 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-    .product-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .product-card:active { transform: scale(0.98); }
     .product-card::before {
       content: ''; position: absolute; left: 0; top: 16px; bottom: 16px;
-      width: 3px; background: var(--brand-500); border-radius: 0 3px 3px 0;
+      width: 4px; background: var(--brand); border-radius: 0 4px 4px 0;
     }
     .product-card.is-orig::before { background: linear-gradient(180deg, #FFD700, #FFA500); }
 
-    .card-brand { font-size: 10px; font-weight: 800; color: var(--brand-500); text-transform: uppercase; letter-spacing: 0.5px; }
-    .card-model { font-size: 16px; font-weight: 700; color: var(--text-1); line-height: 1.3; }
-    .card-type { padding: 4px 10px; border-radius: var(--r-sm); font-size: 10px; font-weight: 700; background: var(--bg-elev-2); color: var(--text-3); }
-    .card-type.oled { background: rgba(255,105,0,0.1); color: var(--brand-500); }
+    .card-brand { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-model { font-size: 16px; font-weight: 700; color: var(--text-main); line-height: 1.3; }
+    
+    .card-type { 
+      padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; 
+      background: var(--bg-elev); color: var(--text-mute); width: fit-content;
+    }
+    .card-type.oled { background: var(--brand-light); color: var(--brand); }
     .card-type.orig { background: linear-gradient(135deg, #FFD700, #FFA500); color: #4A2800; }
 
-    .card-price { font-size: 22px; font-weight: 800; color: var(--text-1); letter-spacing: -0.5px; }
+    .card-price { font-size: 22px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
 
+    /* Botones dentro de la tarjeta */
     .image-btn, .whatsapp-btn, .edit-btn {
-      border: none; padding: 8px 12px; border-radius: var(--r-sm);
-      font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px;
+      border: none; padding: 8px 12px; border-radius: 8px;
+      font-size: 12px; font-weight: 700; cursor: pointer; 
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-family: inherit; transition: 0.2s;
     }
-    .image-btn { background: var(--bg-elev-2); color: var(--text-1); border: 1px solid var(--border-1); }
-    .whatsapp-btn { background: #25D366; color: white; }
-    .edit-btn { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .image-btn:active, .whatsapp-btn:active, .edit-btn:active { transform: scale(0.95); }
+    
+    .image-btn { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border-color); }
+    .whatsapp-btn { background: rgba(37, 211, 102, 0.15); color: #25D366; border: 1px solid rgba(37, 211, 102, 0.3); }
+    .edit-btn { background: rgba(59, 130, 246, 0.15); color: var(--blue); border: 1px solid rgba(59, 130, 246, 0.3); }
 
-    /* Botón de Modo Técnico Activo */
-    .tech-active { background: var(--brand-100) !important; border-color: var(--brand-500) !important; }
+    /* ================= MODALES ================= */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); padding: 20px; }
+    .modal-backdrop.show { display: flex; }
+    .modal { background: var(--bg-card); padding: 24px; border-radius: 20px; width: 100%; max-width: 400px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; }
   </style>
 </head>
 <body>
 
-  <!-- LOADER CORREGIDO -->
+  <!-- LOADER -->
   <div class="loader-overlay" id="splash">
     <div class="loader-logo-container">
       <div class="loader-ring"></div>
       <img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." class="loader-logo-img">
     </div>
-    <div class="loader-text">Sincronizando...</div>
+    <div class="loader-text">Sincronizando catálogo...</div>
   </div>
 
   <main class="app-container" id="appRoot" style="opacity:0;">
     
-    <!-- 🔥 HEADER Y NAV INYECTADOS DESDE LAYOUT.JS 🔥 -->
+    <!-- HEADER Y NAV (Inyectados por layout.js) -->
     <script type="module">
       import { montarLayout } from '../js/layout.js';
       montarLayout({
@@ -137,26 +277,34 @@
     <!-- CONTENIDO PRINCIPAL -->
     <div class="app-content" id="mainScrollContainer">
       
-      <!-- BOTONES DE ACCIÓN (Admin y Modo Técnico) -->
-      <div style="display: flex; gap: 8px; margin-bottom: 12px; justify-content: flex-end;">
-        <button class="icon-btn" id="adminEditBtn" style="display: none; width: 36px; height: 36px; background: var(--bg-elev-2);">
-          <i class="fas fa-list-ul" style="color: #3B82F6; font-size: 14px;"></i>
-        </button>
-        <button class="icon-btn" id="techModeBtn" style="width: 36px; height: 36px; background: var(--bg-elev-2);">
-          <img src="/app/icons/ver.png" width="16" height="16" alt="Ver">
-        </button>
+      <!-- 🔥 BARRA DE ACCIONES CON ICONOS 🔥 -->
+      <div class="toolbar-container">
+        <div class="toolbar-title">Filtros Rápidos</div>
+        <div class="toolbar-actions">
+          
+          <!-- Botón de Admin -->
+          <button class="btn-toolbar" id="adminEditBtn" style="display: none;" title="Gestionar Catálogo">
+            <i class="fas fa-list-ul"></i>
+          </button>
+          
+          <!-- Botón de Modo Técnico -->
+          <button class="btn-toolbar" id="techModeBtn" title="Ver Costos de Compra">
+            <i class="fas fa-eye"></i>
+          </button>
+
+        </div>
       </div>
 
       <!-- BUSCADOR PRO -->
       <div class="search-bar">
-        <img src="/app/icons/buscar.png" width="20" height="20" class="search-icon" alt="Buscar">
+        <i class="fas fa-search search-icon"></i>
         <input type="text" id="searchInput" placeholder="Buscar modelo, marca o compatibilidad..." autocomplete="off">
         <button id="clearSearchBtn" class="clear-btn"><i class="fas fa-times"></i></button>
         <div class="suggestions-panel" id="suggestionsPanel"></div>
       </div>
 
       <!-- FILTROS -->
-      <div class="filters-row" id="quickFilters" style="margin-bottom: 16px; gap: 8px;">
+      <div class="filters-row" id="quickFilters">
         <button class="filter-chip active" data-filter="all">Todos</button>
         <button class="filter-chip" data-filter="ORIG">ORIG</button>
         <button class="filter-chip" data-filter="OLED">OLED</button>
@@ -166,25 +314,86 @@
       </div>
 
       <!-- RESULTADOS -->
-      <div id="resultsCount" style="font-size: 12px; color: var(--text-3); margin-bottom: 12px; display: flex; justify-content: space-between;"></div>
+      <div id="resultsCount" style="display: flex; justify-content: space-between;"></div>
+      
+      <!-- AQUÍ SE INYECTAN LAS TARJETAS -->
       <div id="resultsContainer"></div>
     </div>
   </main>
 
-  <!-- 🔥 MODAL DE CONFIRMACIÓN PARA MODO TÉCNICO -->
-  <div class="sheet-backdrop" id="modalTechConfirm">
-    <div class="sheet" style="text-align: center;">
-      <div class="sheet-handle"></div>
-      <div style="font-size: 56px; color: var(--brand-500); margin-bottom: 16px;"><i class="fas fa-eye"></i></div>
-      <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 8px;">Activar Modo Técnico</h3>
-      <p style="font-size: 14px; color: var(--text-3); margin-bottom: 24px;">Al activar este modo, podrás ver los **precios de compra** de los repuestos. ¿Estás seguro de que quieres continuar?</p>
+  <!-- MODAL DE CONFIRMACIÓN PARA MODO TÉCNICO -->
+  <div class="modal-backdrop" id="modalTechConfirm">
+    <div class="modal">
+      <div style="font-size: 56px; color: var(--brand); margin-bottom: 16px;"><i class="fas fa-eye"></i></div>
+      <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 8px; color: var(--text-main);">Activar Modo Técnico</h3>
+      <p style="font-size: 14px; color: var(--text-mute); margin-bottom: 24px;">Al activar este modo, podrás ver los <b>precios de compra</b> de los repuestos. ¿Estás seguro de que quieres continuar?</p>
       <div style="display: flex; gap: 10px;">
-        <button class="btn btn-secondary" id="btnCancelTech" style="flex: 1;">Cancelar</button>
-        <button class="btn btn-primary" id="btnConfirmTech" style="flex: 1;">Activar</button>
+        <button class="btn" id="btnCancelTech" style="flex: 1; padding: 14px; border-radius: 12px; background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border-color); font-weight: 700;">Cancelar</button>
+        <button class="btn" id="btnConfirmTech" style="flex: 1; padding: 14px; border-radius: 12px; background: var(--brand); color: white; border: none; font-weight: 700;">Activar</button>
       </div>
     </div>
   </div>
 
+  <!-- SCRIPT PRINCIPAL DE PRECIOS (No modificado) -->
   <script type="module" src="./precios.js"></script>
+  
+  <!-- 🔥 SCRIPT DE SONIDO Y RED DE SEGURIDAD 🔥 -->
+  <script>
+    // 1. MOTOR DE SONIDO NATIVO (Web Audio API)
+    let audioCtx = null;
+
+    function playClickSound() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'sine'; // Tono suave
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(300, now + 0.08); // Caída de tono
+        
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08); // Desvanecimiento
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } catch (e) { console.warn('Audio no soportado', e); }
+    }
+
+    // 2. ASIGNAR SONIDO A LOS BOTONES
+    document.addEventListener('DOMContentLoaded', () => {
+      // Botones superiores
+      document.getElementById('techModeBtn')?.addEventListener('click', playClickSound);
+      document.getElementById('adminEditBtn')?.addEventListener('click', playClickSound);
+      
+      // Botones de filtro
+      document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.addEventListener('click', playClickSound);
+      });
+
+      // Botones dentro de las tarjetas (delegación de eventos)
+      document.getElementById('resultsContainer')?.addEventListener('click', (e) => {
+        if (e.target.closest('.whatsapp-btn') || e.target.closest('.image-btn') || e.target.closest('.edit-btn')) {
+          playClickSound();
+        }
+      });
+    });
+
+    // 3. RED DE SEGURIDAD PARA EL LOADER
+    setTimeout(() => {
+      const splash = document.getElementById('splash');
+      const appRoot = document.getElementById('appRoot');
+      if (splash && !splash.classList.contains('hidden')) {
+        splash.classList.add('hidden');
+        if (appRoot) appRoot.style.opacity = '1';
+      }
+    }, 2500);
+  </script>
 </body>
 </html>
