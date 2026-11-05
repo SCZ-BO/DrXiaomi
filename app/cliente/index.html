@@ -33,12 +33,13 @@
 
   <style>
     :root {
-      --radius-sm: var(--r-sm, 4px);
-      --radius-md: var(--r-md, 8px);
-      --radius-lg: var(--r-lg, 12px);
+      --radius-sm: var(--r-sm, 6px);
+      --radius-md: var(--r-md, 10px);
+      --radius-lg: var(--r-lg, 16px);
       --brand: var(--brand-500, #FF6900); 
       --brand-hover: var(--brand-600, #E65100); 
       --brand-light: rgba(255, 105, 0, 0.15); 
+      --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
     }
     
     [data-theme="dark"] { 
@@ -73,26 +74,24 @@
     .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
     
     .header-actions { display: flex; gap: 6px; }
-    .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-    .icon-btn:active { transform: scale(0.95); }
+    .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s var(--ease-spring); }
+    .icon-btn:active { transform: scale(0.88); }
 
-    /* BOTONES DEL HEADER COLORIDOS */
-    .header-actions .icon-btn#homeBtn { color: #3B82F6; border-color: rgba(59, 130, 246, 0.3); }
-    .header-actions .icon-btn#themeToggleBtn { color: #F59E0B; border-color: rgba(245, 158, 11, 0.3); }
-    .header-actions .icon-btn#clearDraftBtn { color: #EF4444; border-color: rgba(239, 68, 68, 0.3); }
-    .header-actions .icon-btn#preciosBtn { color: #10B981; border-color: rgba(16, 185, 129, 0.3); }
-    .header-actions .icon-btn#reportesBtn { color: #8B5CF6; border-color: rgba(139, 92, 246, 0.3); }
-    .header-actions .icon-btn#logoutBtn { color: #EF4444; border-color: rgba(239, 68, 68, 0.3); }
+    .header-actions .icon-btn#homeBtn { color: #3B82F6; border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.05); }
+    .header-actions .icon-btn#themeToggleBtn { color: #F59E0B; border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.05); }
+    .header-actions .icon-btn#clearDraftBtn { color: #EF4444; border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05); }
+    .header-actions .icon-btn#preciosBtn { color: #10B981; border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05); }
+    .header-actions .icon-btn#reportesBtn { color: #8B5CF6; border-color: rgba(139, 92, 246, 0.3); background: rgba(139, 92, 246, 0.05); }
+    .header-actions .icon-btn#logoutBtn { color: #EF4444; border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05); }
 
     .wizard-progress { padding: 4px 0 16px 0; display: flex; justify-content: center; gap: 8px; }
-    .wizard-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg-elev); transition: 0.3s; }
-    .wizard-dot.active { background: var(--brand); transform: scale(1.2); }
+    .wizard-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg-elev); transition: all 0.3s var(--ease-spring); }
+    .wizard-dot.active { background: var(--brand); transform: scale(1.3); box-shadow: 0 0 8px var(--brand); }
     .wizard-dot.done { background: var(--brand); opacity: 0.5; }
 
-    .step-indicator { font-size: 11px; font-weight: 700; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+    .step-indicator { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
     .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     
-    /* INPUTS */
     .field { position: relative; margin-bottom: 12px; }
     .field input, .field textarea { 
       width: 100%; 
@@ -112,7 +111,6 @@
 
     .field-title { font-size: 11px; font-weight: 700; margin-bottom: 10px; display: block; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
     
-    /* MARCAS */
     .marcas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
     .marca-btn { 
       padding: 12px 6px; 
@@ -123,27 +121,28 @@
       font-weight: 700; 
       font-size: 11px; 
       cursor: pointer; 
-      transition: 0.3s; 
+      transition: all 0.3s var(--ease-spring); 
       text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      position: relative;
     }
+    .marca-btn:active { transform: scale(0.9); }
     
-    /* 🔥 EFECTO FOCUS PARA MARCAS */
     .marcas-grid:has(.marca-btn.active) .marca-btn:not(.active) {
-      opacity: 0.3;
+      opacity: 0.25;
       filter: grayscale(1);
-      transform: scale(0.95);
+      transform: scale(0.92);
     }
     .marca-btn.active { 
       border-color: var(--brand) !important; 
       color: #fff !important; 
       transform: scale(1.05);
-      box-shadow: 0 0 15px var(--brand-light);
+      box-shadow: 0 0 20px var(--brand-light);
       background: var(--brand) !important;
       opacity: 1 !important;
       filter: none !important;
+      z-index: 2;
     }
     
-    /* RADIO OPTIONS */
     .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .radio-option { 
       padding: 14px 6px; 
@@ -158,16 +157,17 @@
       align-items: center; 
       gap: 6px; 
       cursor: pointer; 
-      transition: 0.3s; 
+      transition: all 0.3s var(--ease-spring); 
     }
-    .radio-option i { font-size: 18px; }
+    .radio-option:active { transform: scale(0.9); }
+    .radio-option i { font-size: 20px; transition: transform 0.2s; }
+    .radio-option.active i { transform: scale(1.2); }
     
-    /* 🔥 EFECTO FOCUS PARA ENCIENDE */
     #enciendeGroup:has(.radio-option.active) .radio-option:not(.active),
     #tipoSeguridadGroup:has(.radio-option.active) .radio-option:not(.active) {
-      opacity: 0.3;
+      opacity: 0.25;
       filter: grayscale(1);
-      transform: scale(0.95);
+      transform: scale(0.92);
     }
 
     .radio-option[data-value="Sí"] { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); }
@@ -188,14 +188,14 @@
       border-color: var(--brand) !important; 
       color: #fff !important; 
       transform: scale(1.05);
-      box-shadow: 0 0 15px var(--brand-light);
+      box-shadow: 0 0 20px var(--brand-light);
       background: var(--brand) !important;
       opacity: 1 !important;
       filter: none !important;
+      z-index: 2;
     }
     .radio-option.active i { color: #fff !important; }
 
-    /* CHIPS */
     .chips-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
     .chip-btn { 
       padding: 10px 16px; 
@@ -209,14 +209,14 @@
       display: flex; 
       align-items: center; 
       gap: 6px; 
-      transition: 0.3s; 
+      transition: all 0.3s var(--ease-spring); 
     }
+    .chip-btn:active { transform: scale(0.9); }
     
-    /* 🔥 EFECTO FOCUS PARA MOTIVOS */
     .chips-group:has(.chip-btn.active) .chip-btn:not(.active) {
-      opacity: 0.3;
+      opacity: 0.25;
       filter: grayscale(1);
-      transform: scale(0.95);
+      transform: scale(0.92);
     }
 
     .chip-btn[data-value="Cambio de pantalla"] { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); }
@@ -235,44 +235,41 @@
       box-shadow: 0 0 15px var(--brand-light); 
       opacity: 1 !important;
       filter: none !important;
+      z-index: 2;
     }
 
-    /* CHECKLIST */
     .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
-    .check-item { padding: 12px 4px; background: var(--bg-elev); border: 2px solid transparent; border-radius: var(--radius-sm); color: var(--text-main); font-size: 10px; font-weight: 600; cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; text-align: center; white-space: nowrap; }
+    .check-item { padding: 12px 4px; background: var(--bg-elev); border: 2px solid transparent; border-radius: var(--radius-sm); color: var(--text-main); font-size: 10px; font-weight: 600; cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s var(--ease-spring); text-align: center; white-space: nowrap; }
+    .check-item:active { transform: scale(0.9); }
     .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 12px; }
     .check-item.ok { background: rgba(34, 197, 94, 0.15); border-color: #22C55E; color: #22C55E; transform: scale(0.95); }
     .check-item.ok::before { content: '✓'; color: #22C55E; }
     .check-item.falla { background: rgba(239, 68, 68, 0.15); border-color: #EF4444; color: #EF4444; transform: scale(0.95); }
     .check-item.falla::before { content: '✕'; color: #EF4444; }
 
-    /* FOTOS */
     .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .foto-slot { aspect-ratio: 4/3; border-radius: var(--radius-sm); border: 2px dashed var(--border); background: var(--bg-elev); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-mute); font-size: 12px; font-weight: 600; cursor: pointer; position: relative; overflow: hidden; transition: 0.2s; }
-    .foto-slot:active { border-color: var(--brand); color: var(--brand); }
+    .foto-slot { aspect-ratio: 4/3; border-radius: var(--radius-sm); border: 2px dashed var(--border); background: var(--bg-elev); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-mute); font-size: 12px; font-weight: 600; cursor: pointer; position: relative; overflow: hidden; transition: all 0.2s var(--ease-spring); }
+    .foto-slot:active { transform: scale(0.95); border-color: var(--brand); color: var(--brand); }
     .foto-slot img { width: 100%; height: 100%; object-fit: cover; }
     .foto-remove { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.8); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-    /* SERVICIOS */
     .servicio-item { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
     .servicio-item input.servicio-desc { flex: 1; padding: 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; }
     .servicio-item input.servicio-costo { width: 90px; padding: 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-elev); color: var(--brand); font-weight: 700; text-align: right; }
-    .removeServicio { width: 42px; height: 42px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1.5px solid rgba(239, 68, 68, 0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .removeServicio { width: 42px; height: 42px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1.5px solid rgba(239, 68, 68, 0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .removeServicio:active { transform: scale(0.9); }
 
-    /* RESUMEN */
     .resumen-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; margin-bottom: 10px; }
     .resumen-saldo { border-top: 2px dashed var(--border); padding-top: 12px; margin-top: 12px; color: var(--brand); font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
 
-    /* FOOTER */
     .wizard-footer { padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); background: var(--bg-main); border-top: 1px solid var(--border); display: flex; gap: 10px; z-index: 100; }
-    .btn { padding: 16px; border-radius: var(--radius-md); font-size: 15px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+    .btn { padding: 16px; border-radius: var(--radius-md); font-size: 15px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s var(--ease-spring); }
+    .btn:active { transform: scale(0.95); }
     .btn-primary { background: linear-gradient(135deg, var(--brand), #FF8C00); color: white; box-shadow: 0 4px 16px -4px rgba(255, 105, 0, 0.5); }
-    .btn-primary:active { transform: scale(0.97); }
     .btn-secondary { background: var(--bg-elev); color: var(--text-main); border: 1.5px solid var(--border); }
     #btnPrev { flex: 0 0 50px; padding: 14px 0; }
     #btnNext, #btnGenerate { flex: 1; }
 
-    /* MODALES */
     .sheet-backdrop, .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 9999; backdrop-filter: blur(4px); }
     .sheet-backdrop { align-items: flex-end; }
     .sheet-backdrop.show, .modal-backdrop.show { opacity: 1; pointer-events: auto; }
@@ -280,7 +277,6 @@
     .modal { background: var(--bg-card); padding: 24px; border-radius: var(--radius-lg); width: 90%; max-width: 400px; text-align: center; border: 2px solid var(--border); }
     .hidden { display: none !important; }
 
-    /* PREVIEW RECIBO */
     .preview-recibo { background: white; color: #1a1a1a; border-radius: var(--radius-md); padding: 16px; font-size: 12px; }
     .preview-header { border-bottom: 2px solid var(--brand); margin: -16px -16px 12px; padding: 12px 16px; display: flex; align-items: center; gap: 8px; background: #f9fafb;}
     .preview-header img { width: 32px; height: 32px; object-fit: contain; }
@@ -510,6 +506,55 @@
 
   <input type="file" id="inputCamara" accept="image/*" capture="environment" class="hidden-file-input">
   <input type="file" id="inputGaleria" accept="image/*" class="hidden-file-input">
+
+  <!-- 🔥 SCRIPT DE SONIDOS NATIVOS + HÁPTICO -->
+  <script>
+    (function() {
+      let audioCtx = null;
+      function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      }
+      
+      function playSound(type) {
+        try {
+          initAudio();
+          const now = audioCtx.currentTime;
+          
+          const createOsc = (freqStart, freqEnd, duration, gainVal, waveType) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = waveType;
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.setValueAtTime(freqStart, now);
+            osc.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
+            gain.gain.setValueAtTime(gainVal, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+            osc.start(now);
+            osc.stop(now + duration);
+          };
+
+          if (type === 'click') {
+            createOsc(1500, 500, 0.04, 0.2, 'triangle');
+          } else if (type === 'pop') {
+            createOsc(800, 200, 0.1, 0.3, 'sine');
+          } else if (type === 'success') {
+            createOsc(1046.50, 1046.50, 0.1, 0.2, 'sine');
+            setTimeout(() => createOsc(1567.98, 1567.98, 0.2, 0.2, 'sine'), 80);
+          }
+        } catch (e) { console.warn('Audio error', e); }
+      }
+
+      document.addEventListener('click', (e) => {
+        const target = e.target.closest('button, .marca-btn, .radio-option, .chip-btn, .check-item, .foto-slot');
+        if (target) {
+          playSound('click');
+          if (navigator.vibrate) navigator.vibrate(10);
+        }
+      });
+    })();
+  </script>
 
   <script type="module" src="/js/cliente.js"></script>
 </body>
