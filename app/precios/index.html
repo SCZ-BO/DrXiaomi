@@ -18,9 +18,6 @@
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    /* ============================================================ */
-    /* CSS AISLADO Y PREMIUM PARA EL CATÁLOGO                       */
-    /* ============================================================ */
     :root {
       --bg-app: #0A0A0B;
       --bg-card: #141416;
@@ -54,25 +51,32 @@
       min-height: 100vh;
     }
 
-    /* REDUCCIÓN DE ESPACIO (MENOS SCROLL) */
-    .app-content { padding: 8px 16px 100px 16px; display: flex; flex-direction: column; gap: 8px; }
+    /* 🔥 REDUCCIÓN DE ESPACIO (CERO ESPACIO MUERTO) 🔥 */
+    .app-content { padding: 8px 16px 90px 16px; display: flex; flex-direction: column; gap: 8px; }
 
-    /* FORZAR HEADER PARA QUE NO SE ROMPA */
-    .app-header { display: flex !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; padding: 12px 20px !important; background: var(--bg-app) !important; border-bottom: 1px solid var(--border-color) !important; }
-    .header-actions { display: flex !important; align-items: center !important; gap: 8px !important; }
+    /* 🔥 OCULTAR EL HEADER AUTOMÁTICO DE LAYOUT.JS 🔥 */
+    /* Ocultamos el header generado por JS para usar el nuestro */
+    .app-header { display: none !important; }
 
-    /* LOADER */
-    .loader-overlay { position: fixed; inset: 0; background: var(--bg-app); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.4s ease, visibility 0.4s; }
-    .loader-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-    .loader-logo-container { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-    .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); animation: spin 1.2s linear infinite; }
-    .loader-logo-img { width: 50px; height: 50px; border-radius: 50%; animation: spinReverse 2s linear infinite; box-shadow: 0 0 15px rgba(255, 105, 0, 0.3); }
-    .loader-text { font-size: 14px; font-weight: 600; color: var(--text-mute); letter-spacing: 0.5px; animation: pulse 1.5s infinite; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-    @keyframes spinReverse { 100% { transform: rotate(-360deg); } }
-    @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
-
-    /* BOTONES DEL HEADER */
+    /* 🔥 HEADER PERSONALIZADO (EXACTO A TU IMAGEN) 🔥 */
+    .custom-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: var(--bg-app);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-brand { display: flex; align-items: center; gap: 12px; }
+    .header-brand img { width: 40px; height: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .header-brand-text h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-main); margin-bottom: 2px; }
+    .header-brand-text p { font-size: 12px; color: var(--text-mute); font-weight: 500; }
+    
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    
     .header-custom-btn {
       display: flex; align-items: center; justify-content: center;
       width: 36px; height: 36px; border-radius: 50%;
@@ -88,6 +92,31 @@
       background: var(--brand) !important; border-color: var(--brand) !important;
       color: white !important; box-shadow: 0 0 15px rgba(255, 105, 0, 0.5);
     }
+
+    /* LOADER (CON LOGO GIRANDO FORZADO) */
+    .loader-overlay { position: fixed; inset: 0; background: var(--bg-app); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.4s ease, visibility 0.4s; }
+    .loader-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    
+    .loader-logo-container { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    
+    .loader-ring { 
+      position: absolute; inset: 0; border-radius: 50%; 
+      border: 3px solid transparent; 
+      border-top-color: var(--brand); border-bottom-color: var(--brand); 
+      animation: girarAnillo 1.2s linear infinite !important; 
+    }
+    
+    .loader-logo-img { 
+      width: 50px; height: 50px; border-radius: 50%; 
+      animation: girarLogo 2s linear infinite !important; 
+      box-shadow: 0 0 15px rgba(255, 105, 0, 0.3);
+    }
+    
+    .loader-text { font-size: 14px; font-weight: 600; color: var(--text-mute); letter-spacing: 0.5px; animation: pulsoTexto 1.5s infinite !important; }
+
+    @keyframes girarAnillo { 100% { transform: rotate(360deg); } }
+    @keyframes girarLogo { 100% { transform: rotate(-360deg); } }
+    @keyframes pulsoTexto { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
     /* OCULTAR COSTOS */
     .costo-tag { display: none !important; }
@@ -192,7 +221,26 @@
 
   <main class="app-container" id="appRoot" style="opacity:0;">
     
-    <!-- HEADER Y NAV (Restaurado) -->
+    <!-- 🔥 HEADER VISUAL PERSONALIZADO 🔥 -->
+    <header class="custom-header">
+      <div class="header-brand">
+        <img src="/imagenes/web-app-manifest-192x192.png" alt="Logo">
+        <div class="header-brand-text">
+          <h1>DR XIAOMI</h1>
+          <p>Catálogo</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="header-custom-btn" id="adminEditBtn" title="Gestionar Catálogo" style="display:none;">
+          <i class="fas fa-list-ul"></i>
+        </button>
+        <button class="header-custom-btn" id="techModeBtn" title="Ver Costos de Compra">
+          <i class="fas fa-eye"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- 🔥 LAYOUT ORIGINAL (Solo para la barra de abajo) 🔥 -->
     <script type="module">
       import { montarLayout } from '../js/layout.js';
       montarLayout({
@@ -207,7 +255,7 @@
       
       <div class="search-bar">
         <i class="fas fa-search search-icon"></i>
-        <input type="text" id="searchInput" placeholder="Buscar modelo, marca o compatibilidad..." autocomplete="off">
+        <input type="text" id="searchInput" placeholder="Buscar modelo... Ej: Redmi Note 10" autocomplete="off">
         <button id="clearSearchBtn" class="clear-btn"><i class="fas fa-times"></i></button>
         <div class="suggestions-panel" id="suggestionsPanel"></div>
       </div>
@@ -242,7 +290,7 @@
   <script type="module" src="./precios.js"></script>
   
   <script>
-    // INYECTAR BOTONES AL HEADER Y ASIGNAR SONIDO
+    // PULL TO REFRESH Y SONIDO
     let audioCtx = null;
     function playClickSound() {
       try {
@@ -263,31 +311,43 @@
       } catch (e) { console.warn('Audio no soportado', e); }
     }
 
+    // Lógica para el Pull to Refresh
+    let touchStartY = 0;
+    let touchCurrentY = 0;
+    let isPulling = false;
+    
+    document.addEventListener('touchstart', (e) => {
+      if (window.scrollY === 0) {
+        touchStartY = e.touches[0].clientY;
+        isPulling = true;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!isPulling) return;
+      touchCurrentY = e.touches[0].clientY;
+      const distance = touchCurrentY - touchStartY;
+      
+      if (distance > 100 && window.scrollY === 0) {
+        // Mostramos el loader de nuevo
+        const splash = document.getElementById('splash');
+        if(splash) splash.classList.remove('hidden');
+        // Recargamos la página
+        window.location.reload();
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', () => {
+      isPulling = false;
+    });
+
+    // Asignar sonido a los botones
     document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        const headerActions = document.querySelector('.header-actions');
-        if (headerActions) {
-          const techBtn = document.createElement('button');
-          techBtn.className = 'header-custom-btn';
-          techBtn.id = 'techModeBtn';
-          techBtn.innerHTML = '<i class="fas fa-eye"></i>';
-          techBtn.addEventListener('click', playClickSound);
-
-          const adminBtn = document.createElement('button');
-          adminBtn.className = 'header-custom-btn';
-          adminBtn.id = 'adminEditBtn';
-          adminBtn.innerHTML = '<i class="fas fa-list-ul"></i>';
-          adminBtn.addEventListener('click', playClickSound);
-
-          if (headerActions.firstChild) {
-            headerActions.insertBefore(adminBtn, headerActions.firstChild);
-            headerActions.insertBefore(techBtn, headerActions.firstChild);
-          } else {
-            headerActions.appendChild(adminBtn);
-            headerActions.appendChild(techBtn);
-          }
-        }
-      }, 500); // 500ms para asegurar que layout.js termine
+      const techBtn = document.getElementById('techModeBtn');
+      const adminBtn = document.getElementById('adminEditBtn');
+      
+      techBtn?.addEventListener('click', playClickSound);
+      adminBtn?.addEventListener('click', playClickSound);
     });
   </script>
 </body>
