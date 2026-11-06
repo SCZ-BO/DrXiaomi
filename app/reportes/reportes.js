@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES (OPTIMIZADO - CARGA INSTANTÁNEA)
+   DR. XIAOMI · REPORTES PRO (CON GASTOS Y DESGLOSE)
    Archivo: app/reportes/reportes.js
    ============================================================ */
 
@@ -12,19 +12,27 @@ initTheme();
 let sesion = null;
 let rangoActual = 'hoy';
 let unsubscribeRecibos = null;
-let unsubscribeCierres = null;
 let unsubscribeVentas = null; 
-let datosActuales = [];
+let unsubscribeCierresGastos = null;
+let datosActuales = []; // Datos completos del período
+let datosFiltrados = []; // Datos filtrados por la pestaña activa
+let tabActual = 'todos'; // 'todos', 'servicios', 'accesorios'
+let gastosActuales = { pasajes: 0, almuerzo: 0 };
 
+// Elementos del DOM
 const headerSubtitle = document.getElementById('headerSubtitle');
 const totalMontoEl = document.getElementById('totalMonto');
 const totalEntregasEl = document.getElementById('totalEntregas');
 const totalCostoEl = document.getElementById('totalCosto');
 const totalGananciaEl = document.getElementById('totalGanancia');
+const totalGastosEl = document.getElementById('totalGastos');
 const totalMargenEl = document.getElementById('totalMargen');
-const statPromedioEl = document.getElementById('statPromedio');
-const statMaximoEl = document.getElementById('statMaximo');
-const metodosGrid = document.getElementById('metodosGrid');
+const pagoEfectivoEl = document.getElementById('pagoEfectivo');
+const pagoQREl = document.getElementById('pagoQR');
+const breakdownChart = document.getElementById('breakdownChart');
+const breakdownTotalPct = document.getElementById('breakdownTotalPct');
+const breakdownAccesoriosEl = document.getElementById('breakdownAccesorios');
+const breakdownServiciosEl = document.getElementById('breakdownServicios');
 const listaMovimientos = document.getElementById('listaMovimientos');
 
 requireAuth((s) => {
@@ -34,23 +42,21 @@ requireAuth((s) => {
 });
 
 function configurarEventos() {
-  document.getElementById('homeBtn')?.addEventListener('click', () => window.location.href = '/app/');
   document.getElementById('backBtn')?.addEventListener('click', () => window.location.href = '/app/');
-  document.getElementById('preciosBtn')?.addEventListener('click', () => window.location.href = '/precio/');
-  document.getElementById('logoutBtn')?.addEventListener('click', () => logout());
   document.getElementById('refreshBtn')?.addEventListener('click', () => cargarReporte(rangoActual));
 
-  document.querySelectorAll('.fecha-btn[data-rango]').forEach(btn => {
+  // Filtros de tiempo
+  document.querySelectorAll('.time-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       haptic(10);
-      document.querySelectorAll('.fecha-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       rangoActual = btn.dataset.rango;
 
       if (rangoActual === 'custom') {
-        document.getElementById('fechaCustom').classList.add('show');
+        document.getElementById('customDateRow').classList.add('show');
       } else {
-        document.getElementById('fechaCustom').classList.remove('show');
+        document.getElementById('customDateRow').classList.remove('show');
         cargarReporte(rangoActual);
       }
     });
@@ -66,8 +72,19 @@ function configurarEventos() {
     cargarReporte('custom', desde, hasta);
   });
 
-  document.getElementById('btnVolverPanel')?.addEventListener('click', () => window.location.href = '/app/');
+  // Tabs de movimientos
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      haptic(10);
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      tabActual = btn.dataset.tab;
+      filtrarYRenderizarMovimientos();
+    });
+  });
+
   document.getElementById('btnExportar')?.addEventListener('click', exportarCSV);
+  document.getElementById('btnVolverPanel')?.addEventListener('click', () => window.location.href = '/app/');
 }
 
 function parsearFecha(fechaObj) {
@@ -80,12 +97,12 @@ function parsearFecha(fechaObj) {
 
 async function cargarReporte(rango, desdeFecha, hastaFecha) {
   if (unsubscribeRecibos) unsubscribeRecibos();
-  if (unsubscribeCierres) unsubscribeCierres();
   if (unsubscribeVentas) unsubscribeVentas();
+  if (unsubscribeCierresGastos) unsubscribeCierresGastos();
 
   totalMontoEl.textContent = '...';
   totalEntregasEl.textContent = 'Buscando...';
-  listaMovimientos.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-mute);">⏳ Cargando datos...</div>';
+  listaMovimientos.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Cargando datos...</p></div>';
 
   try {
     let inicio = new Date();
@@ -100,7 +117,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       fin.setDate(fin.getDate() - 1);
       fin.setHours(23, 59, 59, 999);
     } else if (rango === 'semana') {
-      const dia = inicio.getDay() || 7;
+      const dia = inicio.getDay() || 7; // Lunes es 1
       inicio.setDate(inicio.getDate() - dia + 1);
       inicio.setHours(0, 0, 0, 0);
       fin.setHours(23, 59, 59, 999);
@@ -120,34 +137,18 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
     headerSubtitle.textContent = `${inicio.toLocaleDateString('es-BO', opcionesFecha)} - ${fin.toLocaleDateString('es-BO', opcionesFecha)}`;
 
     let datosRecibos = [];
-    let datosCierres = [];
     let datosVentas = [];
+    gastosActuales = { pasajes: 0, almuerzo: 0 };
 
     const procesarYRenderizar = () => {
-      // 🔥 AQUÍ ESTÁ LA CORRECCIÓN: Filtramos duplicados.
-      // Un movimiento es duplicado si ya existe uno con el mismo monto, misma fecha y mismo detalle.
-      const todosLosDatos = [...datosRecibos, ...datosCierres, ...datosVentas];
-      const sinDuplicados = [];
-      const huellas = new Set();
-
-      todosLosDatos.forEach(d => {
-        // Creamos una "huella" única basada en la fecha (minuto exacto), el monto y el detalle.
-        const fechaClave = d.fechaReal ? `${d.fechaReal.getFullYear()}-${d.fechaReal.getMonth()}-${d.fechaReal.getDate()}-${d.fechaReal.getHours()}-${d.fechaReal.getMinutes()}` : 'sin-fecha';
-        const huella = `${fechaClave}|${d.montoCobrado}|${d.detalle}`;
-        
-        if (!huellas.has(huella)) {
-          huellas.add(huella);
-          sinDuplicados.push(d);
-        }
-      });
-
-      sinDuplicados.sort((a, b) => b.fechaReal - a.fechaReal);
-      datosActuales = sinDuplicados;
-      renderizarReporte(sinDuplicados);
+      const todosLosDatos = [...datosRecibos, ...datosVentas];
+      todosLosDatos.sort((a, b) => b.fechaReal - a.fechaReal);
+      datosActuales = todosLosDatos;
+      renderizarReporte(todosLosDatos, gastosActuales);
       document.getElementById('appLoader')?.classList.add('hidden');
     };
 
-    // 🔥 LÍMITE REDUCIDO A 100 PARA VELOCIDAD
+    // 1. Leer Recibos (Servicios/Reparaciones)
     const qRecibos = query(collection(db, 'recibos'), limit(100));
     unsubscribeRecibos = onSnapshot(qRecibos, (snapshot) => {
       datosRecibos = [];
@@ -164,6 +165,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
           datosRecibos.push({
             origen: 'recibo',
+            tipo: 'servicio', // Clasificación para el filtro
             cliente: d.cliente || 'Cliente',
             detalle: `${d.marca || ''} ${d.modelo || ''}`,
             montoCobrado: montoCobrado,
@@ -177,6 +179,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
+    // 2. Leer Ventas (Accesorios y Servicios Rápidos)
     const qVentas = query(collection(db, 'ventas'), limit(100));
     unsubscribeVentas = onSnapshot(qVentas, (snapshot) => {
       datosVentas = [];
@@ -187,8 +190,11 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
 
         const diaVenta = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaVenta >= diaInicio && diaVenta <= diaFin) {
+          // Clasificamos como accesorio si el concepto empieza con "Xx " (ej: 1x Pantalla)
+          const esAccesorio = /^\d+x\s/.test(d.concepto);
           datosVentas.push({
             origen: 'venta_panel',
+            tipo: esAccesorio ? 'accesorio' : 'servicio',
             cliente: 'Venta Rápida',
             detalle: d.concepto,
             montoCobrado: Number(d.monto) || 0,
@@ -202,46 +208,19 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
+    // 3. Leer Cierres (SOLO para Gastos)
     const qCierres = query(collection(db, 'cierres'), limit(100));
-    unsubscribeCierres = onSnapshot(qCierres, (snapshot) => {
-      datosCierres = [];
+    unsubscribeCierresGastos = onSnapshot(qCierres, (snapshot) => {
+      gastosActuales = { pasajes: 0, almuerzo: 0 };
       snapshot.forEach(doc => {
         const d = doc.data();
         const fechaD = parsearFecha(d.fecha);
         if (!fechaD) return;
 
-        const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
-        if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
-          if (d.ventasInventario && d.ventasInventario.length > 0) {
-            d.ventasInventario.forEach((v) => {
-              datosCierres.push({
-                origen: 'cierre',
-                cliente: 'Venta de Accesorio',
-                detalle: `${v.cantidad}x ${v.nombre}`,
-                montoCobrado: Number(v.precio * v.cantidad) || 0,
-                costoRepuesto: 0,
-                metodoPago: 'Efectivo',
-                fechaReal: fechaD,
-                numeroRecibo: ''
-              });
-            });
-          }
-          if (d.extras && d.extras.length > 0) {
-            d.extras.forEach((e) => {
-              if (e.monto > 0) {
-                datosCierres.push({
-                  origen: 'cierre',
-                  cliente: 'Venta Extra',
-                  detalle: e.desc || 'Varios',
-                  montoCobrado: Number(e.monto) || 0,
-                  costoRepuesto: 0,
-                  metodoPago: 'Efectivo',
-                  fechaReal: fechaD,
-                  numeroRecibo: ''
-                });
-              }
-            });
-          }
+        const diaCierre = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
+        if (diaCierre >= diaInicio && diaCierre <= diaFin) {
+          gastosActuales.pasajes += Number(d.gastoPasajes) || 0;
+          gastosActuales.almuerzo += Number(d.gastoAlmuerzo) || 0;
         }
       });
       procesarYRenderizar();
@@ -253,96 +232,100 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
   }
 }
 
-function renderizarReporte(datos) {
+function renderizarReporte(datos, gastos) {
   document.getElementById('appLoader')?.classList.add('hidden');
 
-  if (datos.length === 0) {
-    totalMontoEl.textContent = 'Bs. 0.00';
-    totalEntregasEl.textContent = '0 ventas';
-    totalCostoEl.textContent = 'Bs. 0';
-    totalGananciaEl.textContent = 'Bs. 0';
-    totalMargenEl.textContent = '0%';
-    statPromedioEl.textContent = 'Bs. 0';
-    statMaximoEl.textContent = 'Bs. 0';
-    metodosGrid.innerHTML = '';
+  // 1. Calcular Totales
+  let totalMonto = 0;
+  let totalCosto = 0;
+  let metodos = { efectivo: 0, qr: 0 };
+  let totalAccesorios = 0;
+  let totalServicios = 0;
+
+  datos.forEach(d => {
+    const monto = d.montoCobrado;
+    const costo = d.costoRepuesto;
+    const metodo = (d.metodoPago || '').toLowerCase();
+
+    totalMonto += monto;
+    totalCosto += costo;
+
+    if (metodo.includes('efectivo')) metodos.efectivo += monto;
+    else if (metodo.includes('qr')) metodos.qr += monto;
+
+    if (d.tipo === 'accesorio') totalAccesorios += monto;
+    else totalServicios += monto;
+  });
+
+  const totalGastos = gastos.pasajes + gastos.almuerzo;
+  const totalGanancia = totalMonto - totalCosto - totalGastos;
+  const margen = totalMonto > 0 ? (totalGanancia / totalMonto) * 100 : 0;
+
+  // 2. Actualizar DOM
+  totalMontoEl.textContent = formatBs(totalMonto);
+  totalEntregasEl.textContent = `${datos.length} movimientos`;
+  totalCostoEl.textContent = formatBs(totalCosto);
+  totalGastosEl.textContent = formatBs(totalGastos);
+  totalGananciaEl.textContent = formatBs(totalGanancia);
+  totalMargenEl.textContent = `${margen.toFixed(1)}%`;
+  pagoEfectivoEl.textContent = formatBs(metodos.efectivo);
+  pagoQREl.textContent = formatBs(metodos.qr);
+
+  // 3. Gráfico de Dona
+  const totalVentas = totalAccesorios + totalServicios;
+  const pctAccesorios = totalVentas > 0 ? (totalAccesorios / totalVentas) * 100 : 0;
+  breakdownChart.style.setProperty('--p-accesorios', `${pctAccesorios}%`);
+  breakdownTotalPct.textContent = `${Math.round(pctAccesorios)}%`;
+  breakdownAccesoriosEl.textContent = formatBs(totalAccesorios);
+  breakdownServiciosEl.textContent = formatBs(totalServicios);
+
+  // 4. Renderizar Movimientos
+  filtrarYRenderizarMovimientos();
+}
+
+function filtrarYRenderizarMovimientos() {
+  if (tabActual === 'todos') {
+    datosFiltrados = datosActuales;
+  } else if (tabActual === 'servicios') {
+    datosFiltrados = datosActuales.filter(d => d.tipo === 'servicio');
+  } else if (tabActual === 'accesorios') {
+    datosFiltrados = datosActuales.filter(d => d.tipo === 'accesorio');
+  }
+
+  if (datosFiltrados.length === 0) {
     listaMovimientos.innerHTML = `
-      <div style="text-align:center; padding:40px 20px; color:var(--text-mute);">
-        <i class="fas fa-inbox" style="font-size:40px; opacity:0.3; margin-bottom:10px; display:block;"></i>
-        <h3 style="font-size:15px;">Sin movimientos</h3>
-        <p style="font-size:12px;">No hay ventas en este período.</p>
+      <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>No hay movimientos en esta categoría.</p>
       </div>
     `;
     return;
   }
 
-  let totalMonto = 0;
-  let totalCosto = 0;
-  let metodos = { efectivo: 0, qr: 0, transferencia: 0, mixto: 0 };
-  let maxVenta = 0;
-  let movimientosHtml = '';
-
-  for (let i = 0; i < datos.length; i++) {
-    const d = datos[i];
-    const monto = d.montoCobrado;
-    const costo = d.costoRepuesto;
-    const ganancia = monto - costo;
-    const metodo = (d.metodoPago || '').toLowerCase();
-
-    totalMonto += monto;
-    totalCosto += costo;
-    if (monto > maxVenta) maxVenta = monto;
-
-    if (metodo.includes('efectivo')) metodos.efectivo += monto;
-    else if (metodo.includes('qr')) metodos.qr += monto;
-    else if (metodo.includes('transf')) metodos.transferencia += monto;
-    else metodos.mixto += monto;
-
+  let html = '';
+  datosFiltrados.forEach(d => {
     const fechaD = d.fechaReal;
     const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
     const fechaStr = `${String(fechaD.getDate()).padStart(2, '0')}/${String(fechaD.getMonth() + 1).padStart(2, '0')}`;
+    
+    const icono = d.tipo === 'accesorio' ? 'fa-box' : 'fa-wrench';
+    const claseIcono = d.tipo === 'accesorio' ? 'venta' : 'recibo';
 
-    let icono = '🔧';
-    if (d.origen === 'cierre') icono = '🛒';
-    else if (d.origen === 'venta_panel') icono = '⚡';
-
-    movimientosHtml += `
-      <div class="movimiento">
-        <div class="hora">${fechaStr}<br>${horaStr}</div>
-        <div class="info">
-          <div class="cliente">${icono} ${escapeHtml(d.cliente || 'Cliente')}</div>
-          <div class="detalle">${escapeHtml(d.detalle || '')} · ${escapeHtml(d.metodoPago)}${d.numeroRecibo ? ` · ${escapeHtml(d.numeroRecibo)}` : ''}</div>
-          
-          <div style="font-size: 11px; margin-top: 4px; display: flex; gap: 8px;">
-            ${costo > 0 ? `<span style="color: #F59E0B;">Costo: ${formatBs(costo)}</span>` : ''}
-            <span style="color: #22C55E; font-weight: 700;">Ganancia: ${formatBs(ganancia)}</span>
-          </div>
+    html += `
+      <div class="movement-item">
+        <div class="icon-box ${claseIcono}">
+          <i class="fas ${icono}"></i>
         </div>
-        
-        <div class="monto">${formatBs(monto)}</div>
+        <div class="info">
+          <div class="title">${escapeHtml(d.cliente || 'Cliente')}</div>
+          <div class="subtitle">${escapeHtml(d.detalle || '')} · ${fechaStr} ${horaStr} · ${escapeHtml(d.metodoPago)}</div>
+        </div>
+        <div class="amount">${formatBs(d.montoCobrado)}</div>
       </div>
     `;
-  }
+  });
 
-  const totalGanancia = totalMonto - totalCosto;
-  const margen = totalMonto > 0 ? (totalGanancia / totalMonto) * 100 : 0;
-  const promedio = totalMonto / datos.length;
-
-  totalMontoEl.textContent = formatBs(totalMonto);
-  totalEntregasEl.textContent = `${datos.length} ventas totales`;
-  totalCostoEl.textContent = formatBs(totalCosto);
-  totalGananciaEl.textContent = formatBs(totalGanancia);
-  totalMargenEl.textContent = `${margen.toFixed(1)}%`;
-  statPromedioEl.textContent = formatBs(promedio);
-  statMaximoEl.textContent = formatBs(maxVenta);
-
-  metodosGrid.innerHTML = `
-    <div class="metodo-card"><div class="icono efectivo"><i class="fas fa-money-bill-wave"></i></div><div class="nombre">Efectivo</div><div class="monto">${formatBs(metodos.efectivo)}</div></div>
-    <div class="metodo-card"><div class="icono qr"><i class="fas fa-qrcode"></i></div><div class="nombre">QR</div><div class="monto">${formatBs(metodos.qr)}</div></div>
-    <div class="metodo-card"><div class="icono transf"><i class="fas fa-building-columns"></i></div><div class="nombre">Transf.</div><div class="monto">${formatBs(metodos.transferencia)}</div></div>
-    <div class="metodo-card"><div class="icono mixto"><i class="fas fa-shuffle"></i></div><div class="nombre">Mixto</div><div class="monto">${formatBs(metodos.mixto)}</div></div>
-  `;
-
-  listaMovimientos.innerHTML = movimientosHtml;
+  listaMovimientos.innerHTML = html;
 }
 
 function exportarCSV() {
@@ -360,9 +343,7 @@ function exportarCSV() {
     const fechaStr = `${String(fechaD.getDate()).padStart(2, '0')}/${String(fechaD.getMonth() + 1).padStart(2, '0')}/${fechaD.getFullYear()}`;
     const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
     
-    let tipo = 'Reparacion/Venta';
-    if (d.origen === 'cierre') tipo = 'Accesorio/Extra';
-    else if (d.origen === 'venta_panel') tipo = 'Venta Rápida';
+    const tipo = d.tipo === 'accesorio' ? 'Accesorio' : 'Servicio/Reparación';
 
     const cliente = String(d.cliente || '').replace(/;/g, ',');
     const detalle = String(d.detalle || '').replace(/;/g, ',');
