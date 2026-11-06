@@ -177,7 +177,11 @@
 
     /* ============ MAIN ============ */
     .main-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; position: relative; }
-    .cards-view { display: flex; flex-direction: column; gap: 16px; padding: 16px; padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 20px); width: 100%; box-sizing: border-box; }
+    .cards-view { 
+      display: flex; flex-direction: column; gap: 16px; padding: 16px; 
+      padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 40px); /* Aumentado para no tapar el último producto */
+      width: 100%; box-sizing: border-box; 
+    }
 
     /* ============ PRODUCT CARD (NORMAL) ============ */
     .product-card {
@@ -332,23 +336,37 @@
       position: fixed; bottom: calc(16px + var(--safe-bottom)); left: 0; right: 0;
       display: flex; justify-content: center; pointer-events: none; z-index: 100;
     }
+    
     .bottom-nav {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius-pill);
-      display: flex; padding: 8px 16px; gap: 20px;
+      display: flex; 
+      padding: 10px 28px; /* Más espacio interno */
+      gap: 36px; /* Más separación entre botones */
       box-shadow: var(--shadow-lg); pointer-events: auto;
     }
+    
     .nav-item {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 4px; padding: 4px 12px; border: none; background: transparent;
-      color: var(--text-mute); cursor: pointer; font-size: 10px; font-weight: 600;
-      text-decoration: none; transition: 0.15s;
+      gap: 6px; padding: 4px; border: none; background: transparent;
+      color: var(--text-mute); cursor: pointer; font-size: 11px; font-weight: 600;
+      text-decoration: none; transition: 0.2s;
     }
+    
     .nav-item.active { color: var(--brand); }
-    .nav-item i { font-size: 18px; transition: transform 0.15s; }
-    .nav-item.active i { transform: scale(1.1); filter: drop-shadow(0 0 6px var(--brand-glow)); }
-    .nav-item:active i { transform: scale(0.85); }
+    
+    /* Efecto para las imágenes de los botones */
+    .nav-item img { 
+      transition: transform 0.2s ease; 
+    }
+    .nav-item.active img { 
+      transform: scale(1.1); 
+      filter: drop-shadow(0 0 6px var(--brand-glow)); 
+    }
+    .nav-item:active img { 
+      transform: scale(0.9); 
+    }
 
     /* ============ MODAL ============ */
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
@@ -508,16 +526,16 @@
 
   <div class="bottom-nav-wrapper">
     <nav class="bottom-nav">
-      <!-- 🔥 BOTÓN 1: HOME (Cámbialo por tu PNG y dirección) -->
+      <!-- BOTÓN 1: HOME -->
       <a href="/app/" class="nav-item active" data-tab="home">
-        <img src="/imagenes/tu-logo-home.png" alt="Inicio" style="width: 20px; height: 20px; object-fit: contain;">
+        <img src="/imagenes/tu-logo-home.png" alt="Inicio" style="width: 28px; height: 28px; object-fit: contain;">
         <span>Inicio</span>
       </a>
       
-      <!-- 🔥 BOTÓN 2: COMPRAR (Cámbialo por tu PNG y dirección) -->
-      <a href="/app/clientes/" class="nav-item" data-tab="compare">
-        <img src="/imagenes/tu-logo-comprar.png" alt="Comprar" style="width: 20px; height: 20px; object-fit: contain;">
-        <span>Recibo</span>
+      <!-- BOTÓN 2: COMPRAR -->
+      <a href="/app/precios-admin/" class="nav-item" data-tab="compare">
+        <img src="/imagenes/tu-logo-comprar.png" alt="Comprar" style="width: 28px; height: 28px; object-fit: contain;">
+        <span>Comprar</span>
       </a>
     </nav>
   </div>
