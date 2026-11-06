@@ -124,10 +124,26 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
     let datosVentas = [];
 
     const procesarYRenderizar = () => {
+      // 🔥 AQUÍ ESTÁ LA CORRECCIÓN: Filtramos duplicados.
+      // Un movimiento es duplicado si ya existe uno con el mismo monto, misma fecha y mismo detalle.
       const todosLosDatos = [...datosRecibos, ...datosCierres, ...datosVentas];
-      todosLosDatos.sort((a, b) => b.fechaReal - a.fechaReal);
-      datosActuales = todosLosDatos;
-      renderizarReporte(todosLosDatos);
+      const sinDuplicados = [];
+      const huellas = new Set();
+
+      todosLosDatos.forEach(d => {
+        // Creamos una "huella" única basada en la fecha (minuto exacto), el monto y el detalle.
+        const fechaClave = d.fechaReal ? `${d.fechaReal.getFullYear()}-${d.fechaReal.getMonth()}-${d.fechaReal.getDate()}-${d.fechaReal.getHours()}-${d.fechaReal.getMinutes()}` : 'sin-fecha';
+        const huella = `${fechaClave}|${d.montoCobrado}|${d.detalle}`;
+        
+        if (!huellas.has(huella)) {
+          huellas.add(huella);
+          sinDuplicados.push(d);
+        }
+      });
+
+      sinDuplicados.sort((a, b) => b.fechaReal - a.fechaReal);
+      datosActuales = sinDuplicados;
+      renderizarReporte(sinDuplicados);
       document.getElementById('appLoader')?.classList.add('hidden');
     };
 
