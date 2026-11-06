@@ -54,49 +54,16 @@
       min-height: 100vh;
     }
 
-    /* ================= 🔥 HEADER EXACTO A TU CAPTURA 🔥 ================= */
-    .app-header { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      padding: 16px 20px; 
-      background: var(--bg-app);
-      border-bottom: 1px solid var(--border-color);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    
-    .header-brand { display: flex; align-items: center; gap: 12px; }
-    .header-brand img { width: 40px; height: 40px; border-radius: 8px; }
-    .header-brand-text h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-main); margin-bottom: 2px; }
-    .header-brand-text p { font-size: 12px; color: var(--text-mute); font-weight: 500; }
-    
-    .header-actions { display: flex; align-items: center; gap: 8px; }
-    
-    .header-icon-btn {
-      display: flex; align-items: center; justify-content: center;
-      width: 36px; height: 36px; border-radius: 50%;
-      border: 1px solid var(--border-color);
-      background: var(--bg-elev); color: var(--text-main);
-      font-size: 16px; cursor: pointer; transition: all 0.2s ease;
-    }
-    .header-icon-btn:active { transform: scale(0.9); }
-    
-    /* Botones Específicos */
-    #adminEditBtn { color: var(--blue); border-color: rgba(59, 130, 246, 0.3); background: var(--blue-light); }
-    #techModeBtn { color: var(--text-mute); }
-    #techModeBtn.tech-active {
-      background: var(--brand) !important; border-color: var(--brand) !important;
-      color: white !important; box-shadow: 0 0 15px rgba(255, 105, 0, 0.5);
-    }
+    /* REDUCCIÓN DE ESPACIO (MENOS SCROLL) */
+    .app-content { padding: 8px 16px 100px 16px; display: flex; flex-direction: column; gap: 8px; }
 
-    .app-content { padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
+    /* FORZAR HEADER PARA QUE NO SE ROMPA */
+    .app-header { display: flex !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; padding: 12px 20px !important; background: var(--bg-app) !important; border-bottom: 1px solid var(--border-color) !important; }
+    .header-actions { display: flex !important; align-items: center !important; gap: 8px !important; }
 
-    /* ================= LOADER ================= */
+    /* LOADER */
     .loader-overlay { position: fixed; inset: 0; background: var(--bg-app); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.4s ease, visibility 0.4s; }
     .loader-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-    
     .loader-logo-container { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
     .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); animation: spin 1.2s linear infinite; }
     .loader-logo-img { width: 50px; height: 50px; border-radius: 50%; animation: spinReverse 2s linear infinite; box-shadow: 0 0 15px rgba(255, 105, 0, 0.3); }
@@ -105,27 +72,44 @@
     @keyframes spinReverse { 100% { transform: rotate(-360deg); } }
     @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-    /* 🔥 OCULTAR COSTOS POR DEFECTO 🔥 */
-    .precio-compra, .costo-compra, .ganancia-venta, .compra-tag, .costo-tag { display: none !important; }
-    body.show-costs .precio-compra, body.show-costs .costo-compra, body.show-costs .ganancia-venta, body.show-costs .compra-tag, body.show-costs .costo-tag { display: flex !important; }
+    /* BOTONES DEL HEADER */
+    .header-custom-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1px solid var(--border-color);
+      background: var(--bg-elev); color: var(--text-main);
+      font-size: 16px; cursor: pointer; transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .header-custom-btn:active { transform: scale(0.88); }
+    #adminEditBtn { color: var(--blue); border-color: rgba(59, 130, 246, 0.3); background: var(--blue-light); }
+    #techModeBtn { color: var(--text-mute); }
+    #techModeBtn.tech-active {
+      background: var(--brand) !important; border-color: var(--brand) !important;
+      color: white !important; box-shadow: 0 0 15px rgba(255, 105, 0, 0.5);
+    }
 
-    /* ================= BUSCADOR ================= */
-    .search-bar { position: relative; }
+    /* OCULTAR COSTOS */
+    .costo-tag { display: none !important; }
+    body.show-costs .costo-tag { display: flex !important; }
+
+    /* BUSCADOR */
+    .search-bar { position: relative; margin-bottom: 4px; }
     .search-bar input {
-      width: 100%; padding: 16px 16px 16px 48px;
-      border-radius: 16px; background: var(--bg-elev);
+      width: 100%; padding: 14px 14px 14px 44px;
+      border-radius: 12px; background: var(--bg-elev);
       border: 1px solid var(--border-color); color: var(--text-main);
-      font-size: 15px; font-weight: 500; transition: all 0.2s ease; outline: none;
+      font-size: 14px; font-weight: 500; transition: all 0.2s ease; outline: none;
     }
     .search-bar input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-light); }
-    .search-bar .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.5; pointer-events: none; color: var(--text-main); }
-    .search-bar .clear-btn { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-mute); cursor: pointer; display: none; font-size: 16px; }
+    .search-bar .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); opacity: 0.5; pointer-events: none; color: var(--text-main); }
+    .search-bar .clear-btn { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-mute); cursor: pointer; display: none; font-size: 16px; }
     .search-bar .clear-btn.visible { display: block; }
 
     .suggestions-panel {
       position: absolute; top: 100%; left: 0; right: 0; margin-top: 8px;
       background: var(--bg-card); border: 1px solid var(--border-color);
-      border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       max-height: 300px; overflow-y: auto; display: none; z-index: 60;
     }
     .suggestions-panel.active { display: block; }
@@ -133,48 +117,47 @@
     .suggestion-item:hover { background: var(--bg-elev); }
     .suggestion-item:last-child { border-bottom: none; }
 
-    /* ================= FILTROS (Forzados) ================= */
-    .filters-row { display: flex !important; gap: 8px !important; overflow-x: auto !important; padding-bottom: 8px !important; scrollbar-width: none; -ms-overflow-style: none; min-height: 45px; }
+    /* FILTROS */
+    .filters-row { display: flex !important; gap: 6px !important; overflow-x: auto !important; padding-bottom: 4px !important; scrollbar-width: none; -ms-overflow-style: none; min-height: 40px; }
     .filters-row::-webkit-scrollbar { display: none; }
-    
     .filter-chip {
-      padding: 10px 16px !important; border-radius: 20px !important; 
-      font-size: 13px !important; font-weight: 600 !important;
+      padding: 8px 14px !important; border-radius: 16px !important; 
+      font-size: 12px !important; font-weight: 600 !important;
       background: var(--bg-elev) !important; color: var(--text-main) !important; 
       border: 1px solid var(--border-color) !important;
       cursor: pointer !important; white-space: nowrap !important; 
       transition: all 0.2s ease !important; font-family: 'Inter', sans-serif !important;
       display: inline-flex !important; align-items: center !important; justify-content: center !important;
-      visibility: visible !important; opacity: 1 !important; height: 38px !important;
+      visibility: visible !important; opacity: 1 !important; height: 34px !important;
     }
     .filter-chip.active { background: var(--brand) !important; color: white !important; border-color: var(--brand) !important; box-shadow: 0 4px 14px var(--brand-light) !important; }
 
-    #resultsCount { font-size: 13px; color: var(--text-mute); font-weight: 500; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+    #resultsCount { font-size: 12px; color: var(--text-mute); font-weight: 500; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* ================= TARJETAS DE PRODUCTO ================= */
+    /* TARJETAS */
     .product-card {
       background: var(--bg-card); border: 1px solid var(--border-color);
-      border-radius: 16px; padding: 16px; margin-bottom: 12px;
+      border-radius: 14px; padding: 12px; margin-bottom: 8px;
       position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-      transition: transform 0.2s; display: flex; flex-direction: column; gap: 8px;
+      transition: transform 0.2s; display: flex; flex-direction: column; gap: 6px;
     }
     .product-card:active { transform: scale(0.98); }
-    .product-card::before { content: ''; position: absolute; left: 0; top: 16px; bottom: 16px; width: 4px; background: var(--brand); border-radius: 0 4px 4px 0; pointer-events: none; z-index: 0; }
+    .product-card::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 4px; background: var(--brand); border-radius: 0 4px 4px 0; pointer-events: none; z-index: 0; }
     .product-card.is-orig::before { background: linear-gradient(180deg, #FFD700, #FFA500); }
 
-    .card-brand { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1; }
-    .card-model { font-size: 16px; font-weight: 700; color: var(--text-main); line-height: 1.3; position: relative; z-index: 1; }
-    .card-type { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; background: var(--bg-elev); color: var(--text-mute); width: fit-content; position: relative; z-index: 1; }
+    .card-brand { font-size: 10px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1; }
+    .card-model { font-size: 15px; font-weight: 700; color: var(--text-main); line-height: 1.2; position: relative; z-index: 1; }
+    .card-type { padding: 3px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; background: var(--bg-elev); color: var(--text-mute); width: fit-content; position: relative; z-index: 1; }
     .card-type.oled { background: var(--brand-light); color: var(--brand); }
     .card-type.orig { background: linear-gradient(135deg, #FFD700, #FFA500); color: #4A2800; }
 
-    .card-price { font-size: 22px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; cursor: pointer; position: relative; z-index: 10; display: inline-block; transition: color 0.2s; }
+    .card-price { font-size: 20px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; cursor: pointer; position: relative; z-index: 10; display: inline-block; transition: color 0.2s; }
     .card-price:active { transform: scale(0.95); color: var(--brand); }
 
     .image-btn, .whatsapp-btn, .edit-btn {
-      border: none; padding: 8px 12px; border-radius: 8px;
-      font-size: 12px; font-weight: 700; cursor: pointer; 
-      display: flex; align-items: center; justify-content: center; gap: 6px;
+      border: none; padding: 6px 10px; border-radius: 6px;
+      font-size: 11px; font-weight: 700; cursor: pointer; 
+      display: flex; align-items: center; justify-content: center; gap: 4px;
       font-family: inherit; transition: 0.2s; position: relative; z-index: 1;
     }
     .image-btn:active, .whatsapp-btn:active, .edit-btn:active { transform: scale(0.95); }
@@ -182,7 +165,7 @@
     .whatsapp-btn { background: rgba(37, 211, 102, 0.15); color: #25D366; border: 1px solid rgba(37, 211, 102, 0.3); }
     .edit-btn { background: rgba(59, 130, 246, 0.15); color: var(--blue); border: 1px solid rgba(59, 130, 246, 0.3); }
 
-    /* ================= TOAST ================= */
+    /* TOAST */
     .custom-toast {
       position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
       background: #25D366; color: white; padding: 12px 24px; border-radius: 30px;
@@ -192,7 +175,6 @@
     }
     .custom-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* MODALES */
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); padding: 20px; }
     .modal-backdrop.show { display: flex; }
     .modal { background: var(--bg-card); padding: 24px; border-radius: 20px; width: 100%; max-width: 400px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; }
@@ -200,7 +182,6 @@
 </head>
 <body>
 
-  <!-- LOADER CON LOGO GIRANDO -->
   <div class="loader-overlay" id="splash">
     <div class="loader-logo-container">
       <div class="loader-ring"></div>
@@ -211,41 +192,26 @@
 
   <main class="app-container" id="appRoot" style="opacity:0;">
     
-    <!-- 🔥 HEADER ESTÁTICO (COMO EN TU CAPTURA) 🔥 -->
-    <header class="app-header">
-      <div class="header-brand">
-        <img src="/imagenes/web-app-manifest-192x192.png" alt="Logo">
-        <div class="header-brand-text">
-          <h1>DR XIAOMI</h1>
-          <p>Catálogo</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <button class="header-icon-btn" id="adminEditBtn" title="Gestionar Catálogo">
-          <i class="fas fa-list-ul"></i>
-        </button>
-        <button class="header-icon-btn" id="techModeBtn" title="Ver Costos de Compra">
-          <i class="fas fa-eye"></i>
-        </button>
-        <!-- Simulamos la campana y el sol que tenías en tu captura -->
-        <button class="header-icon-btn" style="color: var(--text-mute);"><i class="fas fa-bell"></i></button>
-        <button class="header-icon-btn" style="color: #F59E0B;"><i class="fas fa-sun"></i></button>
-        <button class="header-icon-btn" style="color: var(--text-main);"><i class="fas fa-arrow-left"></i></button>
-      </div>
-    </header>
+    <!-- HEADER Y NAV (Restaurado) -->
+    <script type="module">
+      import { montarLayout } from '../js/layout.js';
+      montarLayout({
+        titulo: 'Catálogo',
+        padre: '/app/',
+        activo: 'precios'
+      });
+    </script>
 
     <!-- CONTENIDO PRINCIPAL -->
     <div class="app-content" id="mainScrollContainer">
       
-      <!-- BUSCADOR PRO -->
       <div class="search-bar">
         <i class="fas fa-search search-icon"></i>
-        <input type="text" id="searchInput" placeholder="Buscar modelo... Ej: Redmi Note 10" autocomplete="off">
+        <input type="text" id="searchInput" placeholder="Buscar modelo, marca o compatibilidad..." autocomplete="off">
         <button id="clearSearchBtn" class="clear-btn"><i class="fas fa-times"></i></button>
         <div class="suggestions-panel" id="suggestionsPanel"></div>
       </div>
 
-      <!-- FILTROS -->
       <div class="filters-row" id="quickFilters">
         <button class="filter-chip active" data-filter="all">Todos</button>
         <button class="filter-chip" data-filter="ORIG">ORIG</button>
@@ -255,20 +221,11 @@
         <button class="filter-chip" data-filter="COMPAT">🔄 Compatibles</button>
       </div>
 
-      <!-- RESULTADOS -->
       <div id="resultsCount"></div>
-      
-      <!-- AQUÍ SE INYECTAN LAS TARJETAS -->
       <div id="resultsContainer"></div>
     </div>
   </main>
 
-  <!-- TOAST PERSONALIZADO -->
-  <div class="custom-toast" id="copyToast">
-    <i class="fas fa-check-circle"></i> <span id="toastText">Mensaje copiado</span>
-  </div>
-
-  <!-- MODAL DE CONFIRMACIÓN PARA MODO TÉCNICO -->
   <div class="modal-backdrop" id="modalTechConfirm">
     <div class="modal">
       <div style="font-size: 56px; color: var(--brand); margin-bottom: 16px;"><i class="fas fa-eye"></i></div>
@@ -281,11 +238,11 @@
     </div>
   </div>
 
-  <!-- 🔥 SCRIPT PRINCIPAL DE PRECIOS (CONEXIÓN A BASE DE DATOS INTACTA) 🔥 -->
+  <!-- SCRIPT PRINCIPAL DE PRECIOS -->
   <script type="module" src="./precios.js"></script>
   
-  <!-- SCRIPT DE INTERACCIÓN (SONIDO, COPIADO Y OJO) -->
   <script>
+    // INYECTAR BOTONES AL HEADER Y ASIGNAR SONIDO
     let audioCtx = null;
     function playClickSound() {
       try {
@@ -306,71 +263,32 @@
       } catch (e) { console.warn('Audio no soportado', e); }
     }
 
-    function mostrarToast(mensaje) {
-      const toast = document.getElementById('copyToast');
-      const span = document.getElementById('toastText');
-      if (span) span.textContent = mensaje || 'Mensaje copiado';
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
-      
-      // 🔥 LÓGICA DEL OJO (MODO TÉCNICO)
-      const techBtn = document.getElementById('techModeBtn');
-      const adminBtn = document.getElementById('adminEditBtn');
-      
-      techBtn?.addEventListener('click', playClickSound);
-      adminBtn?.addEventListener('click', playClickSound);
+      setTimeout(() => {
+        const headerActions = document.querySelector('.header-actions');
+        if (headerActions) {
+          const techBtn = document.createElement('button');
+          techBtn.className = 'header-custom-btn';
+          techBtn.id = 'techModeBtn';
+          techBtn.innerHTML = '<i class="fas fa-eye"></i>';
+          techBtn.addEventListener('click', playClickSound);
 
-      techBtn?.addEventListener('click', () => {
-        techBtn.classList.toggle('tech-active');
-        if (techBtn.classList.contains('tech-active')) {
-          document.body.classList.add('show-costs');
-        } else {
-          document.body.classList.remove('show-costs');
-        }
-      });
+          const adminBtn = document.createElement('button');
+          adminBtn.className = 'header-custom-btn';
+          adminBtn.id = 'adminEditBtn';
+          adminBtn.innerHTML = '<i class="fas fa-list-ul"></i>';
+          adminBtn.addEventListener('click', playClickSound);
 
-      // 🔥 LÓGICA DE COPIADO EN EL PRECIO
-      document.getElementById('resultsContainer')?.addEventListener('click', (e) => {
-        // Sonido en botones de tarjeta
-        if (e.target.closest('.whatsapp-btn') || e.target.closest('.image-btn') || e.target.closest('.edit-btn')) {
-          playClickSound();
+          if (headerActions.firstChild) {
+            headerActions.insertBefore(adminBtn, headerActions.firstChild);
+            headerActions.insertBefore(techBtn, headerActions.firstChild);
+          } else {
+            headerActions.appendChild(adminBtn);
+            headerActions.appendChild(techBtn);
+          }
         }
-
-        // Copiar al clickear el precio
-        if (e.target.closest('.card-price')) {
-          playClickSound();
-          
-          const card = e.target.closest('.product-card');
-          const marca = card.querySelector('.card-brand')?.innerText || '';
-          const modelo = card.querySelector('.card-model')?.innerText || '';
-          
-          const precioTexto = e.target.closest('.card-price').innerText.replace(/[^0-9.]/g, '');
-          const precioFormateado = `${precioTexto} Bs`;
-          
-          const mensaje = `📱 ${marca} ${modelo}\n💰 Precio Pantalla: ${precioFormateado}\n👨🏻‍🔧 INCLUYE INSTALACIÓN`;
-          
-          navigator.clipboard.writeText(mensaje).then(() => {
-            mostrarToast('Mensaje copiado para WhatsApp');
-          }).catch(err => {
-            console.error('Error al copiar:', err);
-            mostrarToast('Error al copiar');
-          });
-        }
-      });
+      }, 500); // 500ms para asegurar que layout.js termine
     });
-
-    // Red de seguridad por si precios.js falla al quitar el loader
-    setTimeout(() => {
-      const splash = document.getElementById('splash');
-      const appRoot = document.getElementById('appRoot');
-      if (splash && !splash.classList.contains('hidden')) {
-        splash.classList.add('hidden');
-        if (appRoot) appRoot.style.opacity = '1';
-      }
-    }, 2500);
   </script>
 </body>
 </html>
