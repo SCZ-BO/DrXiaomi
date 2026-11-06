@@ -25,8 +25,11 @@ try { sesion = JSON.parse(localStorage.getItem('drx_sesion') || 'null'); } catch
 const isAdmin = sesion && sesion.rol === 'admin';
 
 if (isAdmin) {
-  document.getElementById('adminEditBtn').style.display = 'flex';
-  document.getElementById('adminEditBtn').onclick = () => window.location.href = '/app/precios-admin/';
+  const adminBtn = document.getElementById('adminEditBtn');
+  if (adminBtn) {
+    adminBtn.style.display = 'flex';
+    adminBtn.onclick = () => window.location.href = '/app/precios-admin/';
+  }
 } else {
   const navReportes = document.getElementById('navReportes');
   if (navReportes) navReportes.style.display = 'none';
@@ -164,7 +167,7 @@ function renderList() {
 
   container.innerHTML = data.map(item => `
     <div class="product-card ${item.tipo === 'ORIG' ? 'is-orig' : ''}">
-      <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
         <div style="display:flex; gap:10px; align-items:center;">
           <div style="width:32px; height:32px; border-radius:8px; background:var(--bg-elev-2); display:flex; align-items:center; justify-content:center; overflow:hidden;">
              <img src="${getLogo(item.marca)}" style="width:100%; height:100%; object-fit:contain;" 
@@ -180,13 +183,14 @@ function renderList() {
         </button>
       </div>
       
-      <div style="display:flex; gap:8px; margin-bottom:12px;">
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
         <span class="card-type ${item.tipo.toLowerCase()}">${item.tipo}</span>
-        ${techMode || isAdmin ? `<span style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px;">Compra: ${item.compra} Bs</span>` : ''}
+        <!-- 🔥 AQUÍ ESTABA EL PROBLEMA: Le quitamos || isAdmin y le pusimos la clase costo-tag 🔥 -->
+        ${techMode ? `<span class="costo-tag" style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; display:none;">Compra: ${item.compra} Bs</span>` : ''}
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-1); padding-top:12px;">
-        <div class="card-price">${item.venta} Bs</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-1); padding-top:10px; margin-top:auto;">
+        <div class="card-price" data-marca="${item.marca}" data-modelo="${item.modelo}">${item.venta} Bs</div>
         <div style="display:flex; gap:6px;">
           <button class="edit-btn" onclick="window.editPrice('${item.id}')"><i class="fas fa-pen"></i></button>
           <button class="image-btn" onclick="window.openGoogle('${item.modelo}')"><i class="fab fa-google"></i></button>
@@ -232,12 +236,14 @@ const btnCancelTech = document.getElementById('btnCancelTech');
 
 if (techMode) {
   document.getElementById('techModeBtn')?.classList.add('tech-active');
+  document.body.classList.add('show-costs');
 }
 
 document.getElementById('techModeBtn')?.addEventListener('click', () => {
   if (techMode) {
     techMode = false;
     document.getElementById('techModeBtn')?.classList.remove('tech-active');
+    document.body.classList.remove('show-costs');
     renderList();
     return;
   }
@@ -251,6 +257,7 @@ btnCancelTech?.addEventListener('click', () => {
 btnConfirmTech?.addEventListener('click', () => {
   techMode = true;
   document.getElementById('techModeBtn')?.classList.add('tech-active');
+  document.body.classList.add('show-costs');
   modalTechConfirm.classList.remove('show');
   renderList();
 });
@@ -278,3 +285,24 @@ window.shareWA = (id) => {
 window.editPrice = (id) => {
   window.location.href = '/app/precios-admin/';
 };
+
+// 🔥 COPIADO EN EL PRECIO (Añadido aquí para no tocar tu HTML) 🔥
+document.addEventListener('click', (e) => {
+  const priceElement = e.target.closest('.card-price');
+  if (priceElement) {
+    const marca = priceElement.dataset.marca;
+    const modelo = priceElement.dataset.modelo;
+    const precio = priceElement.innerText.replace(/[^0-9.]/g, '');
+    
+    const mensaje = `📱 ${marca} ${modelo}\n💰 Precio Pantalla: ${precio} Bs\n👨🏻‍🔧 INCLUYE INSTALACIÓN`;
+    
+    navigator.clipboard.writeText(mensaje).then(() => {
+      // Creamos un toast rápido
+      const toast = document.createElement('div');
+      toast.className = 'custom-toast show';
+      toast.innerHTML = '<i class="fas fa-check-circle"></i> <span>Mensaje copiado</span>';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }).catch(err => console.error('Error al copiar:', err));
+  }
+});
