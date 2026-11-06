@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES PRO (CON GANANCIA POR MOVIMIENTO)
+   DR. XIAOMI · REPORTES PRO (CON RESUMEN RÁPIDO Y PROGRESO)
    Archivo: app/reportes/reportes.js
    ============================================================ */
 
@@ -19,6 +19,11 @@ let datosFiltrados = [];
 let tabActual = 'todos';
 let gastosActuales = { pasajes: 0, almuerzo: 0 };
 
+// 🔥 Variables para el resumen rápido
+let quickHoy = 0;
+let quickSemana = 0;
+let quickMes = 0;
+
 // Elementos del DOM
 const headerSubtitle = document.getElementById('headerSubtitle');
 const rangoFechasInfo = document.getElementById('rangoFechasInfo');
@@ -36,16 +41,31 @@ const breakdownAccesoriosEl = document.getElementById('breakdownAccesorios');
 const breakdownServiciosEl = document.getElementById('breakdownServicios');
 const listaMovimientos = document.getElementById('listaMovimientos');
 
+// 🔥 Elementos del resumen rápido
+const quickHoyEl = document.getElementById('quickHoy');
+const quickSemanaEl = document.getElementById('quickSemana');
+const quickMesEl = document.getElementById('quickMes');
+
+// 🔥 Elementos de progreso mensual
+const monthProgressContainer = document.getElementById('monthProgressContainer');
+const monthPercentage = document.getElementById('monthPercentage');
+const monthProgressFill = document.getElementById('monthProgressFill');
+const monthProgressSub = document.getElementById('monthProgressSub');
+
 requireAuth((s) => {
   sesion = s;
   configurarEventos();
+  cargarResumenRapido();
   cargarReporte('hoy');
 });
 
 function configurarEventos() {
   document.getElementById('backBtn')?.addEventListener('click', () => window.location.href = '/app/');
   document.getElementById('logoutBtn')?.addEventListener('click', () => logout());
-  document.getElementById('refreshBtn')?.addEventListener('click', () => cargarReporte(rangoActual));
+  document.getElementById('refreshBtn')?.addEventListener('click', () => {
+    cargarResumenRapido();
+    cargarReporte(rangoActual);
+  });
 
   // Filtros de tiempo
   document.querySelectorAll('.time-btn').forEach(btn => {
@@ -97,6 +117,89 @@ function parsearFecha(fechaObj) {
   return isNaN(d.getTime()) ? null : d;
 }
 
+// 🔥 NUEVA FUNCIÓN: Calcular resumen rápido de Hoy, Semana y Mes
+async function cargarResumenRapido() {
+  try {
+    const ahora = new Date();
+    
+    // Fechas para Hoy
+    const hoyInicio = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    const hoyFin = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 23, 59, 59, 999);
+    
+    // Fechas para Semana (Lunes a Domingo)
+    const diaSemana = ahora.getDay() || 7;
+    const semanaInicio = new Date(ahora);
+    semanaInicio.setDate(ahora.getDate() - diaSemana + 1);
+    semanaInicio.setHours(0, 0, 0, 0);
+    const semanaFin = new Date(ahora);
+    semanaFin.setHours(23, 59, 59, 999);
+    
+    // Fechas para Mes
+    const mesInicio = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    const mesFin = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Inicializar contadores
+    let totalHoy = 0;
+    let totalSemana = 0;
+    let totalMes = 0;
+
+    // Leer recibos y ventas para calcular los totales
+    const qRecibos = query(collection(db, 'recibos'), limit(100));
+    const qVentas = query(collection(db, 'ventas'), limit(100));
+
+    const [snapRecibos, snapVentas] = await Promise.all([
+      new Promise(resolve => onSnapshot(qRecibos, resolve)),
+      new Promise(resolve => onSnapshot(qVentas, resolve))
+    ]);
+
+    // Procesar recibos
+    snapRecibos.forEach(doc => {
+      const d = doc.data();
+      const monto = Number(d.montoCobrado) || 0;
+      if (monto <= 0) return;
+      
+      const fechaD = parsearFecha(d.fechaEditada) || parsearFecha(d.fechaEntrega) || parsearFecha(d.fecha);
+      if (!fechaD) return;
+
+      if (fechaD >= hoyInicio && fechaD <= hoyFin) totalHoy += monto;
+      if (fechaD >= semanaInicio && fechaD <= semanaFin) totalSemana += monto;
+      if (fechaD >= mesInicio && fechaD <= mesFin) totalMes += monto;
+    });
+
+    // Procesar ventas
+    snapVentas.forEach(doc => {
+      const d = doc.data();
+      const monto = Number(d.monto) || 0;
+      if (monto <= 0) return;
+      
+      const fechaD = parsearFecha(d.fecha);
+      if (!fechaD) return;
+
+      if (fechaD >= hoyInicio && fechaD <= hoyFin) totalHoy += monto;
+      if (fechaD >= semanaInicio && fechaD <= semanaFin) totalSemana += monto;
+      if (fechaD >= mesInicio && fechaD <= mesFin) totalMes += monto;
+    });
+
+    // Actualizar DOM
+    if (quickHoyEl) quickHoyEl.textContent = formatBs(totalHoy);
+    if (quickSemanaEl) quickSemanaEl.textContent = formatBs(totalSemana);
+    if (quickMesEl) quickMesEl.textContent = formatBs(totalMes);
+
+    // Actualizar barra de progreso mensual
+    if (monthProgressContainer) {
+      const diaActual = ahora.getDate();
+      const diasEnMes = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0).getDate();
+      const porcentaje = (diaActual / diasEnMes) * 100;
+      
+      monthPercentage.textContent = `${Math.round(porcentaje)}%`;
+      monthProgressFill.style.width = `${porcentaje}%`;
+      monthProgressSub.textContent = `Día ${diaActual} de ${diasEnMes}`;
+    }
+  } catch (error) {
+    console.error('Error al cargar resumen rápido:', error);
+  }
+}
+
 async function cargarReporte(rango, desdeFecha, hastaFecha) {
   if (unsubscribeRecibos) unsubscribeRecibos();
   if (unsubscribeVentas) unsubscribeVentas();
@@ -146,6 +249,22 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       else if (rango === 'semana') rangoFechasInfo.textContent = `Semana del ${fechaInicioStr} al ${fechaFinStr}`;
       else if (rango === 'mes') rangoFechasInfo.textContent = `Mes: ${fechaInicioStr} al ${fechaFinStr}`;
       else rangoFechasInfo.textContent = `Del ${fechaInicioStr} al ${fechaFinStr}`;
+    }
+
+    // 🔥 Mostrar u ocultar barra de progreso mensual
+    if (monthProgressContainer) {
+      if (rango === 'mes') {
+        monthProgressContainer.classList.add('show');
+        const hoy = new Date();
+        const diaActual = hoy.getDate();
+        const diasEnMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+        const porcentaje = (diaActual / diasEnMes) * 100;
+        monthPercentage.textContent = `${Math.round(porcentaje)}%`;
+        monthProgressFill.style.width = `${porcentaje}%`;
+        monthProgressSub.textContent = `Día ${diaActual} de ${diasEnMes}`;
+      } else {
+        monthProgressContainer.classList.remove('show');
+      }
     }
 
     let datosRecibos = [];
@@ -315,12 +434,10 @@ function filtrarYRenderizarMovimientos() {
     const icono = d.tipo === 'accesorio' ? 'fa-box' : 'fa-wrench';
     const claseIcono = d.tipo === 'accesorio' ? 'venta' : 'recibo';
 
-    // 🔥 CALCULAR GANANCIA POR MOVIMIENTO 🔥
     const monto = d.montoCobrado;
     const costo = d.costoRepuesto;
     const ganancia = monto - costo;
 
-    // Mostrar la ganancia solo si el usuario es admin
     const esAdmin = sesion?.rol === 'admin';
     let htmlGanancia = '';
     if (esAdmin) {
