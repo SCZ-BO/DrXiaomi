@@ -15,7 +15,7 @@
   <meta name="format-detection" content="telephone=no">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://xiaomi.scz.red/">
-  <title>DR XIAOMI · Santa Cruz  · Micro Electvroni</title>
+  <title>DR XIAOMI · ORANGE LAB · Robotic Repair Center</title>
 
   <!-- REDIRECCIÓN PARA RECIBOS -->
   <script>
@@ -625,7 +625,7 @@
     .offline-badge.show { transform: translateY(0); }
 
     /* ============================================================
-       BANNER INSTALAR (iOS + Android + Desktop)
+       BANNER INSTALAR
     ============================================================ */
     .install-banner {
       position: fixed;
@@ -858,7 +858,9 @@
     const $$ = (sel) => document.querySelectorAll(sel);
 
     function vibrate(pattern = 12) {
-      if (navigator.vibrate) navigator.vibrate(pattern);
+      if (navigator.vibrate) {
+        try { navigator.vibrate(pattern); } catch(e) { /* ignorar bloqueo */ }
+      }
     }
 
     let toastTimer;
@@ -1110,7 +1112,7 @@
     }, { passive: true });
 
     // ============================================================
-    // INSTALACIÓN PWA
+    // INSTALACIÓN PWA (SIEMPRE VISIBLE)
     // ============================================================
     let deferredPrompt = null;
     const installBanner = $('#installBanner');
@@ -1138,21 +1140,19 @@
     }
     setupInstallBanner();
 
-    const installClosed = localStorage.getItem('drxiaomi_install_closed');
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches
                       || window.navigator.standalone === true;
+
+    if (!isStandalone) {
+      setTimeout(() => {
+        installBanner.classList.add('show');
+      }, 3000);
+    }
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      if (!installClosed && !isStandalone) {
-        setTimeout(() => installBanner.classList.add('show'), 3500);
-      }
     });
-
-    if ((PLATFORM.isIOS || PLATFORM.isDesktop) && !installClosed && !isStandalone) {
-      setTimeout(() => installBanner.classList.add('show'), 3500);
-    }
 
     installBtn.addEventListener('click', async () => {
       if (PLATFORM.isIOS) {
@@ -1168,13 +1168,12 @@
         }
         deferredPrompt = null;
       } else {
-        showToast('📲 Usa el menú del navegador → "Instalar app"', 3500);
+        showToast('📲 Usa el menú del navegador → "Instalar app"', 4000);
       }
     });
 
     $('#installClose').addEventListener('click', () => {
       installBanner.classList.remove('show');
-      localStorage.setItem('drxiaomi_install_closed', '1');
     });
 
     window.addEventListener('appinstalled', () => {
