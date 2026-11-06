@@ -1,6 +1,3 @@
-Entendido. Aquí tienes el `cliente.js` completo y arreglado con las nuevas funciones (puntitos navegables, botón físico atrás, Enter inteligente) y sin tocar la lógica del wizard.
-
-```javascript
 /* ============================================================
    DR. XIAOMI · CLIENTE (Wizard PRO - Conectado a Firestore)
    Archivo: js/cliente.js
@@ -10,9 +7,6 @@ import { requireAuth, logout } from './app-auth.js';
 import { toast, haptic, initTheme, escapeHtml, formatBs, showLoading, hideLoading } from './app-ui.js';
 import { db } from './firebase.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-// 🔥 IMPORTANTE: Ya no necesitamos importar generarPDFUnificado aquí, 
-// porque el PDF se genera en la página pública del recibo.
 
 /* ============================================================
    CONFIGURACIÓN GENERAL
@@ -32,7 +26,7 @@ const CONFIG = {
    ============================================================ */
 let sesion = null;
 let pasoActual = 1;
-let pasoMaximoAlcanzado = 1; // 🔥 NUEVO: Para controlar los puntitos
+let pasoMaximoAlcanzado = 1;
 const TOTAL_PASOS = 7;
 
 const datos = {
@@ -75,8 +69,8 @@ function iniciar() {
   configurarFotos();
   configurarServicios();
   configurarBotonGenerar();
-  configurarTeclado(); // 🔥 NUEVO: Enter inteligente
-  configurarBotonAtrasFisico(); // 🔥 NUEVO: Botón físico Android
+  configurarTeclado();
+  configurarBotonAtrasFisico(); // 🔥 BOTÓN ATRÁS CORREGIDO
 
   const content = document.getElementById('wizardContent');
   if (content) {
@@ -171,14 +165,12 @@ function configurarWizard() {
   document.getElementById('btnPrev')?.addEventListener('click', irPasoAnterior);
   document.getElementById('btnNext')?.addEventListener('click', irPasoSiguiente);
   
-  // 🔥 PUNTITOS CLICKEABLES (Solo retroceder y avanzar al siguiente)
   document.getElementById('wizardProgress')?.addEventListener('click', (e) => {
     const dot = e.target.closest('.wizard-dot');
     if (!dot) return;
     const step = parseInt(dot.dataset.step);
     if (isNaN(step)) return;
     
-    // Solo permitir ir a pasos ya visitados o al siguiente inmediato
     if (step < pasoActual) {
       haptic(10);
       guardarDatosPaso(pasoActual);
@@ -255,7 +247,6 @@ function actualizarBarraProgreso() {
     if (step < pasoActual) dot.classList.add('done');
     else if (step === pasoActual) dot.classList.add('active');
     
-    // Actualizar cursor y opacidad según si es clickeable
     if (step < pasoActual || step === pasoActual + 1) {
       dot.style.cursor = 'pointer';
       dot.style.opacity = '1';
@@ -283,21 +274,27 @@ function actualizarBotones() {
 }
 
 /* ============================================================
-   🔥 BOTÓN FÍSICO ATRÁS (Android)
+   🔥 BOTÓN FÍSICO ATRÁS (CORREGIDO - Android)
    ============================================================ */
 function configurarBotonAtrasFisico() {
+  // 1. Empujamos un estado falso al historial desde el principio.
+  // Esto hace que el primer "Atrás" no salga de la página, sino que 
+  // retroceda a este estado falso.
+  history.pushState({ paso: 1 }, '');
+
+  // 2. Escuchamos el evento popstate (cuando el usuario presiona "Atrás")
   window.addEventListener('popstate', (e) => {
     if (pasoActual > 1) {
-      e.preventDefault();
-      // Empujar estado de nuevo para mantener el historial
-      history.pushState({ paso: pasoActual }, '');
+      // Si estamos en un paso mayor a 1, retrocedemos un paso
+      // y volvemos a empujar el estado falso para que el siguiente "Atrás" 
+      // tampoco nos saque de la página.
       irPasoAnterior();
+      history.pushState({ paso: pasoActual }, '');
+    } else {
+      // Si estamos en el paso 1, permitimos que el navegador salga
+      // (no hacemos nada, dejamos que el navegador procese el "Atrás")
     }
-    // Si está en el paso 1, deja que salga al panel
   });
-  
-  // Reemplazar el estado inicial para tener control
-  history.replaceState({ paso: 1 }, '');
 }
 
 /* ============================================================
@@ -308,14 +305,13 @@ function configurarTeclado() {
     if (e.key !== 'Enter') return;
     
     const target = e.target;
-    if (target.tagName === 'TEXTAREA') return; // En textarea, Enter hace salto de línea
+    if (target.tagName === 'TEXTAREA') return;
     
-    e.preventDefault(); // Evitar submit o comportamientos por defecto
+    e.preventDefault();
     
     const panelActual = document.querySelector(`[data-panel="${pasoActual}"]`);
     if (!panelActual) return;
     
-    // Obtener todos los inputs válidos dentro del panel actual (excluyendo hidden y botones)
     const inputs = Array.from(panelActual.querySelectorAll('input:not([type="hidden"]), select, textarea')).filter(el => {
       return el.offsetParent !== null && !el.disabled && !el.readOnly;
     });
@@ -323,11 +319,9 @@ function configurarTeclado() {
     const idx = inputs.indexOf(target);
     
     if (idx > -1 && idx < inputs.length - 1) {
-      // Mover al siguiente input dentro del mismo paso
       inputs[idx + 1].focus();
       haptic(5);
     } else {
-      // Es el último input del paso: intentar avanzar al siguiente paso
       haptic(15);
       irPasoSiguiente();
     }
@@ -335,7 +329,7 @@ function configurarTeclado() {
 }
 
 /* ============================================================
-   VALIDACIONES (Sin cambios)
+   VALIDACIONES
    ============================================================ */
 function validarPaso(paso) {
   if (paso === 1) {
@@ -399,7 +393,7 @@ function guardarDatosPaso(paso) {
 }
 
 /* ============================================================
-   MARCAS Y RADIOS (Sin cambios)
+   MARCAS Y RADIOS
    ============================================================ */
 function configurarMarca() {
   const grid = document.getElementById('marcasGrid');
@@ -444,7 +438,7 @@ function configurarRadioGroups() {
 }
 
 /* ============================================================
-   LÓGICA INTELIGENTE (CHIPS Y CHECKLIST) (Sin cambios)
+   LÓGICA INTELIGENTE (CHIPS Y CHECKLIST)
    ============================================================ */
 function configurarLogicaInteligente() {
   const motivoGroup = document.getElementById('motivoIngresoGroup');
@@ -495,7 +489,7 @@ function configurarLogicaInteligente() {
 }
 
 /* ============================================================
-   PATTERN LOCK (Sin cambios)
+   PATTERN LOCK
    ============================================================ */
 function configurarPattern() {
   const bgCanvas = document.getElementById('bgCanvas');
@@ -575,7 +569,7 @@ function configurarPattern() {
 }
 
 /* ============================================================
-   FOTOS (Sin cambios)
+   FOTOS
    ============================================================ */
 function configurarFotos() {
   const grid = document.getElementById('fotosGrid');
@@ -671,7 +665,7 @@ async function comprimirImagen(file) {
 }
 
 /* ============================================================
-   SERVICIOS Y COSTOS (Sin cambios)
+   SERVICIOS Y COSTOS
    ============================================================ */
 function configurarServicios() {
   const list = document.getElementById('serviciosList');
@@ -771,7 +765,7 @@ function recolectarServicios() {
 }
 
 /* ============================================================
-   VISTA PREVIA (PASO 7) (Sin cambios)
+   VISTA PREVIA (PASO 7)
    ============================================================ */
 function generarVistaPrevia() {
   guardarDatosPaso(6);
@@ -838,7 +832,7 @@ function generarVistaPrevia() {
 }
 
 /* ============================================================
-   GUARDADO EN FIRESTORE (Y ENVÍO DE LINK) (Sin cambios)
+   GUARDADO EN FIRESTORE (Y ENVÍO DE LINK)
    ============================================================ */
 function configurarBotonGenerar() {
   const btn = document.getElementById('btnGenerate');
@@ -885,17 +879,15 @@ function configurarBotonGenerar() {
         costoRepuesto: 0
       };
 
-      // 🔥 GUARDAR EN FIRESTORE
       const docRef = await addDoc(collection(db, 'recibos'), paquete);
       console.log('✅ Recibo guardado en Firestore con ID:', docRef.id);
 
-      // 🔥 ÉXITO
       localStorage.removeItem('drxiaomi_borrador');
       document.getElementById('successNumero').textContent = num;
       document.getElementById('successModal').classList.add('show');
       window._ultimoRecibo = paquete;
       
-      configurarWhatsApp(); // Prepara el botón de WhatsApp con el link
+      configurarWhatsApp();
 
     } catch (error) {
       console.error("Error al guardar en Firestore:", error);
@@ -925,7 +917,6 @@ function configurarWhatsApp() {
     
     haptic(15);
     
-    // 🔥 AQUÍ ESTÁ EL CAMBIO CLAVE: Enviamos el link a la página pública
     const urlRecibo = `${CONFIG.urlApp}/recibo/?id=${recibo.numeroRecibo}`;
     
     const mensaje = `Hola ${recibo.cliente.split(' ')[0]},\n\nHemos recibido tu equipo *${recibo.marca} ${recibo.modelo}*.\n\n📄 *Puedes ver y descargar tu recibo aquí:*\n${urlRecibo}\n\nN° Recibo: ${recibo.numeroRecibo}\nTotal: ${formatBs(recibo.total)}\n${recibo.saldo > 0 ? `Saldo pendiente: ${formatBs(recibo.saldo)}` : '✅ Pagado'}\n\nTe avisaremos por este medio cuando esté listo.\n\n${CONFIG.nombreTienda}`;
@@ -938,4 +929,3 @@ function generarNumeroRecibo() {
   const f = new Date();
   return `REC-${String(f.getDate()).padStart(2, '0')}${String(f.getMonth() + 1).padStart(2, '0')}${String(f.getFullYear()).slice(-2)}-${String(f.getHours()).padStart(2, '0')}${String(f.getMinutes()).padStart(2, '0')}${String(f.getSeconds()).padStart(2, '0')}`;
 }
-```
