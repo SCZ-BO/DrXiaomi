@@ -84,7 +84,7 @@
       display: flex; flex-direction: column; gap: 16px;
     }
 
-    /* 🔥 NUEVO: TARJETAS DE RESUMEN RÁPIDO 🔥 */
+    /* TARJETAS DE RESUMEN RÁPIDO */
     .quick-summary {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -277,6 +277,26 @@
     .kpi-card.success .value { color: var(--success); }
     .kpi-card.danger .value { color: var(--danger); }
 
+    /* 🔥 NUEVO: DESGLOSE DE GASTOS DENTRO DE LA TARJETA 🔥 */
+    .gastos-desglose {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: 8px;
+      font-size: 10px;
+      color: var(--text-mute);
+      font-weight: 600;
+      border-top: 1px solid var(--border-color);
+      padding-top: 8px;
+    }
+    .gastos-desglose span {
+      display: flex;
+      justify-content: space-between;
+    }
+    .gastos-desglose strong {
+      color: var(--text-main);
+    }
+
     .breakdown-container {
       display: flex; gap: 20px; align-items: center;
       background: var(--bg-card); border: 1px solid var(--border-color);
@@ -406,7 +426,6 @@
 
     <main class="app-content">
       
-      <!-- 🔥 TARJETAS DE RESUMEN RÁPIDO (HOY / SEMANA / MES) 🔥 -->
       <div class="quick-summary" id="quickSummary">
         <div class="quick-card hoy">
           <div class="label">Hoy</div>
@@ -463,10 +482,15 @@
           <div class="label">Ganancia Neta</div>
           <div class="value" id="totalGanancia">Bs. 0</div>
         </div>
+        <!-- 🔥 TARJETA DE GASTOS CON DESGLOSE 🔥 -->
         <div class="kpi-card danger">
           <div class="icon"><i class="fas fa-money-bill-transfer"></i></div>
           <div class="label">Gastos del Período</div>
           <div class="value" id="totalGastos">Bs. 0</div>
+          <div class="gastos-desglose" id="gastosDesglose">
+            <span>Pasajes: <strong id="gastoPasajesTotal">Bs. 0</strong></span>
+            <span>Almuerzo: <strong id="gastoAlmuerzoTotal">Bs. 0</strong></span>
+          </div>
         </div>
         <div class="kpi-card blue">
           <div class="icon"><i class="fas fa-box"></i></div>
@@ -520,9 +544,7 @@
         <button class="tab-btn" data-tab="servicios">Servicios</button>
         <button class="tab-btn" data-tab="accesorios">Accesorios</button>
       </div>
-      <div class="movements-list" id="listaMovimientos">
-        <!-- Se llena desde JS -->
-      </div>
+      <div class="movements-list" id="listaMovimientos"></div>
 
       <div class="actions-container">
         <button class="btn-action btn-export" id="btnExportar">
