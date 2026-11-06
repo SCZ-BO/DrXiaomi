@@ -2,19 +2,15 @@
 <html lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0A0A0B" id="metaThemeColor">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Reportes">
-  <title>DR. Xiaomi · Reportes</title>
+  <title>DR. Xiaomi · Reportes Pro</title>
 
   <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
-  <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -22,162 +18,252 @@
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    :root { 
-      --radius-sm: 6px; --radius-md: 12px; --radius-lg: 16px; 
-      --brand: #FF6900; --brand-hover: #E65100; --brand-light: rgba(255, 105, 0, 0.15); 
-      --bg-main: #0A0A0B; --bg-card: #141416; --bg-elev: #1C1C1E; 
-      --text-main: #F5F5F5; --text-mute: #888888; --border: #2A2A2D; 
-    }
-    [data-theme="light"] {
-      --bg-main: #F8F9FA; --bg-card: #FFFFFF; --bg-elev: #F0F0F0; 
-      --text-main: #111111; --text-mute: #666666; --border: #E0E0E0; 
+    /* ============================================================ */
+    /* DISEÑO PREMIUM Y MODERNO                                    */
+    /* ============================================================ */
+    :root {
+      --bg-app: #0A0A0B;
+      --bg-card: #141416;
+      --bg-elev: #1C1C1E;
+      --text-main: #F5F5F5;
+      --text-mute: #888888;
+      --border-color: #2A2A2D;
+      --brand: #FF6900;
+      --brand-light: rgba(255, 105, 0, 0.15);
+      --success: #10B981;
+      --success-light: rgba(16, 185, 129, 0.15);
+      --danger: #EF4444;
+      --danger-light: rgba(239, 68, 68, 0.15);
+      --blue: #3B82F6;
+      --blue-light: rgba(59, 130, 246, 0.15);
+      --purple: #8B5CF6;
+      --purple-light: rgba(139, 92, 246, 0.15);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
     html, body { height: 100%; overflow: hidden; }
-    body { background-color: var(--bg-main); color: var(--text-main); font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
+    body { 
+      background-color: var(--bg-app); 
+      color: var(--text-main); 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+    }
     
     .app-container { display: flex; flex-direction: column; height: 100%; }
     
+    /* HEADER */
     .app-header { 
       display: flex; align-items: center; justify-content: space-between; 
       padding: 10px 16px; 
       padding-top: calc(10px + env(safe-area-inset-top)); 
-      background: var(--bg-main); border-bottom: 1px solid var(--border); 
+      background: rgba(10, 10, 11, 0.85); 
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color); 
       z-index: 100; 
     }
-    
-    .app-content { 
-      flex: 1; overflow-y: auto; 
-      padding: 16px; 
-      padding-bottom: calc(100px + env(safe-area-inset-bottom)); 
-      -webkit-overflow-scrolling: touch; 
-    }
-    
     .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-logo { width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .brand-logo { width: 36px; height: 36px; border-radius: 8px; overflow: hidden; }
     .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
     .brand-text h1 { font-size: 16px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
-    .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
+    .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; font-weight: 500; }
     
     .header-actions { display: flex; gap: 8px; }
     .icon-btn { 
       width: 36px; height: 36px; border-radius: 50%; 
-      background: var(--bg-elev); border: 1px solid var(--border); 
+      background: var(--bg-elev); border: 1px solid var(--border-color); 
       color: var(--text-main); display: flex; align-items: center; justify-content: center; 
       cursor: pointer; transition: 0.2s; font-size: 14px;
     }
     .icon-btn:active { transform: scale(0.9); }
 
-    /* FILTROS DE FECHA */
-    .fecha-filtros { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
-    .fecha-filtros::-webkit-scrollbar { display: none; }
-    .fecha-btn { 
-      flex-shrink: 0; padding: 8px 16px; 
-      background: var(--bg-elev); border: 1px solid var(--border); 
-      border-radius: 20px; color: var(--text-mute); 
-      font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; 
+    /* CONTENIDO CON SCROLL */
+    .app-content { 
+      flex: 1; overflow-y: auto; 
+      padding: 16px; 
+      padding-bottom: calc(100px + env(safe-area-inset-bottom)); 
+      -webkit-overflow-scrolling: touch; 
+      display: flex; flex-direction: column; gap: 16px;
     }
-    .fecha-btn.active { background: var(--brand-light); border-color: var(--brand); color: var(--brand); }
 
-    .fecha-custom { display: none; gap: 8px; margin-bottom: 16px; align-items: center; }
-    .fecha-custom.show { display: flex; }
-    .fecha-custom input { 
+    /* FILTRO DE TIEMPO (GLASSMORPHISM) */
+    .time-filter {
+      display: flex; gap: 8px; overflow-x: auto; padding: 4px; 
+      scrollbar-width: none; -ms-overflow-style: none;
+      background: rgba(28, 28, 30, 0.5);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+    }
+    .time-filter::-webkit-scrollbar { display: none; }
+    .time-btn { 
+      flex-shrink: 0; padding: 10px 16px; border-radius: 12px; 
+      background: transparent; border: none; color: var(--text-mute); 
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; 
+      font-family: inherit;
+    }
+    .time-btn.active { 
+      background: var(--brand); color: white; 
+      box-shadow: 0 4px 12px rgba(255, 105, 0, 0.3);
+    }
+
+    .custom-date-row { display: none; gap: 8px; align-items: center; }
+    .custom-date-row.show { display: flex; }
+    .custom-date-row input { 
       flex: 1; padding: 12px; background: var(--bg-elev); 
-      color: var(--text-main); border: 1px solid var(--border); 
-      border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; outline: none; 
+      color: var(--text-main); border: 1px solid var(--border-color); 
+      border-radius: 12px; font-family: inherit; font-size: 13px; outline: none; 
+    }
+    .custom-date-row button {
+      padding: 12px 16px; background: var(--brand); color: white; 
+      border: none; border-radius: 12px; font-weight: 700; cursor: pointer;
+      font-family: inherit;
     }
 
-    /* TARJETAS DE RESUMEN */
-    .total-card { 
-      background: var(--bg-card); border: 1px solid var(--border); 
-      border-radius: var(--radius-md); padding: 20px; margin-bottom: 16px; 
-      position: relative; overflow: hidden; border-left: 4px solid var(--brand); 
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    /* TARJETA PRINCIPAL (HERO) */
+    .hero-card {
+      background: linear-gradient(135deg, var(--bg-card), #0E0E10);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
-    .total-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--brand); font-weight: 700; }
-    .total-card .valor { font-size: 34px; font-weight: 800; letter-spacing: -1px; margin: 6px 0; line-height: 1; color: var(--text-main); }
-    .total-card .sub { font-size: 13px; color: var(--text-mute); }
+    .hero-card::before {
+      content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle at 50% 50%, rgba(255,105,0,0.1) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-card .label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--brand); font-weight: 700; margin-bottom: 8px; }
+    .hero-card .value { font-size: 42px; font-weight: 800; letter-spacing: -1.5px; color: var(--text-main); line-height: 1; margin-bottom: 8px; }
+    .hero-card .sub { font-size: 14px; color: var(--text-mute); }
 
-    .costos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .costo-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; text-align: center; }
-    .costo-card .valor { font-size: 22px; font-weight: 800; line-height: 1; }
-    .costo-card.costos .valor { color: #F59E0B; }
-    .costo-card.ganancia .valor { color: #22C55E; }
-    .costo-card .label { font-size: 10px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-top: 6px; }
+    /* GRID DE KPIs (Ganancia, Gastos, Margen) */
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .kpi-card .icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 4px; }
+    .kpi-card.success .icon { background: var(--success-light); color: var(--success); }
+    .kpi-card.danger .icon { background: var(--danger-light); color: var(--danger); }
+    .kpi-card.blue .icon { background: var(--blue-light); color: var(--blue); }
+    .kpi-card.purple .icon { background: var(--purple-light); color: var(--purple); }
+    .kpi-card .label { font-size: 11px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    .kpi-card .value { font-size: 20px; font-weight: 800; color: var(--text-main); line-height: 1; }
+    .kpi-card.success .value { color: var(--success); }
+    .kpi-card.danger .value { color: var(--danger); }
 
-    .margen-card { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px; text-align: center; }
-    .margen-card .valor { font-size: 28px; font-weight: 900; color: #22C55E; line-height: 1; }
-    .margen-card .label { font-size: 10px; color: #22C55E; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-top: 4px; }
-    .margen-card .helper { font-size: 10px; color: var(--text-mute); margin-top: 4px; }
-
-    .mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .mini-stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; text-align: center; }
-    .mini-stat .valor { font-size: 20px; font-weight: 800; color: var(--text-main); line-height: 1; }
-    .mini-stat .label { font-size: 10px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-top: 4px; }
+    /* DESGLOSE ACCESORIOS VS SERVICIOS */
+    .breakdown-container {
+      display: flex; gap: 16px; align-items: center;
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 20px; padding: 20px;
+    }
+    .breakdown-chart {
+      position: relative; width: 100px; height: 100px; flex-shrink: 0;
+      border-radius: 50%;
+      background: conic-gradient(var(--brand) 0% var(--p-accesorios, 0%), var(--blue) var(--p-accesorios, 0%) 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .breakdown-chart::before {
+      content: ''; position: absolute; inset: 12px; border-radius: 50%; background: var(--bg-card);
+    }
+    .breakdown-chart .center-text { position: relative; z-index: 2; text-align: center; }
+    .breakdown-chart .center-text .total { font-size: 16px; font-weight: 800; color: var(--text-main); }
+    .breakdown-chart .center-text .label { font-size: 9px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; }
+    
+    .breakdown-details { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+    .breakdown-item { display: flex; justify-content: space-between; align-items: center; }
+    .breakdown-item .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; display: inline-block; }
+    .breakdown-item .dot.accesorios { background: var(--brand); }
+    .breakdown-item .dot.servicios { background: var(--blue); }
+    .breakdown-item .info { display: flex; align-items: center; font-size: 13px; font-weight: 600; }
+    .breakdown-item .amount { font-weight: 800; font-size: 14px; }
 
     /* MÉTODOS DE PAGO */
-    .metodos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .metodo-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; }
-    .metodo-card .icono { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 8px; }
-    .metodo-card .icono.efectivo { background: rgba(34,197,94,0.15); color: #22C55E; }
-    .metodo-card .icono.qr { background: rgba(59,130,246,0.15); color: #3B82F6; }
-    .metodo-card .icono.transf { background: rgba(139,92,246,0.15); color: #8B5CF6; }
-    .metodo-card .icono.mixto { background: rgba(255,105,0,0.15); color: var(--brand); }
-    .metodo-card .nombre { font-size: 10px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .metodo-card .monto { font-size: 16px; font-weight: 800; color: var(--text-main); }
+    .payment-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .payment-card {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 16px;
+    }
+    .payment-card .icon { font-size: 24px; margin-bottom: 8px; }
+    .payment-card .icon.efectivo { color: var(--success); }
+    .payment-card .icon.qr { color: var(--blue); }
+    .payment-card .label { font-size: 11px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+    .payment-card .value { font-size: 18px; font-weight: 800; color: var(--text-main); }
 
-    /* MOVIMIENTOS */
-    .movimiento { display: flex; gap: 12px; padding: 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; align-items: center; }
-    .movimiento .hora { font-size: 11px; font-weight: 700; color: var(--text-mute); flex-shrink: 0; min-width: 45px; }
-    .movimiento .info { flex: 1; min-width: 0; }
-    .movimiento .cliente { font-size: 13px; font-weight: 700; color: var(--text-main); }
-    .movimiento .detalle { font-size: 11px; color: var(--text-mute); margin-top: 2px; }
-    .movimiento .monto { font-size: 15px; font-weight: 800; color: var(--brand); flex-shrink: 0; }
+    /* SECCIÓN TÍTULO */
+    .section-title {
+      font-size: 12px; font-weight: 800; color: var(--brand); 
+      text-transform: uppercase; letter-spacing: 1px; 
+      margin-top: 8px; margin-bottom: -4px;
+    }
+
+    /* TABS DE FILTRADO DE MOVIMIENTOS */
+    .tabs-container {
+      display: flex; gap: 8px; background: var(--bg-elev); 
+      padding: 4px; border-radius: 12px; border: 1px solid var(--border-color);
+    }
+    .tab-btn {
+      flex: 1; padding: 8px; border-radius: 8px; background: transparent;
+      border: none; color: var(--text-mute); font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: 0.2s; font-family: inherit;
+    }
+    .tab-btn.active { background: var(--bg-card); color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
+    /* LISTA DE MOVIMIENTOS */
+    .movements-list { display: flex; flex-direction: column; gap: 8px; }
+    .movement-item {
+      display: flex; gap: 12px; padding: 14px; 
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 12px; align-items: center;
+    }
+    .movement-item .icon-box {
+      width: 40px; height: 40px; border-radius: 10px; 
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .movement-item .icon-box.recibo { background: var(--blue-light); color: var(--blue); }
+    .movement-item .icon-box.venta { background: var(--brand-light); color: var(--brand); }
+    .movement-item .info { flex: 1; min-width: 0; }
+    .movement-item .info .title { font-size: 13px; font-weight: 700; color: var(--text-main); }
+    .movement-item .info .subtitle { font-size: 11px; color: var(--text-mute); margin-top: 2px; }
+    .movement-item .amount { font-size: 15px; font-weight: 800; color: var(--text-main); flex-shrink: 0; }
 
     /* BOTONES DE ACCIÓN */
-    .btn-action { 
-      display: flex; align-items: center; justify-content: center; gap: 8px; 
-      width: 100%; padding: 16px; border-radius: var(--radius-md); 
-      font-size: 14px; font-weight: 700; font-family: inherit; 
-      cursor: pointer; margin-bottom: 12px; transition: 0.2s; border: none; 
+    .actions-container { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+    .btn-action {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 16px; border-radius: 16px;
+      font-size: 14px; font-weight: 700; font-family: inherit;
+      cursor: pointer; transition: 0.2s; border: none;
     }
     .btn-action:active { transform: scale(0.98); }
-    .btn-export { background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); }
-    .btn-back { background: var(--brand); color: white; margin-top: 8px; box-shadow: 0 4px 16px rgba(255,105,0,0.3); }
+    .btn-export { background: var(--bg-elev); border: 1px solid var(--border-color); color: var(--text-main); }
+    .btn-back { background: var(--brand); color: white; box-shadow: 0 4px 16px rgba(255,105,0,0.3); }
 
-    .section-title { font-size: 12px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; margin-top: 20px; }
+    /* ESTADO VACÍO */
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-mute); }
+    .empty-state i { font-size: 48px; opacity: 0.2; margin-bottom: 12px; display: block; }
 
-    .empty-reporte { text-align: center; padding: 40px 20px; color: var(--text-mute); }
-    .empty-reporte i { font-size: 48px; opacity: 0.2; margin-bottom: 12px; display: block; }
-
-    /* LOADER PREMIUM (SOLO EL ANILLO GIRA) */
-    .loader-overlay { position: fixed; inset: 0; background: rgba(10, 10, 11, 0.95); backdrop-filter: blur(10px); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s; }
+    /* LOADER */
+    .loader-overlay { position: fixed; inset: 0; background: var(--bg-app); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.4s, visibility 0.4s; }
     .loader-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-    
     .loader-logo-container { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-    
-    /* Anillo exterior que gira */
-    .loader-ring { 
-      position: absolute; inset: 0; border-radius: 50%; 
-      border: 3px solid transparent; 
-      border-top-color: var(--brand); border-bottom-color: var(--brand); 
-      animation: girarAnillo 1.2s linear infinite !important; 
-    }
-    
-    /* Logo interior estático */
-    .loader-logo-img { 
-      width: 60px; height: 60px; border-radius: 50%; 
-      object-fit: cover; background: var(--bg-elev); 
-      border: 2px solid var(--border); 
-      box-shadow: 0 0 20px rgba(255, 105, 0, 0.2); 
-      /* 🔥 SIN ANIMACIÓN */
-    }
-    
-    .loader-text { font-size: 14px; font-weight: 600; color: var(--text-mute); letter-spacing: 0.5px; animation: pulsoTexto 1.5s infinite !important; }
-    
-    @keyframes girarAnillo { 100% { transform: rotate(360deg); } }
-    @keyframes pulsoTexto { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+    .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); animation: spin 1.2s linear infinite; }
+    .loader-logo-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; }
+    .loader-text { font-size: 14px; font-weight: 600; color: var(--text-mute); }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -185,7 +271,7 @@
   <div class="loader-overlay" id="appLoader">
     <div class="loader-logo-container">
       <div class="loader-ring"></div>
-      <img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." class="loader-logo-img" onerror="this.src='/imagenes/web-app-manifest-192x192.png'">
+      <img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." class="loader-logo-img">
     </div>
     <div class="loader-text">Calculando reportes...</div>
   </div>
@@ -195,7 +281,7 @@
       <div class="brand">
         <button class="icon-btn" id="backBtn"><i class="fas fa-arrow-left"></i></button>
         <div class="brand-logo">
-          <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-tools&quot; style=&quot;color:var(--brand); font-size:18px;&quot;></i>';">
+          <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi">
         </div>
         <div class="brand-text">
           <h1>REPORTES</h1>
@@ -203,73 +289,113 @@
         </div>
       </div>
       <div class="header-actions">
-        <button class="icon-btn" id="homeBtn" title="Panel"><i class="fas fa-home"></i></button>
-        <button class="icon-btn" id="preciosBtn" title="Precios"><i class="fas fa-tags"></i></button>
         <button class="icon-btn" id="refreshBtn" title="Actualizar"><i class="fas fa-rotate"></i></button>
-        <button class="icon-btn" id="logoutBtn" title="Salir"><i class="fas fa-sign-out-alt"></i></button>
       </div>
     </header>
 
     <main class="app-content">
-      <div class="fecha-filtros">
-        <button class="fecha-btn active" data-rango="hoy">Hoy</button>
-        <button class="fecha-btn" data-rango="ayer">Ayer</button>
-        <button class="fecha-btn" data-rango="semana">Esta semana</button>
-        <button class="fecha-btn" data-rango="mes">Este mes</button>
-        <button class="fecha-btn" data-rango="custom">📅 Personalizado</button>
+      
+      <!-- FILTRO DE TIEMPO -->
+      <div class="time-filter" id="timeFilter">
+        <button class="time-btn active" data-rango="hoy">Hoy</button>
+        <button class="time-btn" data-rango="ayer">Ayer</button>
+        <button class="time-btn" data-rango="semana">Semana</button>
+        <button class="time-btn" data-rango="mes">Mes</button>
+        <button class="time-btn" data-rango="custom">📅</button>
       </div>
-      <div class="fecha-custom" id="fechaCustom">
+      <div class="custom-date-row" id="customDateRow">
         <input type="date" id="fechaDesde">
         <input type="date" id="fechaHasta">
-        <button class="fecha-btn active" id="btnAplicarCustom" style="padding: 10px 14px;">Aplicar</button>
+        <button id="btnAplicarCustom">Aplicar</button>
       </div>
 
-      <div class="total-card">
-        <div class="label">Total Cobrado</div>
-        <div class="valor" id="totalMonto">Bs. 0.00</div>
-        <div class="sub" id="totalEntregas">0 ventas</div>
+      <!-- TARJETA PRINCIPAL: TOTAL BRUTO -->
+      <div class="hero-card">
+        <div class="label">Total Cobrado (Bruto)</div>
+        <div class="value" id="totalMonto">Bs. 0</div>
+        <div class="sub" id="totalEntregas">0 movimientos</div>
       </div>
 
-      <div class="costos-grid">
-        <div class="costo-card costos">
-          <div class="valor" id="totalCosto">Bs. 0</div>
-          <div class="label">Costos</div>
-        </div>
-        <div class="costo-card ganancia">
-          <div class="valor" id="totalGanancia">Bs. 0</div>
+      <!-- KPIs: GANANCIA, GASTOS, COSTOS -->
+      <div class="kpi-grid">
+        <div class="kpi-card success">
+          <div class="icon"><i class="fas fa-chart-line"></i></div>
           <div class="label">Ganancia Neta</div>
+          <div class="value" id="totalGanancia">Bs. 0</div>
+        </div>
+        <div class="kpi-card danger">
+          <div class="icon"><i class="fas fa-money-bill-transfer"></i></div>
+          <div class="label">Gastos del Período</div>
+          <div class="value" id="totalGastos">Bs. 0</div>
+        </div>
+        <div class="kpi-card blue">
+          <div class="icon"><i class="fas fa-box"></i></div>
+          <div class="label">Costo Repuestos</div>
+          <div class="value" id="totalCosto">Bs. 0</div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="icon"><i class="fas fa-percent"></i></div>
+          <div class="label">Margen</div>
+          <div class="value" id="totalMargen">0%</div>
         </div>
       </div>
 
-      <div class="margen-card">
-        <div class="valor" id="totalMargen">0%</div>
-        <div class="label">Margen de Ganancia</div>
-        <div class="helper">(Ganancia / Total cobrado)</div>
+      <!-- DESGLOSE ACCESORIOS VS SERVICIOS -->
+      <div class="section-title">Desglose de Ventas</div>
+      <div class="breakdown-container">
+        <div class="breakdown-chart" id="breakdownChart">
+          <div class="center-text">
+            <div class="total" id="breakdownTotalPct">0%</div>
+            <div class="label">Accesorios</div>
+          </div>
+        </div>
+        <div class="breakdown-details">
+          <div class="breakdown-item">
+            <div class="info"><span class="dot accesorios"></span> Accesorios</div>
+            <div class="amount" id="breakdownAccesorios">Bs. 0</div>
+          </div>
+          <div class="breakdown-item">
+            <div class="info"><span class="dot servicios"></span> Servicios/Reparación</div>
+            <div class="amount" id="breakdownServicios">Bs. 0</div>
+          </div>
+        </div>
       </div>
 
-      <div class="mini-stats">
-        <div class="mini-stat">
-          <div class="valor" id="statPromedio">Bs. 0</div>
-          <div class="label">Promedio</div>
+      <!-- MÉTODOS DE PAGO -->
+      <div class="section-title">Métodos de Pago</div>
+      <div class="payment-methods">
+        <div class="payment-card">
+          <div class="icon efectivo"><i class="fas fa-money-bill-wave"></i></div>
+          <div class="label">Efectivo</div>
+          <div class="value" id="pagoEfectivo">Bs. 0</div>
         </div>
-        <div class="mini-stat">
-          <div class="valor" id="statMaximo">Bs. 0</div>
-          <div class="label">Mayor Venta</div>
+        <div class="payment-card">
+          <div class="icon qr"><i class="fas fa-qrcode"></i></div>
+          <div class="label">QR</div>
+          <div class="value" id="pagoQR">Bs. 0</div>
         </div>
       </div>
 
-      <div class="section-title">Por Método de Pago</div>
-      <div class="metodos-grid" id="metodosGrid"></div>
-
+      <!-- LISTA DE MOVIMIENTOS CON TABS -->
       <div class="section-title">Movimientos</div>
-      <div id="listaMovimientos"></div>
+      <div class="tabs-container">
+        <button class="tab-btn active" data-tab="todos">Todos</button>
+        <button class="tab-btn" data-tab="servicios">Servicios</button>
+        <button class="tab-btn" data-tab="accesorios">Accesorios</button>
+      </div>
+      <div class="movements-list" id="listaMovimientos">
+        <!-- Se llena desde JS -->
+      </div>
 
-      <button class="btn-action btn-export" id="btnExportar">
-        <i class="fas fa-download"></i> Exportar a CSV
-      </button>
-      <button class="btn-action btn-back" id="btnVolverPanel">
-        <i class="fas fa-home"></i> VOLVER AL PANEL
-      </button>
+      <!-- BOTONES -->
+      <div class="actions-container">
+        <button class="btn-action btn-export" id="btnExportar">
+          <i class="fas fa-download"></i> Exportar a CSV
+        </button>
+        <button class="btn-action btn-back" id="btnVolverPanel">
+          <i class="fas fa-home"></i> VOLVER AL PANEL
+        </button>
+      </div>
 
     </main>
   </div>
