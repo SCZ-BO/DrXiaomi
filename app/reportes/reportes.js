@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES PRO (CON RESUMEN RÁPIDO Y PROGRESO)
+   DR. XIAOMI · REPORTES PRO (CON GASTOS DETALLADOS)
    Archivo: app/reportes/reportes.js
    ============================================================ */
 
@@ -19,7 +19,7 @@ let datosFiltrados = [];
 let tabActual = 'todos';
 let gastosActuales = { pasajes: 0, almuerzo: 0 };
 
-// 🔥 Variables para el resumen rápido
+// Variables para el resumen rápido
 let quickHoy = 0;
 let quickSemana = 0;
 let quickMes = 0;
@@ -41,16 +41,20 @@ const breakdownAccesoriosEl = document.getElementById('breakdownAccesorios');
 const breakdownServiciosEl = document.getElementById('breakdownServicios');
 const listaMovimientos = document.getElementById('listaMovimientos');
 
-// 🔥 Elementos del resumen rápido
+// Elementos del resumen rápido
 const quickHoyEl = document.getElementById('quickHoy');
 const quickSemanaEl = document.getElementById('quickSemana');
 const quickMesEl = document.getElementById('quickMes');
 
-// 🔥 Elementos de progreso mensual
+// Elementos de progreso mensual
 const monthProgressContainer = document.getElementById('monthProgressContainer');
 const monthPercentage = document.getElementById('monthPercentage');
 const monthProgressFill = document.getElementById('monthProgressFill');
 const monthProgressSub = document.getElementById('monthProgressSub');
+
+// 🔥 Elementos del desglose de gastos
+const gastoPasajesTotalEl = document.getElementById('gastoPasajesTotal');
+const gastoAlmuerzoTotalEl = document.getElementById('gastoAlmuerzoTotal');
 
 requireAuth((s) => {
   sesion = s;
@@ -117,16 +121,14 @@ function parsearFecha(fechaObj) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-// 🔥 NUEVA FUNCIÓN: Calcular resumen rápido de Hoy, Semana y Mes
+// Calcular resumen rápido de Hoy, Semana y Mes
 async function cargarResumenRapido() {
   try {
     const ahora = new Date();
     
-    // Fechas para Hoy
     const hoyInicio = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
     const hoyFin = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 23, 59, 59, 999);
     
-    // Fechas para Semana (Lunes a Domingo)
     const diaSemana = ahora.getDay() || 7;
     const semanaInicio = new Date(ahora);
     semanaInicio.setDate(ahora.getDate() - diaSemana + 1);
@@ -134,25 +136,17 @@ async function cargarResumenRapido() {
     const semanaFin = new Date(ahora);
     semanaFin.setHours(23, 59, 59, 999);
     
-    // Fechas para Mes
     const mesInicio = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
     const mesFin = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0, 23, 59, 59, 999);
 
-    // Inicializar contadores
     let totalHoy = 0;
     let totalSemana = 0;
     let totalMes = 0;
 
-    // Leer recibos y ventas para calcular los totales
+    // Leer recibos
     const qRecibos = query(collection(db, 'recibos'), limit(100));
-    const qVentas = query(collection(db, 'ventas'), limit(100));
+    const snapRecibos = await new Promise(resolve => onSnapshot(qRecibos, resolve));
 
-    const [snapRecibos, snapVentas] = await Promise.all([
-      new Promise(resolve => onSnapshot(qRecibos, resolve)),
-      new Promise(resolve => onSnapshot(qVentas, resolve))
-    ]);
-
-    // Procesar recibos
     snapRecibos.forEach(doc => {
       const d = doc.data();
       const monto = Number(d.montoCobrado) || 0;
@@ -166,7 +160,10 @@ async function cargarResumenRapido() {
       if (fechaD >= mesInicio && fechaD <= mesFin) totalMes += monto;
     });
 
-    // Procesar ventas
+    // Leer ventas
+    const qVentas = query(collection(db, 'ventas'), limit(100));
+    const snapVentas = await new Promise(resolve => onSnapshot(qVentas, resolve));
+
     snapVentas.forEach(doc => {
       const d = doc.data();
       const monto = Number(d.monto) || 0;
@@ -180,7 +177,6 @@ async function cargarResumenRapido() {
       if (fechaD >= mesInicio && fechaD <= mesFin) totalMes += monto;
     });
 
-    // Actualizar DOM
     if (quickHoyEl) quickHoyEl.textContent = formatBs(totalHoy);
     if (quickSemanaEl) quickSemanaEl.textContent = formatBs(totalSemana);
     if (quickMesEl) quickMesEl.textContent = formatBs(totalMes);
@@ -251,7 +247,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       else rangoFechasInfo.textContent = `Del ${fechaInicioStr} al ${fechaFinStr}`;
     }
 
-    // 🔥 Mostrar u ocultar barra de progreso mensual
     if (monthProgressContainer) {
       if (rango === 'mes') {
         monthProgressContainer.classList.add('show');
@@ -395,6 +390,10 @@ function renderizarReporte(datos, gastos) {
   totalMargenEl.textContent = `${margen.toFixed(1)}%`;
   pagoEfectivoEl.textContent = formatBs(metodos.efectivo);
   pagoQREl.textContent = formatBs(metodos.qr);
+
+  // 🔥 ACTUALIZAR EL DESGLOSE DE GASTOS 🔥
+  if (gastoPasajesTotalEl) gastoPasajesTotalEl.textContent = formatBs(gastos.pasajes);
+  if (gastoAlmuerzoTotalEl) gastoAlmuerzoTotalEl.textContent = formatBs(gastos.almuerzo);
 
   const totalVentas = totalAccesorios + totalServicios;
   const pctAccesorios = totalVentas > 0 ? (totalAccesorios / totalVentas) * 100 : 0;
