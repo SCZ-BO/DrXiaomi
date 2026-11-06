@@ -36,7 +36,7 @@ if (isAdmin) {
 }
 
 // ==========================================
-// 2. UTILIDADES (LOGO CON FALLBACK A DEFAULT)
+// 2. UTILIDADES (LOGO CON FALLBACK)
 // ==========================================
 function getLogo(marca) {
   if (!marca) return '/app/precios/logos/default.png';
@@ -54,7 +54,7 @@ function getLogo(marca) {
 }
 
 // ==========================================
-// 3. CONEXIÓN A FIREBASE Y DESORDEN ALEATORIO
+// 3. CONEXIÓN A FIREBASE
 // ==========================================
 onSnapshot(collection(db, "precios"), (snap) => {
   allData = [];
@@ -118,7 +118,7 @@ function buscarCompatibles(term) {
 }
 
 // ==========================================
-// 5. RENDERIZADO PRINCIPAL
+// 5. RENDERIZADO
 // ==========================================
 function renderList() {
   let data = [...allData]; 
@@ -185,8 +185,8 @@ function renderList() {
       
       <div style="display:flex; gap:8px; margin-bottom:8px;">
         <span class="card-type ${item.tipo.toLowerCase()}">${item.tipo}</span>
-        <!-- 🔥 CORREGIDO: Quitamos el display:none para que el CSS lo controle -->
-        ${techMode ? `<span class="costo-tag" style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px;">Compra: ${item.compra} Bs</span>` : ''}
+        <!-- 🔥 AHORA SIEMPRE SE GENERA EL HTML, PERO EL CSS SE ENCARGA DE OCULTARLO/MOSTRARLO 🔥 -->
+        <span class="costo-tag" style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px;">Compra: ${item.compra} Bs</span>
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-1); padding-top:10px; margin-top:auto;">
@@ -202,7 +202,7 @@ function renderList() {
 }
 
 // ==========================================
-// 6. EVENTOS (BOTONES)
+// 6. EVENTOS DE BÚSQUEDA Y FILTROS
 // ==========================================
 searchInput.addEventListener('input', (e) => {
   currentTerm = e.target.value;
@@ -228,13 +228,13 @@ document.getElementById('quickFilters').addEventListener('click', (e) => {
 });
 
 // ==========================================
-// 7. MODO TÉCNICO CON CONFIRMACIÓN
+// 7. MODO TÉCNICO (FLUIDO, SIN REPINTAR LA LISTA)
 // ==========================================
 const modalTechConfirm = document.getElementById('modalTechConfirm');
 const btnConfirmTech = document.getElementById('btnConfirmTech');
 const btnCancelTech = document.getElementById('btnCancelTech');
 
-// Restaurar estado del modo técnico si estaba activo
+// Restaurar estado si estaba activo
 if (techMode) {
   document.getElementById('techModeBtn')?.classList.add('tech-active');
   document.body.classList.add('show-costs');
@@ -242,14 +242,13 @@ if (techMode) {
 
 document.getElementById('techModeBtn')?.addEventListener('click', () => {
   if (techMode) {
-    // Apagar
+    // APAGAR: Solo quitamos la clase, no repintamos
     techMode = false;
     document.getElementById('techModeBtn')?.classList.remove('tech-active');
     document.body.classList.remove('show-costs');
-    renderList();
     return;
   }
-  // Mostrar modal para confirmar encendido
+  // ENCENDER: Mostrar modal de confirmación
   modalTechConfirm.classList.add('show');
 });
 
@@ -258,16 +257,15 @@ btnCancelTech?.addEventListener('click', () => {
 });
 
 btnConfirmTech?.addEventListener('click', () => {
-  // Encender
+  // CONFIRMAR ENCENDIDO: Solo añadimos la clase, no repintamos
   techMode = true;
   document.getElementById('techModeBtn')?.classList.add('tech-active');
   document.body.classList.add('show-costs');
   modalTechConfirm.classList.remove('show');
-  renderList();
 });
 
 // ==========================================
-// 8. FUNCIONES GLOBALES Y COPIADO
+// 8. FUNCIONES GLOBALES
 // ==========================================
 window.toggleFav = (id) => {
   if (favorites.has(id)) favorites.delete(id); else favorites.add(id);
@@ -290,7 +288,9 @@ window.editPrice = (id) => {
   window.location.href = '/app/precios-admin/';
 };
 
-// Copiado de precio al hacer clic en la tarjeta
+// ==========================================
+// 9. COPIADO AL TOCAR EL PRECIO
+// ==========================================
 document.addEventListener('click', (e) => {
   const priceElement = e.target.closest('.card-price');
   if (priceElement) {
