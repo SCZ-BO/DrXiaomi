@@ -167,7 +167,7 @@ function renderList() {
 
   container.innerHTML = data.map(item => `
     <div class="product-card ${item.tipo === 'ORIG' ? 'is-orig' : ''}">
-      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
         <div style="display:flex; gap:10px; align-items:center;">
           <div style="width:32px; height:32px; border-radius:8px; background:var(--bg-elev-2); display:flex; align-items:center; justify-content:center; overflow:hidden;">
              <img src="${getLogo(item.marca)}" style="width:100%; height:100%; object-fit:contain;" 
@@ -176,13 +176,17 @@ function renderList() {
           <div>
             <div class="card-brand">${item.marca}</div>
             <div class="card-model">${item.modelo}</div>
-            <!-- 🔥 PROVEEDOR AGREGADO AQUÍ 🔥 -->
-            <div class="card-provider">Prov: ${item.proveedor || item.provider || 'N/A'}</div>
           </div>
         </div>
-        <button class="icon-btn" onclick="window.toggleFav('${item.id}')" style="background:none; border:none; color:${favorites.has(item.id) ? '#FFB800' : 'var(--text-3)'};">
-          <i class="fa${favorites.has(item.id) ? 's' : 'r'} fa-star"></i>
-        </button>
+        
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+           <!-- 🔥 PROVEEDOR ARRIBA A LA DERECHA 🔥 -->
+           <div class="card-provider">${item.proveedor || 'SIN PROV'}</div>
+           
+           <button class="icon-btn" onclick="window.toggleFav('${item.id}')" style="background:none; border:none; color:${favorites.has(item.id) ? '#FFB800' : 'var(--text-3)'};">
+             <i class="fa${favorites.has(item.id) ? 's' : 'r'} fa-star"></i>
+           </button>
+        </div>
       </div>
       
       <div style="display:flex; gap:8px; margin-bottom:8px;">
