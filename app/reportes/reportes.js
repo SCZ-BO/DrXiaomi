@@ -1,369 +1,406 @@
-/* ============================================================
-   DR. XIAOMI · REPORTES PRO (CON GASTOS Y DESGLOSE)
-   Archivo: app/reportes/reportes.js
-   ============================================================ */
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0B" id="metaThemeColor">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Reportes">
+  <title>DR. Xiaomi · Reportes Pro</title>
 
-import { requireAuth, logout } from '/js/app-auth.js';
-import { toast, haptic, initTheme, formatBs, escapeHtml } from '/js/app-ui.js';
-import { db } from '/js/firebase.js';
-import { collection, query, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="manifest" href="/manifest.json">
 
-initTheme();
-let sesion = null;
-let rangoActual = 'hoy';
-let unsubscribeRecibos = null;
-let unsubscribeVentas = null; 
-let unsubscribeCierresGastos = null;
-let datosActuales = []; // Datos completos del período
-let datosFiltrados = []; // Datos filtrados por la pestaña activa
-let tabActual = 'todos'; // 'todos', 'servicios', 'accesorios'
-let gastosActuales = { pasajes: 0, almuerzo: 0 };
+  <style>
+    :root {
+      --bg-app: #0A0A0B;
+      --bg-card: #141416;
+      --bg-elev: #1C1C1E;
+      --text-main: #F5F5F5;
+      --text-mute: #888888;
+      --border-color: #2A2A2D;
+      --brand: #FF6900;
+      --brand-light: rgba(255, 105, 0, 0.15);
+      --success: #10B981;
+      --success-light: rgba(16, 185, 129, 0.15);
+      --danger: #EF4444;
+      --danger-light: rgba(239, 68, 68, 0.15);
+      --blue: #3B82F6;
+      --blue-light: rgba(59, 130, 246, 0.15);
+      --purple: #8B5CF6;
+      --purple-light: rgba(139, 92, 246, 0.15);
+    }
 
-// Elementos del DOM
-const headerSubtitle = document.getElementById('headerSubtitle');
-const totalMontoEl = document.getElementById('totalMonto');
-const totalEntregasEl = document.getElementById('totalEntregas');
-const totalCostoEl = document.getElementById('totalCosto');
-const totalGananciaEl = document.getElementById('totalGanancia');
-const totalGastosEl = document.getElementById('totalGastos');
-const totalMargenEl = document.getElementById('totalMargen');
-const pagoEfectivoEl = document.getElementById('pagoEfectivo');
-const pagoQREl = document.getElementById('pagoQR');
-const breakdownChart = document.getElementById('breakdownChart');
-const breakdownTotalPct = document.getElementById('breakdownTotalPct');
-const breakdownAccesoriosEl = document.getElementById('breakdownAccesorios');
-const breakdownServiciosEl = document.getElementById('breakdownServicios');
-const listaMovimientos = document.getElementById('listaMovimientos');
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    html, body { height: 100%; overflow: hidden; }
+    body { 
+      background-color: var(--bg-app); 
+      color: var(--text-main); 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .app-container { display: flex; flex-direction: column; height: 100%; }
+    
+    .app-header { 
+      display: flex; align-items: center; justify-content: space-between; 
+      padding: 10px 16px; 
+      padding-top: calc(10px + env(safe-area-inset-top)); 
+      background: rgba(10, 10, 11, 0.85); 
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color); 
+      z-index: 100; 
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-logo { width: 36px; height: 36px; border-radius: 8px; overflow: hidden; }
+    .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .brand-text h1 { font-size: 16px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+    .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; font-weight: 500; }
+    
+    .header-actions { display: flex; gap: 8px; }
+    .icon-btn { 
+      width: 36px; height: 36px; border-radius: 50%; 
+      background: var(--bg-elev); border: 1px solid var(--border-color); 
+      color: var(--text-main); display: flex; align-items: center; justify-content: center; 
+      cursor: pointer; transition: 0.2s; font-size: 14px;
+    }
+    .icon-btn:active { transform: scale(0.9); }
 
-requireAuth((s) => {
-  sesion = s;
-  configurarEventos();
-  cargarReporte('hoy');
-});
+    .app-content { 
+      flex: 1; overflow-y: auto; 
+      padding: 16px; 
+      padding-bottom: calc(100px + env(safe-area-inset-bottom)); 
+      -webkit-overflow-scrolling: touch; 
+      display: flex; flex-direction: column; gap: 16px;
+    }
 
-function configurarEventos() {
-  document.getElementById('backBtn')?.addEventListener('click', () => window.location.href = '/app/');
-  document.getElementById('refreshBtn')?.addEventListener('click', () => cargarReporte(rangoActual));
+    .time-filter {
+      display: flex; gap: 8px; overflow-x: auto; padding: 4px; 
+      scrollbar-width: none; -ms-overflow-style: none;
+      background: rgba(28, 28, 30, 0.5);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+    .time-filter::-webkit-scrollbar { display: none; }
+    .time-btn { 
+      flex-shrink: 0; padding: 10px 16px; border-radius: 12px; 
+      background: transparent; border: none; color: var(--text-mute); 
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; 
+      font-family: inherit;
+    }
+    .time-btn.active { 
+      background: var(--brand); color: white; 
+      box-shadow: 0 4px 12px rgba(255, 105, 0, 0.3);
+    }
 
-  // Filtros de tiempo
-  document.querySelectorAll('.time-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      haptic(10);
-      document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      rangoActual = btn.dataset.rango;
+    .custom-date-row { display: none; gap: 8px; align-items: center; }
+    .custom-date-row.show { display: flex; }
+    .custom-date-row input { 
+      flex: 1; padding: 12px; background: var(--bg-elev); 
+      color: var(--text-main); border: 1px solid var(--border-color); 
+      border-radius: 12px; font-family: inherit; font-size: 13px; outline: none; 
+    }
+    .custom-date-row button {
+      padding: 12px 16px; background: var(--brand); color: white; 
+      border: none; border-radius: 12px; font-weight: 700; cursor: pointer;
+      font-family: inherit;
+    }
 
-      if (rangoActual === 'custom') {
-        document.getElementById('customDateRow').classList.add('show');
-      } else {
-        document.getElementById('customDateRow').classList.remove('show');
-        cargarReporte(rangoActual);
+    /* HERO CARD */
+    .hero-card {
+      background: linear-gradient(135deg, var(--bg-card), #0E0E10);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      flex-shrink: 0;
+    }
+    .hero-card::before {
+      content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle at 50% 50%, rgba(255,105,0,0.1) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-card .label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--brand); font-weight: 700; margin-bottom: 8px; }
+    .hero-card .value { font-size: 42px; font-weight: 800; letter-spacing: -1.5px; color: var(--text-main); line-height: 1; margin-bottom: 8px; }
+    .hero-card .sub { font-size: 14px; color: var(--text-mute); }
+
+    /* KPI GRID CORREGIDO */
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex-shrink: 0; }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center; /* Centra el contenido verticalmente */
+      min-height: 100px; /* Asegura que no se aplasten */
+      gap: 4px;
+    }
+    .kpi-card .icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 8px; }
+    .kpi-card.success .icon { background: var(--success-light); color: var(--success); }
+    .kpi-card.danger .icon { background: var(--danger-light); color: var(--danger); }
+    .kpi-card.blue .icon { background: var(--blue-light); color: var(--blue); }
+    .kpi-card.purple .icon { background: var(--purple-light); color: var(--purple); }
+    .kpi-card .label { font-size: 11px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    .kpi-card .value { font-size: 20px; font-weight: 800; color: var(--text-main); line-height: 1.2; }
+    .kpi-card.success .value { color: var(--success); }
+    .kpi-card.danger .value { color: var(--danger); }
+
+    /* DESGLOSE */
+    .breakdown-container {
+      display: flex; gap: 20px; align-items: center;
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 20px; padding: 20px;
+      flex-shrink: 0;
+    }
+    .breakdown-chart {
+      position: relative; width: 90px; height: 90px; flex-shrink: 0;
+      border-radius: 50%;
+      background: conic-gradient(var(--brand) 0% var(--p-accesorios, 0%), var(--blue) var(--p-accesorios, 0%) 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .breakdown-chart::before {
+      content: ''; position: absolute; inset: 12px; border-radius: 50%; background: var(--bg-card);
+    }
+    .breakdown-chart .center-text { position: relative; z-index: 2; text-align: center; }
+    .breakdown-chart .center-text .total { font-size: 16px; font-weight: 800; color: var(--text-main); }
+    .breakdown-chart .center-text .label { font-size: 8px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; }
+    
+    .breakdown-details { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+    .breakdown-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+    .breakdown-item .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; display: inline-block; }
+    .breakdown-item .dot.accesorios { background: var(--brand); }
+    .breakdown-item .dot.servicios { background: var(--blue); }
+    .breakdown-item .info { display: flex; align-items: center; font-weight: 600; }
+    .breakdown-item .amount { font-weight: 800; }
+
+    /* MÉTODOS DE PAGO */
+    .payment-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex-shrink: 0; }
+    .payment-card {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 16px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .payment-card .icon { font-size: 20px; margin-bottom: 4px; }
+    .payment-card .icon.efectivo { color: var(--success); }
+    .payment-card .icon.qr { color: var(--blue); }
+    .payment-card .label { font-size: 11px; color: var(--text-mute); text-transform: uppercase; font-weight: 700; }
+    .payment-card .value { font-size: 18px; font-weight: 800; color: var(--text-main); }
+
+    .section-title {
+      font-size: 12px; font-weight: 800; color: var(--brand); 
+      text-transform: uppercase; letter-spacing: 1px; 
+      margin-top: 8px; margin-bottom: -4px;
+      flex-shrink: 0;
+    }
+
+    /* TABS */
+    .tabs-container {
+      display: flex; gap: 8px; background: var(--bg-elev); 
+      padding: 4px; border-radius: 12px; border: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      flex: 1; padding: 10px; border-radius: 8px; background: transparent;
+      border: none; color: var(--text-mute); font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: 0.2s; font-family: inherit;
+    }
+    .tab-btn.active { background: var(--bg-card); color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
+    /* LISTA DE MOVIMIENTOS */
+    .movements-list { display: flex; flex-direction: column; gap: 8px; }
+    .movement-item {
+      display: flex; gap: 12px; padding: 14px; 
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 12px; align-items: center;
+    }
+    .movement-item .icon-box {
+      width: 40px; height: 40px; border-radius: 10px; 
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .movement-item .icon-box.recibo { background: var(--blue-light); color: var(--blue); }
+    .movement-item .icon-box.venta { background: var(--brand-light); color: var(--brand); }
+    .movement-item .info { flex: 1; min-width: 0; }
+    .movement-item .info .title { font-size: 13px; font-weight: 700; color: var(--text-main); }
+    .movement-item .info .subtitle { font-size: 11px; color: var(--text-mute); margin-top: 2px; }
+    .movement-item .amount { font-size: 15px; font-weight: 800; color: var(--text-main); flex-shrink: 0; }
+
+    .actions-container { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+    .btn-action {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 16px; border-radius: 16px;
+      font-size: 14px; font-weight: 700; font-family: inherit;
+      cursor: pointer; transition: 0.2s; border: none;
+    }
+    .btn-action:active { transform: scale(0.98); }
+    .btn-export { background: var(--bg-elev); border: 1px solid var(--border-color); color: var(--text-main); }
+    .btn-back { background: var(--brand); color: white; box-shadow: 0 4px 16px rgba(255,105,0,0.3); }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-mute); }
+    .empty-state i { font-size: 48px; opacity: 0.2; margin-bottom: 12px; display: block; }
+
+    .loader-overlay { position: fixed; inset: 0; background: var(--bg-app); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.4s, visibility 0.4s; }
+    .loader-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader-logo-container { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .loader-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--brand); border-bottom-color: var(--brand); animation: spin 1.2s linear infinite; }
+    .loader-logo-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; }
+    .loader-text { font-size: 14px; font-weight: 600; color: var(--text-mute); }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div class="loader-overlay" id="appLoader">
+    <div class="loader-logo-container">
+      <div class="loader-ring"></div>
+      <img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." class="loader-logo-img">
+    </div>
+    <div class="loader-text">Calculando reportes...</div>
+  </div>
+
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand">
+        <button class="icon-btn" id="backBtn"><i class="fas fa-home"></i></button>
+        <div class="brand-logo">
+          <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi">
+        </div>
+        <div class="brand-text">
+          <h1>REPORTES</h1>
+          <p id="headerSubtitle">Cargando...</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="refreshBtn" title="Actualizar"><i class="fas fa-rotate"></i></button>
+        <button class="icon-btn" id="logoutBtn" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i></button>
+      </div>
+    </header>
+
+    <main class="app-content">
+      
+      <div class="time-filter" id="timeFilter">
+        <button class="time-btn active" data-rango="hoy">Hoy</button>
+        <button class="time-btn" data-rango="ayer">Ayer</button>
+        <button class="time-btn" data-rango="semana">Semana</button>
+        <button class="time-btn" data-rango="mes">Mes</button>
+        <button class="time-btn" data-rango="custom">📅</button>
+      </div>
+      <div class="custom-date-row" id="customDateRow">
+        <input type="date" id="fechaDesde">
+        <input type="date" id="fechaHasta">
+        <button id="btnAplicarCustom">Aplicar</button>
+      </div>
+
+      <div class="hero-card">
+        <div class="label">Total Cobrado (Bruto)</div>
+        <div class="value" id="totalMonto">Bs. 0</div>
+        <div class="sub" id="totalEntregas">0 movimientos</div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card success">
+          <div class="icon"><i class="fas fa-chart-line"></i></div>
+          <div class="label">Ganancia Neta</div>
+          <div class="value" id="totalGanancia">Bs. 0</div>
+        </div>
+        <div class="kpi-card danger">
+          <div class="icon"><i class="fas fa-money-bill-transfer"></i></div>
+          <div class="label">Gastos del Período</div>
+          <div class="value" id="totalGastos">Bs. 0</div>
+        </div>
+        <div class="kpi-card blue">
+          <div class="icon"><i class="fas fa-box"></i></div>
+          <div class="label">Costo Repuestos</div>
+          <div class="value" id="totalCosto">Bs. 0</div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="icon"><i class="fas fa-percent"></i></div>
+          <div class="label">Margen</div>
+          <div class="value" id="totalMargen">0%</div>
+        </div>
+      </div>
+
+      <div class="section-title">Desglose de Ventas</div>
+      <div class="breakdown-container">
+        <div class="breakdown-chart" id="breakdownChart">
+          <div class="center-text">
+            <div class="total" id="breakdownTotalPct">0%</div>
+            <div class="label">Accesorios</div>
+          </div>
+        </div>
+        <div class="breakdown-details">
+          <div class="breakdown-item">
+            <div class="info"><span class="dot accesorios"></span> Accesorios</div>
+            <div class="amount" id="breakdownAccesorios">Bs. 0</div>
+          </div>
+          <div class="breakdown-item">
+            <div class="info"><span class="dot servicios"></span> Servicios/Reparación</div>
+            <div class="amount" id="breakdownServicios">Bs. 0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Métodos de Pago</div>
+      <div class="payment-methods">
+        <div class="payment-card">
+          <div class="icon efectivo"><i class="fas fa-money-bill-wave"></i></div>
+          <div class="label">Efectivo</div>
+          <div class="value" id="pagoEfectivo">Bs. 0</div>
+        </div>
+        <div class="payment-card">
+          <div class="icon qr"><i class="fas fa-qrcode"></i></div>
+          <div class="label">QR</div>
+          <div class="value" id="pagoQR">Bs. 0</div>
+        </div>
+      </div>
+
+      <div class="section-title">Movimientos</div>
+      <div class="tabs-container">
+        <button class="tab-btn active" data-tab="todos">Todos</button>
+        <button class="tab-btn" data-tab="servicios">Servicios</button>
+        <button class="tab-btn" data-tab="accesorios">Accesorios</button>
+      </div>
+      <div class="movements-list" id="listaMovimientos">
+        <!-- Se llena desde JS -->
+      </div>
+
+      <div class="actions-container">
+        <button class="btn-action btn-export" id="btnExportar">
+          <i class="fas fa-download"></i> Exportar a CSV
+        </button>
+        <button class="btn-action btn-back" id="btnVolverPanel">
+          <i class="fas fa-home"></i> VOLVER AL PANEL
+        </button>
+      </div>
+
+    </main>
+  </div>
+
+  <script type="module" src="reportes.js"></script>
+
+  <script>
+    setTimeout(() => {
+      const loader = document.getElementById('appLoader');
+      if (loader && !loader.classList.contains('hidden')) {
+        loader.classList.add('hidden');
       }
-    });
-  });
-
-  document.getElementById('btnAplicarCustom')?.addEventListener('click', () => {
-    const desde = document.getElementById('fechaDesde').value;
-    const hasta = document.getElementById('fechaHasta').value;
-    if (!desde || !hasta) {
-      toast('Selecciona ambas fechas', 'warning');
-      return;
-    }
-    cargarReporte('custom', desde, hasta);
-  });
-
-  // Tabs de movimientos
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      haptic(10);
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      tabActual = btn.dataset.tab;
-      filtrarYRenderizarMovimientos();
-    });
-  });
-
-  document.getElementById('btnExportar')?.addEventListener('click', exportarCSV);
-  document.getElementById('btnVolverPanel')?.addEventListener('click', () => window.location.href = '/app/');
-}
-
-function parsearFecha(fechaObj) {
-  if (!fechaObj) return null;
-  if (typeof fechaObj.toDate === 'function') return fechaObj.toDate();
-  if (fechaObj.seconds !== undefined) return new Date(fechaObj.seconds * 1000);
-  const d = new Date(fechaObj);
-  return isNaN(d.getTime()) ? null : d;
-}
-
-async function cargarReporte(rango, desdeFecha, hastaFecha) {
-  if (unsubscribeRecibos) unsubscribeRecibos();
-  if (unsubscribeVentas) unsubscribeVentas();
-  if (unsubscribeCierresGastos) unsubscribeCierresGastos();
-
-  totalMontoEl.textContent = '...';
-  totalEntregasEl.textContent = 'Buscando...';
-  listaMovimientos.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Cargando datos...</p></div>';
-
-  try {
-    let inicio = new Date();
-    let fin = new Date();
-
-    if (rango === 'hoy') {
-      inicio.setHours(0, 0, 0, 0);
-      fin.setHours(23, 59, 59, 999);
-    } else if (rango === 'ayer') {
-      inicio.setDate(inicio.getDate() - 1);
-      inicio.setHours(0, 0, 0, 0);
-      fin.setDate(fin.getDate() - 1);
-      fin.setHours(23, 59, 59, 999);
-    } else if (rango === 'semana') {
-      const dia = inicio.getDay() || 7; // Lunes es 1
-      inicio.setDate(inicio.getDate() - dia + 1);
-      inicio.setHours(0, 0, 0, 0);
-      fin.setHours(23, 59, 59, 999);
-    } else if (rango === 'mes') {
-      inicio.setDate(1);
-      inicio.setHours(0, 0, 0, 0);
-      fin.setHours(23, 59, 59, 999);
-    } else if (rango === 'custom') {
-      inicio = new Date(desdeFecha + 'T00:00:00');
-      fin = new Date(hastaFecha + 'T23:59:59');
-    }
-
-    const diaInicio = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
-    const diaFin = new Date(fin.getFullYear(), fin.getMonth(), fin.getDate());
-
-    const opcionesFecha = { day: '2-digit', month: 'short' };
-    headerSubtitle.textContent = `${inicio.toLocaleDateString('es-BO', opcionesFecha)} - ${fin.toLocaleDateString('es-BO', opcionesFecha)}`;
-
-    let datosRecibos = [];
-    let datosVentas = [];
-    gastosActuales = { pasajes: 0, almuerzo: 0 };
-
-    const procesarYRenderizar = () => {
-      const todosLosDatos = [...datosRecibos, ...datosVentas];
-      todosLosDatos.sort((a, b) => b.fechaReal - a.fechaReal);
-      datosActuales = todosLosDatos;
-      renderizarReporte(todosLosDatos, gastosActuales);
-      document.getElementById('appLoader')?.classList.add('hidden');
-    };
-
-    // 1. Leer Recibos (Servicios/Reparaciones)
-    const qRecibos = query(collection(db, 'recibos'), limit(100));
-    unsubscribeRecibos = onSnapshot(qRecibos, (snapshot) => {
-      datosRecibos = [];
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        const montoCobrado = Number(d.montoCobrado) || 0;
-        const estaEntregado = d.estadoOrden === 'entregado';
-        if (!estaEntregado && montoCobrado <= 0) return;
-
-        const fechaD = parsearFecha(d.fechaEditada) || parsearFecha(d.fechaEntrega) || parsearFecha(d.fecha);
-        if (!fechaD) return;
-
-        const diaRecibo = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
-        if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
-          datosRecibos.push({
-            origen: 'recibo',
-            tipo: 'servicio', // Clasificación para el filtro
-            cliente: d.cliente || 'Cliente',
-            detalle: `${d.marca || ''} ${d.modelo || ''}`,
-            montoCobrado: montoCobrado,
-            costoRepuesto: Number(d.costoRepuesto) || 0,
-            metodoPago: d.metodoPago || 'Efectivo',
-            fechaReal: fechaD,
-            numeroRecibo: d.numeroRecibo || ''
-          });
-        }
-      });
-      procesarYRenderizar();
-    });
-
-    // 2. Leer Ventas (Accesorios y Servicios Rápidos)
-    const qVentas = query(collection(db, 'ventas'), limit(100));
-    unsubscribeVentas = onSnapshot(qVentas, (snapshot) => {
-      datosVentas = [];
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        const fechaD = parsearFecha(d.fecha);
-        if (!fechaD) return;
-
-        const diaVenta = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
-        if (diaVenta >= diaInicio && diaVenta <= diaFin) {
-          // Clasificamos como accesorio si el concepto empieza con "Xx " (ej: 1x Pantalla)
-          const esAccesorio = /^\d+x\s/.test(d.concepto);
-          datosVentas.push({
-            origen: 'venta_panel',
-            tipo: esAccesorio ? 'accesorio' : 'servicio',
-            cliente: 'Venta Rápida',
-            detalle: d.concepto,
-            montoCobrado: Number(d.monto) || 0,
-            costoRepuesto: Number(d.costo) || 0,
-            metodoPago: d.metodoPago || 'Efectivo',
-            fechaReal: fechaD,
-            numeroRecibo: ''
-          });
-        }
-      });
-      procesarYRenderizar();
-    });
-
-    // 3. Leer Cierres (SOLO para Gastos)
-    const qCierres = query(collection(db, 'cierres'), limit(100));
-    unsubscribeCierresGastos = onSnapshot(qCierres, (snapshot) => {
-      gastosActuales = { pasajes: 0, almuerzo: 0 };
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        const fechaD = parsearFecha(d.fecha);
-        if (!fechaD) return;
-
-        const diaCierre = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
-        if (diaCierre >= diaInicio && diaCierre <= diaFin) {
-          gastosActuales.pasajes += Number(d.gastoPasajes) || 0;
-          gastosActuales.almuerzo += Number(d.gastoAlmuerzo) || 0;
-        }
-      });
-      procesarYRenderizar();
-    });
-
-  } catch (error) {
-    console.error('❌ Error al configurar reporte:', error);
-    document.getElementById('appLoader')?.classList.add('hidden');
-  }
-}
-
-function renderizarReporte(datos, gastos) {
-  document.getElementById('appLoader')?.classList.add('hidden');
-
-  // 1. Calcular Totales
-  let totalMonto = 0;
-  let totalCosto = 0;
-  let metodos = { efectivo: 0, qr: 0 };
-  let totalAccesorios = 0;
-  let totalServicios = 0;
-
-  datos.forEach(d => {
-    const monto = d.montoCobrado;
-    const costo = d.costoRepuesto;
-    const metodo = (d.metodoPago || '').toLowerCase();
-
-    totalMonto += monto;
-    totalCosto += costo;
-
-    if (metodo.includes('efectivo')) metodos.efectivo += monto;
-    else if (metodo.includes('qr')) metodos.qr += monto;
-
-    if (d.tipo === 'accesorio') totalAccesorios += monto;
-    else totalServicios += monto;
-  });
-
-  const totalGastos = gastos.pasajes + gastos.almuerzo;
-  const totalGanancia = totalMonto - totalCosto - totalGastos;
-  const margen = totalMonto > 0 ? (totalGanancia / totalMonto) * 100 : 0;
-
-  // 2. Actualizar DOM
-  totalMontoEl.textContent = formatBs(totalMonto);
-  totalEntregasEl.textContent = `${datos.length} movimientos`;
-  totalCostoEl.textContent = formatBs(totalCosto);
-  totalGastosEl.textContent = formatBs(totalGastos);
-  totalGananciaEl.textContent = formatBs(totalGanancia);
-  totalMargenEl.textContent = `${margen.toFixed(1)}%`;
-  pagoEfectivoEl.textContent = formatBs(metodos.efectivo);
-  pagoQREl.textContent = formatBs(metodos.qr);
-
-  // 3. Gráfico de Dona
-  const totalVentas = totalAccesorios + totalServicios;
-  const pctAccesorios = totalVentas > 0 ? (totalAccesorios / totalVentas) * 100 : 0;
-  breakdownChart.style.setProperty('--p-accesorios', `${pctAccesorios}%`);
-  breakdownTotalPct.textContent = `${Math.round(pctAccesorios)}%`;
-  breakdownAccesoriosEl.textContent = formatBs(totalAccesorios);
-  breakdownServiciosEl.textContent = formatBs(totalServicios);
-
-  // 4. Renderizar Movimientos
-  filtrarYRenderizarMovimientos();
-}
-
-function filtrarYRenderizarMovimientos() {
-  if (tabActual === 'todos') {
-    datosFiltrados = datosActuales;
-  } else if (tabActual === 'servicios') {
-    datosFiltrados = datosActuales.filter(d => d.tipo === 'servicio');
-  } else if (tabActual === 'accesorios') {
-    datosFiltrados = datosActuales.filter(d => d.tipo === 'accesorio');
-  }
-
-  if (datosFiltrados.length === 0) {
-    listaMovimientos.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-inbox"></i>
-        <p>No hay movimientos en esta categoría.</p>
-      </div>
-    `;
-    return;
-  }
-
-  let html = '';
-  datosFiltrados.forEach(d => {
-    const fechaD = d.fechaReal;
-    const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
-    const fechaStr = `${String(fechaD.getDate()).padStart(2, '0')}/${String(fechaD.getMonth() + 1).padStart(2, '0')}`;
-    
-    const icono = d.tipo === 'accesorio' ? 'fa-box' : 'fa-wrench';
-    const claseIcono = d.tipo === 'accesorio' ? 'venta' : 'recibo';
-
-    html += `
-      <div class="movement-item">
-        <div class="icon-box ${claseIcono}">
-          <i class="fas ${icono}"></i>
-        </div>
-        <div class="info">
-          <div class="title">${escapeHtml(d.cliente || 'Cliente')}</div>
-          <div class="subtitle">${escapeHtml(d.detalle || '')} · ${fechaStr} ${horaStr} · ${escapeHtml(d.metodoPago)}</div>
-        </div>
-        <div class="amount">${formatBs(d.montoCobrado)}</div>
-      </div>
-    `;
-  });
-
-  listaMovimientos.innerHTML = html;
-}
-
-function exportarCSV() {
-  haptic(15);
-
-  if (!datosActuales || datosActuales.length === 0) {
-    toast('No hay datos para exportar', 'warning');
-    return;
-  }
-
-  let csv = 'Fecha;Hora;Tipo;Cliente;Detalle;Metodo Pago;Monto;Recibo\n';
-
-  datosActuales.forEach(d => {
-    const fechaD = d.fechaReal;
-    const fechaStr = `${String(fechaD.getDate()).padStart(2, '0')}/${String(fechaD.getMonth() + 1).padStart(2, '0')}/${fechaD.getFullYear()}`;
-    const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
-    
-    const tipo = d.tipo === 'accesorio' ? 'Accesorio' : 'Servicio/Reparación';
-
-    const cliente = String(d.cliente || '').replace(/;/g, ',');
-    const detalle = String(d.detalle || '').replace(/;/g, ',');
-    const metodo = String(d.metodoPago || '').replace(/;/g, ',');
-    const monto = Number(d.montoCobrado).toFixed(2);
-    const recibo = String(d.numeroRecibo || '').replace(/;/g, ',');
-
-    csv += `${fechaStr};${horaStr};${tipo};${cliente};${detalle};${metodo};${monto};${recibo}\n`;
-  });
-
-  const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  
-  link.setAttribute('href', url);
-  link.setAttribute('download', `Reporte_${new Date().toISOString().slice(0,10)}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  toast('CSV exportado correctamente', 'success');
-}
+    }, 2500);
+  </script>
+</body>
+</html>
