@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · REPORTES PRO (CON GASTOS Y DESGLOSE)
+   DR. XIAOMI · REPORTES PRO (CON GANANCIA POR MOVIMIENTO)
    Archivo: app/reportes/reportes.js
    ============================================================ */
 
@@ -14,13 +14,14 @@ let rangoActual = 'hoy';
 let unsubscribeRecibos = null;
 let unsubscribeVentas = null; 
 let unsubscribeCierresGastos = null;
-let datosActuales = []; // Datos completos del período
-let datosFiltrados = []; // Datos filtrados por la pestaña activa
-let tabActual = 'todos'; // 'todos', 'servicios', 'accesorios'
+let datosActuales = [];
+let datosFiltrados = [];
+let tabActual = 'todos';
 let gastosActuales = { pasajes: 0, almuerzo: 0 };
 
 // Elementos del DOM
 const headerSubtitle = document.getElementById('headerSubtitle');
+const rangoFechasInfo = document.getElementById('rangoFechasInfo');
 const totalMontoEl = document.getElementById('totalMonto');
 const totalEntregasEl = document.getElementById('totalEntregas');
 const totalCostoEl = document.getElementById('totalCosto');
@@ -118,7 +119,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       fin.setDate(fin.getDate() - 1);
       fin.setHours(23, 59, 59, 999);
     } else if (rango === 'semana') {
-      const dia = inicio.getDay() || 7; // Lunes es 1
+      const dia = inicio.getDay() || 7;
       inicio.setDate(inicio.getDate() - dia + 1);
       inicio.setHours(0, 0, 0, 0);
       fin.setHours(23, 59, 59, 999);
@@ -135,7 +136,17 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
     const diaFin = new Date(fin.getFullYear(), fin.getMonth(), fin.getDate());
 
     const opcionesFecha = { day: '2-digit', month: 'short' };
-    headerSubtitle.textContent = `${inicio.toLocaleDateString('es-BO', opcionesFecha)} - ${fin.toLocaleDateString('es-BO', opcionesFecha)}`;
+    const fechaInicioStr = inicio.toLocaleDateString('es-BO', opcionesFecha);
+    const fechaFinStr = fin.toLocaleDateString('es-BO', opcionesFecha);
+    headerSubtitle.textContent = `${fechaInicioStr} - ${fechaFinStr}`;
+
+    if (rangoFechasInfo) {
+      if (rango === 'hoy') rangoFechasInfo.textContent = `Hoy: ${fechaInicioStr}`;
+      else if (rango === 'ayer') rangoFechasInfo.textContent = `Ayer: ${fechaInicioStr}`;
+      else if (rango === 'semana') rangoFechasInfo.textContent = `Semana del ${fechaInicioStr} al ${fechaFinStr}`;
+      else if (rango === 'mes') rangoFechasInfo.textContent = `Mes: ${fechaInicioStr} al ${fechaFinStr}`;
+      else rangoFechasInfo.textContent = `Del ${fechaInicioStr} al ${fechaFinStr}`;
+    }
 
     let datosRecibos = [];
     let datosVentas = [];
@@ -149,7 +160,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       document.getElementById('appLoader')?.classList.add('hidden');
     };
 
-    // 1. Leer Recibos (Servicios/Reparaciones)
     const qRecibos = query(collection(db, 'recibos'), limit(100));
     unsubscribeRecibos = onSnapshot(qRecibos, (snapshot) => {
       datosRecibos = [];
@@ -166,7 +176,7 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
         if (diaRecibo >= diaInicio && diaRecibo <= diaFin) {
           datosRecibos.push({
             origen: 'recibo',
-            tipo: 'servicio', // Clasificación para el filtro
+            tipo: 'servicio',
             cliente: d.cliente || 'Cliente',
             detalle: `${d.marca || ''} ${d.modelo || ''}`,
             montoCobrado: montoCobrado,
@@ -180,7 +190,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
-    // 2. Leer Ventas (Accesorios y Servicios Rápidos)
     const qVentas = query(collection(db, 'ventas'), limit(100));
     unsubscribeVentas = onSnapshot(qVentas, (snapshot) => {
       datosVentas = [];
@@ -191,7 +200,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
 
         const diaVenta = new Date(fechaD.getFullYear(), fechaD.getMonth(), fechaD.getDate());
         if (diaVenta >= diaInicio && diaVenta <= diaFin) {
-          // Clasificamos como accesorio si el concepto empieza con "Xx " (ej: 1x Pantalla)
           const esAccesorio = /^\d+x\s/.test(d.concepto);
           datosVentas.push({
             origen: 'venta_panel',
@@ -209,7 +217,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
       procesarYRenderizar();
     });
 
-    // 3. Leer Cierres (SOLO para Gastos)
     const qCierres = query(collection(db, 'cierres'), limit(100));
     unsubscribeCierresGastos = onSnapshot(qCierres, (snapshot) => {
       gastosActuales = { pasajes: 0, almuerzo: 0 };
@@ -236,7 +243,6 @@ async function cargarReporte(rango, desdeFecha, hastaFecha) {
 function renderizarReporte(datos, gastos) {
   document.getElementById('appLoader')?.classList.add('hidden');
 
-  // 1. Calcular Totales
   let totalMonto = 0;
   let totalCosto = 0;
   let metodos = { efectivo: 0, qr: 0 };
@@ -262,7 +268,6 @@ function renderizarReporte(datos, gastos) {
   const totalGanancia = totalMonto - totalCosto - totalGastos;
   const margen = totalMonto > 0 ? (totalGanancia / totalMonto) * 100 : 0;
 
-  // 2. Actualizar DOM
   totalMontoEl.textContent = formatBs(totalMonto);
   totalEntregasEl.textContent = `${datos.length} movimientos`;
   totalCostoEl.textContent = formatBs(totalCosto);
@@ -272,7 +277,6 @@ function renderizarReporte(datos, gastos) {
   pagoEfectivoEl.textContent = formatBs(metodos.efectivo);
   pagoQREl.textContent = formatBs(metodos.qr);
 
-  // 3. Gráfico de Dona
   const totalVentas = totalAccesorios + totalServicios;
   const pctAccesorios = totalVentas > 0 ? (totalAccesorios / totalVentas) * 100 : 0;
   breakdownChart.style.setProperty('--p-accesorios', `${pctAccesorios}%`);
@@ -280,7 +284,6 @@ function renderizarReporte(datos, gastos) {
   breakdownAccesoriosEl.textContent = formatBs(totalAccesorios);
   breakdownServiciosEl.textContent = formatBs(totalServicios);
 
-  // 4. Renderizar Movimientos
   filtrarYRenderizarMovimientos();
 }
 
@@ -312,6 +315,23 @@ function filtrarYRenderizarMovimientos() {
     const icono = d.tipo === 'accesorio' ? 'fa-box' : 'fa-wrench';
     const claseIcono = d.tipo === 'accesorio' ? 'venta' : 'recibo';
 
+    // 🔥 CALCULAR GANANCIA POR MOVIMIENTO 🔥
+    const monto = d.montoCobrado;
+    const costo = d.costoRepuesto;
+    const ganancia = monto - costo;
+
+    // Mostrar la ganancia solo si el usuario es admin
+    const esAdmin = sesion?.rol === 'admin';
+    let htmlGanancia = '';
+    if (esAdmin) {
+      htmlGanancia = `
+        <div class="subtitle" style="margin-top: 4px; display: flex; gap: 10px; font-size: 11px;">
+          ${costo > 0 ? `<span style="color: #F59E0B;">Costo: ${formatBs(costo)}</span>` : ''}
+          <span style="color: #22C55E; font-weight: 700;">Ganancia: ${formatBs(ganancia)}</span>
+        </div>
+      `;
+    }
+
     html += `
       <div class="movement-item">
         <div class="icon-box ${claseIcono}">
@@ -320,8 +340,9 @@ function filtrarYRenderizarMovimientos() {
         <div class="info">
           <div class="title">${escapeHtml(d.cliente || 'Cliente')}</div>
           <div class="subtitle">${escapeHtml(d.detalle || '')} · ${fechaStr} ${horaStr} · ${escapeHtml(d.metodoPago)}</div>
+          ${htmlGanancia}
         </div>
-        <div class="amount">${formatBs(d.montoCobrado)}</div>
+        <div class="amount">${formatBs(monto)}</div>
       </div>
     `;
   });
@@ -337,7 +358,7 @@ function exportarCSV() {
     return;
   }
 
-  let csv = 'Fecha;Hora;Tipo;Cliente;Detalle;Metodo Pago;Monto;Recibo\n';
+  let csv = 'Fecha;Hora;Tipo;Cliente;Detalle;Metodo Pago;Monto;Costo;Ganancia;Recibo\n';
 
   datosActuales.forEach(d => {
     const fechaD = d.fechaReal;
@@ -345,14 +366,16 @@ function exportarCSV() {
     const horaStr = `${String(fechaD.getHours()).padStart(2, '0')}:${String(fechaD.getMinutes()).padStart(2, '0')}`;
     
     const tipo = d.tipo === 'accesorio' ? 'Accesorio' : 'Servicio/Reparación';
+    const monto = Number(d.montoCobrado).toFixed(2);
+    const costo = Number(d.costoRepuesto || 0).toFixed(2);
+    const ganancia = (Number(d.montoCobrado) - Number(d.costoRepuesto || 0)).toFixed(2);
 
     const cliente = String(d.cliente || '').replace(/;/g, ',');
     const detalle = String(d.detalle || '').replace(/;/g, ',');
     const metodo = String(d.metodoPago || '').replace(/;/g, ',');
-    const monto = Number(d.montoCobrado).toFixed(2);
     const recibo = String(d.numeroRecibo || '').replace(/;/g, ',');
 
-    csv += `${fechaStr};${horaStr};${tipo};${cliente};${detalle};${metodo};${monto};${recibo}\n`;
+    csv += `${fechaStr};${horaStr};${tipo};${cliente};${detalle};${metodo};${monto};${costo};${ganancia};${recibo}\n`;
   });
 
   const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
