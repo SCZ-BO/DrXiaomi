@@ -18,9 +18,6 @@
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    /* ============================================================ */
-    /* CSS AISLADO Y PREMIUM PARA EL CATÁLOGO                       */
-    /* ============================================================ */
     :root {
       --bg-app: #0A0A0B;
       --bg-card: #141416;
@@ -56,7 +53,11 @@
 
     .app-content { padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
 
-    /* ================= LOADER ================= */
+    /* HEADER FORZADO (Para que se vea como tu captura) */
+    .app-header { display: flex !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; padding: 12px 20px !important; background: var(--bg-app) !important; border-bottom: 1px solid var(--border-color) !important; }
+    .header-actions { display: flex !important; align-items: center !important; gap: 8px !important; }
+
+    /* LOADER */
     .loader-overlay { position: fixed; inset: 0; background: var(--bg-app); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.3s; }
     .loader-overlay.hidden { opacity: 0; pointer-events: none; }
     .loader-logo-container { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
@@ -65,55 +66,39 @@
     .loader-text { font-size: 14px; font-weight: 600; color: var(--text-mute); }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    /* ================= 🔥 BOTONES DEL HEADER (INYECTADOS POR JS) 🔥 ================= */
+    /* BOTONES DEL HEADER */
     .header-custom-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%;
       border: 1px solid var(--border-color);
-      background: var(--bg-elev);
-      color: var(--text-main);
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      margin-left: 6px;
+      background: var(--bg-elev); color: var(--text-main);
+      font-size: 16px; cursor: pointer; transition: all 0.2s ease;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     .header-custom-btn:active { transform: scale(0.88); }
     
-    /* Botón Admin */
-    #adminEditBtn {
-      color: var(--blue);
-      border-color: rgba(59, 130, 246, 0.3);
-      background: var(--blue-light);
-    }
-
-    /* Botón Modo Técnico */
-    #techModeBtn {
-      color: var(--text-mute);
-    }
+    #adminEditBtn { color: var(--blue); border-color: rgba(59, 130, 246, 0.3); background: var(--blue-light); }
+    #techModeBtn { color: var(--text-mute); }
     #techModeBtn.tech-active {
-      background: var(--brand) !important;
-      border-color: var(--brand) !important;
-      color: white !important;
-      box-shadow: 0 0 15px rgba(255, 105, 0, 0.5);
+      background: var(--brand) !important; border-color: var(--brand) !important;
+      color: white !important; box-shadow: 0 0 15px rgba(255, 105, 0, 0.5);
     }
 
-    /* ================= 🔥 REGLA PARA OCULTAR PRECIOS DE COMPRA 🔥 ================= */
-    .precio-compra, .costo-compra, .ganancia-venta { 
+    /* 🔥 OCULTAR COSTOS POR DEFECTO 🔥 */
+    .precio-compra, .costo-compra, .ganancia-venta, .compra-tag, .costo-tag { 
       display: none !important; 
     }
     
+    /* MOSTRAR COSTOS CUANDO EL BODY TIENE LA CLASE */
     body.show-costs .precio-compra,
     body.show-costs .costo-compra,
-    body.show-costs .ganancia-venta {
-      display: block !important;
+    body.show-costs .ganancia-venta,
+    body.show-costs .compra-tag,
+    body.show-costs .costo-tag {
+      display: flex !important;
     }
 
-    /* ================= BUSCADOR ================= */
+    /* BUSCADOR */
     .search-bar { position: relative; }
     .search-bar input {
       width: 100%; padding: 16px 16px 16px 48px;
@@ -137,7 +122,6 @@
     }
     .search-bar .clear-btn.visible { display: block; }
 
-    /* Panel de sugerencias */
     .suggestions-panel {
       position: absolute; top: 100%; left: 0; right: 0; margin-top: 8px;
       background: var(--bg-card); border: 1px solid var(--border-color);
@@ -153,52 +137,44 @@
     .suggestion-item:hover { background: var(--bg-elev); }
     .suggestion-item:last-child { border-bottom: none; }
 
-    /* ================= 🔥 FILTROS ARREGLADOS 🔥 ================= */
+    /* FILTROS (Forzados para que se vean como en tu captura) */
     .filters-row { 
-      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; 
-      scrollbar-width: none; -ms-overflow-style: none;
+      display: flex !important; gap: 8px !important; overflow-x: auto !important; 
+      padding-bottom: 8px !important; scrollbar-width: none; -ms-overflow-style: none;
+      min-height: 45px;
     }
     .filters-row::-webkit-scrollbar { display: none; }
     
     .filter-chip {
-      padding: 10px 16px; border-radius: 20px; 
-      font-size: 13px !important; font-weight: 600;
-      background: var(--bg-elev); 
-      color: var(--text-main) !important; /* Forzado para que se vea */
-      border: 1px solid var(--border-color);
-      cursor: pointer; white-space: nowrap; 
-      transition: all 0.2s ease;
-      font-family: 'Inter', sans-serif !important;
-      display: inline-flex !important;
-      align-items: center;
-      justify-content: center;
+      padding: 10px 16px !important; border-radius: 20px !important; 
+      font-size: 13px !important; font-weight: 600 !important;
+      background: var(--bg-elev) !important; color: var(--text-main) !important; 
+      border: 1px solid var(--border-color) !important;
+      cursor: pointer !important; white-space: nowrap !important; 
+      transition: all 0.2s ease !important; font-family: 'Inter', sans-serif !important;
+      display: inline-flex !important; align-items: center !important; justify-content: center !important;
+      visibility: visible !important; opacity: 1 !important; height: 38px !important;
     }
+    
     .filter-chip.active {
-      background: var(--brand); color: white !important; border-color: var(--brand);
-      box-shadow: 0 4px 14px var(--brand-light);
+      background: var(--brand) !important; color: white !important; 
+      border-color: var(--brand) !important; box-shadow: 0 4px 14px var(--brand-light) !important;
     }
 
-    /* ================= RESULTADOS ================= */
-    #resultsCount { font-size: 13px; color: var(--text-mute); font-weight: 500; margin-bottom: 4px; }
+    #resultsCount { font-size: 13px; color: var(--text-mute); font-weight: 500; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* ================= TARJETAS DE PRODUCTO ================= */
+    /* TARJETAS DE PRODUCTO */
     .product-card {
       background: var(--bg-card); border: 1px solid var(--border-color);
       border-radius: 16px; padding: 16px; margin-bottom: 12px;
       position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-      transition: transform 0.2s;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      transition: transform 0.2s; display: flex; flex-direction: column; gap: 8px;
     }
     .product-card:active { transform: scale(0.98); }
-    
-    /* Línea decorativa sin bloquear clics */
     .product-card::before {
       content: ''; position: absolute; left: 0; top: 16px; bottom: 16px;
       width: 4px; background: var(--brand); border-radius: 0 4px 4px 0;
-      pointer-events: none;
-      z-index: 0;
+      pointer-events: none; z-index: 0;
     }
     .product-card.is-orig::before { background: linear-gradient(180deg, #FFD700, #FFA500); }
 
@@ -213,31 +189,38 @@
     .card-type.oled { background: var(--brand-light); color: var(--brand); }
     .card-type.orig { background: linear-gradient(135deg, #FFD700, #FFA500); color: #4A2800; }
 
-    /* El precio es clickeable para copiar */
+    /* EL PRECIO ES CLICKEABLE */
     .card-price { 
       font-size: 22px; font-weight: 800; color: var(--text-main); 
-      letter-spacing: -0.5px; 
-      cursor: pointer; 
-      position: relative; 
-      z-index: 10;
-      display: inline-block;
+      letter-spacing: -0.5px; cursor: pointer; 
+      position: relative; z-index: 10; display: inline-block;
+      transition: color 0.2s;
     }
+    .card-price:active { transform: scale(0.95); color: var(--brand); }
 
     /* Botones dentro de la tarjeta */
     .image-btn, .whatsapp-btn, .edit-btn {
       border: none; padding: 8px 12px; border-radius: 8px;
       font-size: 12px; font-weight: 700; cursor: pointer; 
       display: flex; align-items: center; justify-content: center; gap: 6px;
-      font-family: inherit; transition: 0.2s;
-      position: relative; z-index: 1;
+      font-family: inherit; transition: 0.2s; position: relative; z-index: 1;
     }
     .image-btn:active, .whatsapp-btn:active, .edit-btn:active { transform: scale(0.95); }
-    
     .image-btn { background: var(--bg-elev); color: var(--text-main); border: 1px solid var(--border-color); }
     .whatsapp-btn { background: rgba(37, 211, 102, 0.15); color: #25D366; border: 1px solid rgba(37, 211, 102, 0.3); }
     .edit-btn { background: rgba(59, 130, 246, 0.15); color: var(--blue); border: 1px solid rgba(59, 130, 246, 0.3); }
 
-    /* ================= MODALES ================= */
+    /* TOAST PARA COPIAR */
+    .custom-toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: #25D366; color: white; padding: 12px 24px; border-radius: 30px;
+      font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      opacity: 0; transition: all 0.3s; z-index: 10000; display: flex; align-items: center; gap: 8px;
+      pointer-events: none; white-space: pre-wrap; text-align: center;
+    }
+    .custom-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* MODALES */
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); padding: 20px; }
     .modal-backdrop.show { display: flex; }
     .modal { background: var(--bg-card); padding: 24px; border-radius: 20px; width: 100%; max-width: 400px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; }
@@ -288,21 +271,16 @@
       </div>
 
       <!-- RESULTADOS -->
-      <div id="resultsCount" style="display: flex; justify-content: space-between;"></div>
+      <div id="resultsCount"></div>
       
       <!-- AQUÍ SE INYECTAN LAS TARJETAS -->
       <div id="resultsContainer"></div>
     </div>
   </main>
 
-  <!-- 🔥 BOTONES OCULTOS QUE SE MOVERÁN AL HEADER POR JS 🔥 -->
-  <div style="display: none;" id="hidden-header-buttons">
-    <button class="header-custom-btn" id="adminEditBtn" title="Gestionar Catálogo">
-      <i class="fas fa-list-ul"></i>
-    </button>
-    <button class="header-custom-btn" id="techModeBtn" title="Ver Costos de Compra">
-      <i class="fas fa-eye"></i>
-    </button>
+  <!-- TOAST PERSONALIZADO -->
+  <div class="custom-toast" id="copyToast">
+    <i class="fas fa-check-circle"></i> <span id="toastText">Mensaje copiado</span>
   </div>
 
   <!-- MODAL DE CONFIRMACIÓN PARA MODO TÉCNICO -->
@@ -321,26 +299,20 @@
   <!-- SCRIPT PRINCIPAL DE PRECIOS (No modificado) -->
   <script type="module" src="./precios.js"></script>
   
-  <!-- 🔥 SCRIPT DE INYECCIÓN DE BOTONES, SONIDO Y LÓGICA 🔥 -->
   <script>
-    // 1. MOTOR DE SONIDO NATIVO
     let audioCtx = null;
     function playClickSound() {
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        
         osc.type = 'sine'; 
         osc.frequency.setValueAtTime(800, now);
         osc.frequency.exponentialRampToValueAtTime(300, now + 0.08); 
-        
         gain.gain.setValueAtTime(0.3, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08); 
-        
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start(now);
@@ -348,52 +320,86 @@
       } catch (e) { console.warn('Audio no soportado', e); }
     }
 
-    // 2. MOVER BOTONES AL HEADER Y ASIGNAR EVENTOS
+    function mostrarToast(mensaje) {
+      const toast = document.getElementById('copyToast');
+      const span = document.getElementById('toastText');
+      if (span) span.textContent = mensaje || 'Mensaje copiado';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       
-      // Esperamos un poco a que layout.js termine de inyectar el header
+      // Inyección de botones al Header
       setTimeout(() => {
         const headerActions = document.querySelector('.header-actions');
-        const techBtn = document.getElementById('techModeBtn');
-        const adminBtn = document.getElementById('adminEditBtn');
-        
-        // Movemos los botones al header
-        if (headerActions && techBtn && adminBtn) {
-          headerActions.prepend(adminBtn);
-          headerActions.prepend(techBtn);
-        }
+        if (headerActions) {
+          const techBtn = document.createElement('button');
+          techBtn.className = 'header-custom-btn';
+          techBtn.id = 'techModeBtn';
+          techBtn.innerHTML = '<i class="fas fa-eye"></i>';
 
-        // Sonido en los botones del header
-        techBtn?.addEventListener('click', playClickSound);
-        adminBtn?.addEventListener('click', playClickSound);
+          const adminBtn = document.createElement('button');
+          adminBtn.className = 'header-custom-btn';
+          adminBtn.id = 'adminEditBtn';
+          adminBtn.innerHTML = '<i class="fas fa-list-ul"></i>';
 
-        // Lógica visual de los costos (body.show-costs)
-        techBtn?.addEventListener('click', () => {
-          // Esperamos a que precios.js haga su trabajo (cambiar clase tech-active)
-          setTimeout(() => {
+          // Insertar al principio del header actions (lado izquierdo de la campana/sol)
+          if (headerActions.firstChild) {
+            headerActions.insertBefore(adminBtn, headerActions.firstChild);
+            headerActions.insertBefore(techBtn, headerActions.firstChild);
+          } else {
+            headerActions.appendChild(adminBtn);
+            headerActions.appendChild(techBtn);
+          }
+
+          techBtn.addEventListener('click', playClickSound);
+          adminBtn.addEventListener('click', playClickSound);
+
+          // 🔥 LÓGICA DEL OJO: Mostrar/Ocultar Costos
+          techBtn.addEventListener('click', () => {
+            techBtn.classList.toggle('tech-active');
+            
             if (techBtn.classList.contains('tech-active')) {
               document.body.classList.add('show-costs');
             } else {
               document.body.classList.remove('show-costs');
             }
-          }, 100);
-        });
-      }, 300); // 300ms para asegurar que el layout cargó
+          });
+        }
+      }, 400);
 
-      // Sonido en los filtros
-      document.querySelectorAll('.filter-chip').forEach(chip => {
-        chip.addEventListener('click', playClickSound);
-      });
-
-      // Sonido en los botones de las tarjetas (y en el precio)
+      // Sonido y Copiado en las tarjetas
       document.getElementById('resultsContainer')?.addEventListener('click', (e) => {
-        if (e.target.closest('.whatsapp-btn') || e.target.closest('.image-btn') || e.target.closest('.edit-btn') || e.target.closest('.card-price')) {
+        if (e.target.closest('.whatsapp-btn') || e.target.closest('.image-btn') || e.target.closest('.edit-btn')) {
           playClickSound();
+        }
+
+        // 🔥 COPIAR AL CLICKEAR EL PRECIO
+        if (e.target.closest('.card-price')) {
+          playClickSound();
+          
+          const card = e.target.closest('.product-card');
+          const marca = card.querySelector('.card-brand')?.innerText || '';
+          const modelo = card.querySelector('.card-model')?.innerText || '';
+          
+          // Extraemos el precio limpio (ej. "330")
+          const precioTexto = e.target.closest('.card-price').innerText.replace(/[^0-9.]/g, '');
+          const precioFormateado = `${precioTexto} Bs`;
+          
+          // El mensaje exacto que pediste
+          const mensaje = `📱 ${marca} ${modelo}\n💰 Precio Pantalla: ${precioFormateado}\n👨🏻‍🔧 INCLUYE INSTALACIÓN`;
+          
+          navigator.clipboard.writeText(mensaje).then(() => {
+            mostrarToast('Mensaje copiado para WhatsApp');
+          }).catch(err => {
+            console.error('Error al copiar:', err);
+            mostrarToast('Error al copiar');
+          });
         }
       });
     });
 
-    // 3. RED DE SEGURIDAD PARA EL LOADER
     setTimeout(() => {
       const splash = document.getElementById('splash');
       const appRoot = document.getElementById('appRoot');
