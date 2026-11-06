@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0A0A0B" id="metaThemeColor">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Catálogo">
   <title>DR. Xiaomi · Catálogo</title>
 
   <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
@@ -41,6 +45,7 @@
       display: flex;
       justify-content: center;
       min-height: 100vh;
+      padding-top: env(safe-area-inset-top);
     }
 
     .app-container {
@@ -51,14 +56,13 @@
       min-height: 100vh;
     }
 
-    /* 🔥 REDUCCIÓN DE ESPACIO (CERO ESPACIO MUERTO) 🔥 */
-    .app-content { padding: 8px 16px 90px 16px; display: flex; flex-direction: column; gap: 8px; }
+    /* REDUCCIÓN DE ESPACIO (CERO ESPACIO MUERTO) */
+    .app-content { padding: 8px 16px 100px 16px; display: flex; flex-direction: column; gap: 8px; }
 
-    /* 🔥 OCULTAR EL HEADER AUTOMÁTICO DE LAYOUT.JS 🔥 */
-    /* Ocultamos el header generado por JS para usar el nuestro */
+    /* OCULTAR EL HEADER AUTOMÁTICO DE LAYOUT.JS */
     .app-header { display: none !important; }
 
-    /* 🔥 HEADER PERSONALIZADO (EXACTO A TU IMAGEN) 🔥 */
+    /* HEADER PERSONALIZADO (EXACTO A TU IMAGEN) */
     .custom-header {
       display: flex;
       justify-content: space-between;
@@ -69,6 +73,7 @@
       position: sticky;
       top: 0;
       z-index: 100;
+      padding-top: calc(12px + env(safe-area-inset-top));
     }
     .header-brand { display: flex; align-items: center; gap: 12px; }
     .header-brand img { width: 40px; height: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
@@ -196,7 +201,7 @@
 
     /* TOAST */
     .custom-toast {
-      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+      position: fixed; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(20px);
       background: #25D366; color: white; padding: 12px 24px; border-radius: 30px;
       font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
       opacity: 0; transition: all 0.3s; z-index: 10000; display: flex; align-items: center; gap: 8px;
@@ -221,7 +226,7 @@
 
   <main class="app-container" id="appRoot" style="opacity:0;">
     
-    <!-- 🔥 HEADER VISUAL PERSONALIZADO 🔥 -->
+    <!-- HEADER VISUAL PERSONALIZADO -->
     <header class="custom-header">
       <div class="header-brand">
         <img src="/imagenes/web-app-manifest-192x192.png" alt="Logo">
@@ -240,7 +245,7 @@
       </div>
     </header>
 
-    <!-- 🔥 LAYOUT ORIGINAL (Solo para la barra de abajo) 🔥 -->
+    <!-- LAYOUT ORIGINAL (Solo para la barra de abajo) -->
     <script type="module">
       import { montarLayout } from '../js/layout.js';
       montarLayout({
@@ -286,11 +291,9 @@
     </div>
   </div>
 
-  <!-- SCRIPT PRINCIPAL DE PRECIOS -->
   <script type="module" src="./precios.js"></script>
   
   <script>
-    // PULL TO REFRESH Y SONIDO
     let audioCtx = null;
     function playClickSound() {
       try {
@@ -311,7 +314,6 @@
       } catch (e) { console.warn('Audio no soportado', e); }
     }
 
-    // Lógica para el Pull to Refresh
     let touchStartY = 0;
     let touchCurrentY = 0;
     let isPulling = false;
@@ -329,10 +331,8 @@
       const distance = touchCurrentY - touchStartY;
       
       if (distance > 100 && window.scrollY === 0) {
-        // Mostramos el loader de nuevo
         const splash = document.getElementById('splash');
         if(splash) splash.classList.remove('hidden');
-        // Recargamos la página
         window.location.reload();
       }
     }, { passive: true });
@@ -341,7 +341,6 @@
       isPulling = false;
     });
 
-    // Asignar sonido a los botones
     document.addEventListener('DOMContentLoaded', () => {
       const techBtn = document.getElementById('techModeBtn');
       const adminBtn = document.getElementById('adminEditBtn');
