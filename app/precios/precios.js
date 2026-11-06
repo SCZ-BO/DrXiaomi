@@ -176,6 +176,8 @@ function renderList() {
           <div>
             <div class="card-brand">${item.marca}</div>
             <div class="card-model">${item.modelo}</div>
+            <!-- 🔥 PROVEEDOR AGREGADO AQUÍ 🔥 -->
+            <div class="card-provider">Prov: ${item.proveedor || item.provider || 'N/A'}</div>
           </div>
         </div>
         <button class="icon-btn" onclick="window.toggleFav('${item.id}')" style="background:none; border:none; color:${favorites.has(item.id) ? '#FFB800' : 'var(--text-3)'};">
