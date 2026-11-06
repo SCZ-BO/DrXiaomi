@@ -84,25 +84,62 @@
       display: flex; flex-direction: column; gap: 16px;
     }
 
+    /* FILTRO DE TIEMPO */
     .time-filter {
-      display: flex; gap: 8px; overflow-x: auto; padding: 4px; 
-      scrollbar-width: none; -ms-overflow-style: none;
+      display: flex !important; 
+      gap: 8px !important; 
+      overflow-x: auto !important; 
+      padding: 8px !important; 
+      scrollbar-width: none; 
+      -ms-overflow-style: none;
       background: rgba(28, 28, 30, 0.5);
       backdrop-filter: blur(10px);
       border-radius: 16px;
       border: 1px solid var(--border-color);
       flex-shrink: 0;
+      min-height: 56px !important;
+      align-items: center;
     }
     .time-filter::-webkit-scrollbar { display: none; }
     .time-btn { 
-      flex-shrink: 0; padding: 10px 16px; border-radius: 12px; 
-      background: transparent; border: none; color: var(--text-mute); 
-      font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; 
+      flex-shrink: 0; 
+      padding: 10px 16px !important; 
+      border-radius: 12px; 
+      background: transparent; 
+      border: none; 
+      color: var(--text-mute); 
+      font-size: 13px !important; 
+      font-weight: 600 !important; 
+      cursor: pointer; 
+      transition: 0.2s; 
       font-family: inherit;
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      height: 40px !important;
     }
     .time-btn.active { 
-      background: var(--brand); color: white; 
+      background: var(--brand) !important; 
+      color: white !important; 
       box-shadow: 0 4px 12px rgba(255, 105, 0, 0.3);
+    }
+
+    /* ETIQUETA DE RANGO DE FECHAS */
+    .date-range-label {
+      font-size: 12px;
+      color: var(--text-mute);
+      font-weight: 500;
+      text-align: center;
+      margin-top: -8px;
+      padding: 0 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .date-range-label i {
+      color: var(--brand);
+      font-size: 11px;
     }
 
     .custom-date-row { display: none; gap: 8px; align-items: center; }
@@ -118,7 +155,6 @@
       font-family: inherit;
     }
 
-    /* HERO CARD */
     .hero-card {
       background: linear-gradient(135deg, var(--bg-card), #0E0E10);
       border: 1px solid var(--border-color);
@@ -138,7 +174,6 @@
     .hero-card .value { font-size: 42px; font-weight: 800; letter-spacing: -1.5px; color: var(--text-main); line-height: 1; margin-bottom: 8px; }
     .hero-card .sub { font-size: 14px; color: var(--text-mute); }
 
-    /* KPI GRID CORREGIDO */
     .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex-shrink: 0; }
     .kpi-card {
       background: var(--bg-card);
@@ -147,8 +182,8 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
-      justify-content: center; /* Centra el contenido verticalmente */
-      min-height: 100px; /* Asegura que no se aplasten */
+      justify-content: center;
+      min-height: 100px;
       gap: 4px;
     }
     .kpi-card .icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 8px; }
@@ -161,7 +196,6 @@
     .kpi-card.success .value { color: var(--success); }
     .kpi-card.danger .value { color: var(--danger); }
 
-    /* DESGLOSE */
     .breakdown-container {
       display: flex; gap: 20px; align-items: center;
       background: var(--bg-card); border: 1px solid var(--border-color);
@@ -189,7 +223,6 @@
     .breakdown-item .info { display: flex; align-items: center; font-weight: 600; }
     .breakdown-item .amount { font-weight: 800; }
 
-    /* MÉTODOS DE PAGO */
     .payment-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex-shrink: 0; }
     .payment-card {
       background: var(--bg-card); border: 1px solid var(--border-color);
@@ -209,7 +242,6 @@
       flex-shrink: 0;
     }
 
-    /* TABS */
     .tabs-container {
       display: flex; gap: 8px; background: var(--bg-elev); 
       padding: 4px; border-radius: 12px; border: 1px solid var(--border-color);
@@ -222,7 +254,6 @@
     }
     .tab-btn.active { background: var(--bg-card); color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
 
-    /* LISTA DE MOVIMIENTOS */
     .movements-list { display: flex; flex-direction: column; gap: 8px; }
     .movement-item {
       display: flex; gap: 12px; padding: 14px; 
@@ -277,7 +308,8 @@
   <div class="app-container">
     <header class="app-header">
       <div class="brand">
-        <button class="icon-btn" id="backBtn"><i class="fas fa-home"></i></button>
+        <!-- BOTÓN HOME EN EL HEADER -->
+        <button class="icon-btn" id="backBtn" title="Volver al Panel"><i class="fas fa-home"></i></button>
         <div class="brand-logo">
           <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi">
         </div>
@@ -301,6 +333,11 @@
         <button class="time-btn" data-rango="mes">Mes</button>
         <button class="time-btn" data-rango="custom">📅</button>
       </div>
+      
+      <div class="date-range-label" id="dateRangeLabel">
+        <i class="fas fa-calendar-day"></i> <span id="rangoFechasInfo">Cargando fechas...</span>
+      </div>
+      
       <div class="custom-date-row" id="customDateRow">
         <input type="date" id="fechaDesde">
         <input type="date" id="fechaHasta">
@@ -384,6 +421,7 @@
         <button class="btn-action btn-export" id="btnExportar">
           <i class="fas fa-download"></i> Exportar a CSV
         </button>
+        <!-- BOTÓN GRANDE VOLVER AL PANEL -->
         <button class="btn-action btn-back" id="btnVolverPanel">
           <i class="fas fa-home"></i> VOLVER AL PANEL
         </button>
