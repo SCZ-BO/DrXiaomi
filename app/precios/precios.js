@@ -185,8 +185,8 @@ function renderList() {
       
       <div style="display:flex; gap:8px; margin-bottom:8px;">
         <span class="card-type ${item.tipo.toLowerCase()}">${item.tipo}</span>
-        <!-- 🔥 AQUÍ ESTABA EL PROBLEMA: Le quitamos || isAdmin y le pusimos la clase costo-tag 🔥 -->
-        ${techMode ? `<span class="costo-tag" style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; display:none;">Compra: ${item.compra} Bs</span>` : ''}
+        <!-- 🔥 CORREGIDO: Quitamos el display:none para que el CSS lo controle -->
+        ${techMode ? `<span class="costo-tag" style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px;">Compra: ${item.compra} Bs</span>` : ''}
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-1); padding-top:10px; margin-top:auto;">
@@ -234,6 +234,7 @@ const modalTechConfirm = document.getElementById('modalTechConfirm');
 const btnConfirmTech = document.getElementById('btnConfirmTech');
 const btnCancelTech = document.getElementById('btnCancelTech');
 
+// Restaurar estado del modo técnico si estaba activo
 if (techMode) {
   document.getElementById('techModeBtn')?.classList.add('tech-active');
   document.body.classList.add('show-costs');
@@ -241,12 +242,14 @@ if (techMode) {
 
 document.getElementById('techModeBtn')?.addEventListener('click', () => {
   if (techMode) {
+    // Apagar
     techMode = false;
     document.getElementById('techModeBtn')?.classList.remove('tech-active');
     document.body.classList.remove('show-costs');
     renderList();
     return;
   }
+  // Mostrar modal para confirmar encendido
   modalTechConfirm.classList.add('show');
 });
 
@@ -255,6 +258,7 @@ btnCancelTech?.addEventListener('click', () => {
 });
 
 btnConfirmTech?.addEventListener('click', () => {
+  // Encender
   techMode = true;
   document.getElementById('techModeBtn')?.classList.add('tech-active');
   document.body.classList.add('show-costs');
@@ -263,7 +267,7 @@ btnConfirmTech?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 8. FUNCIONES GLOBALES
+// 8. FUNCIONES GLOBALES Y COPIADO
 // ==========================================
 window.toggleFav = (id) => {
   if (favorites.has(id)) favorites.delete(id); else favorites.add(id);
@@ -286,7 +290,7 @@ window.editPrice = (id) => {
   window.location.href = '/app/precios-admin/';
 };
 
-// 🔥 COPIADO EN EL PRECIO (Añadido aquí para no tocar tu HTML) 🔥
+// Copiado de precio al hacer clic en la tarjeta
 document.addEventListener('click', (e) => {
   const priceElement = e.target.closest('.card-price');
   if (priceElement) {
@@ -297,7 +301,6 @@ document.addEventListener('click', (e) => {
     const mensaje = `📱 ${marca} ${modelo}\n💰 Precio Pantalla: ${precio} Bs\n👨🏻‍🔧 INCLUYE INSTALACIÓN`;
     
     navigator.clipboard.writeText(mensaje).then(() => {
-      // Creamos un toast rápido
       const toast = document.createElement('div');
       toast.className = 'custom-toast show';
       toast.innerHTML = '<i class="fas fa-check-circle"></i> <span>Mensaje copiado</span>';
