@@ -84,6 +84,40 @@
       display: flex; flex-direction: column; gap: 16px;
     }
 
+    /* 🔥 NUEVO: TARJETAS DE RESUMEN RÁPIDO 🔥 */
+    .quick-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .quick-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .quick-card .label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .quick-card .value {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+    .quick-card.hoy .value { color: var(--brand); }
+    .quick-card.semana .value { color: var(--blue); }
+    .quick-card.mes .value { color: var(--success); }
+
     /* FILTRO DE TIEMPO */
     .time-filter {
       display: flex !important; 
@@ -137,9 +171,56 @@
       justify-content: center;
       gap: 6px;
     }
-    .date-range-label i {
+    .date-range-label i { color: var(--brand); font-size: 11px; }
+
+    /* BARRA DE PROGRESO MENSUAL */
+    .month-progress-container {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      flex-shrink: 0;
+    }
+    .month-progress-container.show { display: block; }
+    .month-progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .month-progress-header .label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .month-progress-header .percentage {
+      font-size: 18px;
+      font-weight: 800;
       color: var(--brand);
+    }
+    .month-progress-bar {
+      height: 10px;
+      background: var(--bg-elev);
+      border-radius: 5px;
+      overflow: hidden;
+      position: relative;
+    }
+    .month-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--brand), #FF8C00);
+      border-radius: 5px;
+      width: 0%;
+      transition: width 0.5s ease;
+      box-shadow: 0 0 10px rgba(255, 105, 0, 0.5);
+    }
+    .month-progress-sub {
       font-size: 11px;
+      color: var(--text-mute);
+      margin-top: 8px;
+      text-align: center;
     }
 
     .custom-date-row { display: none; gap: 8px; align-items: center; }
@@ -308,7 +389,6 @@
   <div class="app-container">
     <header class="app-header">
       <div class="brand">
-        <!-- BOTÓN HOME EN EL HEADER -->
         <button class="icon-btn" id="backBtn" title="Volver al Panel"><i class="fas fa-home"></i></button>
         <div class="brand-logo">
           <img src="/imagenes/web-app-manifest-192x192.png" alt="DR. Xiaomi">
@@ -326,6 +406,22 @@
 
     <main class="app-content">
       
+      <!-- 🔥 TARJETAS DE RESUMEN RÁPIDO (HOY / SEMANA / MES) 🔥 -->
+      <div class="quick-summary" id="quickSummary">
+        <div class="quick-card hoy">
+          <div class="label">Hoy</div>
+          <div class="value" id="quickHoy">Bs. 0</div>
+        </div>
+        <div class="quick-card semana">
+          <div class="label">Semana</div>
+          <div class="value" id="quickSemana">Bs. 0</div>
+        </div>
+        <div class="quick-card mes">
+          <div class="label">Mes</div>
+          <div class="value" id="quickMes">Bs. 0</div>
+        </div>
+      </div>
+      
       <div class="time-filter" id="timeFilter">
         <button class="time-btn active" data-rango="hoy">Hoy</button>
         <button class="time-btn" data-rango="ayer">Ayer</button>
@@ -336,6 +432,17 @@
       
       <div class="date-range-label" id="dateRangeLabel">
         <i class="fas fa-calendar-day"></i> <span id="rangoFechasInfo">Cargando fechas...</span>
+      </div>
+      
+      <div class="month-progress-container" id="monthProgressContainer">
+        <div class="month-progress-header">
+          <div class="label">Avance del Mes</div>
+          <div class="percentage" id="monthPercentage">0%</div>
+        </div>
+        <div class="month-progress-bar">
+          <div class="month-progress-fill" id="monthProgressFill"></div>
+        </div>
+        <div class="month-progress-sub" id="monthProgressSub">Día 1 de 30</div>
       </div>
       
       <div class="custom-date-row" id="customDateRow">
@@ -421,7 +528,6 @@
         <button class="btn-action btn-export" id="btnExportar">
           <i class="fas fa-download"></i> Exportar a CSV
         </button>
-        <!-- BOTÓN GRANDE VOLVER AL PANEL -->
         <button class="btn-action btn-back" id="btnVolverPanel">
           <i class="fas fa-home"></i> VOLVER AL PANEL
         </button>
