@@ -1,5 +1,5 @@
 /* ============================================================
-   DR. XIAOMI · COMPONENTES v2
+   DR. XIAOMI · COMPONENTES v2 + TOQUES DE COLOR
    ============================================================ */
 
 /* ---------- BOTONES ---------- */
@@ -27,13 +27,7 @@
 }
 
 .btn:active:not(:disabled) { transform: scale(0.97); }
-
-.btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none;
-}
-
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 .btn i { font-size: 18px; }
 
 /* Primario (solo 1 por pantalla) */
@@ -60,19 +54,13 @@
 }
 
 /* Ghost */
-.btn-ghost {
-  background: transparent;
-  color: var(--text-2);
-}
+.btn-ghost { background: transparent; color: var(--text-2); }
 @media (hover: hover) {
   .btn-ghost:hover { background: var(--surface-2); color: var(--text); }
 }
 
 /* Danger */
-.btn-danger {
-  background: var(--danger-soft);
-  color: var(--danger);
-}
+.btn-danger { background: var(--danger-soft); color: var(--danger); }
 @media (hover: hover) {
   .btn-danger:hover { background: var(--danger); color: white; }
 }
@@ -119,10 +107,7 @@
 .btn-fab:active { transform: scale(0.92); }
 
 /* ---------- INPUTS ---------- */
-.field {
-  position: relative;
-  margin-bottom: var(--sp-4);
-}
+.field { position: relative; margin-bottom: var(--sp-4); }
 
 .field label {
   display: block;
@@ -135,9 +120,7 @@
   padding-left: 2px;
 }
 
-.field input,
-.field select,
-.field textarea {
+.field input, .field select, .field textarea {
   width: 100%;
   min-height: var(--touch-lg);
   padding: 16px;
@@ -154,28 +137,16 @@
   -webkit-appearance: none;
 }
 
-.field input:focus,
-.field select:focus,
-.field textarea:focus {
+.field input:focus, .field select:focus, .field textarea:focus {
   outline: none;
   border-color: var(--brand);
   background: var(--surface);
 }
 
-.field input::placeholder,
-.field textarea::placeholder {
-  color: var(--text-3);
-  font-weight: 400;
-}
+.field input::placeholder, .field textarea::placeholder { color: var(--text-3); font-weight: 400; }
 
-.field textarea {
-  min-height: 100px;
-  padding-top: 14px;
-  resize: vertical;
-  line-height: 1.5;
-}
+.field textarea { min-height: 100px; padding-top: 14px; resize: vertical; line-height: 1.5; }
 
-/* Select con flecha */
 .field select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23A1A1AA' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -184,11 +155,7 @@
 }
 
 /* Search bar */
-.search-bar {
-  position: relative;
-  margin-bottom: var(--sp-3);
-}
-
+.search-bar { position: relative; margin-bottom: var(--sp-3); }
 .search-bar input {
   width: 100%;
   min-height: var(--touch);
@@ -201,15 +168,13 @@
   font-weight: 500;
   transition: border-color var(--dur-fast) var(--ease);
 }
-
 .search-bar input:focus {
   outline: none;
-  border-color: var(--brand);
+  border-color: #3B82F6; /* Azul al escribir */
   background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
-
-.search-bar i,
-.search-bar .search-icon {
+.search-bar i, .search-bar .search-icon {
   position: absolute;
   left: 16px;
   top: 50%;
@@ -218,7 +183,6 @@
   font-size: 16px;
   pointer-events: none;
 }
-
 .search-bar .search-clear {
   position: absolute;
   right: 8px;
@@ -245,18 +209,21 @@
   position: relative;
   transition: background var(--dur-fast) var(--ease);
 }
-
 .card-interactive { cursor: pointer; }
 .card-interactive:active { background: var(--surface-2); }
 
-/* Card con acento lateral */
-.card-accent {
-  padding-left: calc(var(--sp-4) + 4px);
-  border-left: 3px solid var(--brand);
-}
+.card-accent { padding-left: calc(var(--sp-4) + 4px); border-left: 3px solid var(--brand); }
 .card-accent.success { border-left-color: var(--success); }
 .card-accent.warning { border-left-color: var(--warning); }
 .card-accent.danger  { border-left-color: var(--danger); }
+
+/* Tarjetas de Órdenes (Borde más grueso, fondo limpio) */
+.ingreso-card {
+  border-width: 1px 1px 1px 6px !important;
+  background: var(--surface) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.ingreso-card .icon-circle { box-shadow: 0 0 10px rgba(0,0,0,0.2); }
 
 /* ---------- CHIPS ---------- */
 .chip {
@@ -272,7 +239,6 @@
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
-
 .chip-recibido   { background: var(--warning-soft); color: var(--warning); }
 .chip-reparacion { background: var(--brand-soft);   color: var(--brand); }
 .chip-listo      { background: var(--success-soft); color: var(--success); }
@@ -301,9 +267,10 @@
 }
 .chip-interactive:active { transform: scale(0.96); }
 .chip-interactive.active {
-  background: var(--brand);
+  background: var(--brand); /* Naranja Xiaomi */
   color: white;
   border-color: var(--brand);
+  box-shadow: 0 4px 10px rgba(255, 105, 0, 0.3);
 }
 
 .filters-row {
@@ -368,12 +335,10 @@
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: var(--r-sm);
 }
-
 @keyframes shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
-
 .skeleton-text  { height: 12px; margin-bottom: 8px; }
 .skeleton-title { height: 18px; width: 60%; margin-bottom: 10px; }
 .skeleton-card {
@@ -385,12 +350,7 @@
   gap: 12px;
   border: 1px solid var(--border);
 }
-.skeleton-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--r-md);
-  flex-shrink: 0;
-}
+.skeleton-circle { width: 40px; height: 40px; border-radius: var(--r-md); flex-shrink: 0; }
 .skeleton-lines { flex: 1; }
 
 /* ---------- PROGRESS ---------- */
@@ -450,6 +410,49 @@
   animation: ripple 0.5s linear;
   pointer-events: none;
 }
-@keyframes ripple {
-  to { transform: scale(4); opacity: 0; }
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+
+/* ============================================================
+   TOQUES DE COLOR PARA EL TÉCNICO (UI VIBRANTE)
+   ============================================================ */
+
+/* 1. Accesos Rápidos (Cierre de Caja y Nota) */
+#btnPDFDia {
+  color: #FF6900;
+  border-color: rgba(255, 105, 0, 0.3);
+  background: rgba(255, 105, 0, 0.08);
 }
+#btnAbrirNotaDueno {
+  color: #8B5CF6;
+  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.08);
+}
+#btnPDFDia i, #btnAbrirNotaDueno i { color: inherit; }
+
+/* 2. Stats (Activas, Listas, Hoy) */
+.stat-card { border-bottom-width: 3px !important; }
+.stat-card:nth-child(1) { border-bottom-color: #F59E0B !important; } /* Activas: Amarillo */
+.stat-card:nth-child(2) { border-bottom-color: #10B981 !important; } /* Listas: Verde */
+.stat-card:nth-child(3) { border-bottom-color: #3B82F6 !important; } /* Hoy: Azul */
+
+/* 3. Menú de abajo (Bottom Nav) */
+.bottom-nav .nav-item { transition: all 0.2s ease; opacity: 0.7; }
+.bottom-nav .nav-item.active { opacity: 1; }
+.bottom-nav .nav-item:active { transform: scale(0.92); }
+
+/* INICIO (Naranja) */
+.bottom-nav .nav-item:nth-child(1).active { color: #FF6900; background: rgba(255, 105, 0, 0.15); }
+.bottom-nav .nav-item:nth-child(1).active i { color: #FF6900; }
+
+/* PRECIOS (Azul) */
+.bottom-nav .nav-item:nth-child(2).active { color: #3B82F6; background: rgba(59, 130, 246, 0.15); }
+.bottom-nav .nav-item:nth-child(2).active i { color: #3B82F6; }
+
+/* REPORTES (Verde) */
+.bottom-nav .nav-item:nth-child(3).active { color: #10B981; background: rgba(16, 185, 129, 0.15); }
+.bottom-nav .nav-item:nth-child(3).active i { color: #10B981; }
+
+/* STOCK (Morado) */
+.bottom-nav .nav-item:nth-child(4).active { color: #8B5CF6; background: rgba(139, 92, 246, 0.15); }
+.bottom-nav .nav-item:nth-child(4).active i { color: #8B5CF6; }
