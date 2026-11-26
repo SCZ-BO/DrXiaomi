@@ -1,0 +1,80 @@
+/* ============================================================
+   DR. XIAOMI · RESPONSIVE OVERRIDES
+   Reglas específicas para Android + iOS
+   ============================================================ */
+
+/* iOS: font-size 16px en inputs evita zoom automático */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
+/* iOS: scroll con inercia nativa */
+.scroll-ios {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Android: elimina el highlight azul al tocar */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Android: mejora el renderizado de fuentes */
+body {
+  text-rendering: optimizeLegibility;
+}
+
+/* Safe area en landscape (notch lateral) */
+@media (orientation: landscape) {
+  .app-container {
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
+  }
+}
+
+/* Móviles muy altos (iPhone 15 Pro Max, Android grandes) */
+@media (min-height: 900px) {
+  .app-content { padding-top: var(--sp-4); }
+  .hero-actions { gap: var(--sp-3); }
+}
+
+/* Móviles muy bajos (landscape) */
+@media (max-height: 500px) {
+  .app-content { padding-top: var(--sp-2); }
+  .stats-grid { margin-bottom: var(--sp-2); }
+}
+
+/* Tablets: 2 columnas en listas */
+@media (min-width: 768px) {
+  .app-container { max-width: 560px; }
+  .cards-list { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+}
+
+/* Desktop: centrado y con sombra lateral */
+@media (min-width: 1024px) {
+  body { background: #000; }
+  .app-container { box-shadow: 0 0 60px rgba(0,0,0,0.5); }
+}
+
+/* Modo oscuro del sistema (opcional) */
+@media (prefers-color-scheme: light) {
+  /* Solo aplica si NO tienes data-theme manual */
+  html:not([data-theme]) {
+    /* Aquí podrías poner variables light por defecto */
+  }
+}
+
+/* Reducción de motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Alto contraste (accesibilidad) */
+@media (prefers-contrast: more) {
+  :root {
+    --border: #444;
+    --text-2: #D4D4D8;
+  }
+}
