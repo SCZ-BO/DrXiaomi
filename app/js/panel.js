@@ -1,5 +1,5 @@
 // /app/js/panel.js
-import { toast, haptic, tiempoRelativo, escapeHtml, initTheme, toggleTheme, formatBs } from './app-ui.js';
+import { toast, haptic, tiempoRelativo, escapeHtml, initTheme, toggleTheme, formatBs, confirmar } from './app-ui.js';
 import { requireAuth, logout } from './app-auth.js'; 
 import { db } from './firebase.js';
 import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy, doc, updateDoc, getDoc, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -201,10 +201,10 @@ function renderNotificacionesModal() {
   }
   
   container.innerHTML = notificacionesList.map(n => `
-    <div style="background: var(--bg-elev-2); padding: 12px; border-radius: var(--r-md); margin-bottom: 8px; border-left: 3px solid ${n.leido ? 'var(--border-1)' : 'var(--brand-500)'};">
-      <div style="font-weight: 800; font-size: 13px; color: var(--text-1);">${escapeHtml(n.titulo)}</div>
-      <div style="font-size: 12px; color: var(--text-2); margin-top: 4px;">${escapeHtml(n.mensaje)}</div>
-      <div style="font-size: 10px; color: var(--text-3); margin-top: 6px;">${tiempoRelativo(n.fecha)}</div>
+    <div style="background: var(--surface-2); padding: 12px; border-radius: var(--r-md); margin-bottom: 8px; border-left: 3px solid ${n.leido ? 'var(--border)' : 'var(--brand)'};">
+      <div style="font-weight: 700; font-size: var(--text-sm); color: var(--text);">${escapeHtml(n.titulo)}</div>
+      <div style="font-size: var(--text-sm); color: var(--text-2); margin-top: 4px;">${escapeHtml(n.mensaje)}</div>
+      <div style="font-size: var(--text-xs); color: var(--text-3); margin-top: 6px;">${tiempoRelativo(n.fecha)}</div>
     </div>
   `).join('');
 }
@@ -229,62 +229,28 @@ async function enviarNotificacionDB(titulo, mensaje) {
 }
 
 // ==========================================
-// 1. RENDERIZADO DEL LAYOUT
+// 1. HEADER DINÁMICO (solo botón admin)
 // ==========================================
-function renderLayout() {
-  const container = document.querySelector('.app-container');
-  if (!container) return;
-
-  const esAdmin = appState.sesion?.rol === 'admin';
-  const btnMensajePopup = esAdmin ? `<button type="button" class="icon-btn" id="btnAbrirMensajePopup" title="Mensaje al técnico">${icono('nota', 20)}</button>` : '';
-
-  const headerHTML = `
-    <header class="app-header">
-      <div class="brand">
-        <div class="brand-logo" style="border-color: var(--brand-500);"><img src="/imagenes/web-app-manifest-192x192.png" alt="Logo"></div>
-        <div class="brand-text"><h1>Panel</h1><p id="userInfo">Cargando...</p></div>
-      </div>
-      <div class="header-actions">
-        ${btnMensajePopup}
-        <button type="button" class="icon-btn" id="btnNotificaciones" style="position:relative;">
-          ${icono('campana', 20)}
-          <span class="notif-badge" id="notifBadge" style="position:absolute; top:-4px; right:-4px; display:none; background:var(--brand-500); color:white; font-size:10px; font-weight:800; padding:2px 5px; border-radius:10px; border:2px solid var(--bg-elev-1);">0</span>
-        </button>
-        <button type="button" class="icon-btn" id="btnTema">${icono('tema', 20)}</button>
-        <button type="button" class="icon-btn" id="btnSalir">${icono('salir', 20)}</button>
-      </div>
-    </header>`;
-    
-  const navHTML = `
-    <nav class="bottom-nav">
-      <a href="/app/" class="nav-item active">${icono('home', 22)} <span>Panel</span></a>
-      <a href="/app/precios/" class="nav-item">${icono('precios', 22)} <span>Precios</span></a>
-      <a href="/app/reportes/" class="nav-item">${icono('reportes', 22)} <span>Reportes</span></a>
-      <a href="/app/inventario/" class="nav-item">${icono('inventario', 22)} <span>Stock</span></a>
-    </nav>`;
-    
-  container.insertAdjacentHTML('afterbegin', headerHTML);
-  container.insertAdjacentHTML('beforeend', navHTML);
+function configurarHeaderAdmin() {
+  if (appState.sesion?.rol !== 'admin') return;
   
-  document.getElementById('btnSalir')?.addEventListener('click', () => { if(confirm('¿Cerrar sesión?')) logout(); });
+  const actions = document.querySelector('.header-actions');
+  if (!actions || document.getElementById('btnAbrirMensajePopup')) return;
   
-  document.getElementById('btnNotificaciones')?.addEventListener('click', () => { 
-    haptic(10); 
-    playSound('pop');
-    renderNotificacionesModal();
-    document.getElementById('modalNotificaciones')?.classList.add('show');
-    marcarNotificacionesLeidas(); 
-  });
-  
-  document.getElementById('btnTema')?.addEventListener('click', toggleTheme);
-  document.getElementById('btnAbrirMensajePopup')?.addEventListener('click', () => {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'icon-btn';
+  btn.id = 'btnAbrirMensajePopup';
+  btn.title = 'Mensaje al técnico';
+  btn.innerHTML = icono('nota', 20);
+  btn.addEventListener('click', () => {
     haptic(15);
     playSound('pop');
     document.getElementById('modalMensajePopup')?.classList.add('show');
   });
+  
+  actions.insertBefore(btn, actions.firstChild);
 }
-
-renderLayout();
 
 // ==========================================
 // 2. AUTENTICACIÓN Y POPUPS
@@ -293,7 +259,8 @@ requireAuth((s) => {
   appState.sesion = s;
   setTimeout(() => { 
     iniciarApp(); 
-    const sub = document.getElementById('userInfo'); if(sub) sub.textContent = s.nombre;
+    const sub = document.getElementById('userInfo'); 
+    if(sub) sub.textContent = s.nombre;
     verificarPopups();
     if (s.rol === 'admin') {
       solicitarPermisoNotificaciones();
@@ -303,13 +270,15 @@ requireAuth((s) => {
 });
 
 function iniciarApp() {
-  if (appState.sesion?.rol !== 'admin') {
-    const btnRep = document.querySelector('.nav-item[href="/app/reportes/"]'); 
-    if(btnRep) btnRep.style.display = 'none';
-  }
+  configurarHeaderAdmin();
   configurarEventos(); 
   cargarDatos();
   setTimeout(() => { if(appLoader) appLoader.classList.add('hidden'); }, CONFIG_APP.loaderFallbackMs);
+  
+  // Ocultar reportes para técnico
+  if (appState.sesion?.rol !== 'admin') {
+    document.getElementById('navReportes')?.style.setProperty('display', 'none');
+  }
 }
 
 async function verificarPopups() {
@@ -382,6 +351,38 @@ async function abrirEditarVenta(id) {
 // 4. EVENTOS
 // ==========================================
 function configurarEventos() {
+  // 🔥 HEADER
+  document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
+  
+  document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+    const ok = await confirmar({ 
+      titulo: '¿Cerrar sesión?', 
+      textoConfirmar: 'Salir',
+      peligro: true 
+    });
+    if (ok) logout();
+  });
+
+  document.getElementById('btnNotificaciones')?.addEventListener('click', () => { 
+    haptic(10); 
+    playSound('pop');
+    renderNotificacionesModal();
+    document.getElementById('modalNotificaciones')?.classList.add('show');
+    marcarNotificacionesLeidas(); 
+  });
+
+  // 🔥 STATS TOCABLES (filtran la lista)
+  document.querySelectorAll('.stat-card[data-filtro]').forEach(card => {
+    card.addEventListener('click', () => {
+      haptic(8);
+      playSound('click');
+      const filtro = card.dataset.filtro;
+      document.querySelector(`#filtros .chip-interactive[data-filtro="${filtro}"]`)?.click();
+      document.querySelector('#listaOrdenes')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // 🔥 ACCIONES PRINCIPALES
   document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => { 
     haptic(15); 
     playSound('pop');
@@ -395,6 +396,7 @@ function configurarEventos() {
     modalVenta?.classList.add('show'); 
   });
 
+  // 🔥 CERRAR MODALES
   document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta?.classList.remove('show'));
   document.getElementById('btnCloseSheet')?.addEventListener('click', () => reciboSheet?.classList.remove('show'));
   document.getElementById('btnClosePago')?.addEventListener('click', () => document.getElementById('modalPago')?.classList.remove('show'));
@@ -404,6 +406,7 @@ function configurarEventos() {
     backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.classList.remove('show'); });
   });
 
+  // 🔥 CIERRE DE CAJA
   document.getElementById('btnPDFDia')?.addEventListener('click', () => { 
     haptic(15); 
     playSound('pop');
@@ -411,11 +414,11 @@ function configurarEventos() {
   });
   document.getElementById('btnClosePreviewPDF')?.addEventListener('click', () => modalPreviewPDF?.classList.remove('show'));
 
-  document.getElementById('btnDescargarPDF')?.addEventListener('click', () => {
+  document.getElementById('btnDescargarPDF')?.addEventListener('click', async () => {
     haptic(20);
     playSound('success');
     const gastos = leerGastosDelDOM();
-    generarPDFCierre(gastos); 
+    await generarPDFCierre(gastos); 
     toast('PDF Descargado', 'success');
   });
 
@@ -431,7 +434,7 @@ function configurarEventos() {
       const resumen = calcularResumenCierre(gastos);
       
       await guardarCierreEnFirebase(gastos, resumen);
-      generarPDFCierre(gastos);
+      await generarPDFCierre(gastos);
       playSound('success');
       
       const mensaje = `*CIERRE DE CAJA - DR. XIAOMI*\n\n` +
@@ -454,7 +457,7 @@ function configurarEventos() {
       playSound('error');
       toast('Error al cerrar el día', 'error');
     } finally {
-      btn.innerHTML = `<img src="/app/icons/whatsapp.png" width="20" height="20" style="margin-right: 8px;"> Cerrar Día y Enviar al Dueño`;
+      btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size: 20px; margin-right: 8px;"></i> Cerrar Día y Enviar al Dueño';
       btn.disabled = false;
     }
   });
@@ -462,6 +465,7 @@ function configurarEventos() {
   document.getElementById('gastoPasajes')?.addEventListener('input', recalcularCierre);
   document.getElementById('toggleAlmuerzo')?.addEventListener('change', recalcularCierre);
 
+  // 🔥 NOTA AL DUEÑO
   document.getElementById('btnAbrirNotaDueno')?.addEventListener('click', () => { 
     haptic(15); 
     playSound('pop');
@@ -491,6 +495,7 @@ function configurarEventos() {
     }
   });
 
+  // 🔥 MENSAJE POPUP (ADMIN)
   document.getElementById('btnCancelarMensajePopup')?.addEventListener('click', () => {
     document.getElementById('modalMensajePopup')?.classList.remove('show');
   });
@@ -520,7 +525,7 @@ function configurarEventos() {
     }
   });
 
-  // 🔥 EVENTOS DEL MODAL DE EDITAR COSTO
+  // 🔥 EDITAR COSTO VENTA (ADMIN)
   document.getElementById('btnCancelarEditarVenta')?.addEventListener('click', () => {
     document.getElementById('modalEditarVenta')?.classList.remove('show');
   });
@@ -545,6 +550,7 @@ function configurarEventos() {
     }
   });
 
+  // 🔥 MODAL VENTA - STEPS
   const selConcepto = document.getElementById('ventaConcepto');
   const wrapOtro = document.getElementById('wrapConceptoOtro');
   selConcepto?.addEventListener('change', () => {
@@ -624,6 +630,7 @@ function configurarEventos() {
     if(servicioStep) servicioStep.style.display = 'none'; 
   });
 
+  // 🔥 GUARDAR VENTA SERVICIO
   document.getElementById('btnGuardarVenta')?.addEventListener('click', async () => {
     let concepto = document.getElementById('ventaConcepto').value;
     let monto = parseFloat(document.getElementById('ventaMonto').value);
@@ -657,6 +664,7 @@ function configurarEventos() {
     }
   });
 
+  // 🔥 GUARDAR VENTA ACCESORIO
   document.getElementById('btnRegistrarAccesorio')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     const id = btn.dataset.id, nombre = btn.dataset.nombre;
@@ -695,6 +703,7 @@ function configurarEventos() {
     }
   });
 
+  // 🔥 FILTROS
   document.getElementById('filtros')?.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-filtro]'); if (!btn) return;
     haptic(10); 
@@ -702,16 +711,25 @@ function configurarEventos() {
     document.querySelectorAll('#filtros .chip-interactive').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
     btn.classList.add('active'); btn.setAttribute('aria-selected', 'true');
     filtroActual = btn.dataset.filtro;
-    busquedaActual = ''; document.getElementById('buscador').value = ''; paginaActual = 1; renderizarTodo();
+    busquedaActual = ''; 
+    const buscadorEl = document.getElementById('buscador');
+    if (buscadorEl) buscadorEl.value = ''; 
+    paginaActual = 1; 
+    renderizarTodo();
   });
 
+  // 🔥 BUSCADOR
   const buscador = document.getElementById('buscador');
+  const searchClear = document.getElementById('searchClear');
+  
   if (buscador) {
     buscador.addEventListener('input', (e) => {
       busquedaActual = e.target.value.toLowerCase().trim(); 
       paginaActual = 1; 
+      buscador.parentElement.classList.toggle('has-value', e.target.value.length > 0);
       renderizarTodoDebounced();
     });
+    
     buscador.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -722,6 +740,17 @@ function configurarEventos() {
       }
     });
   }
+
+  searchClear?.addEventListener('click', () => {
+    if (buscador) {
+      buscador.value = '';
+      busquedaActual = '';
+      paginaActual = 1;
+      buscador.parentElement.classList.remove('has-value');
+      renderizarTodo();
+      buscador.focus();
+    }
+  });
 }
 
 function resetVentaModal() {
@@ -742,7 +771,7 @@ function resetVentaModal() {
 // ==========================================
 function cargarDatos() {
   if (unsubscribe) unsubscribe();
-  unsubscribe = onSnapshot(query(collection(db, 'recibos'), orderBy('fecha', 'desc')), (snap) => {
+  unsubscribe = onSnapshot(query(collection(db, 'recibos'), orderBy('fecha', 'desc'), limit(150)), (snap) => {
     appState.ordenes = snap.docs.map(d => { const data = d.data(); delete data.fotos; return { id: d.id, ...data }; });
     appState.ordenes.sort((a, b) => (parsearFecha(b.fechaEditada || b.fecha) || 0) - (parsearFecha(a.fechaEditada || a.fecha) || 0));
     if (appLoader && !appLoader.classList.contains('hidden')) appLoader.classList.add('hidden');
@@ -864,7 +893,7 @@ window.cambiarPagina = (p) => {
   document.querySelector('.app-content')?.scrollTo({ top: 0, behavior: 'smooth' }); 
 };
 
-// 🔥 TARJETAS CON ACENTO ANARANJADO Y ESTILO DE APP
+// 🔥 TARJETAS
 function renderCardTelefono(o) {
   const est = o.estadoOrden || 'recibido';
   
@@ -877,24 +906,24 @@ function renderCardTelefono(o) {
     devuelto:          { t: 'Devuelto',   c: '#EF4444' } 
   }[est] || { t: est, c: '#FF6900' };
 
-  const bgColor = `color-mix(in srgb, ${info.c} 10%, var(--bg-elev-1))`;
+  const bgColor = `color-mix(in srgb, ${info.c} 10%, var(--surface))`;
 
   return `
     <div class="ingreso-card" data-tipo="telefono" data-id="${o.id}" 
-         style="background: ${bgColor}; border-left: 6px solid ${info.c}; display: flex; justify-content: space-between; align-items: center; padding: 10px; margin-bottom: 6px; border-radius: var(--r-md); cursor: pointer; border-top: 1px solid var(--border-1); border-right: 1px solid var(--border-1); border-bottom: 1px solid var(--border-1);">
+         style="background: ${bgColor}; border-left: 4px solid ${info.c};">
       <div class="icon-circle" style="color: ${info.c}; background: color-mix(in srgb, ${info.c} 20%, transparent);">
         ${icono('telefono', 24)}
       </div>
       <div class="info-col">
         <div class="info-title">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
         <div class="info-sub">${escapeHtml(o.cliente || '')}</div>
-        <div class="info-sub" style="font-size: 11px;">
+        <div class="info-sub" style="font-size: var(--text-xs);">
           ${est === 'entregado' ? `Entregado: ${formatFechaCompleta(o.fechaEntrega)}` : `Ingreso: ${tiempoRelativo(o.fechaEditada || o.fecha)}`}
         </div>
         <span class="estado-chip" style="background: color-mix(in srgb, ${info.c} 20%, transparent); color: ${info.c};">${info.t}</span>
       </div>
       <div class="monto-col">
-        <div class="monto" style="color: var(--text-1);">${formatBsLimpio(Number(o.montoCobrado) || Number(o.total) || 0)}</div>
+        <div class="monto" style="color: var(--text);">${formatBsLimpio(Number(o.montoCobrado) || Number(o.total) || 0)}</div>
       </div>
     </div>`;
 }
@@ -920,7 +949,7 @@ function renderCardVenta(v, tipo) {
     iconoNombre = 'venta';
   }
 
-  const bgColor = `color-mix(in srgb, ${cor} 10%, var(--bg-elev-1))`;
+  const bgColor = `color-mix(in srgb, ${cor} 10%, var(--surface))`;
 
   const esAdmin = appState.sesion?.rol === 'admin';
   const monto = Number(v.monto) || 0;
@@ -929,12 +958,12 @@ function renderCardVenta(v, tipo) {
   
   let htmlGanancia = '';
   if (esAdmin && tipo === 'venta') {
-    htmlGanancia = `<div style="font-size: 10px; color: var(--success-500); font-weight: 700; margin-top: 2px;">Ganancia: ${formatBsLimpio(ganancia)}</div>`;
+    htmlGanancia = `<div style="font-size: var(--text-xs); color: var(--success); font-weight: 700; margin-top: 2px;">Ganancia: ${formatBsLimpio(ganancia)}</div>`;
   }
 
   return `
     <div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}" 
-         style="background: ${bgColor}; border-left: 6px solid ${cor}; display: flex; justify-content: space-between; align-items: center; padding: 10px; margin-bottom: 6px; border-radius: var(--r-md); cursor: pointer; border-top: 1px solid var(--border-1); border-right: 1px solid var(--border-1); border-bottom: 1px solid var(--border-1);">
+         style="background: ${bgColor}; border-left: 4px solid ${cor};">
       <div class="icon-circle" style="color: ${cor}; background: color-mix(in srgb, ${cor} 20%, transparent);">
         ${icono(iconoNombre, 24)}
       </div>
@@ -971,7 +1000,7 @@ function actualizarStats() {
 }
 
 // ==========================================
-// 6. LÓGICA DEL CIERRE DE CAJA (MODAL)
+// 6. LÓGICA DEL CIERRE DE CAJA
 // ==========================================
 async function abrirCierreDeCaja() {
   const hoy = new Date();
@@ -1110,7 +1139,29 @@ function recalcularCierre() {
   if (elMontoTransf) elMontoTransf.textContent = formatBsLimpio(resumen.aEntregar);
 }
 
-function generarPDFCierre(gastos) {
+// 🔥 LAZY LOAD DE JSPDF
+async function cargarJsPDF() {
+  if (window.jspdf) return window.jspdf;
+  
+  await new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+  
+  return window.jspdf;
+}
+
+async function generarPDFCierre(gastos) {
+  try {
+    await cargarJsPDF();
+  } catch (e) {
+    toast('Error al cargar generador PDF', 'error');
+    return;
+  }
+  
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
   const resumen = calcularResumenCierre(gastos);
@@ -1191,7 +1242,7 @@ async function guardarCierreEnFirebase(gastos, resumen) {
 }
 
 // ==========================================
-// 7. PULL TO REFRESH (Jalar para actualizar)
+// 7. PULL TO REFRESH
 // ==========================================
 let touchStartY = 0;
 let touchCurrentY = 0;
