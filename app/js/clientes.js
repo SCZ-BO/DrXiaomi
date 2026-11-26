@@ -266,7 +266,6 @@ function actualizarBotones() {
   btnPrev.style.display = pasoActual === 1 ? 'none' : 'flex';
   if (pasoActual === TOTAL_PASOS) {
     btnNext.style.display = 'none';
-    // Ocultamos el botón inferior porque usamos el botón gigante de WhatsApp
     btnGenerate.style.display = 'none'; 
   } else {
     btnNext.style.display = 'flex';
@@ -452,7 +451,6 @@ function configurarRadioGroups() {
    LÓGICA INTELIGENTE (CHIPS, SEMÁFORO Y CHECKLIST)
    ============================================================ */
 function configurarLogicaInteligente() {
-  // 🔥 SEMÁFORO (Estado del equipo)
   const semaforoGroup = document.getElementById('semaforoGroup');
   if (semaforoGroup) {
     semaforoGroup.addEventListener('click', (e) => {
@@ -465,7 +463,6 @@ function configurarLogicaInteligente() {
     });
   }
 
-  // 🔥 MÚLTIPLES REPARACIONES
   const motivoGroup = document.getElementById('motivoIngresoGroup');
   if (motivoGroup) {
     motivoGroup.addEventListener('click', (e) => {
@@ -936,11 +933,18 @@ function configurarBotonGenerar() {
       console.log('✅ Recibo guardado en Firestore con ID:', docRef.id);
 
       localStorage.removeItem('drxiaomi_borrador');
-      document.getElementById('successNumero').textContent = num;
-      document.getElementById('successModal').classList.add('show');
+      
       window._ultimoRecibo = paquete;
       
-      configurarWhatsApp();
+      if (pasoActual === 7) {
+        lanzarConfeti();
+        toast('Recibo guardado. ¡Listo para enviar!', 'success');
+        configurarWhatsApp(); 
+      } else {
+        document.getElementById('successNumero').textContent = num;
+        document.getElementById('successModal').classList.add('show');
+        configurarWhatsApp();
+      }
 
     } catch (error) {
       console.error("Error al guardar en Firestore:", error);
@@ -958,23 +962,23 @@ function configurarBotonGenerar() {
 }
 
 function configurarWhatsApp() {
-  const btn = document.getElementById('sendWhatsappBtn');
-  if (!btn) return;
+  const btns = document.querySelectorAll('#sendWhatsappBtn, #sendWhatsappBtnModal');
   
-  const newBtn = btn.cloneNode(true);
-  btn.parentNode.replaceChild(newBtn, btn);
-  
-  newBtn.addEventListener('click', () => {
-    const recibo = window._ultimoRecibo;
-    if (!recibo) return;
+  btns.forEach(btn => {
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
     
-    haptic(15);
-    
-    const urlRecibo = `${CONFIG.urlApp}/recibo/?id=${recibo.numeroRecibo}`;
-    
-    const mensaje = `Hola ${recibo.cliente.split(' ')[0]},\n\nHemos recibido tu equipo *${recibo.marca} ${recibo.modelo}*.\n\n📄 *Puedes ver y descargar tu recibo aquí:*\n${urlRecibo}\n\nN° Recibo: ${recibo.numeroRecibo}\nTotal: ${formatBs(recibo.total)}\n${recibo.saldo > 0 ? `Saldo pendiente: ${formatBs(recibo.saldo)}` : '✅ Pagado'}\n\nTe avisaremos por este medio cuando esté listo.\n\n${CONFIG.nombreTienda}`;
-    
-    window.open(`https://wa.me/591${recibo.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`, '_blank');
+    newBtn.addEventListener('click', () => {
+      const recibo = window._ultimoRecibo;
+      if (!recibo) return;
+      
+      haptic(15);
+      
+      const urlRecibo = `${CONFIG.urlApp}/recibo/?id=${recibo.numeroRecibo}`;
+      const mensaje = `Hola ${recibo.cliente.split(' ')[0]},\n\nHemos recibido tu equipo *${recibo.marca} ${recibo.modelo}*.\n\n📄 *Puedes ver y descargar tu recibo aquí:*\n${urlRecibo}\n\nN° Recibo: ${recibo.numeroRecibo}\nTotal: ${formatBs(recibo.total)}\n${recibo.saldo > 0 ? `Saldo pendiente: ${formatBs(recibo.saldo)}` : '✅ Pagado'}\n\nTe avisaremos por este medio cuando esté listo.\n\n${CONFIG.nombreTienda}`;
+      
+      window.open(`https://wa.me/591${recibo.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`, '_blank');
+    });
   });
 }
 
