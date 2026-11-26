@@ -1,7 +1,7 @@
 /* ============================================================
    DR. XIAOMI · COMPONENTES
    Archivo: css/app-components.css
-   Descripción: Botones, inputs, cards, chips, badges
+   Descripción: Botones, inputs, cards, chips, badges y PWA
    ============================================================ */
 
 /* ---------- BOTONES ---------- */
@@ -146,7 +146,6 @@
   overflow: hidden;
 }
 
-/* Tarjeta interactiva (cuando se puede tocar) */
 .card-interactive {
   cursor: pointer;
 }
@@ -156,7 +155,6 @@
   background: var(--bg-elev-2);
 }
 
-/* Tarjeta con franja de color (para estados) */
 .card-accent {
   padding-left: var(--sp-5);
 }
@@ -172,7 +170,6 @@
   background: var(--brand-500);
 }
 
-/* Colores de franja */
 .card-accent.success::before { background: var(--success-500); }
 .card-accent.warning::before { background: var(--warning-500); }
 .card-accent.danger::before  { background: var(--danger-500); }
@@ -193,14 +190,12 @@
   white-space: nowrap;
 }
 
-/* Chips de estado */
-.chip-recibido { background: var(--warning-100); color: var(--warning-500); }
-.chip-reparacion { background: var(--brand-100); color: var(--brand-500); }
-.chip-listo { background: var(--success-100); color: var(--success-500); }
-.chip-entregado { background: var(--purple-100); color: var(--purple-500); }
-.chip-devuelto { background: var(--danger-100); color: var(--danger-500); }
+.chip-recibido   { background: var(--warning-100); color: var(--warning-500); }
+.chip-reparacion { background: var(--brand-100);   color: var(--brand-500); }
+.chip-listo      { background: var(--success-100); color: var(--success-500); }
+.chip-entregado  { background: var(--purple-100);  color: var(--purple-500); }
+.chip-devuelto   { background: var(--danger-100);  color: var(--danger-500); }
 
-/* Chip interactivo (para filtrar en las listas) */
 .chip-interactive {
   cursor: pointer;
   background: var(--bg-elev-2);
@@ -224,15 +219,14 @@
   box-shadow: 0 4px 12px var(--brand-100);
 }
 
-/* Fila de chips scrolleable horizontalmente */
 .filters-row {
   display: flex;
   gap: var(--sp-2);
   overflow-x: auto;
   padding-bottom: 8px;
   margin-bottom: var(--sp-4);
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .filters-row::-webkit-scrollbar { display: none; }
@@ -311,3 +305,331 @@
 
 .skeleton-text { height: 14px; margin-bottom: 8px; }
 .skeleton-title { height: 20px; width: 60%; margin-bottom: 12px; }
+
+/* ============================================================
+   PANEL · PROPORCIÓN EQUILIBRADA PWA (OPCIÓN A)
+   ============================================================ */
+
+.hero-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.btn-hero {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 13px;
+  border-radius: var(--r-lg);
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.2;
+  border: 1px solid transparent;
+  cursor: pointer;
+  min-height: 64px;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-fast) var(--ease);
+}
+
+.btn-hero:active { transform: scale(0.96); }
+
+.btn-hero-nuevo {
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
+  color: #fff;
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-hero-venta {
+  background: var(--bg-elev-1);
+  color: var(--text-1);
+  border-color: var(--border-2);
+  box-shadow: var(--shadow-sm);
+}
+
+.hero-icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.btn-hero-nuevo .hero-icon-badge {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.btn-hero-venta .hero-icon-badge {
+  background: rgba(255, 105, 0, 0.14);
+  color: var(--brand-500);
+}
+
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  min-width: 0;
+}
+
+.hero-sub {
+  font-size: 10.5px;
+  font-weight: 500;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.btn-hero-venta .hero-sub { color: var(--text-3); opacity: 1; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.stat-card {
+  background: var(--bg-elev-1);
+  border-radius: var(--r-md);
+  padding: 10px 9px;
+  border: 1px solid var(--border-1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.stat-card.stat-brand {
+  border-color: rgba(255, 105, 0, 0.35);
+  background: linear-gradient(180deg, rgba(255, 105, 0, 0.09) 0%, var(--bg-elev-1) 100%);
+}
+
+.stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.stat-top i {
+  font-size: 12px;
+  color: var(--brand-500);
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-1);
+  line-height: 1.05;
+  letter-spacing: -0.5px;
+}
+
+.stat-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.action-buttons .btn {
+  height: 40px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  border-radius: var(--r-md);
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border-1);
+}
+
+.action-buttons .btn i {
+  color: var(--brand-500);
+  font-size: 14px;
+}
+
+.cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ingreso-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 12px;
+  border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--card-accent, var(--brand-500)) 8%, var(--bg-elev-1));
+  border: 1px solid var(--border-1);
+  border-left: 5px solid var(--card-accent, var(--brand-500));
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-spring), background var(--dur-fast) var(--ease);
+  user-select: none;
+}
+
+.ingreso-card:active {
+  transform: scale(0.98);
+  background: color-mix(in srgb, var(--card-accent, var(--brand-500)) 15%, var(--bg-elev-2));
+}
+
+.ingreso-card .icon-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--card-accent, var(--brand-500));
+  background: color-mix(in srgb, var(--card-accent, var(--brand-500)) 16%, transparent);
+}
+
+.ingreso-card .info-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.ingreso-card .info-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.ingreso-card .info-sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.ingreso-card .info-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+
+.ingreso-card .info-time {
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+
+.ingreso-card .estado-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--card-accent, var(--brand-500)) 18%, transparent);
+  color: var(--card-accent, var(--brand-500));
+}
+
+.ingreso-card .monto-col {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.ingreso-card .monto {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text-1);
+  letter-spacing: -0.3px;
+}
+
+.ingreso-card .ganancia-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--success-500);
+  margin-top: 2px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 36px 16px;
+  background: var(--bg-elev-1);
+  border: 1px dashed var(--border-2);
+  border-radius: var(--r-lg);
+  color: var(--text-3);
+}
+
+.empty-state i {
+  font-size: 28px;
+  color: var(--brand-500);
+  margin-bottom: 8px;
+  opacity: 0.85;
+}
+
+.empty-state h3 {
+  font-size: 15px;
+  color: var(--text-1);
+  margin-bottom: 4px;
+}
+
+.skeleton-card {
+  background: var(--bg-elev-1);
+  border-radius: var(--r-lg);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border: 1px solid var(--border-1);
+  border-left: 5px solid var(--brand-500);
+}
+
+.skeleton-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  flex-shrink: 0;
+}
+
+.skeleton-lines { flex: 1; }
+
+.btn-ripple { position: relative; overflow: hidden; }
+.btn-ripple .ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.35);
+  transform: scale(0);
+  animation: ripple-anim 0.45s linear;
+  pointer-events: none;
+}
+@keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
+
+.toggle-switch { position: relative; display: inline-block; width: 48px; height: 26px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background-color: var(--bg-elev-3);
+  transition: var(--dur-fast);
+  border-radius: var(--r-full);
+  border: 1px solid var(--border-2);
+}
+.slider:before {
+  position: absolute; content: ""; height: 18px; width: 18px;
+  left: 3px; bottom: 3px; background-color: #fff;
+  transition: var(--dur-fast); border-radius: 50%;
+}
+input:checked + .slider { background-color: var(--brand-500); border-color: var(--brand-500); }
+input:checked + .slider:before { transform: translateX(22px); }
