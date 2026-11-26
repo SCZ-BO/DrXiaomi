@@ -32,7 +32,7 @@ const TOTAL_PASOS = 7;
 const datos = {
   nombre: '', telefono: '',
   marca: '', modelo: '', color: '', enciende: '',
-  motivoIngreso: '', falla: '', checklist: '',
+  motivoIngreso: [], falla: '', checklist: '', estadoLlegada: '',
   tipoSeguridad: 'patron', pin: '', patronSecuencia: '',
   fotos: [null, null, null, null],
   servicios: [], total: 0, adelanto: 0, saldo: 0
@@ -70,7 +70,7 @@ function iniciar() {
   configurarServicios();
   configurarBotonGenerar();
   configurarTeclado();
-  configurarBotonAtrasFisico(); // 🔥 BOTÓN ATRÁS CORREGIDO
+  configurarBotonAtrasFisico();
 
   const content = document.getElementById('wizardContent');
   if (content) {
@@ -266,7 +266,8 @@ function actualizarBotones() {
   btnPrev.style.display = pasoActual === 1 ? 'none' : 'flex';
   if (pasoActual === TOTAL_PASOS) {
     btnNext.style.display = 'none';
-    btnGenerate.style.display = 'flex';
+    // Ocultamos el botón inferior porque usamos el botón gigante de WhatsApp
+    btnGenerate.style.display = 'none'; 
   } else {
     btnNext.style.display = 'flex';
     btnGenerate.style.display = 'none';
@@ -277,22 +278,12 @@ function actualizarBotones() {
    🔥 BOTÓN FÍSICO ATRÁS (CORREGIDO - Android)
    ============================================================ */
 function configurarBotonAtrasFisico() {
-  // 1. Empujamos un estado falso al historial desde el principio.
-  // Esto hace que el primer "Atrás" no salga de la página, sino que 
-  // retroceda a este estado falso.
   history.pushState({ paso: 1 }, '');
 
-  // 2. Escuchamos el evento popstate (cuando el usuario presiona "Atrás")
   window.addEventListener('popstate', (e) => {
     if (pasoActual > 1) {
-      // Si estamos en un paso mayor a 1, retrocedemos un paso
-      // y volvemos a empujar el estado falso para que el siguiente "Atrás" 
-      // tampoco nos saque de la página.
       irPasoAnterior();
       history.pushState({ paso: pasoActual }, '');
-    } else {
-      // Si estamos en el paso 1, permitimos que el navegador salga
-      // (no hacemos nada, dejamos que el navegador procese el "Atrás")
     }
   });
 }
@@ -344,9 +335,13 @@ function validarPaso(paso) {
   if (paso === 3) {
     const enciende = document.getElementById('enciende')?.value;
     if (enciende === 'Sí' || enciende === 'A veces') {
-      if (!document.getElementById('motivoIngreso')?.value) {
-        toast('Selecciona una reparación', 'error'); return false;
+      const motivosActivos = document.querySelectorAll('#motivoIngresoGroup .chip-btn.active');
+      if (motivosActivos.length === 0) {
+        toast('Selecciona al menos una reparación', 'error'); return false;
       }
+    }
+    if (!document.getElementById('estadoLlegada')?.value) {
+      toast('Selecciona cómo llegó el equipo (semáforo)', 'error'); return false;
     }
   }
   if (paso === 4) {
@@ -378,9 +373,25 @@ function guardarDatosPaso(paso) {
     datos.enciende = document.getElementById('enciende')?.value || '';
   }
   if (paso === 3) {
-    datos.motivoIngreso = document.getElementById('motivoIngreso')?.value || '';
+    const motivosSeleccionados = Array.from(document.querySelectorAll('#motivoIngresoGroup .chip-btn.active'))
+                                     .map(btn => btn.dataset.value);
+    
+    datos.motivoIngreso = motivosSeleccionados;
     datos.falla = document.getElementById('fallaDetalle')?.value.trim() || '';
     datos.checklist = document.getElementById('checklistResultados')?.value || '';
+    datos.estadoLlegada = document.getElementById('estadoLlegada')?.value || '';
+
+    const list = document.getElementById('serviciosList');
+    if (list) {
+      list.innerHTML = ''; 
+      if (motivosSeleccionados.length > 0) {
+        motivosSeleccionados.forEach(motivo => {
+          list.appendChild(crearServicioItem(motivo, ''));
+        });
+      } else {
+        list.appendChild(crearServicioItem('', ''));
+      }
+    }
   }
   if (paso === 4) {
     datos.tipoSeguridad = document.getElementById('tipoSeguridad')?.value || 'patron';
@@ -438,18 +449,30 @@ function configurarRadioGroups() {
 }
 
 /* ============================================================
-   LÓGICA INTELIGENTE (CHIPS Y CHECKLIST)
+   LÓGICA INTELIGENTE (CHIPS, SEMÁFORO Y CHECKLIST)
    ============================================================ */
 function configurarLogicaInteligente() {
+  // 🔥 SEMÁFORO (Estado del equipo)
+  const semaforoGroup = document.getElementById('semaforoGroup');
+  if (semaforoGroup) {
+    semaforoGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('.semaforo-item');
+      if (!btn) return;
+      haptic(8);
+      semaforoGroup.querySelectorAll('.semaforo-item').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('estadoLlegada').value = btn.dataset.estado;
+    });
+  }
+
+  // 🔥 MÚLTIPLES REPARACIONES
   const motivoGroup = document.getElementById('motivoIngresoGroup');
   if (motivoGroup) {
     motivoGroup.addEventListener('click', (e) => {
       const btn = e.target.closest('.chip-btn');
       if (!btn) return;
       haptic(8);
-      motivoGroup.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('motivoIngreso').value = btn.dataset.value;
+      btn.classList.toggle('active');
     });
   }
 
@@ -772,6 +795,16 @@ function generarVistaPrevia() {
   const cont = document.getElementById('previewContainer');
   if (!cont) return;
 
+  const reparacionesTexto = Array.isArray(datos.motivoIngreso) 
+    ? datos.motivoIngreso.join(' + ') 
+    : (datos.motivoIngreso || 'Ninguna (Apagado)');
+
+  const semaforoTexto = {
+    'bueno': '🟢 Buen estado',
+    'regular': '🟡 Con detalles',
+    'malo': '🔴 Muy dañado'
+  }[datos.estadoLlegada] || 'No evaluado';
+
   const serviciosHtml = datos.servicios.map(s => 
     `<tr><td>${escapeHtml(s.desc)}</td><td style="text-align:right">${formatBs(s.costo)}</td></tr>`
   ).join('');
@@ -807,11 +840,12 @@ function generarVistaPrevia() {
 
       <div class="preview-section">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>EQUIPO:</strong> <span>${escapeHtml(datos.marca)} ${escapeHtml(datos.modelo)} (${escapeHtml(datos.color || 'N/A')})</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>ESTADO:</strong> <span>${semaforoTexto}</span></div>
         <div style="display:flex;justify-content:space-between;color:#E65100;"><strong>DESBLOQUEO:</strong> <span>${seguridadTexto}</span></div>
       </div>
 
       <div class="preview-section">
-        <div><strong>MOTIVO / FALLA:</strong> ${escapeHtml(datos.motivoIngreso || datos.falla || '-')}</div>
+        <div><strong>REPARACIONES:</strong> ${escapeHtml(reparacionesTexto)}</div>
         <div style="margin-top:4px; font-size:10px; color:#666;"><strong>CHECKLIST:</strong> ${escapeHtml(datos.checklist || 'Todo OK')}</div>
       </div>
 
@@ -829,6 +863,24 @@ function generarVistaPrevia() {
       ${fotosHtml}
     </div>
   `;
+
+  const paso7Botones = document.getElementById('paso7Botones');
+  if (paso7Botones) paso7Botones.classList.remove('hidden');
+  
+  const btnGenerate = document.getElementById('btnGenerate');
+  if (btnGenerate) btnGenerate.style.display = 'none';
+
+  document.getElementById('sendWhatsappBtn')?.addEventListener('click', () => {
+    haptic(20);
+    lanzarConfeti();
+    document.getElementById('btnGenerate')?.click();
+  });
+
+  document.getElementById('descargarPdfBtn')?.addEventListener('click', () => {
+    haptic(15);
+    toast('Generando PDF...', 'info');
+    // Aquí va tu función de PDF
+  });
 }
 
 /* ============================================================
@@ -876,7 +928,8 @@ function configurarBotonGenerar() {
         fecha: serverTimestamp(),
         creadoPor: sesion.nombre,
         montoCobrado: 0,
-        costoRepuesto: 0
+        costoRepuesto: 0,
+        estadoLlegada: datos.estadoLlegada
       };
 
       const docRef = await addDoc(collection(db, 'recibos'), paquete);
@@ -928,4 +981,20 @@ function configurarWhatsApp() {
 function generarNumeroRecibo() {
   const f = new Date();
   return `REC-${String(f.getDate()).padStart(2, '0')}${String(f.getMonth() + 1).padStart(2, '0')}${String(f.getFullYear()).slice(-2)}-${String(f.getHours()).padStart(2, '0')}${String(f.getMinutes()).padStart(2, '0')}${String(f.getSeconds()).padStart(2, '0')}`;
+}
+
+/* ============================================================
+   🔥 FUNCIÓN DE CONFETI
+   ============================================================ */
+function lanzarConfeti() {
+  const colors = ['#FF6900', '#3B82F6', '#10B981', '#EF4444', '#F59E0B'];
+  for (let i = 0; i < 50; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.left = Math.random() * 100 + 'vw';
+    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+    document.body.appendChild(confetti);
+    setTimeout(() => confetti.remove(), 2500);
+  }
 }
