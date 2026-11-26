@@ -21,245 +21,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- TUS ESTILOS GLOBALES DE LA APP -->
+  <!-- TUS ESTILOS GLOBALES -->
   <link rel="stylesheet" href="/app/css/app-theme.css">
   <link rel="stylesheet" href="/app/css/app-layouts.css">
   <link rel="stylesheet" href="/app/css/app-components.css">
+
+  <!-- 🔥 TU NUEVO ARCHIVO CSS SEPARADO -->
+  <link rel="stylesheet" href="/app/cliente/cliente.css">
 
   <!-- LIBRERÍAS PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-  <style>
-    :root {
-      --radius-sm: var(--r-sm, 8px);
-      --radius-md: var(--r-md, 14px);
-      --radius-lg: var(--r-lg, 20px);
-      --brand: var(--brand-500, #FF6900); 
-      --brand-hover: var(--brand-600, #E65100); 
-      --brand-light: rgba(255, 105, 0, 0.2); 
-      --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
-      --glass-bg: rgba(24, 24, 24, 0.7);
-      --glass-border: rgba(255, 255, 255, 0.08);
-    }
-    
-    [data-theme="dark"] { 
-      --bg-main: var(--bg-app, #0A0A0B); 
-      --bg-card: var(--bg-elev-1, #181818); 
-      --bg-elev: var(--bg-elev-2, #242424); 
-      --text-main: var(--text-1, #F5F5F5); 
-      --text-mute: var(--text-3, #888888); 
-      --border: var(--border-1, #2A2A2A); 
-    }
-    [data-theme="light"] { 
-      --bg-main: var(--bg-app, #F9F9F9); 
-      --bg-card: var(--bg-elev-1, #FFFFFF); 
-      --bg-elev: var(--bg-elev-2, #F0F0F0); 
-      --text-main: var(--text-1, #111111); 
-      --text-mute: var(--text-3, #666666); 
-      --border: var(--border-1, #E0E0E0); 
-      --glass-bg: rgba(255, 255, 255, 0.7);
-      --glass-border: rgba(0, 0, 0, 0.05);
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    
-    html, body { height: 100%; overflow: hidden; }
-    body { background-color: var(--bg-main); color: var(--text-main); font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
-    
-    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-main); border-bottom: 1px solid var(--border); z-index: 100; }
-    .app-body { flex: 1; overflow-y: auto; padding: 12px; -webkit-overflow-scrolling: touch; padding-bottom: 100px; }
-    
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-logo { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
-    .brand-text h1 { font-size: 14px; font-weight: 700; margin: 0; }
-    .brand-text p { font-size: 11px; color: var(--text-mute); margin: 0; }
-    
-    .header-actions { display: flex; gap: 6px; }
-    .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s var(--ease-spring); }
-    .icon-btn:active { transform: scale(0.88); }
-
-    .header-actions .icon-btn#homeBtn { color: #3B82F6; border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.05); }
-    .header-actions .icon-btn#themeToggleBtn { color: #F59E0B; border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.05); }
-    .header-actions .icon-btn#clearDraftBtn { color: #EF4444; border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05); }
-    .header-actions .icon-btn#preciosBtn { color: #10B981; border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05); }
-    .header-actions .icon-btn#reportesBtn { color: #8B5CF6; border-color: rgba(139, 92, 246, 0.3); background: rgba(139, 92, 246, 0.05); }
-    .header-actions .icon-btn#logoutBtn { color: #EF4444; border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05); }
-
-    /* WIZARD PROGRESS (CLICKEABLE) */
-    .wizard-progress { padding: 4px 0 16px 0; display: flex; justify-content: center; gap: 12px; }
-    .wizard-dot { 
-      width: 10px; height: 10px; border-radius: 50%; background: var(--bg-elev); 
-      transition: all 0.3s var(--ease-spring); cursor: pointer; 
-      border: 2px solid transparent;
-    }
-    .wizard-dot:hover { transform: scale(1.2); }
-    .wizard-dot.active { background: var(--brand); transform: scale(1.4); box-shadow: 0 0 12px var(--brand); border-color: #fff; }
-    .wizard-dot.done { background: var(--brand); opacity: 0.6; }
-    .wizard-dot:active { transform: scale(0.9); }
-
-    .step-indicator { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
-    
-    /* TARJETAS CON ESTILO PREMIUM */
-    .card { 
-      background: var(--glass-bg); 
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--glass-border); 
-      border-radius: var(--radius-md); 
-      padding: 16px; 
-      margin-bottom: 12px; 
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2); 
-      transition: transform 0.2s var(--ease-spring);
-    }
-    .card:active { transform: scale(0.99); }
-    
-    .field { position: relative; margin-bottom: 12px; }
-    .field input, .field textarea { 
-      width: 100%; padding: 14px 12px; 
-      background: var(--bg-elev) !important; 
-      border: 1.5px solid var(--border) !important; 
-      border-radius: var(--radius-sm); 
-      color: var(--text-main) !important; 
-      font-size: 14px; font-family: inherit; transition: 0.2s; outline: none; 
-    }
-    .field input:focus, .field textarea:focus { 
-      border-color: var(--brand) !important; 
-      background: var(--bg-card) !important; 
-      box-shadow: 0 0 0 4px var(--brand-light); 
-    }
-    .field label { position: absolute; left: 12px; top: 14px; font-size: 13px; color: var(--text-mute); transition: 0.2s; pointer-events: none; }
-    .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label, .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label { top: 4px; font-size: 9px; font-weight: 700; color: var(--brand); }
-
-    .field-title { font-size: 11px; font-weight: 700; margin-bottom: 10px; display: block; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
-    
-    .marcas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
-    .marca-btn { 
-      padding: 12px 6px; border-radius: var(--radius-sm); border: 2px solid transparent; 
-      background: var(--bg-elev); color: var(--text-main); font-weight: 700; font-size: 11px; 
-      cursor: pointer; transition: all 0.3s var(--ease-spring); position: relative; overflow: hidden;
-    }
-    .marca-btn:active { transform: scale(0.9); }
-    .marca-btn::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent); opacity: 0; transition: 0.3s; }
-    .marca-btn.active::after { opacity: 1; }
-    .marca-btn.active { border-color: var(--brand) !important; color: #fff !important; transform: scale(1.05); box-shadow: 0 0 20px var(--brand-light); background: var(--brand) !important; z-index: 2; }
-    
-    .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .radio-option { 
-      padding: 14px 6px; border-radius: var(--radius-sm); border: 2px solid transparent; 
-      background: var(--bg-elev); color: var(--text-main); font-weight: 600; font-size: 12px; 
-      display: flex; flex-direction: column; align-items: center; gap: 6px; 
-      cursor: pointer; transition: all 0.3s var(--ease-spring); 
-    }
-    .radio-option:active { transform: scale(0.9); }
-    .radio-option i { font-size: 20px; transition: transform 0.2s; }
-    .radio-option.active i { transform: scale(1.2); }
-    
-    .radio-option[data-value="Sí"] { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); }
-    .radio-option[data-value="Sí"] i { color: #22C55E; }
-    .radio-option[data-value="No"] { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
-    .radio-option[data-value="No"] i { color: #EF4444; }
-    .radio-option[data-value="A veces"] { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); }
-    .radio-option[data-value="A veces"] i { color: #F59E0B; }
-
-    .radio-option[data-value="patron"] { background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3); }
-    .radio-option[data-value="patron"] i { color: #8B5CF6; }
-    .radio-option[data-value="pin"] { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); }
-    .radio-option[data-value="pin"] i { color: #3B82F6; }
-    .radio-option[data-value="ninguno"] { background: rgba(156, 163, 175, 0.1); border-color: rgba(156, 163, 175, 0.3); }
-    .radio-option[data-value="ninguno"] i { color: #9CA3AF; }
-
-    .radio-option.active { border-color: var(--brand) !important; color: #fff !important; transform: scale(1.05); box-shadow: 0 0 20px var(--brand-light); background: var(--brand) !important; z-index: 2; }
-    .radio-option.active i { color: #fff !important; }
-
-    .chips-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .chip-btn { 
-      padding: 10px 16px; border-radius: 2rem; background: var(--bg-elev); 
-      border: 2px solid transparent; color: var(--text-main); font-size: 12px; 
-      font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; 
-      transition: all 0.3s var(--ease-spring); 
-    }
-    .chip-btn:active { transform: scale(0.9); }
-    .chip-btn[data-value="Cambio de pantalla"] { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); }
-    .chip-btn[data-value="Cambio de batería"] { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); }
-    .chip-btn[data-value="Módulo de carga"] { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); }
-    .chip-btn[data-value="Cambio de tapa"] { background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3); }
-    .chip-btn[data-value="Cambio de visor cámara"] { background: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.3); }
-    .chip-btn[data-value="Problema de placa"] { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
-    .chip-btn[data-value="Otro"] { background: rgba(156, 163, 175, 0.1); border-color: rgba(156, 163, 175, 0.3); }
-
-    .chip-btn.active { background: var(--brand) !important; border-color: var(--brand) !important; color: #fff !important; transform: scale(1.05); box-shadow: 0 0 15px var(--brand-light); z-index: 2; }
-
-    .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
-    .check-item { 
-      padding: 12px 4px; background: var(--bg-elev); border: 2px solid transparent; 
-      border-radius: var(--radius-sm); color: var(--text-main); font-size: 10px; 
-      font-weight: 600; cursor: pointer; display: flex; flex-direction: row; 
-      align-items: center; justify-content: center; gap: 4px; 
-      transition: all 0.2s var(--ease-spring); text-align: center; white-space: nowrap; 
-    }
-    .check-item:active { transform: scale(0.9); }
-    .check-item::before { content: '?'; font-weight: 800; color: var(--text-mute); font-size: 12px; }
-    .check-item.ok { background: rgba(34, 197, 94, 0.15); border-color: #22C55E; color: #22C55E; transform: scale(0.95); }
-    .check-item.ok::before { content: '✓'; color: #22C55E; }
-    .check-item.falla { background: rgba(239, 68, 68, 0.15); border-color: #EF4444; color: #EF4444; transform: scale(0.95); }
-    .check-item.falla::before { content: '✕'; color: #EF4444; }
-
-    .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .foto-slot { 
-      aspect-ratio: 4/3; border-radius: var(--radius-sm); border: 2px dashed var(--border); 
-      background: var(--bg-elev); display: flex; flex-direction: column; align-items: center; 
-      justify-content: center; gap: 6px; color: var(--text-mute); font-size: 12px; 
-      font-weight: 600; cursor: pointer; position: relative; overflow: hidden; 
-      transition: all 0.2s var(--ease-spring); 
-    }
-    .foto-slot:active { transform: scale(0.95); border-color: var(--brand); color: var(--brand); }
-    .foto-slot img { width: 100%; height: 100%; object-fit: cover; }
-    .foto-remove { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.8); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-
-    .servicio-item { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
-    .servicio-item input.servicio-desc { flex: 1; padding: 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-elev); color: var(--text-main); font-weight: 500; }
-    .servicio-item input.servicio-costo { width: 90px; padding: 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg-elev); color: var(--brand); font-weight: 700; text-align: right; }
-    .removeServicio { width: 42px; height: 42px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1.5px solid rgba(239, 68, 68, 0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-    .removeServicio:active { transform: scale(0.9); }
-
-    .resumen-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; margin-bottom: 10px; }
-    .resumen-saldo { border-top: 2px dashed var(--border); padding-top: 12px; margin-top: 12px; color: var(--brand); font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
-
-    /* FOOTER CON SAFE AREA Y Z-INDEX ALTO */
-    .wizard-footer { 
-      padding: 12px; 
-      padding-bottom: calc(12px + env(safe-area-inset-bottom)); 
-      background: var(--bg-main); 
-      border-top: 1px solid var(--border); 
-      display: flex; gap: 10px; 
-      z-index: 1000; 
-      position: sticky;
-      bottom: 0;
-    }
-    .btn { padding: 16px; border-radius: var(--radius-md); font-size: 15px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s var(--ease-spring); }
-    .btn:active { transform: scale(0.95); }
-    .btn-primary { background: linear-gradient(135deg, var(--brand), #FF8C00); color: white; box-shadow: 0 4px 16px -4px rgba(255, 105, 0, 0.5); }
-    .btn-secondary { background: var(--bg-elev); color: var(--text-main); border: 1.5px solid var(--border); }
-    #btnPrev { flex: 0 0 50px; padding: 14px 0; }
-    #btnNext, #btnGenerate { flex: 1; }
-
-    .sheet-backdrop, .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 9999; backdrop-filter: blur(4px); }
-    .sheet-backdrop { align-items: flex-end; }
-    .sheet-backdrop.show, .modal-backdrop.show { opacity: 1; pointer-events: auto; }
-    .sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 24px; width: 100%; max-width: 550px; border-top: 2px solid var(--brand); }
-    .modal { background: var(--bg-card); padding: 24px; border-radius: var(--radius-lg); width: 90%; max-width: 400px; text-align: center; border: 2px solid var(--border); }
-    .hidden { display: none !important; }
-
-    .preview-recibo { background: white; color: #1a1a1a; border-radius: var(--radius-md); padding: 16px; font-size: 12px; }
-    .preview-header { border-bottom: 2px solid var(--brand); margin: -16px -16px 12px; padding: 12px 16px; display: flex; align-items: center; gap: 8px; background: #f9fafb;}
-    .preview-header img { width: 32px; height: 32px; object-fit: contain; }
-    .preview-section { background: #f9fafb; border-radius: var(--radius-sm); padding: 10px; margin-bottom: 10px; border: 1px solid #eee; }
-    .preview-totales { border-top: 1px solid #ddd; margin-top: 6px; padding-top: 6px; }
-
-    .hidden-file-input { position: absolute; width: 1px; height: 1px; opacity: 0; z-index: -1; }
-  </style>
 </head>
 <body>
 
@@ -342,8 +115,9 @@
       <!-- PASO 3 -->
       <section class="wizard-panel hidden" data-panel="3" aria-hidden="true">
         <div class="step-indicator">Paso 3 · Recepción</div>
+        
         <div class="card hidden" id="cardReparaciones">
-          <label class="field-title">1. Motivo de Reparación</label>
+          <label class="field-title">1. ¿Qué reparaciones necesita? (Elige varias)</label>
           <div class="chips-group" id="motivoIngresoGroup">
             <button type="button" class="chip-btn" data-value="Cambio de pantalla">📱 Cambio pantalla</button>
             <button type="button" class="chip-btn" data-value="Cambio de batería">🔋 Cambio batería</button>
@@ -355,8 +129,25 @@
           </div>
           <input type="hidden" id="motivoIngreso" value="">
         </div>
+        
+        <div class="card" id="cardSemaforo">
+          <label class="field-title">2. ¿Cómo llegó el equipo?</label>
+          <div class="semaforo-grid" id="semaforoGroup">
+            <button type="button" class="semaforo-item" data-estado="bueno">
+              <span class="emoji">🟢</span> Buen estado
+            </button>
+            <button type="button" class="semaforo-item" data-estado="regular">
+              <span class="emoji">🟡</span> Con detalles
+            </button>
+            <button type="button" class="semaforo-item" data-estado="malo">
+              <span class="emoji">🔴</span> Muy dañado
+            </button>
+          </div>
+          <input type="hidden" id="estadoLlegada" value="">
+        </div>
+
         <div class="card hidden" id="cardAuditoriaGeneral">
-          <label class="field-title">2. Auditoría General</label>
+          <label class="field-title">3. Auditoría General</label>
           <div class="checklist-grid" id="checklistGeneralGroup">
             <button type="button" class="check-item" data-item="Cámaras"><span>Cámaras</span></button>
             <button type="button" class="check-item" data-item="Audio / mic"><span>Audio / mic</span></button>
@@ -366,14 +157,16 @@
             <button type="button" class="check-item" data-item="Batería"><span>Batería</span></button>
           </div>
         </div>
+        
         <div class="card hidden" id="cardAuditoriaFisica">
-          <label class="field-title">Auditoría Física</label>
+          <label class="field-title">3. Auditoría Física</label>
           <div class="checklist-grid" id="checklistFisicoGroup">
             <button type="button" class="check-item" data-item="Pantalla"><span>Pantalla sana</span></button>
             <button type="button" class="check-item" data-item="Tapa trasera"><span>Tapa trasera</span></button>
             <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
           </div>
         </div>
+        
         <input type="hidden" id="checklistResultados" value="">
         <div class="card">
           <label class="field-title">Detalles extra (opcional)</label>
@@ -447,10 +240,21 @@
         <input type="hidden" id="costoTotal" value="0">
       </section>
 
-      <!-- PASO 7 -->
+      <!-- PASO 7: BONUS FINAL -->
       <section class="wizard-panel hidden" data-panel="7" aria-hidden="true">
         <div class="step-indicator">Paso 7 · Listo</div>
-        <div id="previewContainer"></div>
+        <div id="previewContainer" style="margin-bottom: 20px;"></div>
+        
+        <div id="paso7Botones" class="hidden" style="display: flex; flex-direction: column; gap: 12px; padding: 0 16px;">
+          <!-- Botón Gigante de WhatsApp -->
+          <button type="button" id="sendWhatsappBtn" class="btn" style="background:#25D366; color:white; font-size: 18px; padding: 20px; border-radius: 16px; box-shadow: 0 10px 20px -5px rgba(37, 211, 102, 0.4); width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 800;">
+            <i class="fab fa-whatsapp" style="font-size: 24px;"></i> Enviar Recibo por WhatsApp
+          </button>
+          <!-- Botón PDF -->
+          <button type="button" id="descargarPdfBtn" class="btn btn-secondary" style="font-size: 16px; padding: 16px; border-radius: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; border: 1.5px solid var(--border);">
+            <i class="fas fa-file-pdf" style="color: #EF4444; font-size: 20px;"></i> Descargar Solo el PDF
+          </button>
+        </div>
       </section>
     </main>
   </div>
@@ -461,15 +265,14 @@
     <button type="button" class="btn btn-primary" id="btnGenerate" style="display: none;"><i class="fas fa-paper-plane"></i> Generar y Enviar</button>
   </footer>
 
-  <!-- MODAL DE ÉXITO -->
+  <!-- MODAL DE ÉXITO (Oculto por defecto) -->
   <div class="modal-backdrop" id="successModal">
     <div class="modal">
       <div style="font-size: 48px; color: #22C55E; margin-bottom: 16px;"><i class="fas fa-check-circle"></i></div>
       <h3 style="font-size: 20px; margin-bottom: 8px;">¡Recibo guardado!</h3>
       <p style="font-size: 14px; color: var(--text-mute); margin-bottom: 24px;" id="successNumero">REC-XXX</p>
-      
       <div style="display: flex; flex-direction: column; gap: 10px;">
-        <button class="btn" style="background:#25D366;color:white;" id="sendWhatsappBtn"><i class="fab fa-whatsapp"></i> Enviar recibo por WhatsApp</button>
+        <button class="btn" style="background:#25D366;color:white;" id="sendWhatsappBtnModal"><i class="fab fa-whatsapp"></i> Enviar recibo por WhatsApp</button>
         <button class="btn btn-secondary" id="backToPanelBtn2">Volver al panel</button>
       </div>
     </div>
@@ -500,7 +303,6 @@
         try {
           initAudio();
           const now = audioCtx.currentTime;
-          
           const createOsc = (freqStart, freqEnd, duration, gainVal, waveType) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -527,7 +329,7 @@
       }
 
       document.addEventListener('click', (e) => {
-        const target = e.target.closest('button, .marca-btn, .radio-option, .chip-btn, .check-item, .foto-slot');
+        const target = e.target.closest('button, .marca-btn, .radio-option, .chip-btn, .check-item, .foto-slot, .semaforo-item');
         if (target) {
           playSound('click');
           if (navigator.vibrate) navigator.vibrate(10);
