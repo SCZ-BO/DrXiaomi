@@ -27,7 +27,6 @@
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    /* Estilos específicos del panel que no van en el sistema */
     .hero-actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -159,7 +158,6 @@
     }
     .action-buttons .btn i { font-size: 16px; color: var(--brand); }
 
-    /* Paginación */
     .pagination-container {
       display: flex;
       justify-content: center;
@@ -200,7 +198,6 @@
       font-weight: 600;
     }
 
-    /* Accesorios grid sin scroll anidado */
     #gridAccesorios {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -208,7 +205,6 @@
       min-height: 180px;
     }
 
-    /* Preview PDF blanco forzado */
     #previewPDFContent {
       background: #fff;
       color: #111;
@@ -220,7 +216,6 @@
       line-height: 1.5;
     }
 
-    /* Cierre de caja: footer sticky */
     #modalPreviewPDF .sheet {
       display: flex;
       flex-direction: column;
@@ -235,7 +230,6 @@
       margin-top: 8px;
     }
 
-    /* Input label */
     .input-label {
       display: block;
       font-size: var(--text-xs);
@@ -246,7 +240,6 @@
       margin-bottom: 6px;
     }
 
-    /* Pull to refresh */
     #pullToRefresh {
       position: fixed;
       top: calc(var(--safe-top) + 10px);
@@ -269,11 +262,15 @@
       border: 1px solid var(--brand);
       color: var(--brand);
     }
+
+    .notif-badge {
+      font-family: var(--font-sans);
+      line-height: 1;
+    }
   </style>
 </head>
 <body>
 
-  <!-- LOADER -->
   <div class="loader-overlay" id="appLoader">
     <div class="loader-logo-container">
       <div class="loader-ring"></div>
@@ -282,14 +279,12 @@
     <div class="loader-text">Sincronizando...</div>
   </div>
 
-  <!-- PULL TO REFRESH -->
   <div id="pullToRefresh">
     <div>
       <i id="ptrIcon" class="fas fa-sync-alt" style="font-size: 16px;"></i>
     </div>
   </div>
 
-  <!-- HEADER -->
   <header class="app-header">
     <div class="brand">
       <div class="brand-logo">
@@ -304,8 +299,9 @@
       <button type="button" class="icon-btn" id="themeToggleBtn" aria-label="Cambiar tema">
         <i class="fas fa-moon" id="themeIcon"></i>
       </button>
-      <button type="button" class="icon-btn" id="btnNotificaciones" aria-label="Notificaciones">
+      <button type="button" class="icon-btn" id="btnNotificaciones" aria-label="Notificaciones" style="position:relative;">
         <i class="fas fa-bell"></i>
+        <span class="notif-badge" id="notifBadge" style="position:absolute; top:-4px; right:-4px; display:none; background:var(--brand); color:white; font-size:10px; font-weight:800; padding:2px 5px; border-radius:10px; border:2px solid var(--bg); min-width:16px; text-align:center;">0</span>
       </button>
       <button type="button" class="icon-btn" id="logoutBtn" aria-label="Cerrar sesión">
         <i class="fas fa-sign-out-alt"></i>
@@ -316,7 +312,6 @@
   <main class="app-container">
     <div class="app-content">
 
-      <!-- HERO -->
       <div class="hero-actions">
         <button type="button" class="btn-hero btn-hero-nuevo btn-ripple" id="nuevoReciboBtn">
           <div class="hero-icon-badge"><i class="fas fa-plus"></i></div>
@@ -334,7 +329,6 @@
         </button>
       </div>
 
-      <!-- STATS (tocables → filtran) -->
       <div class="stats-grid">
         <button type="button" class="stat-card" data-filtro="reparacion" id="statCardActivas">
           <div class="stat-top">
@@ -359,7 +353,6 @@
         </button>
       </div>
 
-      <!-- ACCIONES RÁPIDAS -->
       <div class="action-buttons">
         <button type="button" class="btn btn-secondary" id="btnPDFDia">
           <i class="fas fa-file-invoice-dollar"></i> Cierre de Caja
@@ -369,7 +362,6 @@
         </button>
       </div>
 
-      <!-- BUSCADOR -->
       <div class="search-bar">
         <i class="fas fa-search search-icon"></i>
         <input type="search" id="buscador" placeholder="Buscar cliente o equipo..." autocomplete="off" aria-label="Buscar cliente o equipo" enterkeyhint="search">
@@ -378,7 +370,6 @@
         </button>
       </div>
 
-      <!-- FILTROS (3 chips: los importantes) -->
       <div class="filters-row" id="filtros" role="tablist" aria-label="Filtros de movimientos">
         <button type="button" class="chip-interactive active" data-filtro="todos" role="tab" aria-selected="true">Todos</button>
         <button type="button" class="chip-interactive" data-filtro="reparacion" role="tab" aria-selected="false">🔧 En taller</button>
@@ -386,7 +377,6 @@
         <button type="button" class="chip-interactive" data-filtro="entregado" role="tab" aria-selected="false">🤝 Entregados</button>
       </div>
 
-      <!-- LISTA -->
       <div class="cards-list" id="listaOrdenes">
         <div class="skeleton-card">
           <div class="skeleton skeleton-circle"></div>
@@ -415,28 +405,21 @@
     </div>
   </main>
 
-  <!-- BOTTOM NAV -->
   <nav class="bottom-nav" id="bottomNav">
     <a href="/app/" class="nav-item active" aria-current="page">
       <i class="fas fa-home"></i><span>Inicio</span>
     </a>
-    <a href="/historial/" class="nav-item">
-      <i class="fas fa-list"></i><span>Historial</span>
+    <a href="/app/precios/" class="nav-item">
+      <i class="fas fa-tags"></i><span>Precios</span>
     </a>
-    <a href="/clientes/" class="nav-item">
-      <i class="fas fa-users"></i><span>Clientes</span>
+    <a href="/app/reportes/" class="nav-item" id="navReportes">
+      <i class="fas fa-chart-line"></i><span>Reportes</span>
     </a>
-    <a href="/inventario/" class="nav-item">
-      <i class="fas fa-box"></i><span>Inventario</span>
-    </a>
-    <a href="/config/" class="nav-item">
-      <i class="fas fa-cog"></i><span>Ajustes</span>
+    <a href="/app/inventario/" class="nav-item">
+      <i class="fas fa-box"></i><span>Stock</span>
     </a>
   </nav>
 
-  <!-- ================= MODALES ================= -->
-
-  <!-- 1. MODAL VENTA RÁPIDA -->
   <div class="sheet-backdrop" id="modalVenta">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -516,7 +499,6 @@
     </div>
   </div>
 
-  <!-- 2. MODAL OPCIONES / DETALLE -->
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -530,7 +512,6 @@
     </div>
   </div>
 
-  <!-- 3. MODAL PAGO -->
   <div class="sheet-backdrop" id="modalPago">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -553,7 +534,6 @@
     </div>
   </div>
 
-  <!-- 4. MODAL NOTA AL DUEÑO -->
   <div class="sheet-backdrop" id="modalNotaDueno">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -570,7 +550,6 @@
     </div>
   </div>
 
-  <!-- 5. MODAL CIERRE DE CAJA / PDF -->
   <div class="sheet-backdrop" id="modalPreviewPDF">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -626,7 +605,6 @@
     </div>
   </div>
 
-  <!-- 6. MODAL CREAR MENSAJE POPUP (Admin) -->
   <div class="sheet-backdrop" id="modalMensajePopup">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -656,7 +634,6 @@
     </div>
   </div>
 
-  <!-- 7. MODAL VER MENSAJE POPUP (Técnico) -->
   <div class="sheet-backdrop" id="modalVerPopup">
     <div class="sheet" style="text-align: center;">
       <div class="sheet-handle"></div>
@@ -667,7 +644,6 @@
     </div>
   </div>
 
-  <!-- 8. MODAL VER NOTIFICACIONES (DUEÑO) -->
   <div class="sheet-backdrop" id="modalNotificaciones">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -681,7 +657,6 @@
     </div>
   </div>
 
-  <!-- 9. MODAL EDITAR COSTO / GANANCIA (SOLO ADMIN) -->
   <div class="sheet-backdrop" id="modalEditarVenta">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -698,14 +673,13 @@
     </div>
   </div>
 
-  <!-- Failsafe: oculta el loader si panel.js falla -->
   <script>
     setTimeout(function () {
       var loader = document.getElementById('appLoader');
       if (loader && !loader.classList.contains('hidden')) {
         loader.classList.add('hidden');
       }
-    }, 6000);
+    }, 3000);
   </script>
 
   <script type="module" src="./js/panel.js"></script>
