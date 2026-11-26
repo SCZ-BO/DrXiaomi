@@ -6,15 +6,11 @@ import { collection, query, onSnapshot, limit, addDoc, serverTimestamp, orderBy,
 import { abrirSheetTelefono, abrirSheetVenta } from './panel-modals.js';
 import { icono } from './icons.js';
 
-// 🔥 IMPORTACIONES PARA NOTIFICACIONES PUSH (FCM)
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 import { app } from './firebase.js';
 
 initTheme();
 
-// ==========================================
-// CONFIGURACIÓN GLOBAL
-// ==========================================
 const CONFIG_APP = {
   whatsappDueno: '59175589308',
   gastoAlmuerzo: 20,
@@ -25,82 +21,42 @@ const CONFIG_APP = {
   vapidKey: 'BNCSlsvNPr7pVw5dZTtm-mrSOrXsuIMQ_9IW9KTVPS1Hm8IEJMh8DaEk1nojGJ_4ZwVgV6ZYUgVTFSymAyS-jRc' 
 };
 
-// ==========================================
-// 🔥 MOTOR DE SONIDO NATIVO MODERNO (UI SOUNDS)
-// ==========================================
 let audioCtx = null;
-
 function initAudio() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
 function playSound(type) {
   try {
     initAudio();
     const now = audioCtx.currentTime;
-    
-    const createOsc = (freqStart, freqEnd, duration, gainVal, waveType) => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = waveType;
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.frequency.setValueAtTime(freqStart, now);
-      osc.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
-      gain.gain.setValueAtTime(gainVal, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-      osc.start(now);
-      osc.stop(now + duration);
+    const createOsc = (fStart, fEnd, dur, gainVal, wave) => {
+      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+      osc.type = wave; osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(fStart, now); osc.frequency.exponentialRampToValueAtTime(fEnd, now + dur);
+      gain.gain.setValueAtTime(gainVal, now); gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      osc.start(now); osc.stop(now + dur);
     };
-
-    const createNoise = (duration, filterFreq, gainVal) => {
-      const bufferSize = audioCtx.sampleRate * duration;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.value = filterFreq;
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(gainVal, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(audioCtx.destination);
-      noise.start(now);
+    const createNoise = (dur, fFreq, gainVal) => {
+      const bufSize = audioCtx.sampleRate * dur; const buffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0); for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter(); filter.type = 'highpass'; filter.frequency.value = fFreq;
+      const gain = audioCtx.createGain(); gain.gain.setValueAtTime(gainVal, now); gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); noise.start(now);
     };
-
-    if (type === 'click') {
-      createOsc(1500, 500, 0.04, 0.2, 'triangle');
-      createNoise(0.02, 5000, 0.1);
-    } 
-    else if (type === 'pop') {
-      createOsc(800, 200, 0.1, 0.3, 'sine');
-    } 
-    else if (type === 'success') {
-      createOsc(1046.50, 1046.50, 0.1, 0.2, 'sine');
-      setTimeout(() => createOsc(1567.98, 1567.98, 0.2, 0.2, 'sine'), 80);
-    } 
-    else if (type === 'error') {
-      createOsc(200, 150, 0.15, 0.3, 'square');
-      createNoise(0.1, 1000, 0.05);
-    }
+    if (type === 'click') { createOsc(1500, 500, 0.04, 0.2, 'triangle'); createNoise(0.02, 5000, 0.1); }
+    else if (type === 'pop') { createOsc(800, 200, 0.1, 0.3, 'sine'); }
+    else if (type === 'success') { createOsc(1046.50, 1046.50, 0.1, 0.2, 'sine'); setTimeout(() => createOsc(1567.98, 1567.98, 0.2, 0.2, 'sine'), 80); }
+    else if (type === 'error') { createOsc(200, 150, 0.15, 0.3, 'square'); createNoise(0.1, 1000, 0.05); }
   } catch (e) { console.warn('Audio error', e); }
 }
 
-// 🔥 RIPPLE EFFECT
 document.addEventListener('click', (e) => {
   const target = e.target.closest('button, .nav-item, .chip-btn');
   if (target) {
     playSound('click');
-
     const btn = target.closest('.btn-ripple');
     if (btn) {
       const circle = document.createElement('span');
@@ -122,12 +78,10 @@ let filtroActual = 'todos', busquedaActual = '', todosLosMovimientos = [], pagin
 let unsubscribe = null, unsubscribeVentas = null, unsubscribeCierres = null, unsubscribeInventario = null; 
 let ventasPanel = [];
 const ITEMS_POR_PAGINA = CONFIG_APP.itemsPorPagina;
-
 let reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
 let ventasAccesoriosData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
 let detallesReparaciones = [];
 let detallesVentas = [];
-
 let ventaActualEditando = null;
 
 const reciboSheet = document.getElementById('reciboSheet');
@@ -137,9 +91,6 @@ const modalPreviewPDF = document.getElementById('modalPreviewPDF');
 const paginationContainer = document.getElementById('paginationContainer');
 const appLoader = document.getElementById('appLoader');
 
-// ==========================================
-// 🔥 NOTIFICACIONES PUSH (FCM)
-// ==========================================
 let messaging = null;
 try { messaging = getMessaging(app); } catch(e) { console.warn('FCM no disponible', e); }
 
@@ -149,21 +100,14 @@ async function solicitarPermisoNotificaciones() {
     const permiso = await Notification.requestPermission();
     if (permiso === 'granted') {
       if (!CONFIG_APP.vapidKey || CONFIG_APP.vapidKey === 'TU_VAPID_KEY_AQUI') return;
-      
-      // 🔥 EL PARCHE: Evitar el crash si no hay service worker (localhost o sin SSL)
       if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
-        console.warn('Notificaciones push omitidas: No hay Service Worker activo (requiere HTTPS).');
+        console.warn('Notificaciones push omitidas: No hay Service Worker activo.');
         return;
       }
-
       const token = await getToken(messaging, { vapidKey: CONFIG_APP.vapidKey });
-      if (token && appState.sesion?.rol === 'admin') {
-        await updateDoc(doc(db, 'usuarios', appState.sesion.uid), { fcmToken: token });
-      }
+      if (token && appState.sesion?.rol === 'admin') await updateDoc(doc(db, 'usuarios', appState.sesion.uid), { fcmToken: token });
     }
-  } catch(e) { 
-    console.warn('Error silencioso en Notificaciones Push:', e); 
-  }
+  } catch(e) { console.warn('Error silencioso en Notificaciones Push:', e); }
 }
 
 if (messaging) {
@@ -174,7 +118,6 @@ if (messaging) {
     escucharNotificaciones(); 
   });
 }
-
 // ==========================================
 // BANDEJA DE NOTIFICACIONES (PARA EL DUEÑO)
 // ==========================================
@@ -354,7 +297,6 @@ async function abrirEditarVenta(id) {
   document.getElementById('modalEditarVenta')?.classList.add('show');
   playSound('pop');
 }
-
 // ==========================================
 // 4. EVENTOS
 // ==========================================
@@ -773,7 +715,6 @@ function resetVentaModal() {
   const ventaConceptoOtro = document.getElementById('ventaConceptoOtro');
   if (ventaConceptoOtro) ventaConceptoOtro.value = '';
 }
-
 // ==========================================
 // 5. CARGA DE DATOS Y RENDERIZADO
 // ==========================================
@@ -908,30 +849,36 @@ function renderCardTelefono(o) {
   const info = { 
     recibido: { t: 'Recibido', c: '#F59E0B' }, 
     reparacion: { t: 'Reparación', c: '#EF4444' }, 
-    'espera-repuesto': { t: 'Repuesto', c: '#8B5CF6' }, 
+    'espera-repuesto': { t: 'Espera Repuesto', c: '#8B5CF6' }, 
     listo: { t: 'Listo', c: '#3B82F6' }, 
     entregado: { t: 'Entregado', c: '#10B981' }, 
     devuelto: { t: 'Devuelto', c: '#6B7280' } 
   }[est] || { t: est, c: 'var(--text-3)' };
 
-  const bgColor = `color-mix(in srgb, ${info.c} 10%, var(--surface))`;
-
   return `
     <div class="ingreso-card" data-tipo="telefono" data-id="${o.id}" 
-         style="background: ${bgColor}; border-left: 4px solid ${info.c};">
-      <div class="icon-circle" style="color: ${info.c}; background: color-mix(in srgb, ${info.c} 20%, transparent);">
+         style="background: var(--surface); border-left: 6px solid ${info.c}; display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; margin-bottom: 8px; border-radius: var(--r-md); cursor: pointer; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      
+      <div class="icon-circle" style="color: ${info.c}; background: color-mix(in srgb, ${info.c} 20%, transparent); width: 42px; height: 42px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
         ${icono('telefono', 24)}
       </div>
-      <div class="info-col">
-        <div class="info-title">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
-        <div class="info-sub">${escapeHtml(o.cliente || '')}</div>
-        <div class="info-sub" style="font-size: var(--text-xs);">
-          ${est === 'entregado' ? `Entregado: ${formatFechaCompleta(o.fechaEntrega)}` : `Ingreso: ${tiempoRelativo(o.fechaEditada || o.fecha)}`}
+      
+      <div class="info-col" style="flex: 1; min-width: 0; padding: 0 12px;">
+        <div class="info-title" style="font-size: 14px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(o.marca || '')} ${escapeHtml(o.modelo || '')}</div>
+        <div class="info-sub" style="font-size: 12px; color: var(--text-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(o.cliente || '')}</div>
+        
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+          <span class="chip chip-${est}" style="font-size: 10px; padding: 2px 8px;">${info.t}</span>
+          <span style="font-size: 11px; color: var(--text-3);">
+            ${est === 'entregado' ? `📅 ${formatFechaCompleta(o.fechaEntrega)}` : `⏱️ ${tiempoRelativo(o.fechaEditada || o.fecha)}`}
+          </span>
         </div>
-        <span class="estado-chip" style="background: color-mix(in srgb, ${info.c} 20%, transparent); color: ${info.c};">${info.t}</span>
       </div>
-      <div class="monto-col">
-        <div class="monto" style="color: var(--text);">${formatBsLimpio(Number(o.montoCobrado) || Number(o.total) || 0)}</div>
+      
+      <div class="monto-col" style="text-align: right; flex-shrink: 0;">
+        <div class="monto" style="font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.3px;">
+          ${formatBsLimpio(Number(o.montoCobrado) || Number(o.total) || 0)}
+        </div>
       </div>
     </div>`;
 }
@@ -957,8 +904,6 @@ function renderCardVenta(v, tipo) {
     iconoNombre = 'venta';
   }
 
-  const bgColor = `color-mix(in srgb, ${cor} 10%, var(--surface))`;
-
   const esAdmin = appState.sesion?.rol === 'admin';
   const monto = Number(v.monto) || 0;
   const costo = Number(v.costo) || 0;
@@ -966,22 +911,27 @@ function renderCardVenta(v, tipo) {
   
   let htmlGanancia = '';
   if (esAdmin && tipo === 'venta') {
-    htmlGanancia = `<div style="font-size: var(--text-xs); color: var(--success); font-weight: 700; margin-top: 2px;">Ganancia: ${formatBsLimpio(ganancia)}</div>`;
+    htmlGanancia = `<div style="font-size: 10px; color: var(--success); font-weight: 700; margin-top: 2px;">Ganancia: ${formatBsLimpio(ganancia)}</div>`;
   }
 
   return `
     <div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra || ''}" 
-         style="background: ${bgColor}; border-left: 4px solid ${cor};">
-      <div class="icon-circle" style="color: ${cor}; background: color-mix(in srgb, ${cor} 20%, transparent);">
+         style="background: var(--surface); border-left: 6px solid ${cor}; display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; margin-bottom: 8px; border-radius: var(--r-md); cursor: pointer; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      
+      <div class="icon-circle" style="color: ${cor}; background: color-mix(in srgb, ${cor} 20%, transparent); width: 42px; height: 42px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
         ${icono(iconoNombre, 24)}
       </div>
-      <div class="info-col">
-        <div class="info-title">${escapeHtml(v.concepto || '')}</div>
-        <div class="info-sub">${hora} · ${escapeHtml(v.metodoPago || '')}</div>
+      
+      <div class="info-col" style="flex: 1; min-width: 0; padding: 0 12px;">
+        <div class="info-title" style="font-size: 14px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(v.concepto || '')}</div>
+        <div class="info-sub" style="font-size: 12px; color: var(--text-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${hora} · ${escapeHtml(v.metodoPago || '')}</div>
         ${htmlGanancia}
       </div>
-      <div class="monto-col">
-        <div class="monto" style="color: ${cor};">${formatBsLimpio(v.monto)}</div>
+      
+      <div class="monto-col" style="text-align: right; flex-shrink: 0;">
+        <div class="monto" style="font-size: 15px; font-weight: 800; color: ${cor}; letter-spacing: -0.3px;">
+          ${formatBsLimpio(v.monto)}
+        </div>
       </div>
     </div>`;
 }
