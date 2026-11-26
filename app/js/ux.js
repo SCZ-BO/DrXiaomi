@@ -1,5 +1,5 @@
 /* Cárgalo DESPUÉS de cliente.js:  <script type="module" src="/js/ux.js"></script> */
-import { datos, CONFIG, formatBs, toast, haptic } from './cliente.js';
+import { datos, CONFIG, formatBs, toast, haptic } from './clientes.js';
 const $ = id => document.getElementById(id);
 const NOMBRES = ['Cliente','Equipo','Recepción','Seguridad','Fotos','Costos','Listo'];
 
