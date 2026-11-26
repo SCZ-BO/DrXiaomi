@@ -144,16 +144,25 @@ let messaging = null;
 try { messaging = getMessaging(app); } catch(e) { console.warn('FCM no disponible', e); }
 
 async function solicitarPermisoNotificaciones() {
-  if (!('Notification' in window) || !messaging) return;
-  const permiso = await Notification.requestPermission();
-  if (permiso === 'granted') {
-    try {
+  try {
+    if (!('Notification' in window) || !messaging) return;
+    const permiso = await Notification.requestPermission();
+    if (permiso === 'granted') {
       if (!CONFIG_APP.vapidKey || CONFIG_APP.vapidKey === 'TU_VAPID_KEY_AQUI') return;
+      
+      // 🔥 EL PARCHE: Evitar el crash si no hay service worker (localhost o sin SSL)
+      if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+        console.warn('Notificaciones push omitidas: No hay Service Worker activo (requiere HTTPS).');
+        return;
+      }
+
       const token = await getToken(messaging, { vapidKey: CONFIG_APP.vapidKey });
       if (token && appState.sesion?.rol === 'admin') {
         await updateDoc(doc(db, 'usuarios', appState.sesion.uid), { fcmToken: token });
       }
-    } catch(e) { console.error(e); }
+    }
+  } catch(e) { 
+    console.warn('Error silencioso en Notificaciones Push:', e); 
   }
 }
 
