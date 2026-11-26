@@ -2,13 +2,17 @@
 <html lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0A0A0B" id="metaThemeColor">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>DR. Xiaomi · Panel</title>
 
   <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="/imagenes/web-app-manifest-192x192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -19,149 +23,32 @@
   <link rel="manifest" href="/manifest.json">
 
   <style>
-    /* 🔥 ANIMACIÓN FORZADA PARA EL LOADER */
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .loader-ring { 
-      position: absolute; 
-      inset: 0; 
-      border-radius: 50%; 
-      border: 3px solid transparent; 
-      border-top-color: var(--brand-500); 
-      border-bottom-color: var(--brand-500); 
-      animation: spin 1.2s linear infinite !important;
-    }
-    
-    /* 🔥 SKELETON LOADER (Esqueletos de carga) */
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    .skeleton-card {
-      background: var(--bg-elev-1);
-      border-radius: var(--r-md);
-      padding: 10px;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border: 1px solid var(--border-1);
-      border-left-width: 5px;
-      border-left-color: var(--border-2);
-    }
-    .skeleton-circle {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: linear-gradient(90deg, var(--bg-elev-2) 25%, var(--bg-elev-3) 50%, var(--bg-elev-2) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    .skeleton-lines { flex: 1; }
-    .skeleton-line {
-      height: 10px; border-radius: 4px; margin-bottom: 6px;
-      background: linear-gradient(90deg, var(--bg-elev-2) 25%, var(--bg-elev-3) 50%, var(--bg-elev-2) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    .skeleton-line.short { width: 40%; }
-    .skeleton-line.medium { width: 70%; }
-
-    /* 🔥 EFECTO RIPPLE (Onda al tocar botones) */
-    .btn-ripple {
-      position: relative;
-      overflow: hidden;
-    }
-    .btn-ripple .ripple-effect {
-      position: absolute;
-      border-radius: 50%;
-      background-color: rgba(255, 255, 255, 0.4);
-      transform: scale(0);
-      animation: ripple-anim 0.6s linear;
-      pointer-events: none;
-    }
-    @keyframes ripple-anim {
-      to { transform: scale(4); opacity: 0; }
-    }
-    
-    /* HERO BUTTONS */
-    .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-    .btn-hero { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; padding: 10px 12px; border-radius: var(--r-lg); font-weight: 700; font-size: 12px; line-height: 1.2; border: none; cursor: pointer; transition: var(--dur) var(--ease-spring); height: 60px; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
-    .btn-hero:active { transform: scale(0.96); }
-    .btn-hero-nuevo { background: linear-gradient(135deg, var(--brand-500), #FF8C00); color: white; box-shadow: var(--shadow-glow); }
-    .btn-hero-venta { background: var(--bg-elev-1); color: var(--success-500); border: 1px solid var(--border-1); }
-    .icon-box { width: 28px; height: 28px; background: rgba(255, 255, 255, 0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 4px; margin-right: 8px; flex-shrink: 0; z-index: 2; }
-    .btn-hero-nuevo .icon-box { background: white; }
-    .icon-box img { width: 100%; height: 100%; object-fit: contain; }
-    .icon-raw { width: 28px; height: 28px; object-fit: contain; margin-right: 8px; flex-shrink: 0; z-index: 2; }
-    .btn-hero span { z-index: 2; text-align: left; }
-
-    /* STATS */
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
-    .stat-card { background: var(--bg-elev-1); border-radius: var(--r-md); padding: 8px 6px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--border-1); }
-    .stat-value { font-size: 18px; font-weight: 800; color: var(--text-1); line-height: 1; margin-bottom: 2px; letter-spacing: -0.5px; }
-    .stat-label { font-size: 9px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
-
-    /* BOTONES PDF Y NOTA */
-    .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .action-buttons .btn { padding: 8px; font-size: 12px; border-radius: var(--r-md); height: 36px; display: flex; align-items: center; justify-content: center; }
-    .action-buttons .btn img { margin-right: 6px; }
-
-    .section-title { font-size: 13px; font-weight: 800; color: var(--text-1); margin-bottom: 6px; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
-    
-    /* NOTA: Eliminamos la clase .ingreso-card. Las tarjetas se renderizan con estilos en línea desde el JS */
-
-    /* PAGINACIÓN */
-    .pagination-container { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 12px; margin-bottom: 20px; }
-    .page-btn { background: var(--bg-elev-1); border: 1px solid var(--border-1); color: var(--text-1); width: 32px; height: 32px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; cursor: pointer; transition: var(--dur); }
-    .page-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: white; box-shadow: var(--shadow-glow); }
-    .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-    .page-nav { background: var(--bg-elev-2); border: 1px solid var(--border-1); color: var(--text-1); padding: 0 12px; height: 32px; border-radius: var(--r-md); font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-    /* BUSCADOR */
-    .search-bar { margin-bottom: 8px; position: relative; }
-    .search-bar input { padding: 8px 12px 8px 36px; font-size: 13px; width: 100%; }
-    .search-bar img { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: 0.5; pointer-events: none; }
-    .filters-row { margin-bottom: 12px; gap: 6px; }
-    .chip-interactive { padding: 6px 12px; font-size: 12px; }
-
-    /* SCROLL VENTA RÁPIDA */
+    .section-title { font-size: 14px; font-weight: 800; color: var(--text-1); margin: 4px 0 8px; display: flex; align-items: center; gap: 7px; }
+    .section-title i { color: var(--brand-500); font-size: 13px; }
+    .chip-interactive { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; font-size: 12px; font-weight: 700; }
+    .chip-interactive i { font-size: 11px; }
+    .pagination-container { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 12px 0 20px; }
+    .page-btn { background: var(--bg-elev-1); border: 1px solid var(--border-1); color: var(--text-1); width: 34px; height: 34px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+    .page-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: #fff; box-shadow: var(--shadow-glow); }
+    .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .page-nav { background: var(--bg-elev-2); border: 1px solid var(--border-1); color: var(--text-1); padding: 0 12px; height: 34px; border-radius: var(--r-md); font-size: 12px; font-weight: 700; }
     #gridAccesorios { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-height: 180px; max-height: 40vh; overflow-y: auto; padding-right: 4px; }
-    #gridAccesorios::-webkit-scrollbar { width: 4px; }
-    #gridAccesorios::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
-    .accesorio-card { background: var(--bg-elev-2); border: 2px solid transparent; border-radius: var(--r-md); padding: 8px; cursor: pointer; transition: 0.2s; text-align: center; position: relative; }
-    .accesorio-card.seleccionado { border-color: var(--brand-500); background: color-mix(in srgb, var(--brand-500) 10%, var(--bg-elev-2)); box-shadow: 0 0 12px var(--brand-100); }
-    .accesorio-card img { width: 100%; height: 70px; object-fit: contain; border-radius: 6px; margin-bottom: 6px; }
-    .accesorio-card .nombre { font-size: 11px; font-weight: 700; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .accesorio-card .precio { font-size: 12px; font-weight: 800; color: var(--success-500); }
-    .accesorio-card .stock { font-size: 10px; color: var(--text-3); }
-
-    /* CIERRE DE CAJA */
-    #previewPDFContent { background: white; color: black; padding: 20px; border-radius: 4px; font-family: 'Helvetica', sans-serif; font-size: 11px; min-height: 200px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-
-    /* ESTILOS PARA LOS SWITCHES */
-    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-elev-3); transition: .3s; border-radius: 34px; border: 1px solid var(--border-2); }
-    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
-    input:checked + .slider { background-color: var(--success-500); border-color: var(--success-500); }
-    input:checked + .slider:before { transform: translateX(22px); }
+    #previewPDFContent { background: #fff; color: #111; padding: 16px; border-radius: var(--r-sm); font-family: 'Helvetica', sans-serif; font-size: 11px; min-height: 180px; }
   </style>
 </head>
 <body>
 
   <div class="loader-overlay" id="appLoader">
     <div class="loader-logo-container">
-      <!-- 🔥 ESTE ES EL ANILLO QUE GIRA -->
       <div class="loader-ring"></div>
       <img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." class="loader-logo-img">
     </div>
     <div class="loader-text">Sincronizando...</div>
   </div>
 
-  <div id="pullToRefresh" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%) translateY(-60px); z-index: 9999; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); opacity: 0; pointer-events: none;">
-    <div style="background: var(--bg-elev-1); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); border: 1px solid var(--border-1);">
-      <img id="ptrIcon" src="/app/icons/estado-reparacion.png" width="24" height="24" alt="Refresh" style="transition: transform 0.3s;">
+  <div id="pullToRefresh" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%) translateY(-60px); z-index: 9999; transition: all 0.25s ease; opacity: 0; pointer-events: none;">
+    <div style="background: var(--bg-elev-1); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); border: 1px solid var(--brand-500); color: var(--brand-500);">
+      <i id="ptrIcon" class="fas fa-sync-alt" style="font-size: 15px;"></i>
     </div>
   </div>
 
@@ -170,72 +57,69 @@
       <!-- HERO -->
       <div class="hero-actions">
         <button type="button" class="btn-hero btn-hero-nuevo btn-ripple" id="nuevoReciboBtn">
-          <div class="icon-box"><img src="/app/icons/agregar.png" alt="Nuevo Equipo"></div>
-          <span>Nuevo Equipo</span>
+          <div class="hero-icon-badge"><i class="fas fa-plus"></i></div>
+          <div class="hero-text">
+            <span>Nuevo Equipo</span>
+            <span class="hero-sub">Ingresar orden</span>
+          </div>
         </button>
         <button type="button" class="btn-hero btn-hero-venta btn-ripple" id="ventaRapidaBtn">
-          <img src="/app/icons/venta.png" alt="Venta Rápida" class="icon-raw">
-          <span>Venta Rápida</span>
+          <div class="hero-icon-badge"><i class="fas fa-bolt"></i></div>
+          <div class="hero-text">
+            <span>Venta Rápida</span>
+            <span class="hero-sub">Accesorio o servicio</span>
+          </div>
         </button>
       </div>
 
       <!-- STATS -->
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-value" id="statActivas">—</div><div class="stat-label">Activas</div></div>
-        <div class="stat-card"><div class="stat-value" id="statListas" style="color: var(--success-500);">—</div><div class="stat-label">Listas</div></div>
-        <div class="stat-card"><div class="stat-value" id="statHoy" style="color: var(--brand-500);">—</div><div class="stat-label">Ingresos Hoy</div></div>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-label">Activas</span><i class="fas fa-screwdriver-wrench"></i></div>
+          <div class="stat-value" id="statActivas">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-label">Listas</span><i class="fas fa-check-circle" style="color: var(--success-500);"></i></div>
+          <div class="stat-value" id="statListas" style="color: var(--success-500);">—</div>
+        </div>
+        <div class="stat-card stat-brand">
+          <div class="stat-top"><span class="stat-label">Ingresos Hoy</span><i class="fas fa-coins"></i></div>
+          <div class="stat-value" id="statHoy" style="color: var(--brand-500);">—</div>
+        </div>
       </div>
 
-      <!-- BOTONES PDF Y NOTA -->
+      <!-- ACCIONES RÁPIDAS -->
       <div class="action-buttons">
         <button type="button" class="btn btn-secondary btn-ripple" id="btnPDFDia">
-          <img src="/app/icons/pdf.png" width="16" height="16" alt="PDF"> Cierre de Caja
+          <i class="fas fa-file-invoice-dollar"></i> Cierre de Caja
         </button>
         <button type="button" class="btn btn-secondary btn-ripple" id="btnAbrirNotaDueno">
-          <img src="/app/icons/nota.png" width="16" height="16" alt="Nota"> Nota al Dueño
+          <i class="fas fa-sticky-note"></i> Nota al Dueño
         </button>
       </div>
 
-      <div class="section-title">Movimientos Recientes</div>
-      
+      <div class="section-title"><i class="fas fa-layer-group"></i> Movimientos Recientes</div>
+
       <div class="search-bar">
-        <img src="/app/icons/buscar.png" width="18" height="18" alt="">
+        <i class="fas fa-search" style="color: var(--brand-500); opacity: 0.9;"></i>
         <input type="search" id="buscador" placeholder="Buscar cliente o equipo..." autocomplete="off" aria-label="Buscar cliente o equipo" enterkeyhint="search">
       </div>
 
       <div class="filters-row" id="filtros" role="tablist" aria-label="Filtros de movimientos">
-        <button type="button" class="chip-interactive active btn-ripple" data-filtro="todos" role="tab" aria-selected="true">Todos</button>
-        <button type="button" class="chip-interactive btn-ripple" data-filtro="reparacion" role="tab" aria-selected="false">Reparación</button>
-        <button type="button" class="chip-interactive btn-ripple" data-filtro="listo" role="tab" aria-selected="false">Listos</button>
-        <button type="button" class="chip-interactive btn-ripple" data-filtro="entregado" role="tab" aria-selected="false">Entregados</button>
-        <button type="button" class="chip-interactive btn-ripple" data-filtro="devuelto" role="tab" aria-selected="false">Devueltos</button>
-        <button type="button" class="chip-interactive btn-ripple" data-filtro="venta" role="tab" aria-selected="false">Ventas</button>
+        <button type="button" class="chip-interactive active btn-ripple" data-filtro="todos" role="tab" aria-selected="true"><i class="fas fa-border-all"></i> Todos</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="reparacion" role="tab" aria-selected="false"><i class="fas fa-tools"></i> Reparación</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="listo" role="tab" aria-selected="false"><i class="fas fa-check"></i> Listos</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="entregado" role="tab" aria-selected="false"><i class="fas fa-handshake"></i> Entregados</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="devuelto" role="tab" aria-selected="false"><i class="fas fa-undo-alt"></i> Devueltos</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="venta" role="tab" aria-selected="false"><i class="fas fa-shopping-bag"></i> Ventas</button>
       </div>
 
       <div class="cards-list" id="listaOrdenes">
-        <!-- 🔥 ESQUELETOS INICIALES (Se borran cuando cargan los datos) -->
-        <div class="skeleton-card">
-          <div class="skeleton-circle"></div>
-          <div class="skeleton-lines">
-            <div class="skeleton-line medium"></div>
-            <div class="skeleton-line short"></div>
-          </div>
-        </div>
-        <div class="skeleton-card">
-          <div class="skeleton-circle"></div>
-          <div class="skeleton-lines">
-            <div class="skeleton-line medium"></div>
-            <div class="skeleton-line short"></div>
-          </div>
-        </div>
-        <div class="skeleton-card">
-          <div class="skeleton-circle"></div>
-          <div class="skeleton-lines">
-            <div class="skeleton-line medium"></div>
-            <div class="skeleton-line short"></div>
-          </div>
-        </div>
+        <div class="skeleton-card"><div class="skeleton skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton skeleton-text" style="width:70%;"></div><div class="skeleton skeleton-text" style="width:45%; margin-bottom:0;"></div></div></div>
+        <div class="skeleton-card"><div class="skeleton skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton skeleton-text" style="width:70%;"></div><div class="skeleton skeleton-text" style="width:45%; margin-bottom:0;"></div></div></div>
+        <div class="skeleton-card"><div class="skeleton skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton skeleton-text" style="width:70%;"></div><div class="skeleton skeleton-text" style="width:45%; margin-bottom:0;"></div></div></div>
       </div>
+
       <div class="pagination-container" id="paginationContainer"></div>
     </div>
   </main>
@@ -246,45 +130,45 @@
   <div class="sheet-backdrop" id="modalVenta">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1);"><i class="fas fa-cash-register" style="color: var(--brand-500);"></i> Venta Rápida</h3>
-        <button type="button" class="icon-btn" id="btnCloseVenta"><i class="fas fa-times"></i></button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1);"><i class="fas fa-cash-register" style="color: var(--brand-500); margin-right: 6px;"></i> Venta Rápida</h3>
+        <button type="button" class="btn btn-secondary btn-icon" id="btnCloseVenta" style="width:32px; height:32px;"><i class="fas fa-times"></i></button>
       </div>
       <div id="tipoVentaStep">
-        <p style="font-size: 14px; color: var(--text-3); margin-bottom: 16px; text-align: center;">¿Qué vas a registrar?</p>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <button type="button" class="btn btn-secondary btn-ripple" id="btnVentaAccesorio" style="padding: 20px; font-size: 16px; justify-content: flex-start;">
-            <i class="fas fa-box" style="color: var(--brand-500); font-size: 24px; margin-right: 12px;"></i>
+        <p style="font-size: 13px; color: var(--text-3); margin-bottom: 14px; text-align: center;">¿Qué vas a registrar?</p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" class="btn btn-secondary btn-ripple" id="btnVentaAccesorio" style="padding: 16px; justify-content: flex-start;">
+            <i class="fas fa-box" style="color: var(--brand-500); font-size: 22px; margin-right: 12px;"></i>
             <div style="text-align: left;"><div style="font-weight: 800;">Venta de Accesorio</div><div style="font-size: 12px; color: var(--text-3);">Elegir producto del inventario</div></div>
           </button>
-          <button type="button" class="btn btn-secondary btn-ripple" id="btnVentaServicio" style="padding: 20px; font-size: 16px; justify-content: flex-start;">
-            <i class="fas fa-tools" style="color: var(--success-500); font-size: 24px; margin-right: 12px;"></i>
+          <button type="button" class="btn btn-secondary btn-ripple" id="btnVentaServicio" style="padding: 16px; justify-content: flex-start;">
+            <i class="fas fa-tools" style="color: var(--brand-500); font-size: 22px; margin-right: 12px;"></i>
             <div style="text-align: left;"><div style="font-weight: 800;">Venta de Servicio</div><div style="font-size: 12px; color: var(--text-3);">Limpieza, botón, reactivación...</div></div>
           </button>
         </div>
       </div>
       <div id="ventaAccesorioStep" style="display: none;">
-        <button type="button" class="btn btn-secondary btn-ripple" id="btnBackToTipo" style="margin-bottom: 16px; width: auto; padding: 8px 16px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnBackToTipo" style="margin-bottom: 14px; padding: 8px 14px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
         <label class="input-label" style="margin-bottom: 8px; display:block;">Selecciona un producto:</label>
         <div id="gridAccesorios"></div>
-        <div id="productoSeleccionadoInfo" style="display: none; background: var(--bg-elev-2); padding: 12px; border-radius: 8px; margin-top: 12px; margin-bottom: 12px; border: 1px solid var(--border-1);">
+        <div id="productoSeleccionadoInfo" style="display: none; background: var(--bg-elev-2); padding: 12px; border-radius: var(--r-md); margin: 12px 0; border: 1px solid var(--border-2);">
           <div style="font-weight: 800; font-size: 14px;" id="infoProdNombre">-</div>
           <div style="font-size: 12px; color: var(--text-3);">Precio: <span id="infoProdPrecio">0</span> Bs</div>
-          <div class="field" style="margin-top: 8px; margin-bottom: 0;"><label class="input-label" for="accesorioCantidad">Cantidad</label><input type="number" id="accesorioCantidad" class="input-field" value="1" min="1"></div>
+          <div class="field" style="margin-top: 8px; margin-bottom: 0;"><label class="input-label" for="accesorioCantidad">Cantidad</label><input type="number" id="accesorioCantidad" value="1" min="1"></div>
           <div class="field" style="margin-top: 8px; margin-bottom: 0;">
             <label class="input-label" for="accesorioMetodoPago">Método de Pago</label>
-            <select id="accesorioMetodoPago" class="input-field"><option value="Efectivo">💵 Efectivo</option><option value="QR">📱 QR</option></select>
+            <select id="accesorioMetodoPago"><option value="Efectivo">💵 Efectivo</option><option value="QR">📱 QR</option></select>
           </div>
         </div>
         <button type="button" class="btn btn-primary btn-ripple" id="btnRegistrarAccesorio" style="width: 100%;" disabled>Registrar Venta</button>
       </div>
       <div id="ventaServicioStep" style="display: none;">
-        <button type="button" class="btn btn-secondary btn-ripple" id="btnBackToTipo2" style="margin-bottom: 16px; width: auto; padding: 8px 16px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
-        <div class="field"><select id="ventaConcepto" class="input-field"><option value="Botón">Botón</option><option value="Limpieza">Limpieza</option><option value="Reactivación">Reactivación</option><option value="Cargador">Cargador</option><option value="Otro">Otro</option></select></div>
-        <div class="field" id="wrapConceptoOtro" style="display: none;"><input type="text" id="ventaConceptoOtro" class="input-field" placeholder="Especifique qué se vendió"></div>
-        <div class="field"><input type="number" id="ventaMonto" class="input-field" placeholder="Monto (Bs.)" inputmode="decimal"></div>
-        <div class="field"><select id="ventaMetodo" class="input-field"><option value="Efectivo">💵 Efectivo</option><option value="QR">📱 QR</option></select></div>
-        <button type="button" class="btn btn-primary btn-ripple" id="btnGuardarVenta" style="width: 100%; margin-top: 10px;">Registrar Venta</button>
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnBackToTipo2" style="margin-bottom: 14px; padding: 8px 14px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
+        <div class="field"><select id="ventaConcepto"><option value="Botón">Botón</option><option value="Limpieza">Limpieza</option><option value="Reactivación">Reactivación</option><option value="Cargador">Cargador</option><option value="Otro">Otro</option></select></div>
+        <div class="field" id="wrapConceptoOtro" style="display: none;"><input type="text" id="ventaConceptoOtro" placeholder="Especifique qué se vendió"></div>
+        <div class="field"><input type="number" id="ventaMonto" placeholder="Monto (Bs.)" inputmode="decimal"></div>
+        <div class="field"><select id="ventaMetodo"><option value="Efectivo">💵 Efectivo</option><option value="QR">📱 QR</option></select></div>
+        <button type="button" class="btn btn-primary btn-ripple" id="btnGuardarVenta" style="width: 100%; margin-top: 8px;">Registrar Venta</button>
       </div>
     </div>
   </div>
@@ -293,9 +177,9 @@
   <div class="sheet-backdrop" id="reciboSheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1);">Opciones</h3>
-        <button type="button" class="icon-btn" id="btnCloseSheet"><i class="fas fa-times"></i></button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1);"><i class="fas fa-sliders-h" style="color: var(--brand-500); margin-right: 6px;"></i> Opciones</h3>
+        <button type="button" class="btn btn-secondary btn-icon" id="btnCloseSheet" style="width:32px; height:32px;"><i class="fas fa-times"></i></button>
       </div>
       <div id="sheetContent"></div>
     </div>
@@ -305,15 +189,15 @@
   <div class="sheet-backdrop" id="modalPago">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1);">Confirmar Entrega</h3>
-        <button type="button" class="icon-btn" id="btnClosePago"><i class="fas fa-times"></i></button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1);"><i class="fas fa-hand-holding-usd" style="color: var(--brand-500); margin-right: 6px;"></i> Confirmar Entrega</h3>
+        <button type="button" class="btn btn-secondary btn-icon" id="btnClosePago" style="width:32px; height:32px;"><i class="fas fa-times"></i></button>
       </div>
-      <div class="field"><input type="number" id="pagoMonto" class="input-field" placeholder="Monto Cobrado (Bs.)" inputmode="decimal"></div>
-      <label class="input-label" style="padding-left:0; margin-bottom: 8px; display:block;">Método de Pago</label>
-      <div id="metodosPagoGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
-          <button type="button" class="btn btn-secondary btn-ripple" data-metodo="Efectivo">💵 Efectivo</button>
-          <button type="button" class="btn btn-secondary btn-ripple" data-metodo="QR">📱 QR</button>
+      <div class="field"><input type="number" id="pagoMonto" placeholder="Monto Cobrado (Bs.)" inputmode="decimal"></div>
+      <label class="input-label" style="margin-bottom: 8px; display:block;">Método de Pago</label>
+      <div id="metodosPagoGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+        <button type="button" class="btn btn-secondary btn-ripple" data-metodo="Efectivo">💵 Efectivo</button>
+        <button type="button" class="btn btn-secondary btn-ripple" data-metodo="QR">📱 QR</button>
       </div>
       <button type="button" class="btn btn-primary btn-ripple" id="btnConfirmarPago" style="width: 100%;">Confirmar y Entregar</button>
     </div>
@@ -323,45 +207,41 @@
   <div class="sheet-backdrop" id="modalNotaDueno">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1); margin-bottom: 8px;">Nota para el Dueño</h3>
-      <p style="font-size: 14px; color: var(--text-3); margin-bottom: 16px;">Escribe una constancia que el dueño verá en su panel.</p>
-      <div class="field"><textarea id="notaDuenoTexto" class="input-field" rows="4" placeholder="Ej: Faltó cambiar el flex del modelo X..."></textarea></div>
-      <div style="display: flex; gap: 10px; margin-top: 16px;">
+      <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1); margin-bottom: 6px;"><i class="fas fa-sticky-note" style="color: var(--brand-500); margin-right: 6px;"></i> Nota para el Dueño</h3>
+      <p style="font-size: 13px; color: var(--text-3); margin-bottom: 14px;">Escribe una constancia que el dueño verá en su panel.</p>
+      <div class="field"><textarea id="notaDuenoTexto" rows="4" placeholder="Ej: Faltó cambiar el flex del modelo X..."></textarea></div>
+      <div style="display: flex; gap: 10px;">
         <button type="button" class="btn btn-secondary btn-ripple" id="btnCancelarNotaDueno" style="flex: 1;">Cancelar</button>
         <button type="button" class="btn btn-primary btn-ripple" id="btnGuardarNotaDueno" style="flex: 1;">Guardar Nota</button>
       </div>
     </div>
   </div>
 
-  <!-- 5. MODAL CIERRE DE CAJA / PDF (REDISEÑADO) -->
+  <!-- 5. MODAL CIERRE DE CAJA / PDF -->
   <div class="sheet-backdrop" id="modalPreviewPDF">
-    <div class="sheet" style="max-height: 80vh; display: flex; flex-direction: column; padding: 14px;">
+    <div class="sheet" style="max-height: 85vh; display: flex; flex-direction: column; padding: 14px;">
       <div class="sheet-handle"></div>
-      
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-1);"><i class="fas fa-cash-register" style="color: var(--brand-500);"></i> Cierre de Caja</h3>
-        <button type="button" class="icon-btn" id="btnClosePreviewPDF" style="width: 28px; height: 28px; background: var(--bg-elev-2);"><i class="fas fa-times" style="font-size: 12px;"></i></button>
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-1);"><i class="fas fa-cash-register" style="color: var(--brand-500); margin-right: 6px;"></i> Cierre de Caja</h3>
+        <button type="button" class="btn btn-secondary btn-icon" id="btnClosePreviewPDF" style="width: 30px; height: 30px;"><i class="fas fa-times" style="font-size: 12px;"></i></button>
       </div>
-      
       <div style="flex: 1; overflow-y: auto; background: var(--bg-elev-2); padding: 6px; border-radius: var(--r-md); margin-bottom: 10px; min-height: 100px;">
         <div id="previewPDFContent"></div>
       </div>
-
       <div style="background: var(--bg-elev-1); padding: 10px; border-radius: var(--r-md); border: 1px solid var(--border-1); margin-bottom: 10px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
           <label for="gastoPasajes" style="font-size: 12px; font-weight: 600; color: var(--text-2);">Pasajes (Bs.):</label>
-          <input type="number" id="gastoPasajes" class="input-field" placeholder="0.00" inputmode="decimal" style="width: 70px; padding: 5px 8px; text-align: right; font-weight: 700; color: var(--brand-500); font-size: 12px; height: 30px;">
+          <input type="number" id="gastoPasajes" placeholder="0.00" inputmode="decimal" style="width: 76px; padding: 5px 8px; text-align: right; font-weight: 700; color: var(--brand-500); font-size: 12px; height: 30px; background: var(--input-bg); border: 1px solid var(--border-2); border-radius: var(--r-sm);">
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <label for="toggleAlmuerzo" style="font-size: 12px; font-weight: 600; color: var(--text-2);">Descontar Almuerzo (Bs. 20):</label>
-          <label class="toggle-switch" style="transform: scale(0.85); transform-origin: right center;">
+          <label class="toggle-switch" style="transform: scale(0.88); transform-origin: right center;">
             <input type="checkbox" id="toggleAlmuerzo">
             <span class="slider"></span>
           </label>
         </div>
       </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
         <div style="background: var(--bg-elev-2); padding: 8px; border-radius: var(--r-md); text-align: center;">
           <div style="font-size: 16px; font-weight: 900; color: var(--brand-500);" id="totalGlobal">Bs. 0</div>
           <div style="font-size: 9px; color: var(--text-3); text-transform: uppercase; font-weight: 700; margin-top: 2px;">Total Ingresos</div>
@@ -371,17 +251,15 @@
           <div style="font-size: 9px; color: var(--success-500); text-transform: uppercase; font-weight: 800; margin-top: 2px;">Efectivo Físico</div>
         </div>
       </div>
-      
-      <div style="background: rgba(59, 130, 246, 0.1); padding: 10px; border-radius: var(--r-md); border: 1px solid var(--info-500); text-align: center; margin-bottom: 10px;">
-        <div style="font-size: 18px; font-weight: 900; color: var(--info-500);" id="montoTransferir">Bs. 0</div>
-        <div style="font-size: 9px; color: var(--info-500); text-transform: uppercase; font-weight: 800;">Monto a Entregar al Dueño</div>
+      <div style="background: rgba(255, 105, 0, 0.12); padding: 10px; border-radius: var(--r-md); border: 1px solid var(--brand-500); text-align: center; margin-bottom: 10px;">
+        <div style="font-size: 18px; font-weight: 900; color: var(--brand-500);" id="montoTransferir">Bs. 0</div>
+        <div style="font-size: 9px; color: var(--brand-500); text-transform: uppercase; font-weight: 800;">Monto a Entregar al Dueño</div>
       </div>
-      
-      <button type="button" class="btn btn-whatsapp btn-ripple" id="btnCerrarYEnviar" style="width: 100%; height: 40px; margin-bottom: 6px; font-size: 13px; border-radius: var(--r-md);">
-        <img src="/app/icons/whatsapp.png" width="18" height="18" style="margin-right: 6px;" alt=""> Cerrar Día y Enviar al Dueño
+      <button type="button" class="btn btn-whatsapp btn-ripple" id="btnCerrarYEnviar" style="width: 100%; height: 42px; margin-bottom: 6px; font-size: 13px;">
+        <i class="fab fa-whatsapp" style="font-size: 17px;"></i> Cerrar Día y Enviar al Dueño
       </button>
-      <button type="button" class="btn btn-secondary btn-ripple" id="btnDescargarPDF" style="width: 100%; height: 40px; font-size: 13px; border-radius: var(--r-md);">
-        <img src="/app/icons/pdf.png" width="18" height="18" style="margin-right: 6px;" alt=""> Solo Descargar PDF
+      <button type="button" class="btn btn-secondary btn-ripple" id="btnDescargarPDF" style="width: 100%; height: 40px; font-size: 13px;">
+        <i class="fas fa-file-pdf" style="color: var(--brand-500);"></i> Solo Descargar PDF
       </button>
     </div>
   </div>
@@ -390,15 +268,15 @@
   <div class="sheet-backdrop" id="modalMensajePopup">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1); margin-bottom: 8px;">Mensaje para el Técnico</h3>
-      <p style="font-size: 14px; color: var(--text-3); margin-bottom: 16px;">Este mensaje aparecerá en un popup al técnico al entrar.</p>
-      <div class="field"><input type="text" id="mensajePopupTitulo" class="input-field" placeholder="Título (Ej: Aviso importante)"></div>
-      <div class="field"><textarea id="mensajePopupTexto" class="input-field" rows="3" placeholder="Escribe el mensaje aquí..."></textarea></div>
+      <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1); margin-bottom: 6px;"><i class="fas fa-bullhorn" style="color: var(--brand-500); margin-right: 6px;"></i> Mensaje para el Técnico</h3>
+      <p style="font-size: 13px; color: var(--text-3); margin-bottom: 14px;">Este mensaje aparecerá en un popup al técnico al entrar.</p>
+      <div class="field"><input type="text" id="mensajePopupTitulo" placeholder="Título (Ej: Aviso importante)"></div>
+      <div class="field"><textarea id="mensajePopupTexto" rows="3" placeholder="Escribe el mensaje aquí..."></textarea></div>
       <div class="field">
         <label class="input-label" for="mensajePopupDuracion">Duración</label>
-        <select id="mensajePopupDuracion" class="input-field"><option value="1">1 día</option><option value="3">3 días</option><option value="7">1 semana</option><option value="0">Hasta que el técnico lo cierre</option></select>
+        <select id="mensajePopupDuracion"><option value="1">1 día</option><option value="3">3 días</option><option value="7">1 semana</option><option value="0">Hasta que el técnico lo cierre</option></select>
       </div>
-      <div style="display: flex; gap: 10px; margin-top: 16px;">
+      <div style="display: flex; gap: 10px;">
         <button type="button" class="btn btn-secondary btn-ripple" id="btnCancelarMensajePopup" style="flex: 1;">Cancelar</button>
         <button type="button" class="btn btn-primary btn-ripple" id="btnGuardarMensajePopup" style="flex: 1;">Enviar Mensaje</button>
       </div>
@@ -409,9 +287,9 @@
   <div class="sheet-backdrop" id="modalVerPopup">
     <div class="sheet" style="text-align: center;">
       <div class="sheet-handle"></div>
-      <div style="font-size: 56px; color: var(--brand-500); margin-bottom: 16px;"><i class="fas fa-bullhorn"></i></div>
-      <h3 id="verPopupTitulo" style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Mensaje del Dueño</h3>
-      <p id="verPopupTexto" style="font-size: 16px; color: var(--text-3); margin-bottom: 24px;">...</p>
+      <div style="font-size: 48px; color: var(--brand-500); margin-bottom: 12px;"><i class="fas fa-bullhorn"></i></div>
+      <h3 id="verPopupTitulo" style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">Mensaje del Dueño</h3>
+      <p id="verPopupTexto" style="font-size: 14px; color: var(--text-3); margin-bottom: 20px;">...</p>
       <button type="button" class="btn btn-primary btn-ripple" id="btnOkPopup" style="width: 100%;">Entendido</button>
     </div>
   </div>
@@ -421,28 +299,24 @@
     <div class="sheet" style="max-height: 80vh; display: flex; flex-direction: column; padding: 14px;">
       <div class="sheet-handle"></div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-1);"><i class="fas fa-bell" style="color: var(--brand-500);"></i> Notificaciones</h3>
-        <button type="button" class="icon-btn" id="btnCloseNotificaciones" style="width: 28px; height: 28px; background: var(--bg-elev-2);"><i class="fas fa-times" style="font-size: 12px;"></i></button>
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-1);"><i class="fas fa-bell" style="color: var(--brand-500); margin-right: 6px;"></i> Notificaciones</h3>
+        <button type="button" class="btn btn-secondary btn-icon" id="btnCloseNotificaciones" style="width: 30px; height: 30px;"><i class="fas fa-times" style="font-size: 12px;"></i></button>
       </div>
-      <div style="flex: 1; overflow-y: auto; padding: 6px;" id="listaNotificaciones">
-        <!-- Las notificaciones se cargan aquí dinámicamente -->
-      </div>
+      <div style="flex: 1; overflow-y: auto; padding: 4px;" id="listaNotificaciones"></div>
     </div>
   </div>
 
-  <!-- 🔥 9. MODAL EDITAR COSTO / GANANCIA (SOLO ADMIN) -->
+  <!-- 9. MODAL EDITAR COSTO / GANANCIA (SOLO ADMIN) -->
   <div class="sheet-backdrop" id="modalEditarVenta">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <h3 style="font-size: 20px; font-weight: 800; color: var(--text-1); margin-bottom: 8px;">Editar Costo</h3>
-      <p style="font-size: 14px; color: var(--text-3); margin-bottom: 16px;">Ingresa el costo de la tienda para calcular la ganancia de esta venta.</p>
-      
+      <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1); margin-bottom: 6px;"><i class="fas fa-tags" style="color: var(--brand-500); margin-right: 6px;"></i> Editar Costo</h3>
+      <p style="font-size: 13px; color: var(--text-3); margin-bottom: 14px;">Ingresa el costo de la tienda para calcular la ganancia de esta venta.</p>
       <div class="field">
         <label class="input-label" for="editCostoVenta">Costo (Bs.)</label>
-        <input type="number" id="editCostoVenta" class="input-field" placeholder="0.00" inputmode="decimal">
+        <input type="number" id="editCostoVenta" placeholder="0.00" inputmode="decimal">
       </div>
-      
-      <div style="display: flex; gap: 10px; margin-top: 16px;">
+      <div style="display: flex; gap: 10px;">
         <button type="button" class="btn btn-secondary btn-ripple" id="btnCancelarEditarVenta" style="flex: 1;">Cancelar</button>
         <button type="button" class="btn btn-primary btn-ripple" id="btnGuardarEditarVenta" style="flex: 1;">Guardar Costo</button>
       </div>
