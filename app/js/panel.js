@@ -1,1097 +1,329 @@
-// /app/js/panel.js
-import { toast, haptic, tiempoRelativo, escapeHtml, initTheme, toggleTheme, formatBs } from './app-ui.js';
-import { requireAuth, logout } from './app-auth.js';
-import { db, app } from './firebase.js';
-import {
-  collection, query, onSnapshot, limit, addDoc, serverTimestamp,
-  orderBy, doc, updateDoc, getDoc, where, getDocs, setDoc
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { abrirSheetTelefono, abrirSheetVenta } from './panel-modals.js';
-import { icono } from './icons.js';
-import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0B" id="metaThemeColor">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>DR. Xiaomi · Panel</title>
 
-initTheme();
+  <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="/imagenes/web-app-manifest-192x192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-// ==========================================
-// CONFIGURACIÓN GLOBAL
-// ==========================================
-const CONFIG_APP = {
-  whatsappDueno: '59175589308',
-  gastoAlmuerzo: 20,
-  itemsPorPagina: 12,
-  pullThreshold: 100,
-  debounceRenderMs: 60,
-  loaderFallbackMs: 2500,
-  vapidKey: 'BNCSlsvNPr7pVw5dZTtm-mrSOrXsuIMQ_9IW9KTVPS1Hm8IEJMh8DaEk1nojGJ_4ZwVgV6ZYUgVTFSymAyS-jRc'
-};
+  <link rel="stylesheet" href="./css/app-theme.css">
+  <link rel="stylesheet" href="./css/app-layouts.css">
+  <link rel="stylesheet" href="./css/app-components.css">
+  <link rel="manifest" href="/manifest.json">
 
-// ==========================================
-// MOTOR DE SONIDO NATIVO MODERNO (UI SOUNDS)
-// ==========================================
-let audioCtx = null;
+  <style>
+    .section-title { font-size: 14px; font-weight: 800; color: var(--text-1); margin: 4px 0 8px; display: flex; align-items: center; gap: 7px; }
+    .section-title i { color: var(--brand-500); font-size: 13px; }
+    .chip-interactive { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; font-size: 12px; font-weight: 700; }
+    .chip-interactive i { font-size: 11px; }
+    .pagination-container { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 12px 0 20px; }
+    .page-btn { background: var(--bg-elev-1); border: 1px solid var(--border-1); color: var(--text-1); width: 34px; height: 34px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+    .page-btn.active { background: var(--brand-500); border-color: var(--brand-500); color: #fff; box-shadow: var(--shadow-glow); }
+    .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .page-nav { background: var(--bg-elev-2); border: 1px solid var(--border-1); color: var(--text-1); padding: 0 12px; height: 34px; border-radius: var(--r-md); font-size: 12px; font-weight: 700; }
+    #gridAccesorios { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-height: 180px; max-height: 40vh; overflow-y: auto; padding-right: 4px; }
+    #previewPDFContent { background: #fff; color: #111; padding: 16px; border-radius: var(--r-sm); font-family: 'Helvetica', sans-serif; font-size: 11px; min-height: 180px; }
+  </style>
+</head>
+<body>
 
-function initAudio() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-}
-
-function playSound(type) {
-  try {
-    initAudio();
-    const now = audioCtx.currentTime;
-
-    const createOsc = (freqStart, freqEnd, duration, gainVal, waveType) => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = waveType;
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.frequency.setValueAtTime(freqStart, now);
-      osc.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
-      gain.gain.setValueAtTime(gainVal, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-      osc.start(now);
-      osc.stop(now + duration);
-    };
-
-    const createNoise = (duration, filterFreq, gainVal) => {
-      const bufferSize = audioCtx.sampleRate * duration;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.value = filterFreq;
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(gainVal, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(audioCtx.destination);
-      noise.start(now);
-    };
-
-    if (type === 'click') {
-      createOsc(1500, 500, 0.04, 0.2, 'triangle');
-      createNoise(0.02, 5000, 0.1);
-    } else if (type === 'pop') {
-      createOsc(800, 200, 0.1, 0.3, 'sine');
-    } else if (type === 'success') {
-      createOsc(1046.50, 1046.50, 0.1, 0.2, 'sine');
-      setTimeout(() => createOsc(1567.98, 1567.98, 0.2, 0.2, 'sine'), 80);
-    } else if (type === 'error') {
-      createOsc(200, 150, 0.15, 0.3, 'square');
-      createNoise(0.1, 1000, 0.05);
-    }
-  } catch (e) { console.warn('Audio error', e); }
-}
-
-// RIPPLE EFFECT
-document.addEventListener('click', (e) => {
-  const target = e.target.closest('button, .nav-item, .chip-btn');
-  if (target) {
-    playSound('click');
-
-    const btn = target.closest('.btn-ripple');
-    if (btn) {
-      const circle = document.createElement('span');
-      const diameter = Math.max(btn.clientWidth, btn.clientHeight);
-      const radius = diameter / 2;
-      const rect = btn.getBoundingClientRect();
-      circle.style.width = circle.style.height = `${diameter}px`;
-      circle.style.left = `${e.clientX - rect.left - radius}px`; circle.style.top = `${e.clientY - rect.top - radius}px`;
-      circle.classList.add('ripple-effect');
-      btn.querySelector('.ripple-effect')?.remove();
-      btn.appendChild(circle);
-    }
-  }
-});
-
-// ==========================================
-// ESTADO GLOBAL
-// ==========================================
-export let appState = { sesion: null, ordenes: [], ventasHoy: [], inventario: [] };
-let filtroActual = 'todos', busquedaActual = '', todosLosMovimientos = [], paginaActual = 1;
-let unsubscribe = null, unsubscribeVentas = null, unsubscribeCierres = null, unsubscribeInventario = null;
-let ventasPanel = [];
-const ITEMS_POR_PAGINA = CONFIG_APP.itemsPorPagina;
-
-let reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
-let ventasAccesoriosData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
-let detallesReparaciones = [];
-let detallesVentas = [];
-let ventaActualEditando = null;
-
-const reciboSheet = document.getElementById('reciboSheet');
-const modalVenta = document.getElementById('modalVenta');
-const modalNotaDueno = document.getElementById('modalNotaDueno');
-const modalPreviewPDF = document.getElementById('modalPreviewPDF');
-const paginationContainer = document.getElementById('paginationContainer');
-const appLoader = document.getElementById('appLoader');
-
-// ==========================================
-// NOTIFICACIONES PUSH (FCM)
-// ==========================================
-let messaging = null;
-try { messaging = getMessaging(app); } catch (e) { console.warn('FCM no disponible', e); }
-
-async function solicitarPermisoNotificaciones() {
-  if (!('Notification' in window) || !messaging) return;
-  const permiso = await Notification.requestPermission();
-  if (permiso === 'granted') {
-    try {
-      if (!CONFIG_APP.vapidKey || CONFIG_APP.vapidKey === 'TU_VAPID_KEY_AQUI') return;
-      const token = await getToken(messaging, { vapidKey: CONFIG_APP.vapidKey });
-      if (token && appState.sesion?.rol === 'admin') {
-        await updateDoc(doc(db, 'usuarios', appState.sesion.uid), { fcmToken: token });
-      }
-    } catch (e) { console.error(e); }
-  }
-}
-
-if (messaging) {
-  onMessage(messaging, (payload) => {
-    const title = payload.notification?.title || payload.data?.title || 'Notificación';
-    const body = payload.notification?.body || payload.data?.body || '';
-    toast(`🔔 ${title}:${body}`, 'info', 6000);
-    escucharNotificaciones();
-  });
-}
-
-// ==========================================
-// BANDEJA DE NOTIFICACIONES (PARA EL DUEÑO)
-// ==========================================
-let notificacionesList = [];
-let unsubscribeNotif = null;
-
-function actualizarBadgeNotif() {
-  const badge = document.getElementById('notifBadge');
-  if (badge) {
-    const noLeidas = notificacionesList.filter(n => !n.leido).length;
-    badge.textContent = noLeidas;
-    badge.style.display = noLeidas > 0 ? 'block' : 'none';
-  }
-}
-
-function escucharNotificaciones() {
-  if (unsubscribeNotif) unsubscribeNotif();
-  if (appState.sesion?.rol !== 'admin') return;
-
-  unsubscribeNotif = onSnapshot(query(collection(db, 'notificaciones'), orderBy('fecha', 'desc'), limit(50)), (snap) => {
-    notificacionesList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    actualizarBadgeNotif();
-  });
-}
-
-function renderNotificacionesModal() {
-  const container = document.getElementById('listaNotificaciones');
-  if (!container) return;
-
-  if (notificacionesList.length === 0) {
-    container.innerHTML = `<div class="empty-state"><i class="fas fa-bell-slash"></i><h3>Sin notificaciones</h3><p>No hay notificaciones aún.</p></div>`;
-    return;
-  }
-
-  container.innerHTML = notificacionesList.map(n => `
-    <div style="background: var(--bg-elev-2); padding: 12px; border-radius: var(--r-md); margin-bottom: 8px; border-left: 3px solid ${n.leido ? 'var(--border-1)' : 'var(--brand-500)'};">
-      <div style="font-weight: 800; font-size: 13px; color: var(--text-1);">${escapeHtml(n.titulo)}</div>
-      <div style="font-size: 12px; color: var(--text-2); margin-top: 4px;">${escapeHtml(n.mensaje)}</div>
-      <div style="font-size: 10px; color: var(--text-3); margin-top: 6px;">${tiempoRelativo(n.fecha)}</div>
+  <div class="loader-overlay" id="appLoader">
+    <div class="loader-logo-container">
+      <div class="loader-ring"></div>
+      <img src="/imagenes/web-app-manifest-192x192.png" alt="Cargando..." class="loader-logo-img">
     </div>
-  `).join('');
-}
+    <div class="loader-text">Sincronizando...</div>
+  </div>
 
-async function marcarNotificacionesLeidas() {
-  const noLeidas = notificacionesList.filter(n => !n.leido);
-  if (noLeidas.length === 0) return;
-  for (const n of noLeidas) {
-    await updateDoc(doc(db, 'notificaciones', n.id), { leido: true });
-  }
-}
+  <div id="pullToRefresh" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%) translateY(-60px); z-index: 9999; transition: all 0.25s ease; opacity: 0; pointer-events: none;">
+    <div style="background: var(--bg-elev-1); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); border: 1px solid var(--brand-500); color: var(--brand-500);">
+      <i id="ptrIcon" class="fas fa-sync-alt" style="font-size: 15px;"></i>
+    </div>
+  </div>
 
-async function enviarNotificacionDB(titulo, mensaje) {
-  try {
-    await addDoc(collection(db, 'notificaciones'), {
-      titulo,
-      mensaje,
-      leido: false,
-      fecha: serverTimestamp()
-    });
-  } catch (e) { console.error('Error al guardar notificación', e); }
-}
-
-// ==========================================
-// 1. RENDERIZADO DEL LAYOUT
-// ==========================================
-function renderLayout() {
-  const container = document.querySelector('.app-container');
-  if (!container) return;
-
-  const esAdmin = appState.sesion?.rol === 'admin';
-  const btnMensajePopup = esAdmin ? `<button type="button" class="icon-btn" id="btnAbrirMensajePopup" title="Mensaje al técnico">${icono('nota', 20)}</button>` : '';
-
-  const headerHTML = `
-    <header class="app-header">
-      <div class="brand">
-        <div class="brand-logo" style="border-color: var(--brand-500);"><img src="/imagenes/web-app-manifest-192x192.png" alt="Logo"></div>
-        <div class="brand-text"><h1>DR. Xiaomi <span style="color: var(--brand-500);">·</span></h1><p id="userInfo">Cargando...</p></div>
-      </div>
-      <div class="header-actions">
-        ${btnMensajePopup}
-        <button type="button" class="icon-btn" id="btnNotificaciones" style="position:relative;">
-          ${icono('campana', 20)}
-          <span class="notif-badge" id="notifBadge" style="position:absolute; top:-4px; right:-4px; display:none; background:var(--brand-500); color:white; font-size:10px; font-weight:800; padding:2px 5px; border-radius:10px; border:2px solid var(--bg-elev-1);">0</span>
+  <main class="app-container">
+    <div class="app-content">
+      <!-- HERO -->
+      <div class="hero-actions">
+        <button type="button" class="btn-hero btn-hero-nuevo btn-ripple" id="nuevoReciboBtn">
+          <div class="hero-icon-badge"><i class="fas fa-plus"></i></div>
+          <div class="hero-text">
+            <span>Nuevo Equipo</span>
+            <span class="hero-sub">Ingresar orden</span>
+          </div>
         </button>
-        <button type="button" class="icon-btn" id="btnTema">${icono('tema', 20)}</button>
-        <button type="button" class="icon-btn" id="btnSalir">${icono('salir', 20)}</button>
+        <button type="button" class="btn-hero btn-hero-venta btn-ripple" id="ventaRapidaBtn">
+          <div class="hero-icon-badge"><i class="fas fa-bolt"></i></div>
+          <div class="hero-text">
+            <span>Venta Rápida</span>
+            <span class="hero-sub">Accesorio o servicio</span>
+          </div>
+        </button>
       </div>
-    </header>`;
 
-  const navHTML = `
-    <nav class="bottom-nav">
-      <a href="/app/" class="nav-item active">${icono('home', 22)} <span>Panel</span></a>
-      <a href="/app/precios/" class="nav-item">${icono('precios', 22)} <span>Precios</span></a>
-      <a href="/app/reportes/" class="nav-item">${icono('reportes', 22)} <span>Reportes</span></a>
-      <a href="/app/inventario/" class="nav-item">${icono('inventario', 22)} <span>Stock</span></a>
-    </nav>`;
-
-  container.insertAdjacentHTML('afterbegin', headerHTML);
-  container.insertAdjacentHTML('beforeend', navHTML);
-
-  document.getElementById('btnSalir')?.addEventListener('click', () => { if (confirm('¿Cerrar sesión?')) logout(); });
-
-  document.getElementById('btnNotificaciones')?.addEventListener('click', () => {
-    haptic(10);
-    playSound('pop');
-    renderNotificacionesModal();
-    document.getElementById('modalNotificaciones')?.classList.add('show');
-    marcarNotificacionesLeidas();
-  });
-
-  document.getElementById('btnTema')?.addEventListener('click', toggleTheme);
-  document.getElementById('btnAbrirMensajePopup')?.addEventListener('click', () => {
-    haptic(15);
-    playSound('pop');
-    document.getElementById('modalMensajePopup')?.classList.add('show');
-  });
-}
-
-renderLayout();
-
-// ==========================================
-// 2. AUTENTICACIÓN Y POPUPS
-// ==========================================
-requireAuth((s) => {
-  appState.sesion = s;
-  iniciarApp();
-  const sub = document.getElementById('userInfo');
-  if (sub) sub.textContent = s.nombre;
-  verificarPopups();
-  if (s.rol === 'admin') {
-    solicitarPermisoNotificaciones();
-    escucharNotificaciones();
-  }
-});
-
-function iniciarApp() {
-  if (appState.sesion?.rol !== 'admin') {
-    const btnRep = document.querySelector('.nav-item[href="/app/reportes/"]');
-    if (btnRep) btnRep.style.display = 'none';
-  }
-  configurarEventos();
-  cargarDatos();
-  setTimeout(() => { if (appLoader) appLoader.classList.add('hidden'); }, CONFIG_APP.loaderFallbackMs);
-}
-
-async function verificarPopups() {
-  try {
-    const docRef = doc(db, 'config', 'popup_mensaje');
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      const ahora = new Date().getTime();
-      if (data.activo && data.fechaExpiracion > ahora && !data.leidoPorTecnico) {
-        const t = document.getElementById('verPopupTitulo');
-        const p = document.getElementById('verPopupTexto');
-        if (t) t.textContent = data.titulo || 'Mensaje';
-        if (p) p.textContent = data.texto || '';
-        document.getElementById('modalVerPopup')?.classList.add('show');
-        playSound('pop');
-      }
-    }
-  } catch (e) { /* Silencioso */ }
-}
-
-document.getElementById('btnOkPopup')?.addEventListener('click', async () => {
-  document.getElementById('modalVerPopup').classList.remove('show');
-  haptic(15);
-  try {
-    await updateDoc(doc(db, 'config', 'popup_mensaje'), { leidoPorTecnico: true });
-    toast('Mensaje confirmado', 'success');
-    playSound('success');
-  } catch (e) { console.log(e); }
-});
-
-// ==========================================
-// 3. HELPERS
-// ==========================================
-export function parsearFecha(f) {
-  if (!f) return null;
-  if (typeof f.toDate === 'function') return f.toDate();
-  if (f.seconds !== undefined) return new Date(f.seconds * 1000);
-  const d = new Date(f);
-  return isNaN(d.getTime()) ? null : d;
-}
-
-export function formatBsLimpio(n) {
-  const v = Number(n) || 0;
-  return v === Math.floor(v) ? `Bs. ${v}` : `Bs. ${v.toFixed(2)}`; }  function formatFechaCompleta(f) { const d = parsearFecha(f); if (!d) return 'Reciente'; return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} a las ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
-
-export function cerrarSheet() { if (reciboSheet) reciboSheet.classList.remove('show'); }
-
-// ==========================================
-// FUNCIÓN PARA EDITAR VENTA (SOLO ADMIN)
-// ==========================================
-async function abrirEditarVenta(id) {
-  const venta = appState.ventasHoy.find(v => v.id === id);
-  if (!venta) return;
-
-  ventaActualEditando = venta;
-
-  const inputCosto = document.getElementById('editCostoVenta');
-  if (inputCosto) inputCosto.value = venta.costo || 0;
-
-  document.getElementById('modalEditarVenta')?.classList.add('show');
-  playSound('pop');
-}
-
-// ==========================================
-// 4. EVENTOS
-// ==========================================
-function configurarEventos() {
-  document.getElementById('nuevoReciboBtn')?.addEventListener('click', () => {
-    haptic(15);
-    window.location.href = '/app/cliente/';
-  });
-
-  document.getElementById('ventaRapidaBtn')?.addEventListener('click', () => {
-    haptic(15);
-    playSound('pop');
-    resetVentaModal();
-    modalVenta?.classList.add('show');
-  });
-
-  document.getElementById('btnCloseVenta')?.addEventListener('click', () => modalVenta?.classList.remove('show'));
-  document.getElementById('btnCloseSheet')?.addEventListener('click', () => reciboSheet?.classList.remove('show'));
-  document.getElementById('btnClosePago')?.addEventListener('click', () => document.getElementById('modalPago')?.classList.remove('show'));
-  document.getElementById('btnCloseNotificaciones')?.addEventListener('click', () => document.getElementById('modalNotificaciones')?.classList.remove('show'));
-
-  document.querySelectorAll('.sheet-backdrop').forEach(backdrop => {
-    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.classList.remove('show'); });
-  });
-
-  // Delegación rápida de clics en tarjetas de movimientos
-  document.getElementById('listaOrdenes')?.addEventListener('click', (e) => {
-    const card = e.target.closest('.ingreso-card');
-    if (!card) return;
-    haptic(10);
-    playSound('click');
-
-    const esAdmin = appState.sesion?.rol === 'admin';
-    if (esAdmin && card.dataset.tipo === 'venta') {
-      abrirEditarVenta(card.dataset.id);
-    } else if (card.dataset.tipo === 'telefono') {
-      abrirSheetTelefono(card.dataset.id);
-    } else {
-      abrirSheetVenta(card.dataset.id, card.dataset.origen, card.dataset.extra);
-    }
-  });
-
-  document.getElementById('btnPDFDia')?.addEventListener('click', () => {
-    haptic(15);
-    playSound('pop');
-    abrirCierreDeCaja();
-  });
-  document.getElementById('btnClosePreviewPDF')?.addEventListener('click', () => modalPreviewPDF?.classList.remove('show'));
-
-  document.getElementById('btnDescargarPDF')?.addEventListener('click', () => {
-    haptic(20);
-    playSound('success');
-    const gastos = leerGastosDelDOM();
-    generarPDFCierre(gastos);
-    toast('PDF Descargado', 'success');
-  });
-
-  document.getElementById('btnCerrarYEnviar')?.addEventListener('click', async () => {
-    haptic(20);
-    const btn = document.getElementById('btnCerrarYEnviar');
-    if (!btn) return;
-    const prevHTML = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
-    btn.disabled = true;
-
-    try {
-      const gastos = leerGastosDelDOM();
-      const resumen = calcularResumenCierre(gastos);
-
-      await guardarCierreEnFirebase(gastos, resumen);
-      generarPDFCierre(gastos);
-      playSound('success');
-
-      const mensaje = `*CIERRE DE CAJA - DR. XIAOMI*\n\n` +
-        `📅 *Fecha:* ${new Date().toLocaleDateString()}\n\n` +
-        `💰 *Total Cobrado:* ${formatBsLimpio(resumen.totalGlobal)}\n` +
-        `💵 *Efectivo Físico:* ${formatBsLimpio(resumen.efectivoCaja)}\n` + `📱 *QR:* ${formatBsLimpio(resumen.qrCaja)}\n\n` +
-        `💸 *A Entregar al Dueño:* ${formatBsLimpio(resumen.aEntregar)}\n` +
-        `_(Se descontaron Bs. ${resumen.totalGastos} de gastos)_\n\n` +
-        `_Adjunto el PDF con el detalle._`;
-
-      window.open(`https://wa.me/${CONFIG_APP.whatsappDueno}?text=${encodeURIComponent(mensaje)}`, '_blank');
-
-      toast('Día cerrado y guardado', 'success');
-      modalPreviewPDF?.classList.remove('show');
-    } catch (e) {
-      console.error(e);
-      playSound('error');
-      toast('Error al cerrar el día', 'error');
-    } finally {
-      btn.innerHTML = prevHTML;
-      btn.disabled = false;
-    }
-  });
-
-  document.getElementById('gastoPasajes')?.addEventListener('input', recalcularCierre);
-  document.getElementById('toggleAlmuerzo')?.addEventListener('change', recalcularCierre);
-
-  document.getElementById('btnAbrirNotaDueno')?.addEventListener('click', () => {
-    haptic(15);
-    playSound('pop');
-    modalNotaDueno?.classList.add('show');
-  });
-  document.getElementById('btnCancelarNotaDueno')?.addEventListener('click', () => modalNotaDueno?.classList.remove('show'));
-
-  document.getElementById('btnGuardarNotaDueno')?.addEventListener('click', async () => {
-    const texto = document.getElementById('notaDuenoTexto').value.trim();
-    if (!texto) {
-      playSound('error');
-      toast('Escribe algo primero', 'error');
-      return;
-    }
-    haptic(20);
-    try {
-      await addDoc(collection(db, 'notas'), { texto, autor: appState.sesion?.nombre || 'Técnico', fecha: serverTimestamp() });
-      await enviarNotificacionDB('Nota del Técnico', `${appState.sesion?.nombre \vert{}\vert{} 'Técnico'}: ${texto}`);
-
-      playSound('success');
-      toast('Nota guardada', 'success');
-      modalNotaDueno?.classList.remove('show');
-      document.getElementById('notaDuenoTexto').value = '';
-    } catch (e) {
-      playSound('error');
-      toast('Error al guardar', 'error');
-    }
-  });
-
-  document.getElementById('btnCancelarMensajePopup')?.addEventListener('click', () => {
-    document.getElementById('modalMensajePopup')?.classList.remove('show');
-  });
-
-  document.getElementById('btnGuardarMensajePopup')?.addEventListener('click', async () => {
-    const titulo = (document.getElementById('mensajePopupTitulo').value || '').trim().slice(0, 100);
-    const texto = (document.getElementById('mensajePopupTexto').value || '').trim().slice(0, 2000);
-    const dias = parseInt(document.getElementById('mensajePopupDuracion').value) || 0;
-
-    if (!titulo || !texto) {
-      playSound('error');
-      toast('Completa todos los campos', 'error');
-      return;
-    }
-    haptic(20);
-    try {
-      const fechaExpiracion = dias > 0 ? new Date().getTime() + (dias * 24 * 60 * 60 * 1000) : 9999999999999;
-      await setDoc(doc(db, 'config', 'popup_mensaje'), { titulo, texto, fechaExpiracion, activo: true, leidoPorTecnico: false, fechaCreacion: serverTimestamp() });
-      await enviarNotificacionDB('Mensaje del Dueño', texto);
-
-      playSound('success');
-      toast('Mensaje enviado', 'success');
-      document.getElementById('modalMensajePopup')?.classList.remove('show');
-    } catch (err) {
-      playSound('error');
-      toast('Error al enviar', 'error');
-    }
-  });
-
-  // EVENTOS DEL MODAL DE EDITAR COSTO
-  document.getElementById('btnCancelarEditarVenta')?.addEventListener('click', () => {
-    document.getElementById('modalEditarVenta')?.classList.remove('show');
-  });
-
-  document.getElementById('btnGuardarEditarVenta')?.addEventListener('click', async () => {
-    if (!ventaActualEditando) return;
-
-    const nuevoCosto = parseFloat(document.getElementById('editCostoVenta').value) || 0;
-
-    try {
-      await updateDoc(doc(db, 'ventas', ventaActualEditando.id), { costo: nuevoCosto });
-      ventaActualEditando.costo = nuevoCosto;
-
-      playSound('success');
-      toast('Costo actualizado', 'success');
-      document.getElementById('modalEditarVenta')?.classList.remove('show');
-      renderizarTodo();
-    } catch (error) {
-      console.error(error);
-      playSound('error');
-      toast('Error al guardar', 'error');
-    }
-  });
-
-  const selConcepto = document.getElementById('ventaConcepto');
-  const wrapOtro = document.getElementById('wrapConceptoOtro');
-  selConcepto?.addEventListener('change', () => {
-    if (wrapOtro) wrapOtro.style.display = selConcepto.value === 'Otro' ? 'block' : 'none';
-  });
-
-  const tipoStep = document.getElementById('tipoVentaStep');
-  const accesorioStep = document.getElementById('ventaAccesorioStep');
-  const servicioStep = document.getElementById('ventaServicioStep');
-
-  document.getElementById('btnVentaAccesorio')?.addEventListener('click', () => {
-    playSound('click');
-    if (tipoStep) tipoStep.style.display = 'none';
-    if (accesorioStep) accesorioStep.style.display = 'block';
-    if (servicioStep) servicioStep.style.display = 'none';
-
-    const metodoAccesorio = document.getElementById('accesorioMetodoPago');
-    if (metodoAccesorio) metodoAccesorio.value = 'Efectivo';
-
-    const grid = document.getElementById('gridAccesorios');
-    if (grid) {
-      grid.innerHTML = appState.inventario.map(i => `
-        <div class="accesorio-card" data-id="${i.id}" data-nombre="${escapeHtml(i.nombre)}" data-precio="${i.precio}" data-costo="${i.costo}" data-stock="${i.stock}">
-          ${i.foto ? `<img src="${i.foto}" alt="${escapeHtml(i.nombre)}" loading="lazy">` : `<div class="no-img">${icono('inventario', 24)}</div>`}
-          <div class="nombre">${escapeHtml(i.nombre)}</div>
-          <div class="precio">${i.precio} Bs</div>
-          <div class="stock">Stock: ${i.stock}</div>
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-label">Activas</span><i class="fas fa-screwdriver-wrench"></i></div>
+          <div class="stat-value" id="statActivas">—</div>
         </div>
-      `).join('');
-
-      grid.onclick = (e) => {
-        const card = e.target.closest('.accesorio-card');
-        if (!card) return;
-        haptic(10);
-        playSound('click');
-        grid.querySelectorAll('.accesorio-card').forEach(c => c.classList.remove('seleccionado'));
-        card.classList.add('seleccionado');
-
-        document.getElementById('productoSeleccionadoInfo').style.display = 'block';
-        document.getElementById('infoProdNombre').textContent = card.dataset.nombre;
-        document.getElementById('infoProdPrecio').textContent = card.dataset.precio;
-        document.getElementById('accesorioCantidad').value = 1;
-        document.getElementById('accesorioCantidad').max = card.dataset.stock;
-
-        const btnReg = document.getElementById('btnRegistrarAccesorio');
-        btnReg.disabled = false;
-        Object.assign(btnReg.dataset, card.dataset);
-      };
-    }
-  });
-
-  document.getElementById('btnVentaServicio')?.addEventListener('click', () => {
-    playSound('click');
-    if (tipoStep) tipoStep.style.display = 'none';
-    if (accesorioStep) accesorioStep.style.display = 'none';
-    if (servicioStep) servicioStep.style.display = 'block';
-
-    document.getElementById('ventaConcepto').value = 'Botón';
-    if (wrapOtro) wrapOtro.style.display = 'none';
-    document.getElementById('ventaMonto').value = '';
-  });
-
-  document.getElementById('btnBackToTipo')?.addEventListener('click', () => {
-    playSound('click');
-    if (tipoStep) tipoStep.style.display = 'block';
-    if (accesorioStep) accesorioStep.style.display = 'none';
-    if (servicioStep) servicioStep.style.display = 'none';
-  });
-  document.getElementById('btnBackToTipo2')?.addEventListener('click', () => {
-    playSound('click');
-    if (tipoStep) tipoStep.style.display = 'block';
-    if (accesorioStep) accesorioStep.style.display = 'none';
-    if (servicioStep) servicioStep.style.display = 'none';
-  });
-
-  document.getElementById('btnGuardarVenta')?.addEventListener('click', async () => {
-    let concepto = document.getElementById('ventaConcepto').value;
-    const monto = parseFloat(document.getElementById('ventaMonto').value);
-    const metodo = document.getElementById('ventaMetodo').value;
-    if (concepto === 'Otro') {
-      const c = document.getElementById('ventaConceptoOtro').value.trim();
-      if (!c) {
-        playSound('error');
-        toast('Especifica qué se vendió', 'error');
-        return;
-      }
-      concepto = c;
-    }
-    if (!monto || monto <= 0 || isNaN(monto)) {
-      playSound('error');
-      toast('Ingresa un monto válido', 'error');
-      return;
-    }
-    haptic(20);
-    try {
-      await addDoc(collection(db, 'ventas'), { concepto, monto, costo: 0, metodoPago: metodo, fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
-      await enviarNotificacionDB('Nueva Venta', `Se vendió ${concepto} por Bs. ${monto} (${metodo})`);
-
-      playSound('success');
-      toast('Venta registrada', 'success');
-      if (document.activeElement) document.activeElement.blur();
-      modalVenta?.classList.remove('show');
-    } catch (err) {
-      playSound('error');
-      toast('Error al guardar', 'error');
-    }
-  });
-
-  document.getElementById('btnRegistrarAccesorio')?.addEventListener('click', async (e) => {
-    const btn = e.currentTarget;
-    const id = btn.dataset.id, nombre = btn.dataset.nombre;
-    const precio = parseFloat(btn.dataset.precio), costo = parseFloat(btn.dataset.costo);
-    const stock = parseInt(btn.dataset.stock);
-    const cantidad = parseInt(document.getElementById('accesorioCantidad').value);
-    const metodo = document.getElementById('accesorioMetodoPago').value;
-
-    if (!id) return;
-    if (!cantidad || cantidad < 1 || isNaN(cantidad)) {
-      playSound('error');
-      toast('Cantidad inválida', 'error');
-      return;
-    }
-    if (cantidad > stock) {
-      playSound('error');
-      toast('No hay suficiente stock', 'error');
-      return;
-    }
-
-    haptic(20);
-    try {
-      const total = precio * cantidad;
-      await addDoc(collection(db, 'ventas'), { concepto: `${cantidad}x${nombre}`, monto: total, costo: costo * cantidad, metodoPago: metodo, fecha: serverTimestamp(), creadoPor: appState.sesion?.nombre || 'Técnico' });
-      await updateDoc(doc(db, 'productos', id), { stock: stock - cantidad });
-      await enviarNotificacionDB('Nueva Venta (Accesorio)', `Se vendió ${cantidad}x${nombre} por Bs. ${total} (${metodo})`);
-
-      playSound('success');
-      toast('Venta de accesorio registrada', 'success');
-      if (document.activeElement) document.activeElement.blur();
-      modalVenta?.classList.remove('show');
-    } catch (err) {
-      console.error(err);
-      playSound('error');
-      toast('Error al guardar', 'error');
-    }
-  });
-
-  document.getElementById('filtros')?.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-filtro]');
-    if (!btn) return;
-    haptic(10);
-    playSound('click');
-    document.querySelectorAll('#filtros .chip-interactive').forEach(b => {
-      b.classList.remove('active');
-      b.setAttribute('aria-selected', 'false');
-    });
-    btn.classList.add('active');
-    btn.setAttribute('aria-selected', 'true');
-    filtroActual = btn.dataset.filtro;
-    busquedaActual = '';
-    const buscadorEl = document.getElementById('buscador');
-    if (buscadorEl) buscadorEl.value = '';
-    paginaActual = 1;
-    renderizarTodo();
-  });
-
-  const buscador = document.getElementById('buscador');
-  if (buscador) {
-    buscador.addEventListener('input', (e) => {
-      busquedaActual = e.target.value.toLowerCase().trim();
-      paginaActual = 1;
-      renderizarTodoDebounced();
-    });
-    buscador.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        buscador.blur();
-        haptic(10);
-        playSound('click');
-        renderizarTodo();
-      }
-    });
-  }
-}
-
-function resetVentaModal() {
-  document.getElementById('tipoVentaStep').style.display = 'block';
-  document.getElementById('ventaAccesorioStep').style.display = 'none';
-  document.getElementById('ventaServicioStep').style.display = 'none';
-  document.getElementById('productoSeleccionadoInfo').style.display = 'none';
-  document.getElementById('btnRegistrarAccesorio').disabled = true;
-
-  const ventaMonto = document.getElementById('ventaMonto');
-  if (ventaMonto) ventaMonto.value = '';
-  const ventaConceptoOtro = document.getElementById('ventaConceptoOtro');
-  if (ventaConceptoOtro) ventaConceptoOtro.value = '';
-}
-
-// ==========================================
-// 5. CARGA DE DATOS Y RENDERIZADO
-// ==========================================
-function cargarDatos() {
-  if (unsubscribe) unsubscribe();
-  unsubscribe = onSnapshot(query(collection(db, 'recibos'), orderBy('fecha', 'desc')), (snap) => {
-    appState.ordenes = snap.docs.map(d => { const data = d.data(); delete data.fotos; return { id: d.id, ...data }; });
-    appState.ordenes.sort((a, b) => (parsearFecha(b.fechaEditada || b.fecha) || 0) - (parsearFecha(a.fechaEditada || a.fecha) || 0));
-    if (appLoader && !appLoader.classList.contains('hidden')) appLoader.classList.add('hidden');
-    renderizarTodo();
-  }, (err) => {
-    console.error(err);
-    if (appLoader) appLoader.classList.add('hidden');
-  });
-
-  if (unsubscribeVentas) unsubscribeVentas();
-  unsubscribeVentas = onSnapshot(query(collection(db, 'ventas'), orderBy('fecha', 'desc'), limit(100)), (snap) => {
-    ventasPanel = snap.docs.map(d => ({ id: d.id, origen: 'panel', coleccion: 'ventas', ...d.data() }));
-    procesarVentas();
-  });
-
-  if (unsubscribeCierres) unsubscribeCierres();
-  unsubscribeCierres = onSnapshot(query(collection(db, 'cierres'), orderBy('fecha', 'desc'), limit(100)), () => {});
-
-  if (unsubscribeInventario) unsubscribeInventario();
-  unsubscribeInventario = onSnapshot(query(collection(db, 'productos')), (snap) => {
-    appState.inventario = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  });
-}
-
-function procesarVentas() {
-  appState.ventasHoy = [...ventasPanel].sort((a, b) => (parsearFecha(b.fecha) || 0) - (parsearFecha(a.fecha) || 0));
-  renderizarTodoDebounced();
-}
-
-let renderTimer = null;
-function renderizarTodoDebounced() {
-  clearTimeout(renderTimer);
-  renderTimer = setTimeout(renderizarTodo, CONFIG_APP.debounceRenderMs);
-}
-
-function renderizarTodo() {
-  actualizarStats();
-  todosLosMovimientos = [];
-
-  if (filtroActual === 'todos' || filtroActual === 'reparacion' || filtroActual === 'listo' || filtroActual === 'entregado' || filtroActual === 'devuelto') {
-    appState.ordenes.forEach(o => {
-      const est = o.estadoOrden || 'recibido';
-      if (filtroActual === 'reparacion' && est !== 'reparacion' && est !== 'espera-repuesto' && est !== 'recibido') return;
-      else if (filtroActual !== 'todos' && filtroActual !== 'reparacion' && filtroActual !== est) return;
-      const entregado = est === 'entregado';
-      todosLosMovimientos.push({
-        tipo: 'telefono',
-        data: o,
-        fechaOrden: entregado
-          ? (parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha))
-          : (parsearFecha(o.fechaEditada) || parsearFecha(o.fecha))
-      });
-    });
-  }
-
-  if (filtroActual === 'todos' || filtroActual === 'venta') {
-    appState.ventasHoy.forEach(v => {
-      todosLosMovimientos.push({ tipo: 'venta', data: v, fechaOrden: parsearFecha(v.fecha) });
-    });
-  }
-
-  if (busquedaActual) {
-    todosLosMovimientos = todosLosMovimientos.filter(m => {
-      const txt = m.tipo === 'telefono'
-        ? [m.data.numeroRecibo, m.data.cliente, m.data.telefono, m.data.marca, m.data.modelo].filter(Boolean).join(' ').toLowerCase()
-        : (m.data.concepto || '').toLowerCase();
-      return txt.includes(busquedaActual);
-    });
-  }
-
-  todosLosMovimientos.sort((a, b) => (b.fechaOrden || 0) - (a.fechaOrden || 0));
-  const totalPag = Math.ceil(todosLosMovimientos.length / ITEMS_POR_PAGINA);
-  if (paginaActual > totalPag) paginaActual = totalPag || 1;
-  const pagItems = todosLosMovimientos.slice((paginaActual - 1) * ITEMS_POR_PAGINA, paginaActual * ITEMS_POR_PAGINA);
-  const lista = document.getElementById('listaOrdenes');
-  if (!lista) return;
-
-  if (todosLosMovimientos.length === 0) {
-    lista.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><h3>Sin movimientos</h3><p>No hay resultados.</p></div>`;
-    if (paginationContainer) paginationContainer.innerHTML = '';
-    return;
-  }
-
-  lista.innerHTML = pagItems.map(m => m.tipo === 'telefono' ? renderCardTelefono(m.data) : renderCardVenta(m.data, m.tipo)).join('');
-  renderizarPaginacion(totalPag);
-}
-
-function renderizarPaginacion(total) {
-  if (!paginationContainer) return;
-  if (total <= 1) { paginationContainer.innerHTML = ''; return; }
-  let html = `<button type="button" class="page-nav" data-page="${paginaActual - 1}" ${paginaActual === 1 ? 'disabled' : ''}>Ant</button>`;
-  for (let i = 1; i <= total; i++) {
-    if (i === 1 || i === total || (i >= paginaActual - 1 && i <= paginaActual + 1)) {
-      html += `<button type="button" class="page-btn ${i === paginaActual ? 'active' : ''}" data-page="${i}">${i}</button>`;
-    } else if (i === paginaActual - 2 || i === paginaActual + 2) {
-      html += `<span>...</span>`;
-    }
-  }
-  html += `<button type="button" class="page-nav" data-page="${paginaActual + 1}" ${paginaActual === total ? 'disabled' : ''}>Sig</button>`;
-  paginationContainer.innerHTML = html;
-
-  paginationContainer.onclick = (e) => {
-    const btn = e.target.closest('button[data-page]');
-    if (!btn || btn.disabled) return;
-    const p = parseInt(btn.dataset.page);
-    if (!isNaN(p) && p >= 1) window.cambiarPagina(p);
-  };
-}
-
-window.cambiarPagina = (p) => {
-  haptic(8);
-  playSound('click');
-  paginaActual = p;
-  renderizarTodo();
-  document.querySelector('.app-content')?.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-function renderCardTelefono(o) {
-  const est = o.estadoOrden || 'recibido';
-
-  const info = {
-    recibido:          { t: 'Recibido',   c: '#F59E0B' },
-    reparacion:        { t: 'Reparación', c: '#FF6900' },
-    'espera-repuesto': { t: 'Repuesto',   c: '#8B5CF6' },
-    listo:             { t: 'Listo',      c: '#3B82F6' },
-    entregado:         { t: 'Entregado',  c: '#10B981' },
-    devuelto:          { t: 'Devuelto',   c: '#EF4444' }
-  }[est] || { t: est, c: '#FF6900' };
-
-  const fechaTexto = est === 'entregado'
-    ? `Entregado: ${formatFechaCompleta(o.fechaEntrega)}` : `Ingreso: ${tiempoRelativo(o.fechaEditada || o.fecha)}`;
-
-  return `
-    <div class="ingreso-card" data-tipo="telefono" data-id="${o.id}" style="--card-accent: ${info.c};">
-      <div class="icon-circle">${icono('telefono', 22)}</div>
-      <div class="info-col">
-        <div class="info-title">${escapeHtml(o.marca \vert{}\vert{} '')}${escapeHtml(o.modelo || '')}</div>
-        <div class="info-sub">${escapeHtml(o.cliente || '')}</div>
-        <div class="info-meta">
-          <span class="estado-chip">${info.t}</span>
-          <span class="info-time">${fechaTexto}</span>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-label">Listas</span><i class="fas fa-check-circle" style="color: var(--success-500);"></i></div>
+          <div class="stat-value" id="statListas" style="color: var(--success-500);">—</div>
+        </div>
+        <div class="stat-card stat-brand">
+          <div class="stat-top"><span class="stat-label">Ingresos Hoy</span><i class="fas fa-coins"></i></div>
+          <div class="stat-value" id="statHoy" style="color: var(--brand-500);">—</div>
         </div>
       </div>
-      <div class="monto-col">
-        <div class="monto">${formatBsLimpio(Number(o.montoCobrado) || Number(o.total) || 0)}</div>
+
+      <!-- ACCIONES RÁPIDAS -->
+      <div class="action-buttons">
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnPDFDia">
+          <i class="fas fa-file-invoice-dollar"></i> Cierre de Caja
+        </button>
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnAbrirNotaDueno">
+          <i class="fas fa-sticky-note"></i> Nota al Dueño
+        </button>
       </div>
-    </div>`;
-}
 
-function renderCardVenta(v, tipo) {
-  const f = parsearFecha(v.fecha);
-  const hora = f ? `${String(f.getHours()).padStart(2, '0')}:${String(f.getMinutes()).padStart(2, '0')}` : '';
+      <div class="section-title"><i class="fas fa-layer-group"></i> Movimientos Recientes</div>
 
-  let iconoNombre = 'venta';
-  let cor = '#FF8A3C';
-  const esAccesorio = /^\d+x\s/.test(v.concepto || '');
-
-  if (!esAccesorio) {
-    cor = '#FF6900';
-    if (v.concepto.includes('Botón')) iconoNombre = 'bateria';
-    else if (v.concepto.includes('Limpieza')) iconoNombre = 'servicios';
-    else if (v.concepto.includes('Reactivación')) iconoNombre = 'estado';
-    else if (v.concepto.includes('Cargador')) iconoNombre = 'bateria';
-    else iconoNombre = 'servicios';
-  }
-
-  const esAdmin = appState.sesion?.rol === 'admin';
-  const monto = Number(v.monto) || 0;
-  const costo = Number(v.costo) || 0;
-  const ganancia = monto - costo;
-
-  let htmlGanancia = '';
-  if (esAdmin && tipo === 'venta') {
-    htmlGanancia = `<div class="ganancia-tag">Ganancia: ${formatBsLimpio(ganancia)}</div>`;
-  }
-
-  return `
-    <div class="ingreso-card" data-tipo="${tipo}" data-id="${v.id}" data-origen="${v.origen}" data-extra="${v.indexExtra \vert{}\vert{} ''}" style="--card-accent: ${cor};">
-      <div class="icon-circle">${icono(iconoNombre, 22)}</div>
-      <div class="info-col">
-        <div class="info-title">${escapeHtml(v.concepto || '')}</div>
-        <div class="info-meta">
-          <span class="estado-chip">${esAccesorio ? 'Accesorio' : 'Servicio'}</span>
-          <span class="info-time">${hora} ·${escapeHtml(v.metodoPago || '')}</span>
-        </div>
+      <div class="search-bar">
+        <i class="fas fa-search" style="color: var(--brand-500); opacity: 0.9;"></i>
+        <input type="search" id="buscador" placeholder="Buscar cliente o equipo..." autocomplete="off" aria-label="Buscar cliente o equipo" enterkeyhint="search">
       </div>
-      <div class="monto-col">
-        <div class="monto" style="color: ${cor};">${formatBsLimpio(v.monto)}</div>${htmlGanancia}
+
+      <div class="filters-row" id="filtros" role="tablist" aria-label="Filtros de movimientos">
+        <button type="button" class="chip-interactive active btn-ripple" data-filtro="todos" role="tab" aria-selected="true"><i class="fas fa-border-all"></i> Todos</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="reparacion" role="tab" aria-selected="false"><i class="fas fa-tools"></i> Reparación</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="listo" role="tab" aria-selected="false"><i class="fas fa-check"></i> Listos</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="entregado" role="tab" aria-selected="false"><i class="fas fa-handshake"></i> Entregados</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="devuelto" role="tab" aria-selected="false"><i class="fas fa-undo-alt"></i> Devueltos</button>
+        <button type="button" class="chip-interactive btn-ripple" data-filtro="venta" role="tab" aria-selected="false"><i class="fas fa-shopping-bag"></i> Ventas</button>
       </div>
-    </div>`;
-}
 
-function actualizarStats() {
-  const activas = document.getElementById('statActivas');
-  const listas = document.getElementById('statListas');
-  const hoyEl = document.getElementById('statHoy');
-  if (activas) activas.textContent = appState.ordenes.filter(o => ['recibido', 'reparacion', 'espera-repuesto'].includes(o.estadoOrden || 'recibido')).length;
-  if (listas) listas.textContent = appState.ordenes.filter(o => o.estadoOrden === 'listo').length;
+      <div class="cards-list" id="listaOrdenes">
+        <div class="skeleton-card"><div class="skeleton skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton skeleton-text" style="width:70%;"></div><div class="skeleton skeleton-text" style="width:45%; margin-bottom:0;"></div></div></div>
+        <div class="skeleton-card"><div class="skeleton skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton skeleton-text" style="width:70%;"></div><div class="skeleton skeleton-text" style="width:45%; margin-bottom:0;"></div></div></div>
+        <div class="skeleton-card"><div class="skeleton skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton skeleton-text" style="width:70%;"></div><div class="skeleton skeleton-text" style="width:45%; margin-bottom:0;"></div></div></div>
+      </div>
 
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-  let ingRep = 0;
-  appState.ordenes.forEach(o => {
-    if (o.estadoOrden === 'entregado') {
-      const f = parsearFecha(o.fechaEntrega) || parsearFecha(o.fechaEditada) || parsearFecha(o.fecha);
-      if (f && f >= hoy) ingRep += Number(o.montoCobrado) || Number(o.total) || 0;
-    }
-  });
-
-  const ingVent = appState.ventasHoy.filter(v => { const f = parsearFecha(v.fecha); return f && f >= hoy; }).reduce((s, v) => s + (Number(v.monto) || 0), 0);
-
-  if (hoyEl) hoyEl.textContent = formatBsLimpio(ingRep + ingVent);
-}
-
-// ==========================================
-// 6. LÓGICA DEL CIERRE DE CAJA (MODAL)
-// ==========================================
-async function abrirCierreDeCaja() {
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-  const hoyStr = hoy.toDateString();
-
-  reparacionesData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
-  ventasAccesoriosData = { total: 0, efectivo: 0, qr: 0, cantidad: 0 };
-  detallesReparaciones = [];
-  detallesVentas = [];
-
-  try {
-    const qRecibos = query(collection(db, 'recibos'), where('estadoOrden', '==', 'entregado'));
-    const snapRecibos = await getDocs(qRecibos);
-
-    snapRecibos.forEach(docSnap => {
-      const d = docSnap.data();
-      let fechaD = d.fechaEntrega || d.fecha;
-      if (fechaD && typeof fechaD.toDate === 'function') fechaD = fechaD.toDate();
-
-      if (fechaD && fechaD.toDateString() === hoyStr) {
-        const monto = Number(d.montoCobrado) || 0;
-        const metodo = (d.metodoPago || 'Efectivo').toLowerCase();
-
-        reparacionesData.total += monto;
-        reparacionesData.cantidad++;
-        if (metodo.includes('efectivo')) reparacionesData.efectivo += monto;
-        else if (metodo.includes('qr')) reparacionesData.qr += monto;
-
-        detallesReparaciones.push({
-          cliente: d.cliente || 'Sin nombre',
-          equipo: `${d.marca || ''} ${d.modelo \vert{}\vert{} ''}`.trim() \vert{}\vert{} 'Equipo', monto, metodo: metodo.includes('qr') ? 'QR' : 'Efectivo' }); } }); } catch (e) { console.error('Error al leer recibos para cierre:', e); toast('Error al leer recibos. Se usará solo ventas.', 'error'); }  appState.ventasHoy.forEach(v => { const f = parsearFecha(v.fecha); if (f && f.toDateString() === hoyStr) { const monto = Number(v.monto) \vert{}\vert{} 0; const metodo = (v.metodoPago \vert{}\vert{} 'Efectivo').toLowerCase();  ventasAccesoriosData.total += monto; ventasAccesoriosData.cantidad++; if (metodo.includes('efectivo')) ventasAccesoriosData.efectivo += monto; else if (metodo.includes('qr')) ventasAccesoriosData.qr += monto;  detallesVentas.push({ producto: v.concepto \vert{}\vert{} 'Venta', monto, metodo: metodo.includes('qr') ? 'QR' : 'Efectivo' }); } });  renderizarVistaPreviaCierre(); recalcularCierre(); modalPreviewPDF?.classList.add('show'); }  function renderizarVistaPreviaCierre() { const container = document.getElementById('previewPDFContent'); if (!container) return; const hoy = new Date(); const fechaStr = `${String(hoy.getDate()).padStart(2, '0')}/${String(hoy.getMonth() + 1).padStart(2, '0')}/${hoy.getFullYear()}`;
-
-  let htmlDetalles = '';
-
-  if (detallesReparaciones.length > 0) {
-    htmlDetalles += `
-      <div style="margin-top: 15px;">
-        <h4 style="font-size: 12px; font-weight: bold; border-bottom: 1px solid #ccc; margin-bottom: 5px;">Reparaciones Entregadas</h4>
-        <table style="width: 100%; font-size: 10px; text-align: left;">
-          <tr><th>Equipo / Cliente</th><th style="text-align: right;">Monto</th></tr>
-          ${detallesReparaciones.map(r => `<tr><td>${escapeHtml(r.equipo)} (${escapeHtml(r.cliente)}) - ${r.metodo}</td><td style="text-align: right;">Bs. ${r.monto.toFixed(2)}</td></tr>`).join('')}
-        </table>
-      </div>`;
-  }
-
-  if (detallesVentas.length > 0) {
-    htmlDetalles += `
-      <div style="margin-top: 15px;">
-        <h4 style="font-size: 12px; font-weight: bold; border-bottom: 1px solid #ccc; margin-bottom: 5px;">Ventas de Accesorios</h4>
-        <table style="width: 100%; font-size: 10px; text-align: left;">
-          <tr><th>Producto</th><th style="text-align: right;">Monto</th></tr>
-          ${detallesVentas.map(v => `<tr><td>${escapeHtml(v.producto)} - ${v.metodo}</td><td style="text-align: right;">Bs. ${v.monto.toFixed(2)}</td></tr>`).join('')}
-        </table>
-      </div>`;
-  }
-
-  container.innerHTML = `
-    <div style="text-align: center; border-bottom: 2px solid #FF6900; padding-bottom: 8px; margin-bottom: 12px;">
-      <h2 style="font-size: 16px; margin: 0; font-family: 'Helvetica'; color: #FF6900;">DR. XIAOMI SCZ</h2>
-      <p style="margin: 0; font-size: 10px;">Cierre del ${fechaStr}</p>
+      <div class="pagination-container" id="paginationContainer"></div>
     </div>
-    <div style="background: #f0f0f0; padding: 8px; border-radius: 4px; font-size: 11px; margin-bottom: 10px;">
-      <div style="display: flex; justify-content: space-between;"><span>Total Reparaciones:</span> <strong>Bs. ${reparacionesData.total.toFixed(2)}</strong></div>
-      <div style="display: flex; justify-content: space-between;"><span>Total Ventas:</span> <strong>Bs. ${ventasAccesoriosData.total.toFixed(2)}</strong></div>
+  </main>
+
+  <!-- ================= MODALES ================= -->
+
+  <!-- 1. MODAL VENTA RÁPIDA -->
+  <div class="sheet-backdrop" id="modalVenta">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1);"><i class="fas fa-cash-register" style="color: var(--brand-500); margin-right: 6px;"></i> Venta Rápida</h3>
+        <button type="button" class="btn btn-secondary btn-icon" id="btnCloseVenta" style="width:32px; height:32px;"><i class="fas fa-times"></i></button>
+      </div>
+      <div id="tipoVentaStep">
+        <p style="font-size: 13px; color: var(--text-3); margin-bottom: 14px; text-align: center;">¿Qué vas a registrar?</p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" class="btn btn-secondary btn-ripple" id="btnVentaAccesorio" style="padding: 16px; justify-content: flex-start;">
+            <i class="fas fa-box" style="color: var(--brand-500); font-size: 22px; margin-right: 12px;"></i>
+            <div style="text-align: left;"><div style="font-weight: 800;">Venta de Accesorio</div><div style="font-size: 12px; color: var(--text-3);">Elegir producto del inventario</div></div>
+          </button>
+          <button type="button" class="btn btn-secondary btn-ripple" id="btnVentaServicio" style="padding: 16px; justify-content: flex-start;">
+            <i class="fas fa-tools" style="color: var(--brand-500); font-size: 22px; margin-right: 12px;"></i>
+            <div style="text-align: left;"><div style="font-weight: 800;">Venta de Servicio</div><div style="font-size: 12px; color: var(--text-3);">Limpieza, botón, reactivación...</div></div>
+          </button>
+        </div>
+      </div>
+      <div id="ventaAccesorioStep" style="display: none;">
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnBackToTipo" style="margin-bottom: 14px; padding: 8px 14px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
+        <label class="input-label" style="margin-bottom: 8px; display:block;">Selecciona un producto:</label>
+        <div id="gridAccesorios"></div>
+        <div id="productoSeleccionadoInfo" style="display: none; background: var(--bg-elev-2); padding: 12px; border-radius: var(--r-md); margin: 12px 0; border: 1px solid var(--border-2);">
+          <div style="font-weight: 800; font-size: 14px;" id="infoProdNombre">-</div>
+          <div style="font-size: 12px; color: var(--text-3);">Precio: <span id="infoProdPrecio">0</span> Bs</div>
+          <div class="field" style="margin-top: 8px; margin-bottom: 0;"><label class="input-label" for="accesorioCantidad">Cantidad</label><input type="number" id="accesorioCantidad" value="1" min="1"></div>
+          <div class="field" style="margin-top: 8px; margin-bottom: 0;">
+            <label class="input-label" for="accesorioMetodoPago">Método de Pago</label>
+            <select id="accesorioMetodoPago"><option value="Efectivo">💵 Efectivo</option><option value="QR">📱 QR</option></select>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary btn-ripple" id="btnRegistrarAccesorio" style="width: 100%;" disabled>Registrar Venta</button>
+      </div>
+      <div id="ventaServicioStep" style="display: none;">
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnBackToTipo2" style="margin-bottom: 14px; padding: 8px 14px; font-size: 12px;"><i class="fas fa-arrow-left"></i> Volver</button>
+        <div class="field"><select id="ventaConcepto"><option value="Botón">Botón</option><option value="Limpieza">Limpieza</option><option value="Reactivación">Reactivación</option><option value="Cargador">Cargador</option><option value="Otro">Otro</option></select></div>
+        <div class="field" id="wrapConceptoOtro" style="display: none;"><input type="text" id="ventaConceptoOtro" placeholder="Especifique qué se vendió"></div>
+        <div class="field"><input type="number" id="ventaMonto" placeholder="Monto (Bs.)" inputmode="decimal"></div>
+        <div class="field"><select id="ventaMetodo"><option value="Efectivo">💵 Efectivo</option><option value="QR">📱 QR</option></select></div>
+        <button type="button" class="btn btn-primary btn-ripple" id="btnGuardarVenta" style="width: 100%; margin-top: 8px;">Registrar Venta</button>
+      </div>
     </div>
-    ${htmlDetalles}
-  `;
-}
+  </div>
 
-function leerGastosDelDOM() {
-  const pasajes = parseFloat(document.getElementById('gastoPasajes')?.value) || 0;
-  const almuerzo = document.getElementById('toggleAlmuerzo')?.checked ? CONFIG_APP.gastoAlmuerzo : 0;
-  return { pasajes, almuerzo, totalGastos: pasajes + almuerzo };
-}
+  <!-- 2. MODAL OPCIONES / DETALLE -->
+  <div class="sheet-backdrop" id="reciboSheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1);"><i class="fas fa-sliders-h" style="color: var(--brand-500); margin-right: 6px;"></i> Opciones</h3>
+        <button type="button" class="btn btn-secondary btn-icon" id="btnCloseSheet" style="width:32px; height:32px;"><i class="fas fa-times"></i></button>
+      </div>
+      <div id="sheetContent"></div>
+    </div>
+  </div>
 
-function calcularResumenCierre(gastos) {
-  const totalGlobal = reparacionesData.total + ventasAccesoriosData.total;
-  const efectivoCaja = reparacionesData.efectivo + ventasAccesoriosData.efectivo;
-  const qrCaja = reparacionesData.qr + ventasAccesoriosData.qr;
-  const aEntregar = Math.max(0, efectivoCaja - gastos.totalGastos);
+  <!-- 3. MODAL PAGO -->
+  <div class="sheet-backdrop" id="modalPago">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1);"><i class="fas fa-hand-holding-usd" style="color: var(--brand-500); margin-right: 6px;"></i> Confirmar Entrega</h3>
+        <button type="button" class="btn btn-secondary btn-icon" id="btnClosePago" style="width:32px; height:32px;"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="field"><input type="number" id="pagoMonto" placeholder="Monto Cobrado (Bs.)" inputmode="decimal"></div>
+      <label class="input-label" style="margin-bottom: 8px; display:block;">Método de Pago</label>
+      <div id="metodosPagoGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+        <button type="button" class="btn btn-secondary btn-ripple" data-metodo="Efectivo">💵 Efectivo</button>
+        <button type="button" class="btn btn-secondary btn-ripple" data-metodo="QR">📱 QR</button>
+      </div>
+      <button type="button" class="btn btn-primary btn-ripple" id="btnConfirmarPago" style="width: 100%;">Confirmar y Entregar</button>
+    </div>
+  </div>
 
-  return { totalGlobal, efectivoCaja, qrCaja, aEntregar, totalGastos: gastos.totalGastos };
-}
+  <!-- 4. MODAL NOTA AL DUEÑO -->
+  <div class="sheet-backdrop" id="modalNotaDueno">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1); margin-bottom: 6px;"><i class="fas fa-sticky-note" style="color: var(--brand-500); margin-right: 6px;"></i> Nota para el Dueño</h3>
+      <p style="font-size: 13px; color: var(--text-3); margin-bottom: 14px;">Escribe una constancia que el dueño verá en su panel.</p>
+      <div class="field"><textarea id="notaDuenoTexto" rows="4" placeholder="Ej: Faltó cambiar el flex del modelo X..."></textarea></div>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnCancelarNotaDueno" style="flex: 1;">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-ripple" id="btnGuardarNotaDueno" style="flex: 1;">Guardar Nota</button>
+      </div>
+    </div>
+  </div>
 
-function recalcularCierre() {
-  const gastos = leerGastosDelDOM();
-  const resumen = calcularResumenCierre(gastos);
+  <!-- 5. MODAL CIERRE DE CAJA / PDF -->
+  <div class="sheet-backdrop" id="modalPreviewPDF">
+    <div class="sheet" style="max-height: 85vh; display: flex; flex-direction: column; padding: 14px;">
+      <div class="sheet-handle"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-1);"><i class="fas fa-cash-register" style="color: var(--brand-500); margin-right: 6px;"></i> Cierre de Caja</h3>
+        <button type="button" class="btn btn-secondary btn-icon" id="btnClosePreviewPDF" style="width: 30px; height: 30px;"><i class="fas fa-times" style="font-size: 12px;"></i></button>
+      </div>
+      <div style="flex: 1; overflow-y: auto; background: var(--bg-elev-2); padding: 6px; border-radius: var(--r-md); margin-bottom: 10px; min-height: 100px;">
+        <div id="previewPDFContent"></div>
+      </div>
+      <div style="background: var(--bg-elev-1); padding: 10px; border-radius: var(--r-md); border: 1px solid var(--border-1); margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label for="gastoPasajes" style="font-size: 12px; font-weight: 600; color: var(--text-2);">Pasajes (Bs.):</label>
+          <input type="number" id="gastoPasajes" placeholder="0.00" inputmode="decimal" style="width: 76px; padding: 5px 8px; text-align: right; font-weight: 700; color: var(--brand-500); font-size: 12px; height: 30px; background: var(--input-bg); border: 1px solid var(--border-2); border-radius: var(--r-sm);">
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label for="toggleAlmuerzo" style="font-size: 12px; font-weight: 600; color: var(--text-2);">Descontar Almuerzo (Bs. 20):</label>
+          <label class="toggle-switch" style="transform: scale(0.88); transform-origin: right center;">
+            <input type="checkbox" id="toggleAlmuerzo">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+        <div style="background: var(--bg-elev-2); padding: 8px; border-radius: var(--r-md); text-align: center;">
+          <div style="font-size: 16px; font-weight: 900; color: var(--brand-500);" id="totalGlobal">Bs. 0</div>
+          <div style="font-size: 9px; color: var(--text-3); text-transform: uppercase; font-weight: 700; margin-top: 2px;">Total Ingresos</div>
+        </div>
+        <div style="background: var(--bg-elev-2); padding: 8px; border-radius: var(--r-md); text-align: center;">
+          <div style="font-size: 16px; font-weight: 900; color: var(--success-500);" id="gananciaGlobal">Bs. 0</div>
+          <div style="font-size: 9px; color: var(--success-500); text-transform: uppercase; font-weight: 800; margin-top: 2px;">Efectivo Físico</div>
+        </div>
+      </div>
+      <div style="background: rgba(255, 105, 0, 0.12); padding: 10px; border-radius: var(--r-md); border: 1px solid var(--brand-500); text-align: center; margin-bottom: 10px;">
+        <div style="font-size: 18px; font-weight: 900; color: var(--brand-500);" id="montoTransferir">Bs. 0</div>
+        <div style="font-size: 9px; color: var(--brand-500); text-transform: uppercase; font-weight: 800;">Monto a Entregar al Dueño</div>
+      </div>
+      <button type="button" class="btn btn-whatsapp btn-ripple" id="btnCerrarYEnviar" style="width: 100%; height: 42px; margin-bottom: 6px; font-size: 13px;">
+        <i class="fab fa-whatsapp" style="font-size: 17px;"></i> Cerrar Día y Enviar al Dueño
+      </button>
+      <button type="button" class="btn btn-secondary btn-ripple" id="btnDescargarPDF" style="width: 100%; height: 40px; font-size: 13px;">
+        <i class="fas fa-file-pdf" style="color: var(--brand-500);"></i> Solo Descargar PDF
+      </button>
+    </div>
+  </div>
 
-  const elTotal = document.getElementById('totalGlobal');
-  const elGanancia = document.getElementById('gananciaGlobal');
-  const elMontoTransf = document.getElementById('montoTransferir');
+  <!-- 6. MODAL CREAR MENSAJE POPUP (Admin) -->
+  <div class="sheet-backdrop" id="modalMensajePopup">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1); margin-bottom: 6px;"><i class="fas fa-bullhorn" style="color: var(--brand-500); margin-right: 6px;"></i> Mensaje para el Técnico</h3>
+      <p style="font-size: 13px; color: var(--text-3); margin-bottom: 14px;">Este mensaje aparecerá en un popup al técnico al entrar.</p>
+      <div class="field"><input type="text" id="mensajePopupTitulo" placeholder="Título (Ej: Aviso importante)"></div>
+      <div class="field"><textarea id="mensajePopupTexto" rows="3" placeholder="Escribe el mensaje aquí..."></textarea></div>
+      <div class="field">
+        <label class="input-label" for="mensajePopupDuracion">Duración</label>
+        <select id="mensajePopupDuracion"><option value="1">1 día</option><option value="3">3 días</option><option value="7">1 semana</option><option value="0">Hasta que el técnico lo cierre</option></select>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnCancelarMensajePopup" style="flex: 1;">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-ripple" id="btnGuardarMensajePopup" style="flex: 1;">Enviar Mensaje</button>
+      </div>
+    </div>
+  </div>
 
-  if (elTotal) elTotal.textContent = formatBsLimpio(resumen.totalGlobal);
-  if (elGanancia) elGanancia.textContent = formatBsLimpio(resumen.efectivoCaja);
-  if (elMontoTransf) elMontoTransf.textContent = formatBsLimpio(resumen.aEntregar);
-}
+  <!-- 7. MODAL VER MENSAJE POPUP (Técnico) -->
+  <div class="sheet-backdrop" id="modalVerPopup">
+    <div class="sheet" style="text-align: center;">
+      <div class="sheet-handle"></div>
+      <div style="font-size: 48px; color: var(--brand-500); margin-bottom: 12px;"><i class="fas fa-bullhorn"></i></div>
+      <h3 id="verPopupTitulo" style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">Mensaje del Dueño</h3>
+      <p id="verPopupTexto" style="font-size: 14px; color: var(--text-3); margin-bottom: 20px;">...</p>
+      <button type="button" class="btn btn-primary btn-ripple" id="btnOkPopup" style="width: 100%;">Entendido</button>
+    </div>
+  </div>
 
-function generarPDFCierre(gastos) {
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-  const resumen = calcularResumenCierre(gastos);
+  <!-- 8. MODAL VER NOTIFICACIONES (DUEÑO) -->
+  <div class="sheet-backdrop" id="modalNotificaciones">
+    <div class="sheet" style="max-height: 80vh; display: flex; flex-direction: column; padding: 14px;">
+      <div class="sheet-handle"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-1);"><i class="fas fa-bell" style="color: var(--brand-500); margin-right: 6px;"></i> Notificaciones</h3>
+        <button type="button" class="btn btn-secondary btn-icon" id="btnCloseNotificaciones" style="width: 30px; height: 30px;"><i class="fas fa-times" style="font-size: 12px;"></i></button>
+      </div>
+      <div style="flex: 1; overflow-y: auto; padding: 4px;" id="listaNotificaciones"></div>
+    </div>
+  </div>
 
-  pdf.setFillColor(255, 105, 0); pdf.rect(0, 0, 210, 30, 'F');
-  pdf.setTextColor(255, 255, 255); pdf.setFontSize(20); pdf.text('DR. XIAOMI SCZ', 14, 15);
-  pdf.setFontSize(10); pdf.text('Cierre de Caja Diario', 14, 22);
-  pdf.setTextColor(0, 0, 0); pdf.setFontSize(12);
-  pdf.text(`Fecha: ${new Date().toLocaleDateString('es-BO')}`, 14, 45);
-  pdf.text(`Realizado por: ${appState.sesion?.nombre || 'Técnico'}`, 14, 52);
+  <!-- 9. MODAL EDITAR COSTO / GANANCIA (SOLO ADMIN) -->
+  <div class="sheet-backdrop" id="modalEditarVenta">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h3 style="font-size: 18px; font-weight: 800; color: var(--text-1); margin-bottom: 6px;"><i class="fas fa-tags" style="color: var(--brand-500); margin-right: 6px;"></i> Editar Costo</h3>
+      <p style="font-size: 13px; color: var(--text-3); margin-bottom: 14px;">Ingresa el costo de la tienda para calcular la ganancia de esta venta.</p>
+      <div class="field">
+        <label class="input-label" for="editCostoVenta">Costo (Bs.)</label>
+        <input type="number" id="editCostoVenta" placeholder="0.00" inputmode="decimal">
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" class="btn btn-secondary btn-ripple" id="btnCancelarEditarVenta" style="flex: 1;">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-ripple" id="btnGuardarEditarVenta" style="flex: 1;">Guardar Costo</button>
+      </div>
+    </div>
+  </div>
 
-  pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.text('Resumen Financiero', 14, 65);
-  pdf.setFontSize(11); pdf.setFont('helvetica', 'normal');
-  pdf.text(`- Total Cobrado: ${formatBsLimpio(resumen.totalGlobal)}`, 18, 72);
-  pdf.text(`- Efectivo Físico: ${formatBsLimpio(resumen.efectivoCaja)}`, 18, 79);
-  pdf.text(`- QR (Transferencia): ${formatBsLimpio(resumen.qrCaja)}`, 18, 86); pdf.text(`- Gastos (Pasajes/Almuerzo): -${formatBsLimpio(resumen.totalGastos)}`, 18, 93);
-
-  let y = 105;
-
-  if (detallesReparaciones.length > 0) {
-    pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.text('Detalle de Reparaciones Entregadas', 14, y); y += 7;
-    pdf.setFontSize(10); pdf.setFont('helvetica', 'normal');
-    detallesReparaciones.forEach(r => {
-      pdf.text(`${r.equipo} (${r.cliente}) [${r.metodo}]`, 18, y); pdf.text(`${format
+  <script type="module" src="./js/panel.js"></script>
+</body>
+</html>
