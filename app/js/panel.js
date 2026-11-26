@@ -229,7 +229,7 @@ async function enviarNotificacionDB(titulo, mensaje) {
 }
 
 // ==========================================
-// 1. HEADER DINÁMICO (solo botón admin)
+// 1. HEADER DINÁMICO (SOLO BOTÓN ADMIN)
 // ==========================================
 function configurarHeaderAdmin() {
   if (appState.sesion?.rol !== 'admin') return;
@@ -242,7 +242,7 @@ function configurarHeaderAdmin() {
   btn.className = 'icon-btn';
   btn.id = 'btnAbrirMensajePopup';
   btn.title = 'Mensaje al técnico';
-  btn.innerHTML = icono('nota', 20);
+  btn.innerHTML = '<i class="fas fa-bullhorn" style="font-size: 18px;"></i>';
   btn.addEventListener('click', () => {
     haptic(15);
     playSound('pop');
@@ -275,7 +275,6 @@ function iniciarApp() {
   cargarDatos();
   setTimeout(() => { if(appLoader) appLoader.classList.add('hidden'); }, CONFIG_APP.loaderFallbackMs);
   
-  // Ocultar reportes para técnico
   if (appState.sesion?.rol !== 'admin') {
     document.getElementById('navReportes')?.style.setProperty('display', 'none');
   }
@@ -718,7 +717,7 @@ function configurarEventos() {
     renderizarTodo();
   });
 
-  // 🔥 BUSCADOR
+  // 🔥 BUSCADOR + BOTÓN LIMPIAR
   const buscador = document.getElementById('buscador');
   const searchClear = document.getElementById('searchClear');
   
@@ -771,15 +770,15 @@ function resetVentaModal() {
 // ==========================================
 function cargarDatos() {
   if (unsubscribe) unsubscribe();
-  unsubscribe = onSnapshot(query(collection(db, 'recibos'), orderBy('fecha', 'desc'), limit(150)), (snap) => {
-    appState.ordenes = snap.docs.map(d => { const data = d.data(); delete data.fotos; return { id: d.id, ...data }; });
-    appState.ordenes.sort((a, b) => (parsearFecha(b.fechaEditada || b.fecha) || 0) - (parsearFecha(a.fechaEditada || a.fecha) || 0));
-    if (appLoader && !appLoader.classList.contains('hidden')) appLoader.classList.add('hidden');
-    renderizarTodo();
-  }, (err) => { 
-    console.error(err); 
-    if (appLoader) appLoader.classList.add('hidden');
-  });
+  unsubscribe = onSnapshot(query(collection(db, 'recibos'), orderBy('fecha', 'desc')), (snap) => {
+      appState.ordenes = snap.docs.map(d => { const data = d.data(); delete data.fotos; return { id: d.id, ...data }; });
+      appState.ordenes.sort((a, b) => (parsearFecha(b.fechaEditada || b.fecha) || 0) - (parsearFecha(a.fechaEditada || a.fecha) || 0));
+      if (appLoader && !appLoader.classList.contains('hidden')) appLoader.classList.add('hidden');
+      renderizarTodo();
+    }, (err) => { 
+      console.error(err); 
+      if (appLoader) appLoader.classList.add('hidden');
+    });
 
   if (unsubscribeVentas) unsubscribeVentas();
   unsubscribeVentas = onSnapshot(query(collection(db, 'ventas'), orderBy('fecha', 'desc'), limit(100)), (snap) => {
@@ -788,7 +787,7 @@ function cargarDatos() {
   });
 
   if (unsubscribeCierres) unsubscribeCierres();
-  unsubscribeCierres = onSnapshot(query(collection(db, 'cierres'), orderBy('fecha', 'desc'), limit(100)), () => {
+  unsubscribeCierres = onSnapshot(query(collection(db, 'cierres'), orderBy('fecha', 'desc'), limit(100)), (snap) => {
   });
 
   if (unsubscribeInventario) unsubscribeInventario();
@@ -898,13 +897,13 @@ function renderCardTelefono(o) {
   const est = o.estadoOrden || 'recibido';
   
   const info = { 
-    recibido:          { t: 'Recibido',   c: '#F59E0B' }, 
-    reparacion:        { t: 'Reparación', c: '#FF6900' }, 
-    'espera-repuesto': { t: 'Repuesto',   c: '#8B5CF6' }, 
-    listo:             { t: 'Listo',      c: '#3B82F6' }, 
-    entregado:         { t: 'Entregado',  c: '#10B981' }, 
-    devuelto:          { t: 'Devuelto',   c: '#EF4444' } 
-  }[est] || { t: est, c: '#FF6900' };
+    recibido: { t: 'Recibido', c: '#F59E0B' }, 
+    reparacion: { t: 'Reparación', c: '#EF4444' }, 
+    'espera-repuesto': { t: 'Repuesto', c: '#8B5CF6' }, 
+    listo: { t: 'Listo', c: '#3B82F6' }, 
+    entregado: { t: 'Entregado', c: '#10B981' }, 
+    devuelto: { t: 'Devuelto', c: '#6B7280' } 
+  }[est] || { t: est, c: 'var(--text-3)' };
 
   const bgColor = `color-mix(in srgb, ${info.c} 10%, var(--surface))`;
 
@@ -933,7 +932,7 @@ function renderCardVenta(v, tipo) {
   const hora = f ? `${String(f.getHours()).padStart(2,'0')}:${String(f.getMinutes()).padStart(2,'0')}` : '';
   
   let iconoNombre = 'venta';
-  let cor = '#FF8A3C';
+  let cor = '#FFFFFF';
 
   const esAccesorio = /^\d+x\s/.test(v.concepto || '');
 
@@ -945,7 +944,7 @@ function renderCardVenta(v, tipo) {
     else if ((v.concepto || '').includes('Cargador')) iconoNombre = 'bateria';
     else iconoNombre = 'servicios';
   } else {
-    cor = '#FF6900';
+    cor = '#FFFFFF';
     iconoNombre = 'venta';
   }
 
