@@ -1,343 +1,244 @@
 <!DOCTYPE html>
 <html lang="es" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <meta name="theme-color" content="#0A0A0B" id="metaThemeColor">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>DR. Xiaomi · Nuevo Recibo</title>
-
-  <!-- FAVICON Y MANIFEST -->
-  <link rel="icon" href="/imagenes/favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/svg+xml" href="/imagenes/favicon.svg">
-  <link rel="icon" type="image/png" sizes="96x96" href="/imagenes/favicon-96x96.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
-  <link rel="manifest" href="/manifest.json">
-
-  <!-- FUENTES E ICONOS -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-  <!-- TUS ESTILOS GLOBALES -->
-  <link rel="stylesheet" href="/app/css/app-theme.css">
-  <link rel="stylesheet" href="/app/css/app-layouts.css">
-  <link rel="stylesheet" href="/app/css/app-components.css">
-
-  <!-- 🔥 TU NUEVO ARCHIVO CSS SEPARADO -->
-  <link rel="stylesheet" href="./css/cliente.css">
-
-  <!-- LIBRERÍAS PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#0A0A0B" id="metaThemeColor">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>DR. Xiaomi · Nuevo Recibo</title>
+<link rel="icon" href="/imagenes/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/imagenes/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/app/css/app-theme.css">
+<link rel="stylesheet" href="/app/css/app-layouts.css">
+<link rel="stylesheet" href="/app/css/app-components.css">
+<link rel="stylesheet" href="./css/cliente.css">
+<link rel="stylesheet" href="./css/cliente-ux.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
-  <header class="app-header">
-    <div class="brand">
-      <button class="icon-btn" id="backToPanelBtn" style="margin-right: 8px;"><i class="fas fa-arrow-left"></i></button>
-      <div class="brand-logo" style="width: 32px; height: 32px;"><img src="/imagenes/web-app-manifest-192x192.png" onerror="this.style.display='none'"></div>
-      <div class="brand-text" style="margin-left: 8px;"><h1>NUEVO RECIBO</h1><p id="userInfo">Cargando...</p></div>
-    </div>
-    
-    <div class="header-actions">
-      <button class="icon-btn" id="homeBtn" title="Ir al Panel Principal" onclick="window.location.href='/app/'"><i class="fas fa-home"></i></button>
-      <button class="icon-btn" id="themeToggleBtn" title="Cambiar Tema"><i class="fas fa-sun"></i></button>
-      <button class="icon-btn" id="clearDraftBtn" title="Limpiar Borrador"><i class="fas fa-trash-alt"></i></button>
-      <button class="icon-btn" id="preciosBtn" title="Buscar precio">
-        <img src="/imagenes/icon-precio.png" alt="Precio" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-dollar-sign&quot;></i>';">
-      </button>
-      <button class="icon-btn" id="reportesBtn" title="Reportes" style="display: none;">
-        <img src="/imagenes/icon-reportes.png" alt="Reportes" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-chart-bar&quot;></i>';">
-      </button>
-      <button class="icon-btn" id="logoutBtn" title="Cerrar sesión">
-        <img src="/imagenes/icon-salir.png" alt="Salir" style="width:18px; height:18px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fas fa-sign-out-alt&quot;></i>';">
-      </button>
-    </div>
-  </header>
-
-  <div class="app-body" id="appBody">
-    <div class="wizard-progress" id="wizardProgress">
-      <div class="wizard-dot active" data-step="1"></div>
-      <div class="wizard-dot" data-step="2"></div>
-      <div class="wizard-dot" data-step="3"></div>
-      <div class="wizard-dot" data-step="4"></div>
-      <div class="wizard-dot" data-step="5"></div>
-      <div class="wizard-dot" data-step="6"></div>
-      <div class="wizard-dot" data-step="7"></div>
-    </div>
-
-    <main id="wizardContent">
-      <!-- PASO 1 -->
-      <section class="wizard-panel" data-panel="1" aria-hidden="false">
-        <div class="step-indicator">Paso 1 · Cliente</div>
-        <div class="card">
-          <div class="field"><input type="text" id="nombre" placeholder=" " required autocomplete="name"><label for="nombre">Nombre completo *</label></div>
-          <div class="field"><input type="tel" id="telefono" placeholder=" " required inputmode="numeric" maxlength="8"><label for="telefono">Teléfono / WhatsApp *</label></div>
-        </div>
-      </section>
-
-      <!-- PASO 2 -->
-      <section class="wizard-panel hidden" data-panel="2" aria-hidden="true">
-        <div class="step-indicator">Paso 2 · Equipo</div>
-        <div class="card">
-          <label class="field-title">Marca *</label>
-          <div class="marcas-grid" id="marcasGrid">
-            <button type="button" class="marca-btn" data-marca="Xiaomi">Xiaomi</button>
-            <button type="button" class="marca-btn" data-marca="Samsung">Samsung</button>
-            <button type="button" class="marca-btn" data-marca="Huawei">Huawei</button>
-            <button type="button" class="marca-btn" data-marca="Tecno">Tecno</button>
-            <button type="button" class="marca-btn" data-marca="Honor">Honor</button>
-            <button type="button" class="marca-btn" data-marca="Infinix">Infinix</button>
-            <button type="button" class="marca-btn" data-marca="iPhone">iPhone</button>
-            <button type="button" class="marca-btn" data-marca="Otro">Otro</button>
-          </div>
-          <input type="hidden" id="marca" required>
-        </div>
-        <div class="card">
-          <div class="field" style="margin-bottom: 10px;"><input type="text" id="modelo" placeholder=" " required><label for="modelo">Modelo del equipo *</label></div>
-          <div class="field" style="margin-bottom: 0;"><input type="text" id="color" placeholder=" "><label for="color">Color (opcional)</label></div>
-        </div>
-        <div class="card">
-          <label class="field-title">¿El equipo enciende? *</label>
-          <div class="radio-group" id="enciendeGroup">
-            <button type="button" class="radio-option" data-value="Sí"><i class="fas fa-power-off"></i><span>Sí</span></button>
-            <button type="button" class="radio-option" data-value="No"><i class="fas fa-ban"></i><span>No</span></button>
-            <button type="button" class="radio-option" data-value="A veces"><i class="fas fa-circle-half-stroke"></i><span>A veces</span></button>
-          </div>
-          <input type="hidden" id="enciende" required>
-        </div>
-      </section>
-
-      <!-- PASO 3 -->
-      <section class="wizard-panel hidden" data-panel="3" aria-hidden="true">
-        <div class="step-indicator">Paso 3 · Recepción</div>
-        
-        <div class="card hidden" id="cardReparaciones">
-          <label class="field-title">1. ¿Qué reparaciones necesita? (Elige varias)</label>
-          <div class="chips-group" id="motivoIngresoGroup">
-            <button type="button" class="chip-btn" data-value="Cambio de pantalla">📱 Cambio pantalla</button>
-            <button type="button" class="chip-btn" data-value="Cambio de batería">🔋 Cambio batería</button>
-            <button type="button" class="chip-btn" data-value="Módulo de carga">🔌 Módulo carga</button>
-            <button type="button" class="chip-btn" data-value="Cambio de tapa">🪵 Cambio tapa</button>
-            <button type="button" class="chip-btn" data-value="Cambio de visor cámara">📸 Visor cámara</button>
-            <button type="button" class="chip-btn" data-value="Problema de placa">🔬 Placa</button>
-            <button type="button" class="chip-btn" data-value="Otro">🛠️ Otro</button>
-          </div>
-          <input type="hidden" id="motivoIngreso" value="">
-        </div>
-        
-        <div class="card" id="cardSemaforo">
-          <label class="field-title">2. ¿Cómo llegó el equipo?</label>
-          <div class="semaforo-grid" id="semaforoGroup">
-            <button type="button" class="semaforo-item" data-estado="bueno">
-              <span class="emoji">🟢</span> Buen estado
-            </button>
-            <button type="button" class="semaforo-item" data-estado="regular">
-              <span class="emoji">🟡</span> Con detalles
-            </button>
-            <button type="button" class="semaforo-item" data-estado="malo">
-              <span class="emoji">🔴</span> Muy dañado
-            </button>
-          </div>
-          <input type="hidden" id="estadoLlegada" value="">
-        </div>
-
-        <div class="card hidden" id="cardAuditoriaGeneral">
-          <label class="field-title">3. Auditoría General</label>
-          <div class="checklist-grid" id="checklistGeneralGroup">
-            <button type="button" class="check-item" data-item="Cámaras"><span>Cámaras</span></button>
-            <button type="button" class="check-item" data-item="Audio / mic"><span>Audio / mic</span></button>
-            <button type="button" class="check-item" data-item="Wi-Fi / señal"><span>Wi-Fi / señal</span></button>
-            <button type="button" class="check-item" data-item="Táctil"><span>Táctil</span></button>
-            <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
-            <button type="button" class="check-item" data-item="Batería"><span>Batería</span></button>
-          </div>
-        </div>
-        
-        <div class="card hidden" id="cardAuditoriaFisica">
-          <label class="field-title">3. Auditoría Física</label>
-          <div class="checklist-grid" id="checklistFisicoGroup">
-            <button type="button" class="check-item" data-item="Pantalla"><span>Pantalla sana</span></button>
-            <button type="button" class="check-item" data-item="Tapa trasera"><span>Tapa trasera</span></button>
-            <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
-          </div>
-        </div>
-        
-        <input type="hidden" id="checklistResultados" value="">
-        <div class="card">
-          <label class="field-title">Detalles extra (opcional)</label>
-          <div class="field" style="margin-bottom:0;"><textarea id="fallaDetalle" placeholder=" " rows="2"></textarea><label for="fallaDetalle">Escribe algo más...</label></div>
-        </div>
-      </section>
-
-      <!-- PASO 4 -->
-      <section class="wizard-panel hidden" data-panel="4" aria-hidden="true">
-        <div class="step-indicator">Paso 4 · Seguridad</div>
-        <div class="card">
-          <div class="radio-group" id="tipoSeguridadGroup" style="margin-bottom:12px;">
-            <button type="button" class="radio-option active" data-value="patron"><i class="fas fa-braille"></i><span>Patrón</span></button>
-            <button type="button" class="radio-option" data-value="pin"><i class="fas fa-hashtag"></i><span>PIN</span></button>
-            <button type="button" class="radio-option" data-value="ninguno"><i class="fas fa-lock-open"></i><span>Ninguno</span></button>
-          </div>
-          <input type="hidden" id="tipoSeguridad" value="patron">
-          
-          <div id="pinContainer" class="hidden">
-            <div class="field"><input type="text" id="pinInput" placeholder=" " maxlength="12" inputmode="numeric"><label for="pinInput">PIN de acceso</label></div>
-          </div>
-
-          <div id="patronContainer">
-            <div style="position: relative; width: 100%; max-width: 260px; margin: 0 auto; aspect-ratio: 1 / 1;">
-              <canvas id="bgCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
-              <canvas id="lineCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%; touch-action: none;"></canvas>
-            </div>
-            <div style="text-align:center;margin:8px 0;">
-              <span id="pattern-sequence" style="font-size: 12px; font-weight: 700; color: var(--brand);">Sin patrón</span>
-            </div>
-            <button type="button" id="clearPattern" class="btn btn-secondary" style="width: 100%; padding:8px; font-size:12px;"><i class="fas fa-eraser"></i> Limpiar</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- PASO 5 -->
-      <section class="wizard-panel hidden" data-panel="5" aria-hidden="true">
-        <div class="step-indicator">Paso 5 · Fotos</div>
-        <div class="card">
-          <div class="fotos-grid" id="fotosGrid">
-            <button type="button" class="foto-slot" data-slot="0"><i class="fas fa-camera"></i><span>Añadir</span></button>
-            <button type="button" class="foto-slot" data-slot="1"><i class="fas fa-camera"></i><span>Añadir</span></button>
-            <button type="button" class="foto-slot" data-slot="2"><i class="fas fa-camera"></i><span>Añadir</span></button>
-            <button type="button" class="foto-slot" data-slot="3"><i class="fas fa-camera"></i><span>Añadir</span></button>
-          </div>
-        </div>
-      </section>
-
-      <!-- PASO 6 -->
-      <section class="wizard-panel hidden" data-panel="6" aria-hidden="true">
-        <div class="step-indicator">Paso 6 · Costos</div>
-        <div class="card">
-          <div class="servicios-container" id="serviciosList"></div>
-          <button type="button" id="addServicio" class="btn btn-secondary" style="width: 100%; margin-top: 6px; font-size: 12px; padding:10px;"><i class="fas fa-plus"></i> Añadir otro servicio</button>
-          <div style="margin-top: 12px;">
-            <label class="field-title" style="font-size: 10px;">Precios rápidos</label>
-            <div class="chips-group" id="preciosRapidosGroup" style="margin-bottom:0;">
-              <button type="button" class="chip-btn" data-precio="50">Bs. 50</button>
-              <button type="button" class="chip-btn" data-precio="100">Bs. 100</button>
-              <button type="button" class="chip-btn" data-precio="200">Bs. 200</button>
-              <button type="button" class="chip-btn" data-precio="350">Bs. 350</button>
-              <button type="button" class="chip-btn" data-precio="500">Bs. 500</button>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="resumen-row"><span>Total</span><strong id="costoTotalDisplay">Bs. 0.00</strong></div>
-          <div class="field" style="margin-bottom:0;"><input type="number" id="adelanto" placeholder=" " value="0"><label for="adelanto">Adelanto</label></div>
-          <div class="resumen-row resumen-saldo"><span>Saldo pendiente</span><strong id="saldoDisplay">Bs. 0.00</strong></div>
-        </div>
-        <input type="hidden" id="costoTotal" value="0">
-      </section>
-
-      <!-- PASO 7: BONUS FINAL -->
-      <section class="wizard-panel hidden" data-panel="7" aria-hidden="true">
-        <div class="step-indicator">Paso 7 · Listo</div>
-        <div id="previewContainer" style="margin-bottom: 20px;"></div>
-        
-        <div id="paso7Botones" class="hidden" style="display: flex; flex-direction: column; gap: 12px; padding: 0 16px;">
-          <!-- Botón Gigante de WhatsApp -->
-          <button type="button" id="sendWhatsappBtn" class="btn" style="background:#25D366; color:white; font-size: 18px; padding: 20px; border-radius: 16px; box-shadow: 0 10px 20px -5px rgba(37, 211, 102, 0.4); width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 800;">
-            <i class="fab fa-whatsapp" style="font-size: 24px;"></i> Enviar Recibo por WhatsApp
-          </button>
-          <!-- Botón PDF -->
-          <button type="button" id="descargarPdfBtn" class="btn btn-secondary" style="font-size: 16px; padding: 16px; border-radius: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; border: 1.5px solid var(--border);">
-            <i class="fas fa-file-pdf" style="color: #EF4444; font-size: 20px;"></i> Descargar Solo el PDF
-          </button>
-        </div>
-      </section>
-    </main>
+<header class="app-header">
+  <div class="brand">
+    <button class="icon-btn" id="backToPanelBtn" aria-label="Volver"><i class="fas fa-arrow-left"></i></button>
+    <div class="brand-text"><h1>NUEVO RECIBO <span class="offline-pill">Sin conexión</span></h1><p id="userInfo">Cargando...</p></div>
   </div>
-
-  <footer class="wizard-footer" id="wizardFooter">
-    <button type="button" class="btn btn-secondary" id="btnPrev" style="display: none;"><i class="fas fa-arrow-left"></i></button>
-    <button type="button" class="btn btn-primary" id="btnNext">Siguiente <i class="fas fa-arrow-right"></i></button>
-    <button type="button" class="btn btn-primary" id="btnGenerate" style="display: none;"><i class="fas fa-paper-plane"></i> Generar y Enviar</button>
-  </footer>
-
-  <!-- MODAL DE ÉXITO (Oculto por defecto) -->
-  <div class="modal-backdrop" id="successModal">
-    <div class="modal">
-      <div style="font-size: 48px; color: #22C55E; margin-bottom: 16px;"><i class="fas fa-check-circle"></i></div>
-      <h3 style="font-size: 20px; margin-bottom: 8px;">¡Recibo guardado!</h3>
-      <p style="font-size: 14px; color: var(--text-mute); margin-bottom: 24px;" id="successNumero">REC-XXX</p>
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        <button class="btn" style="background:#25D366;color:white;" id="sendWhatsappBtnModal"><i class="fab fa-whatsapp"></i> Enviar recibo por WhatsApp</button>
-        <button class="btn btn-secondary" id="backToPanelBtn2">Volver al panel</button>
+  <div class="header-actions">
+    <button class="icon-btn" id="themeToggleBtn" aria-label="Tema"><i class="fas fa-sun"></i></button>
+    <div class="menu-wrap">
+      <button class="icon-btn" id="menuBtn" aria-label="Más"><i class="fas fa-ellipsis-v"></i></button>
+      <div class="menu-pop" id="menuPop">
+        <button class="icon-btn" id="homeBtn" onclick="location.href='/app/'"><i class="fas fa-home"></i> Panel</button>
+        <button class="icon-btn" id="preciosBtn"><i class="fas fa-dollar-sign"></i> Precios</button>
+        <button class="icon-btn" id="reportesBtn" style="display:none"><i class="fas fa-chart-bar"></i> Reportes</button>
+        <button class="icon-btn" id="clearDraftBtn"><i class="fas fa-trash-alt"></i> Borrar borrador</button>
+        <button class="icon-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Salir</button>
       </div>
     </div>
   </div>
+</header>
 
-  <div class="sheet-backdrop" id="fotoSheet">
-    <div class="sheet">
-      <h3 style="margin-bottom: 16px; text-align: center;">Añadir foto</h3>
-      <button type="button" class="btn btn-primary" id="btnTomarFoto" style="width: 100%; margin-bottom: 10px;"><i class="fas fa-camera"></i> Cámara</button>
-      <button type="button" class="btn btn-secondary" id="btnSubirFoto" style="width: 100%; margin-bottom: 10px;"><i class="fas fa-image"></i> Galería</button>
-      <button type="button" class="btn" id="btnCancelarFoto" style="width: 100%; background:transparent; color:var(--text-mute);">Cancelar</button>
-    </div>
+<div class="app-body" id="appBody">
+  <div class="wizard-progress" id="wizardProgress">
+    <div class="wizard-dot active" data-step="1"></div><div class="wizard-dot" data-step="2"></div>
+    <div class="wizard-dot" data-step="3"></div><div class="wizard-dot" data-step="4"></div>
+    <div class="wizard-dot" data-step="5"></div><div class="wizard-dot" data-step="6"></div>
+    <div class="wizard-dot" data-step="7"></div>
   </div>
+  <div class="step-label" id="stepLabel"></div>
 
-  <input type="file" id="inputCamara" accept="image/*" capture="environment" class="hidden-file-input">
-  <input type="file" id="inputGaleria" accept="image/*" class="hidden-file-input">
+  <main id="wizardContent">
+    <section class="wizard-panel" data-panel="1" aria-hidden="false">
+      <div class="card">
+        <div class="field"><input type="text" id="nombre" placeholder=" " required autocomplete="name" enterkeyhint="next"><label for="nombre">Nombre completo *</label></div>
+        <div class="field"><input type="tel" id="telefono" placeholder=" " required inputmode="numeric" maxlength="8" enterkeyhint="next"><label for="telefono">Teléfono / WhatsApp *</label></div>
+      </div>
+    </section>
 
-  <!-- SCRIPT DE SONIDOS NATIVOS + HÁPTICO -->
-  <script>
-    (function() {
-      let audioCtx = null;
-      function initAudio() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-      }
-      
-      function playSound(type) {
-        try {
-          initAudio();
-          const now = audioCtx.currentTime;
-          const createOsc = (freqStart, freqEnd, duration, gainVal, waveType) => {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = waveType;
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.frequency.setValueAtTime(freqStart, now);
-            osc.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
-            gain.gain.setValueAtTime(gainVal, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-            osc.start(now);
-            osc.stop(now + duration);
-          };
+    <section class="wizard-panel hidden" data-panel="2" aria-hidden="true">
+      <div class="card">
+        <label class="field-title">Marca *</label>
+        <div class="marcas-grid" id="marcasGrid">
+          <button type="button" class="marca-btn" data-marca="Xiaomi">Xiaomi</button>
+          <button type="button" class="marca-btn" data-marca="Samsung">Samsung</button>
+          <button type="button" class="marca-btn" data-marca="Huawei">Huawei</button>
+          <button type="button" class="marca-btn" data-marca="Tecno">Tecno</button>
+          <button type="button" class="marca-btn" data-marca="Honor">Honor</button>
+          <button type="button" class="marca-btn" data-marca="Infinix">Infinix</button>
+          <button type="button" class="marca-btn" data-marca="iPhone">iPhone</button>
+          <button type="button" class="marca-btn" data-marca="Otro">Otro</button>
+        </div>
+        <input type="hidden" id="marca" required>
+      </div>
+      <div class="card">
+        <div class="field" style="margin-bottom:10px"><input type="text" id="modelo" placeholder=" " required enterkeyhint="next"><label for="modelo">Modelo del equipo *</label></div>
+        <div class="field" style="margin-bottom:0"><input type="text" id="color" placeholder=" "><label for="color">Color (opcional)</label></div>
+      </div>
+      <div class="card">
+        <label class="field-title">¿El equipo enciende? *</label>
+        <div class="radio-group" id="enciendeGroup">
+          <button type="button" class="radio-option" data-value="Sí"><i class="fas fa-power-off"></i><span>Sí</span></button>
+          <button type="button" class="radio-option" data-value="No"><i class="fas fa-ban"></i><span>No</span></button>
+          <button type="button" class="radio-option" data-value="A veces"><i class="fas fa-circle-half-stroke"></i><span>A veces</span></button>
+        </div>
+        <input type="hidden" id="enciende" required>
+      </div>
+    </section>
 
-          if (type === 'click') {
-            createOsc(1500, 500, 0.04, 0.2, 'triangle');
-          } else if (type === 'pop') {
-            createOsc(800, 200, 0.1, 0.3, 'sine');
-          } else if (type === 'success') {
-            createOsc(1046.50, 1046.50, 0.1, 0.2, 'sine');
-            setTimeout(() => createOsc(1567.98, 1567.98, 0.2, 0.2, 'sine'), 80);
-          }
-        } catch (e) { console.warn('Audio error', e); }
-      }
+    <section class="wizard-panel hidden" data-panel="3" aria-hidden="true">
+      <div class="card hidden" id="cardReparaciones">
+        <label class="field-title">¿Qué reparaciones necesita? (varias)</label>
+        <div class="chips-group" id="motivoIngresoGroup">
+          <button type="button" class="chip-btn" data-value="Cambio de pantalla">📱 Pantalla</button>
+          <button type="button" class="chip-btn" data-value="Cambio de batería">🔋 Batería</button>
+          <button type="button" class="chip-btn" data-value="Módulo de carga">🔌 Carga</button>
+          <button type="button" class="chip-btn" data-value="Cambio de tapa">🪵 Tapa</button>
+          <button type="button" class="chip-btn" data-value="Cambio de visor cámara">📸 Visor cámara</button>
+          <button type="button" class="chip-btn" data-value="Problema de placa">🔬 Placa</button>
+          <button type="button" class="chip-btn" data-value="Otro">🛠️ Otro</button>
+        </div>
+        <input type="hidden" id="motivoIngreso" value="">
+      </div>
+      <div class="card" id="cardSemaforo">
+        <label class="field-title">¿Cómo llegó el equipo?</label>
+        <div class="semaforo-grid" id="semaforoGroup">
+          <button type="button" class="semaforo-item" data-estado="bueno"><span class="emoji">🟢</span>Buen estado</button>
+          <button type="button" class="semaforo-item" data-estado="regular"><span class="emoji">🟡</span>Con detalles</button>
+          <button type="button" class="semaforo-item" data-estado="malo"><span class="emoji">🔴</span>Muy dañado</button>
+        </div>
+        <input type="hidden" id="estadoLlegada" value="">
+      </div>
+      <div class="card hidden" id="cardAuditoriaGeneral">
+        <label class="field-title">Auditoría (toca: ✓ funciona, ✕ falla)</label>
+        <div class="checklist-grid" id="checklistGeneralGroup">
+          <button type="button" class="check-item" data-item="Cámaras"><span>Cámaras</span></button>
+          <button type="button" class="check-item" data-item="Audio / mic"><span>Audio / mic</span></button>
+          <button type="button" class="check-item" data-item="Wi-Fi / señal"><span>Wi-Fi / señal</span></button>
+          <button type="button" class="check-item" data-item="Táctil"><span>Táctil</span></button>
+          <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
+          <button type="button" class="check-item" data-item="Batería"><span>Batería</span></button>
+        </div>
+      </div>
+      <div class="card hidden" id="cardAuditoriaFisica">
+        <label class="field-title">Auditoría física</label>
+        <div class="checklist-grid" id="checklistFisicoGroup">
+          <button type="button" class="check-item" data-item="Pantalla"><span>Pantalla</span></button>
+          <button type="button" class="check-item" data-item="Tapa trasera"><span>Tapa</span></button>
+          <button type="button" class="check-item" data-item="Botones"><span>Botones</span></button>
+        </div>
+      </div>
+      <input type="hidden" id="checklistResultados" value="">
+      <div class="card">
+        <div class="field" style="margin-bottom:0"><textarea id="fallaDetalle" placeholder=" " rows="2"></textarea><label for="fallaDetalle">Detalles extra (opcional)</label></div>
+      </div>
+    </section>
 
-      document.addEventListener('click', (e) => {
-        const target = e.target.closest('button, .marca-btn, .radio-option, .chip-btn, .check-item, .foto-slot, .semaforo-item');
-        if (target) {
-          playSound('click');
-          if (navigator.vibrate) navigator.vibrate(10);
-        }
-      });
-    })();
-  </script>
+    <section class="wizard-panel hidden" data-panel="4" aria-hidden="true">
+      <div class="card">
+        <label class="field-title">¿Cómo se desbloquea?</label>
+        <div class="radio-group" id="tipoSeguridadGroup" style="margin-bottom:12px">
+          <button type="button" class="radio-option active" data-value="patron"><i class="fas fa-braille"></i><span>Patrón</span></button>
+          <button type="button" class="radio-option" data-value="pin"><i class="fas fa-hashtag"></i><span>PIN</span></button>
+          <button type="button" class="radio-option" data-value="ninguno"><i class="fas fa-lock-open"></i><span>Ninguno</span></button>
+        </div>
+        <input type="hidden" id="tipoSeguridad" value="patron">
+        <div id="pinContainer" class="hidden">
+          <div class="field"><input type="text" id="pinInput" placeholder=" " maxlength="12" inputmode="numeric"><label for="pinInput">PIN de acceso</label></div>
+        </div>
+        <div id="patronContainer">
+          <div style="position:relative;width:100%;max-width:280px;margin:0 auto;aspect-ratio:1/1">
+            <canvas id="bgCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+            <canvas id="lineCanvas" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></canvas>
+          </div>
+          <div style="text-align:center;margin:8px 0"><span id="pattern-sequence" style="font-size:13px;font-weight:700;color:var(--brand)">Sin patrón</span></div>
+          <button type="button" id="clearPattern" class="btn btn-secondary" style="width:100%;min-height:44px;font-size:13px"><i class="fas fa-eraser"></i> Borrar patrón</button>
+        </div>
+      </div>
+    </section>
 
-  <script type="module" src="/js/cliente.js"></script>
+    <section class="wizard-panel hidden" data-panel="5" aria-hidden="true">
+      <div class="card">
+        <label class="field-title">Fotos del equipo (opcional, hasta 4)</label>
+        <div class="fotos-grid" id="fotosGrid">
+          <button type="button" class="foto-slot" data-slot="0"><i class="fas fa-camera"></i><span>Añadir</span></button>
+          <button type="button" class="foto-slot" data-slot="1"><i class="fas fa-camera"></i><span>Añadir</span></button>
+          <button type="button" class="foto-slot" data-slot="2"><i class="fas fa-camera"></i><span>Añadir</span></button>
+          <button type="button" class="foto-slot" data-slot="3"><i class="fas fa-camera"></i><span>Añadir</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="wizard-panel hidden" data-panel="6" aria-hidden="true">
+      <div class="card">
+        <div class="servicios-container" id="serviciosList"></div>
+        <button type="button" id="addServicio" class="btn btn-secondary" style="width:100%;min-height:46px;font-size:13px"><i class="fas fa-plus"></i> Otro servicio</button>
+        <div class="chips-group" id="preciosRapidosGroup" style="margin:12px 0 0">
+          <button type="button" class="chip-btn" data-precio="50">Bs. 50</button>
+          <button type="button" class="chip-btn" data-precio="100">Bs. 100</button>
+          <button type="button" class="chip-btn" data-precio="200">Bs. 200</button>
+          <button type="button" class="chip-btn" data-precio="350">Bs. 350</button>
+          <button type="button" class="chip-btn" data-precio="500">Bs. 500</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="resumen-row"><span>Total</span><strong id="costoTotalDisplay">Bs. 0.00</strong></div>
+        <div class="field" style="margin-bottom:0"><input type="number" id="adelanto" placeholder=" " value="0" inputmode="decimal"><label for="adelanto">Adelanto</label></div>
+        <div class="resumen-row resumen-saldo"><span>Saldo</span><strong id="saldoDisplay">Bs. 0.00</strong></div>
+      </div>
+      <input type="hidden" id="costoTotal" value="0">
+    </section>
+
+    <section class="wizard-panel hidden" data-panel="7" aria-hidden="true">
+      <div id="previewContainer" style="margin-bottom:16px"></div>
+
+      <div class="final-actions" id="finalActions">
+        <button type="button" id="btnGuardarFinal" class="btn btn-primary btn-block"><i class="fas fa-check"></i> Guardar y crear link</button>
+      </div>
+
+      <div class="success-box hidden" id="successBox">
+        <div class="check-big"><i class="fas fa-check"></i></div>
+        <h3 style="font-size:22px;margin-bottom:4px">¡Recibo listo!</h3>
+        <p id="successNum" style="color:var(--text-mute);font-size:13px"></p>
+        <div class="link-row">
+          <input type="text" id="linkRecibo" readonly>
+          <button type="button" class="btn btn-secondary" id="btnCopiar" aria-label="Copiar"><i class="fas fa-copy"></i></button>
+        </div>
+        <div class="final-actions">
+          <button type="button" id="btnWa" class="btn btn-wa btn-block"><i class="fab fa-whatsapp"></i> Enviar por WhatsApp</button>
+          <button type="button" id="btnPdf" class="btn btn-secondary btn-block"><i class="fas fa-file-pdf" style="color:#EF4444"></i> Descargar PDF</button>
+          <button type="button" class="btn btn-secondary btn-block" onclick="location.href='/app/'">Volver al panel</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer class="wizard-footer" id="wizardFooter">
+  <button type="button" class="btn btn-secondary" id="btnPrev" style="display:none" aria-label="Atrás"><i class="fas fa-arrow-left"></i></button>
+  <button type="button" class="btn btn-primary" id="btnNext">Siguiente <i class="fas fa-arrow-right"></i></button>
+  <button type="button" class="btn btn-primary" id="btnGenerate" style="display:none"></button>
+</footer>
+
+<div class="modal-backdrop" id="successModal"><div class="modal"><p id="successNumero"></p><button class="btn" id="sendWhatsappBtnModal" style="display:none"></button><button class="btn" id="backToPanelBtn2" style="display:none"></button></div></div>
+
+<div class="sheet-backdrop" id="fotoSheet">
+  <div class="sheet">
+    <h3 style="margin-bottom:16px;text-align:center">Añadir foto</h3>
+    <button type="button" class="btn btn-primary" id="btnTomarFoto" style="width:100%;margin-bottom:10px"><i class="fas fa-camera"></i> Cámara</button>
+    <button type="button" class="btn btn-secondary" id="btnSubirFoto" style="width:100%;margin-bottom:10px"><i class="fas fa-image"></i> Galería</button>
+    <button type="button" class="btn" id="btnCancelarFoto" style="width:100%;background:transparent;color:var(--text-mute)">Cancelar</button>
+  </div>
+</div>
+<input type="file" id="inputCamara" accept="image/*" capture="environment" class="hidden-file-input">
+<input type="file" id="inputGaleria" accept="image/*" class="hidden-file-input">
+
+<script type="module" src="/js/cliente.js"></script>
+<script type="module" src="/js/ux.js"></script>
 </body>
 </html>
